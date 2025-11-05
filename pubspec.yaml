@@ -1,0 +1,77 @@
+name: krishimithra
+description: A new Flutter project.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Icons
+  cupertino_icons: ^1.0.8
+  oktoast: ^3.3.1
+  flutter_svg: ^2.0.7
+  google_fonts: ^6.2.1
+
+  # Firebase (compatible versions)
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.6.12
+  firebase_storage: ^12.0.0
+
+  # Phone Auth
+  intl_phone_field: ^3.1.0
+
+  # Date, HTTP & Logging
+  intl: ^0.20.2
+  http: ^1.0.0
+  logging: ^1.2.0
+  flutter_dotenv: ^5.1.0
+
+  # Location, Geocoding & Maps
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  url_launcher: ^6.2.6
+  google_maps_flutter: ^2.5.0
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.0
+
+  # Supabase
+  supabase_flutter: ^2.0.6
+  mime: ^1.0.4
+  path: ^1.8.3
+
+  # Local storage
+  shared_preferences: ^2.2.2
+  
+  # Autocomplete and UUID for dropdown search
+  uuid: ^4.0.0
+
+  # Image & File Pickers
+  image_picker: ^1.0.4
+  image_picker_for_web: ^3.0.1
+  file_picker: ^10.2.0
+
+  # Keyboard visibility (compatible with flutter_typeahead ^4.8.0)
+  
+  flutter_typeahead: ^5.2.0
+  flutter_keyboard_visibility: ^6.0.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/km.png.png
+    - assets/.env
+    - assets/login_bg.png
+    - assets/log.png
+    - assets/leaves.png

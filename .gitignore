@@ -1,0 +1,12 @@
+﻿build/
+.dart_tool/
+.packages
+pubspec.lock
+android/.gradle/
+android/app/build/
+ios/Pods/
+*.iml
+.idea/
+.vscode/
+windows/flutter/ephemeral/
+assets/.env
