@@ -33,7 +33,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
 
   # Location, Geocoding & Maps
-  geolocator: ^14.0.2
+  geolocator: any
   geocoding: ^4.0.0
   url_launcher: ^6.2.6
   google_maps_flutter: ^2.5.0
@@ -55,7 +55,7 @@ dependencies:
   image_picker: ^1.0.4
   image_picker_for_web: ^3.0.1
   file_picker: ^10.2.0
-
+  
   # Keyboard visibility (compatible with flutter_typeahead ^4.8.0)
   
   flutter_typeahead: ^5.2.0

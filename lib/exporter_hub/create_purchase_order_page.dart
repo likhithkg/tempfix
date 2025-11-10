@@ -88,11 +88,12 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
         }
       ];
 
-      final docRef = await svc.createPO(
+      // --- IMPORTANT: use createPOForListing so farmerId is resolved automatically ---
+      final docRef = await svc.createPOForListing(
+        listingId: widget.listingData.id,
         buyerId: user.uid,
         buyerName: buyerName,
         buyerContact: buyerContact,
-        farmerId: widget.listingData.farmerId,
         items: items,
         totalAmount: total,
         paymentTerms: {'advancePercent': 0},
@@ -108,7 +109,7 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
         SnackBar(content: Text('Purchase order created successfully: ${docRef.id}')),
       );
 
-      // Navigate to the Purchase Order list so user can see the created PO
+      // Navigate to the Purchase Order list as buyer
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => PurchaseOrderListPage(buyerId: user.uid)),
@@ -139,6 +140,11 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
   Widget build(BuildContext context) {
     final product = widget.listingData;
 
+    // prepare seller display lines: include mobile if available
+    final sellerMobile = product.farmerMobile ?? '';
+    final sellerIdOrMobile = sellerMobile.isNotEmpty ? ' • $sellerMobile' : '';
+    final sellerLine = 'Seller: ${product.farmerName}$sellerIdOrMobile';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Buy from Farmer'),
@@ -156,8 +162,7 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text('Seller: ${product.farmerName} • ${product.location}',
-                    style: const TextStyle(color: Colors.grey)),
+                Text(sellerLine, style: const TextStyle(color: Colors.grey)),
                 const Divider(height: 24),
 
                 TextFormField(

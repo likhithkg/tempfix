@@ -7,6 +7,8 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'firebase_options.dart';
 import 'weather/weather_page.dart';
 import 'rent/rent_home_page.dart';
+
+
 import 'exporter_hub/exporter_service.dart';
 import 'plant_vendor/plant_vendor_home.dart';
 import 'labour_hub/labour_hub_listing_page.dart';
@@ -876,77 +878,186 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadUserProfile();
   }
 
+  // ---------- Improved: load saved default location (reads both userProfile & users) ----------
   Future<void> _loadSavedLocation() async {
     final user = fb.FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('userProfile').doc(user.uid).get();
-      if (doc.exists && doc.data()?['defaultLocation'] != null) {
-        final location = doc.data()?['defaultLocation'];
-        final lat = doc.data()?['defaultLat'];
-        final lon = doc.data()?['defaultLon'];
+      try {
+        final userProfileDoc = FirebaseFirestore.instance.collection('userProfile').doc(user.uid);
+        final usersDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-        if (!mounted) return;
+        DocumentSnapshot<Map<String, dynamic>> doc = await userProfileDoc.get();
+        Map<String, dynamic>? data;
+        if (doc.exists) {
+          data = doc.data();
+        } else {
+          final doc2 = await usersDoc.get();
+          if (doc2.exists) data = doc2.data();
+        }
+
+        if (data != null) {
+          final location = data['defaultLocation'] ?? data['default_location'] ?? data['default_loc'];
+          final lat = data['defaultLat'] ?? data['default_lat'] ?? data['lat'];
+          final lon = data['defaultLon'] ?? data['default_lon'] ?? data['lon'];
+
+          if (location != null && location is String && mounted) {
+            setState(() {
+              selectedLocation = location;
+              _searchController.text = location;
+              if (lat != null && lon != null) {
+                try {
+                  final doubleLat = (lat is num) ? lat.toDouble() : double.parse(lat.toString());
+                  final doubleLon = (lon is num) ? lon.toDouble() : double.parse(lon.toString());
+                  _defaultCoords = LatLng(doubleLat, doubleLon);
+                } catch (_) {}
+              }
+            });
+            return;
+          }
+        }
+      } catch (_) {
+        // ignore and fallback
+      }
+    }
+
+    // Fallback to original LocationService behavior
+    try {
+      final location = await LocationService.getDefaultLocation(
+        userId: fb.FirebaseAuth.instance.currentUser?.uid ?? "",
+      );
+      if (location != null && location.isNotEmpty && mounted) {
         setState(() {
           selectedLocation = location;
           _searchController.text = location;
-          if (lat != null && lon != null) {
-            _defaultCoords = LatLng(lat, lon); // ✅ Save default as coords
-          }
         });
-        return;
       }
-    }
-
-    final location = await LocationService.getDefaultLocation(
-      userId: fb.FirebaseAuth.instance.currentUser?.uid ?? "",
-    );
-    if (location != null && location.isNotEmpty) {
-      if (!mounted) return;
-      setState(() {
-        selectedLocation = location;
-        _searchController.text = location;
-      });
-    }
+    } catch (_) {}
   }
 
+  // ---------- Improved: load recent locations (local then Firestore) ----------
   Future<void> _loadRecentLocations() async {
-    final prefs = await SharedPreferences.getInstance();
-    _recentLocations = prefs.getStringList('recent_locations') ?? [];
+    // load local prefs first for quick UI
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final local = prefs.getStringList('recent_locations') ?? [];
+      if (local.isNotEmpty && mounted) setState(() => _recentLocations = local);
+    } catch (_) {}
+
+    // then try to sync from Firestore (so it persists across devices)
+    final user = fb.FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final doc1 = await FirebaseFirestore.instance.collection('userProfile').doc(user.uid).get();
+        List<String> fromFs = [];
+        if (doc1.exists && doc1.data()?['recentLocations'] != null) {
+          fromFs = (doc1.data()!['recentLocations'] as List).map((e) => e.toString()).toList();
+        } else {
+          final doc2 = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          if (doc2.exists && doc2.data()?['recentLocations'] != null) {
+            fromFs = (doc2.data()!['recentLocations'] as List).map((e) => e.toString()).toList();
+          }
+        }
+        if (fromFs.isNotEmpty && mounted) {
+          setState(() => _recentLocations = fromFs.take(5).toList());
+          // update local prefs too
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setStringList('recent_locations', _recentLocations);
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
   }
 
+  // ---------- Improved: save selected location (writes Firestore userProfile & users) ----------
   Future<void> _saveLocation(String location) async {
-    final coords = await LocationService.getCoordinatesFromName(location);
-    final lat = coords['lat'] ?? 0.0;
-    final lon = coords['lon'] ?? 0.0;
+    // Resolve coordinates using your existing LocationService
+    double lat = 0.0;
+    double lon = 0.0;
+    try {
+      final coords = await LocationService.getCoordinatesFromName(location);
+      lat = (coords['lat'] is num) ? (coords['lat'] as num).toDouble() : double.tryParse(coords['lat'].toString()) ?? 0.0;
+      lon = (coords['lon'] is num) ? (coords['lon'] as num).toDouble() : double.tryParse(coords['lon'].toString()) ?? 0.0;
+    } catch (_) {}
 
     final user = fb.FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await LocationService.setDefaultLocation(
-        location,
-        userId: user.uid,
-        lat: lat,
-        lon: lon,
-      );
+      final userProfileRef = FirebaseFirestore.instance.collection('userProfile').doc(user.uid);
+      final usersRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      final locMap = {
+        'defaultLocation': location,
+        'defaultLat': lat,
+        'defaultLon': lon,
+      };
+
+      // Write to both collections (merge) to be compatible with different code paths
+      try {
+        await userProfileRef.set(locMap, SetOptions(merge: true));
+      } catch (_) {}
+      try {
+        await usersRef.set(locMap, SetOptions(merge: true));
+      } catch (_) {}
+
+      // Maintain recentLocations array in Firestore (server-side copy)
+      try {
+        final userDoc = await userProfileRef.get();
+        List existing = [];
+        if (userDoc.exists && userDoc.data()?['recentLocations'] != null) {
+          existing = List.from(userDoc.data()?['recentLocations'] as List);
+        } else {
+          final udoc2 = await usersRef.get();
+          if (udoc2.exists && udoc2.data()?['recentLocations'] != null) {
+            existing = List.from(udoc2.data()?['recentLocations'] as List);
+          }
+        }
+
+        // Remove duplicates (by string equality) and insert new at front
+        existing.removeWhere((e) {
+          try {
+            final s = e is String ? e : (e is Map ? (e['displayName'] ?? e['name'] ?? e['defaultLocation']) : e.toString());
+            return s == location;
+          } catch (_) {
+            return false;
+          }
+        });
+
+        existing.insert(0, location);
+        // Trim to 10 items
+        final trimmed = existing.take(10).toList();
+
+        await userProfileRef.set({'recentLocations': trimmed}, SetOptions(merge: true));
+        await usersRef.set({'recentLocations': trimmed}, SetOptions(merge: true));
+      } catch (_) {
+        // ignore
+      }
     }
 
-    setState(() {
-      selectedLocation = location;
-      _searchController.text = location;
-      _showSuggestions = false;
-      _defaultCoords = LatLng(lat, lon); // ✅ Always update with last chosen
-
-      if (!_recentLocations.contains(location)) {
-        _recentLocations.insert(0, location);
-        if (_recentLocations.length > 5) {
-          _recentLocations = _recentLocations.sublist(0, 5);
+    // Update local UI & SharedPreferences
+    if (mounted) {
+      setState(() {
+        selectedLocation = location;
+        _searchController.text = location;
+        _showSuggestions = false;
+        _defaultCoords = LatLng(lat, lon);
+        if (!_recentLocations.contains(location)) {
+          _recentLocations.insert(0, location);
+          if (_recentLocations.length > 5) _recentLocations = _recentLocations.sublist(0, 5);
+        } else {
+          // move to front
+          _recentLocations.remove(location);
+          _recentLocations.insert(0, location);
         }
-      }
-    });
+      });
+    }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('recent_locations', _recentLocations);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('recent_locations', _recentLocations);
+    } catch (_) {}
   }
 
+  // ---------- Keep user profile loader (unchanged but robust) ----------
   Future<void> _loadUserProfile() async {
     try {
       final user = fb.FirebaseAuth.instance.currentUser;
@@ -968,6 +1079,7 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (_) {}
   }
 
+  // ---------- small helpers used by search & dialog ----------
   void _onSearchTextChanged(String text) async {
     if (text.isEmpty) {
       setState(() => _suggestions = []);
@@ -984,6 +1096,7 @@ class _DashboardPageState extends State<DashboardPage> {
     FocusScope.of(context).unfocus();
   }
 
+  // ---------- Location dialog (await save before pop) ----------
   void _showLocationDialog() {
     showDialog(
       context: context,
@@ -1054,9 +1167,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         ..._recentLocations.map((loc) => ListTile(
                               leading: Icon(Icons.history, color: Theme.of(context).iconTheme.color),
                               title: Text(loc),
-                              onTap: () {
+                              onTap: () async {
+                                await _saveLocation(loc);
+                                if (!mounted) return;
                                 Navigator.pop(context);
-                                _saveLocation(loc);
                               },
                             )),
                       ],
@@ -1067,9 +1181,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       return ListTile(
                         leading: Icon(Icons.place, color: Theme.of(context).iconTheme.color),
                         title: Text(name),
-                        onTap: () {
+                        onTap: () async {
+                          await _saveLocation(name);
+                          if (!mounted) return;
                           Navigator.pop(context);
-                          _saveLocation(name);
                         },
                       );
                     }),
@@ -1081,6 +1196,7 @@ class _DashboardPageState extends State<DashboardPage> {
       },
     );
   }
+
 
   void _openNearbyMachines() {
   Navigator.push(
