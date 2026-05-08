@@ -1,11 +1,18 @@
 // lib/exporter_hub/nearby_farmers_page.dart
-import 'dart:async';
-import 'package:flutter/material.dart';
+// FINAL VERSION – Correct KM + Auto Geocoding + Attractive UI + Detail Page Navigation
+
+import 'dart:math';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+
 import 'nearby_farmers_map_page.dart';
 import 'nearby_farmers_service.dart';
+
+const String _locationIqKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
 class NearbyFarmersPage extends StatefulWidget {
   const NearbyFarmersPage({Key? key}) : super(key: key);
@@ -14,479 +21,392 @@ class NearbyFarmersPage extends StatefulWidget {
   State<NearbyFarmersPage> createState() => _NearbyFarmersPageState();
 }
 
-class _NearbyFarmersPageState extends State<NearbyFarmersPage> {
+class _NearbyFarmersPageState extends State<NearbyFarmersPage>
+    with SingleTickerProviderStateMixin {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   bool _loading = true;
   String? _error;
-  Position? _currentPos;
-  StreamSubscription<Position>? _posSub;
-  List<Map<String, dynamic>> _items = [];
-  double _radiusKm = 40; // default radius
-  bool _showOutside = false; // toggle to also display items outside radius
+  Position? _currentPosition;
+  List<_NearbyFarmer> _nearby = [];
+
+  late final AnimationController _animController;
 
   @override
   void initState() {
     super.initState();
-    _initLocation();
+    _animController =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _initAndLoad();
   }
 
   @override
   void dispose() {
-    _posSub?.cancel();
+    _animController.dispose();
     super.dispose();
   }
 
-  Future<void> _initLocation() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
+  Future<void> _initAndLoad() async {
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
-        setState(() {
-          _error = 'Location services disabled. Please enable.';
-          _loading = false;
-        });
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.denied) {
-        setState(() {
-          _error = 'Location permission denied.';
-          _loading = false;
-        });
-        return;
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          _error = 'Location permission permanently denied. Grant from settings.';
-          _loading = false;
-        });
-        return;
-      }
-
-      final pos = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.best));
-      setState(() {
-        _currentPos = pos;
-        _loading = false;
-      });
-
-      await _loadAllItems();
+      final pos = await _determinePosition();
+      _currentPosition = pos;
+      await _loadNearbyFarmers(pos.latitude, pos.longitude);
+      _animController.forward(from: 0);
     } catch (e) {
-      setState(() {
-        _error = 'Failed to determine location: $e';
-        _loading = false;
-      });
+      _error = e.toString();
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
-  double _distanceKm(double lat1, double lon1, double lat2, double lon2) {
-    final m = Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
-    return m / 1000.0;
+  Future<Position> _determinePosition() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      throw Exception('Location services disabled');
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permission permanently denied');
+    }
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permission denied');
+      }
+    }
+
+    return Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
   }
 
-  Future<void> _callPhone(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot open dialer')));
-    }
-  }
-
-  // Robust recursive coordinate extractor:
-  Map<String, double>? _extractCoords(dynamic raw) {
-    double? toDouble(dynamic v) {
-      if (v == null) return null;
-      if (v is num) return v.toDouble();
-      if (v is String) return double.tryParse(v);
-      return null;
-    }
-
-    Map<String, double>? search(dynamic node) {
-      if (node == null) return null;
-
-      // Firestore GeoPoint
-      if (node is GeoPoint) return {'lat': node.latitude, 'lon': node.longitude};
-
-      // Map-like
-      if (node is Map) {
-        // direct lat/lon style
-        final la = toDouble(node['lat'] ?? node['latitude'] ?? node['y']);
-        final lo = toDouble(node['lng'] ?? node['lon'] ?? node['longitude'] ?? node['x']);
-        if (la != null && lo != null) return {'lat': la, 'lon': lo};
-
-        // GeoJSON coordinate field
-        if (node.containsKey('coordinates')) {
-          final coords = node['coordinates'];
-          if (coords is List && coords.length >= 2) {
-            final a = toDouble(coords[0]);
-            final b = toDouble(coords[1]);
-            if (a != null && b != null) {
-              return {'lat': b, 'lon': a}; // assume [lon, lat]
-            }
-          }
-        }
-
-        // nested search
-        for (final e in node.entries) {
-          try {
-            final res = search(e.value);
-            if (res != null) return res;
-          } catch (_) {}
-        }
-      }
-
-      // List-like [lat, lon] or [lon, lat]
-      if (node is List && node.length >= 2) {
-        final a = toDouble(node[0]);
-        final b = toDouble(node[1]);
-        if (a != null && b != null) {
-          if (a.abs() <= 90) return {'lat': a, 'lon': b}; // [lat, lon]
-          return {'lat': b, 'lon': a}; // [lon, lat]
-        }
-      }
-
-      // String "lat,lon"
-      if (node is String && node.contains(',')) {
-        final parts = node.split(RegExp(r'\s*,\s*'));
-        if (parts.length >= 2) {
-          final a = toDouble(parts[0]);
-          final b = toDouble(parts[1]);
-          if (a != null && b != null) {
-            if (a.abs() <= 90) return {'lat': a, 'lon': b};
-            return {'lat': b, 'lon': a};
-          }
-        }
-      }
-
-      return null;
-    }
+  // ---------------- LOAD FARMERS ----------------
+  Future<void> _loadNearbyFarmers(double myLat, double myLng) async {
+    final List<Map<String, dynamic>> collected = [];
 
     try {
-      if (raw is DocumentSnapshot) {
-        final d = raw.data();
-        if (d != null) return search(d);
+      final svc = NearbyFarmersService();
+      final svcRes = await svc.queryNearbyFarmers(
+        centerLat: myLat,
+        centerLon: myLng,
+        radiusKm: 1000,
+        limit: 2000,
+      );
+      for (final e in svcRes) {
+        if (e is Map) collected.add(Map<String, dynamic>.from(e));
       }
-      return search(raw);
+    } catch (_) {}
+
+    try {
+      final snap = await _firestore.collection('export_products').get();
+      for (final d in snap.docs) {
+        collected.add({...d.data(), '_docId': d.id, '_col': 'export_products'});
+      }
+    } catch (_) {}
+
+    try {
+      final snap = await _firestore.collection('farmers').get();
+      for (final d in snap.docs) {
+        collected.add({...d.data(), '_docId': d.id, '_col': 'farmers'});
+      }
+    } catch (_) {}
+
+    final List<_NearbyFarmer> results = [];
+
+    for (final raw in collected) {
+      Map<String, double>? coords = _extractCoords(raw);
+
+      if (coords == null) {
+        final address = raw['location'] ?? raw['address'] ?? '';
+        if (address.toString().trim().isNotEmpty) {
+          coords = await _geocodeAddress(address.toString());
+
+          if (coords != null && raw['_docId'] != null && raw['_col'] != null) {
+            try {
+              await _firestore
+                  .collection(raw['_col'])
+                  .doc(raw['_docId'])
+                  .update({
+                'lat': coords['lat'],
+                'lon': coords['lon'],
+              });
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (coords == null) continue;
+
+      final dist = _distance(
+        myLat,
+        myLng,
+        coords['lat']!,
+        coords['lon']!,
+      );
+
+      results.add(
+        _NearbyFarmer(
+          docId: raw['_docId']?.toString() ?? '',
+          name: (raw['farmerName'] ?? raw['name'] ?? 'Unknown').toString(),
+          phone: (raw['phone'] ?? raw['contact'] ?? '').toString(),
+          location:
+              (raw['location'] ?? raw['address'] ?? 'Unknown').toString(),
+          lat: coords['lat']!,
+          lon: coords['lon']!,
+          distanceKm: dist,
+        ),
+      );
+    }
+
+    results.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+    setState(() => _nearby = results);
+  }
+
+  // ---------------- HELPERS ----------------
+  Future<Map<String, double>?> _geocodeAddress(String address) async {
+    try {
+      final uri = Uri.parse(
+        'https://us1.locationiq.com/v1/search.php'
+        '?key=$_locationIqKey'
+        '&q=${Uri.encodeComponent(address)}'
+        '&format=json'
+        '&limit=1',
+      );
+
+      final res = await http.get(uri);
+      if (res.statusCode != 200) return null;
+
+      final List data = jsonDecode(res.body);
+      if (data.isEmpty) return null;
+
+      return {
+        'lat': double.parse(data[0]['lat']),
+        'lon': double.parse(data[0]['lon']),
+      };
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> _loadAllItems() async {
-    if (_currentPos == null) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    try {
-      final List<Map<String, dynamic>> collected = [];
-
-      // 1) try using NearbyFarmersService (it may already have filtering), but we will re-evaluate distances
-      try {
-        final svc = NearbyFarmersService();
-        final svcRes = await svc.queryNearbyFarmers(
-          centerLat: _currentPos!.latitude,
-          centerLon: _currentPos!.longitude,
-          radiusKm: _radiusKm * 5, // get broader set from service then filter ourselves
-          limit: 2000,
-        );
-        for (final item in svcRes) {
-          // item might already be normalized; ensure it's a Map<String, dynamic>
-          final Map<String, dynamic> m = Map<String, dynamic>.from(item);
-          // Add a marker showing it came from service
-          m['_source'] = 'service';
-          collected.add(m);
-        }
-      } catch (e) {
-        debugPrint('NearbyFarmersPage: service failed: $e');
+  Map<String, double>? _extractCoords(dynamic raw) {
+    if (raw is Map) {
+      final lat = raw['lat'] ?? raw['latitude'];
+      final lon = raw['lon'] ?? raw['longitude'];
+      if (lat is num && lon is num) {
+        return {'lat': lat.toDouble(), 'lon': lon.toDouble()};
       }
+    }
+    return null;
+  }
 
-      // 2) fetch export_products
-      try {
-        final snap = await FirebaseFirestore.instance.collection('export_products').get();
-        for (final d in snap.docs) {
-          final m = d.data();
-          final wrapped = Map<String, dynamic>.from(m);
-          wrapped['_docId'] = d.id;
-          wrapped['_sourceCollection'] = 'export_products';
-          collected.add(wrapped);
-        }
-      } catch (e) {
-        debugPrint('NearbyFarmersPage: export_products fetch failed: $e');
-      }
+  double _distance(double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371.0;
+    final dLat = _deg(lat2 - lat1);
+    final dLon = _deg(lon2 - lon1);
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_deg(lat1)) *
+            cos(_deg(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a));
+  }
 
-      // 3) fetch farmers collection if present
-      try {
-        final snap2 = await FirebaseFirestore.instance.collection('farmers').get();
-        for (final d in snap2.docs) {
-          final m = d.data();
-          final wrapped = Map<String, dynamic>.from(m);
-          wrapped['_docId'] = d.id;
-          wrapped['_sourceCollection'] = 'farmers';
-          collected.add(wrapped);
-        }
-      } catch (_) {
-        // ignore if collection not present
-      }
+  double _deg(double d) => d * (pi / 180);
 
-      // Normalize: for each collected item, find coords, compute distance
-      final List<Map<String, dynamic>> finalList = [];
-      for (final raw in collected) {
-        final coords = _extractCoords(raw);
-        if (coords == null) continue;
-        final lat = coords['lat']!;
-        final lon = coords['lon']!;
-        final dist = _distanceKm(_currentPos!.latitude, _currentPos!.longitude, lat, lon);
-
-        final name = (raw['farmerName'] ?? raw['name'] ?? raw['productName'] ?? raw['title'] ?? 'Unknown').toString();
-        final phone = (raw['farmerMobile'] ?? raw['phone'] ?? raw['farmerMobileNo'] ?? raw['farmer_phone'] ?? '').toString();
-        final loc = (raw['location'] ?? raw['address'] ?? raw['place'] ?? '').toString();
-
-        finalList.add({
-          'name': name,
-          'phone': phone,
-          'lat': lat,
-          'lon': lon,
-          'distKm': dist,
-          'location': loc,
-          'raw': raw,
-        });
-      }
-
-      // Sort by distance
-      finalList.sort((a, b) => (a['distKm'] as double).compareTo(b['distKm'] as double));
-
-      // Filter to those within radius unless _showOutside is true
-      final itemsToShow = _showOutside ? finalList : finalList.where((e) => (e['distKm'] as double) <= _radiusKm).toList();
-
-      setState(() {
-        _items = itemsToShow;
-      });
-    } catch (e, st) {
-      debugPrint('NearbyFarmersPage: load error $e\n$st');
-      setState(() {
-        _error = 'Failed to load items: $e';
-      });
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  void _call(String phone) async {
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
   }
 
-  Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_error ?? 'Unknown error', style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              onPressed: _initLocation,
-            ),
-          ],
-        ),
-      ),
-    );
+  void _openMap(double lat, double lon) async {
+    final uri =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lon');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
+  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
-    final radiusCard = Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            const Icon(Icons.tune, color: Colors.black54, size: 20),
-            const SizedBox(width: 8),
-            const Text('Radius:', style: TextStyle(fontSize: 14)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Slider(
-                min: 5,
-                max: 500,
-                divisions: 99,
-                value: _radiusKm,
-                label: '${_radiusKm.round()} km',
-                onChanged: (v) => setState(() => _radiusKm = v),
-                onChangeEnd: (v) async {
-                  await _loadAllItems();
-                },
-              ),
-            ),
-            Text('${_radiusKm.toStringAsFixed(0)} km', style: const TextStyle(fontSize: 13)),
-          ],
-        ),
-      ),
-    );
-
     return Scaffold(
+      backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text('Nearby Farmers'),
         backgroundColor: Colors.green,
-        actions: [
-          IconButton(
-            icon: const Text('👨‍🌾', style: TextStyle(fontSize: 20)),
-            tooltip: 'Show all items on map',
-            onPressed: () {
-              final mapItems = _items
-                  .map((e) => {'id': e['raw']?['_docId'] ?? '', 'name': e['name'], 'lat': e['lat'], 'lon': e['lon'], 'raw': e['raw']})
-                  .toList();
-              Navigator.push(context, MaterialPageRoute(builder: (_) => NearbyFarmersMapPage(initialFarmers: mapItems)));
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadAllItems,
-          ),
-        ],
+        title: const Text('Nearby Farmers'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : (_error != null)
-              ? _buildError()
-              : _currentPos == null
-                  ? const Center(child: Text('Could not determine your location.'))
-                  : Column(
-                      children: [
-                        radiusCard,
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          child: Row(
-                            children: [
-                              Checkbox(
-                                value: _showOutside,
-                                onChanged: (v) {
-                                  setState(() {
-                                    _showOutside = v ?? false;
-                                  });
-                                  _loadAllItems();
+          : _error != null
+              ? Center(child: Text(_error!))
+              : ListView.builder(
+                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  itemCount: _nearby.length,
+                  itemBuilder: (_, i) {
+                    final f = _nearby[i];
+
+                    return FadeTransition(
+                      opacity: _animController,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NearbyFarmersMapPage(
+                                initialFarmers: [
+                                  {
+                                    'id': f.docId,
+                                    'name': f.name,
+                                    'phone': f.phone,
+                                    'location': f.location,
+                                    'lat': f.lat,
+                                    'lon': f.lon,
+                                  }
+                                ],
+                                focusLat: f.lat,
+                                focusLon: f.lon,
+                                focusFarmer: {
+                                  'name': f.name,
+                                  'phone': f.phone,
+                                  'location': f.location,
+                                  'lat': f.lat,
+                                  'lon': f.lon,
                                 },
                               ),
-                              const Text('Show items outside radius (grayed)'),
-                              const Spacer(),
-                              Text('Total found: ${_items.length}'),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
                             ],
                           ),
-                        ),
-                        Expanded(
-                          child: _items.isEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.all(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.agriculture,
+                                    color: Colors.green,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('No items found (within radius).', style: TextStyle(fontSize: 16)),
-                                      const SizedBox(height: 12),
-                                      ElevatedButton.icon(
-                                        icon: const Icon(Icons.refresh),
-                                        label: const Text('Retry & Expand Radius'),
-                                        onPressed: () {
-                                          setState(() {
-                                            _radiusKm = (_radiusKm * 2).clamp(5, 500);
-                                          });
-                                          _loadAllItems();
-                                        },
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              f.name,
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w700),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              '${f.distanceKm.toStringAsFixed(1)} km',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.green),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.location_on,
+                                              size: 14, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              f.location,
+                                              style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey.shade700),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                )
-                              : ListView.separated(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                  itemCount: _items.length,
-                                  itemBuilder: (context, index) {
-                                    final it = _items[index];
-                                    final name = (it['name'] ?? 'Unknown') as String;
-                                    final phone = (it['phone'] ?? '') as String;
-                                    final lat = (it['lat'] as double);
-                                    final lon = (it['lon'] as double);
-                                    final dist = (it['distKm'] as double);
-                                    final loc = (it['location'] ?? '') as String;
-                                    final within = dist <= _radiusKm;
-                                    final displayLoc = loc.isNotEmpty ? (loc.split(',').take(2).join(', ')) : 'Unknown location';
-
-                                    return Opacity(
-                                      opacity: within ? 1.0 : 0.5,
-                                      child: Card(
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                        elevation: 1,
-                                        child: SizedBox(
-                                          height: 110,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                CircleAvatar(
-                                                  radius: 20,
-                                                  child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'F'),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                                      const SizedBox(height: 6),
-                                                      Text(displayLoc, style: const TextStyle(color: Colors.black87, fontSize: 13)),
-                                                      const Spacer(),
-                                                      Text('${dist.toStringAsFixed(2)} km away', style: const TextStyle(color: Colors.black54, fontSize: 13)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    IconButton(
-                                                      tooltip: 'View on map',
-                                                      icon: const Text('👨‍🌾', style: TextStyle(fontSize: 22, color: Colors.green)),
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (_) => NearbyFarmersMapPage(
-                                                              focusLat: lat,
-                                                              focusLon: lon,
-                                                              focusFarmer: it,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                    if (phone.isNotEmpty)
-                                                      IconButton(
-                                                        tooltip: 'Call',
-                                                        icon: const Icon(Icons.call, color: Colors.blue),
-                                                        onPressed: () => _callPhone(phone),
-                                                      ),
-                                                  ],
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
                                 ),
+                                Column(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.call,
+                                          color: Colors.green),
+                                      onPressed: f.phone.isNotEmpty
+                                          ? () => _call(f.phone)
+                                          : null,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.map,
+                                          color: Colors.blue),
+                                      onPressed: () =>
+                                          _openMap(f.lat, f.lon),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
+}
+
+class _NearbyFarmer {
+  final String docId;
+  final String name;
+  final String phone;
+  final String location;
+  final double lat;
+  final double lon;
+  final double distanceKm;
+
+  _NearbyFarmer({
+    required this.docId,
+    required this.name,
+    required this.phone,
+    required this.location,
+    required this.lat,
+    required this.lon,
+    required this.distanceKm,
+  });
 }

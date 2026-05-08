@@ -1,5 +1,5 @@
 name: krishimithra
-description: A new Flutter project.
+description: KrishiMithra – Smart Agriculture Assistant
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -11,28 +11,33 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # 🌍 Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  provider: ^6.0.5
+
   # UI & Icons
   cupertino_icons: ^1.0.8
   oktoast: ^3.3.1
   flutter_svg: ^2.0.7
   google_fonts: ^6.2.1
 
-  # Firebase (compatible versions)
+  # Firebase
   firebase_core: ^3.0.0
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.6.12
   firebase_storage: ^12.0.0
 
-  # Phone Auth
+  # Phone Authentication
   intl_phone_field: ^3.1.0
 
-  # Date, HTTP & Logging
-  intl: ^0.20.2
+  # HTTP & Utils
   http: ^1.0.0
   logging: ^1.2.0
   flutter_dotenv: ^5.1.0
 
-  # Location, Geocoding & Maps
+  # 📍 Location & Maps
   geolocator: any
   geocoding: ^4.0.0
   url_launcher: ^6.2.6
@@ -45,21 +50,21 @@ dependencies:
   mime: ^1.0.4
   path: ^1.8.3
 
-  # Local storage
+  # 💾 Local Storage
   shared_preferences: ^2.2.2
-  
-  # Autocomplete and UUID for dropdown search
+
+  # Utilities
   uuid: ^4.0.0
 
   # Image & File Pickers
   image_picker: ^1.0.4
   image_picker_for_web: ^3.0.1
   file_picker: ^10.2.0
-  
-  # Keyboard visibility (compatible with flutter_typeahead ^4.8.0)
-  
+
+  # Search & Keyboard
   flutter_typeahead: ^5.2.0
   flutter_keyboard_visibility: ^6.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -67,11 +72,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   assets:
+    # App Assets
     - assets/icons/
     - assets/km.png.png
-    - assets/.env
     - assets/login_bg.png
     - assets/log.png
     - assets/leaves.png
+    - assets/farmer_logo.png
+    - .env

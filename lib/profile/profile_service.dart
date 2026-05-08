@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Import the helpers we added (ensure this path matches your project)
+import 'profile_service_helpers.dart';
+
 class ProfileService {
   ProfileService._();
   static final instance = ProfileService._();
@@ -84,5 +87,20 @@ class ProfileService {
   Future<bool> getDarkMode() async {
     final sp = await SharedPreferences.getInstance();
     return sp.getBool('isDarkMode') ?? false;
+  }
+
+  // ----- New forwarding helpers (fixes undefined_method errors) -----
+
+  /// Deletes user-owned documents and the users/{uid} doc.
+  /// This delegates to ProfileServiceHelpers.deleteUserData - adjust helper's
+  /// collection list in profile_service_helpers.dart if needed.
+  Future<void> deleteUserData(String uid) async {
+    return ProfileServiceHelpers.deleteUserData(uid);
+  }
+
+  /// Exports user data (returns a download URL for the exported JSON).
+  /// Delegates to ProfileServiceHelpers.exportUserData.
+  Future<String> exportUserData(String uid) async {
+    return ProfileServiceHelpers.exportUserData(uid);
   }
 }

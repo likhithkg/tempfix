@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'soil_sample_model.dart';
+import 'export_model.dart';
 
 class SoilService {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;

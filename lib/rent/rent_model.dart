@@ -61,6 +61,7 @@ class RentMachine {
   }
 
   Map<String, dynamic> toMap() => {
+        // Keep original keys your app expects
         'name': name,
         'type': type,
         'pricePerDay': pricePerDay,
@@ -72,15 +73,32 @@ class RentMachine {
         'imageUrl': imageUrl,
         'createdAt': Timestamp.fromDate(createdAt),
         'location': location,
+        // ALSO write the keys your Firestore rules require (title & ratePerDay)
+        'title': name,
+        'ratePerDay': pricePerDay,
       };
 
   factory RentMachine.fromDoc(DocumentSnapshot doc) {
     final d = (doc.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
+
+    // name may be stored as 'name' or older/newer 'title'
+    final nameValue = (d['name'] ?? d['title'] ?? '') as String;
+
+    // pricePerDay may be stored as 'pricePerDay' or 'ratePerDay'
+    double parsePrice(dynamic p) {
+      if (p == null) return 0;
+      if (p is num) return p.toDouble();
+      if (p is String) return double.tryParse(p) ?? 0;
+      return 0;
+    }
+
+    final price = parsePrice(d['pricePerDay'] ?? d['ratePerDay']);
+
     return RentMachine(
       id: doc.id,
-      name: (d['name'] ?? '') as String,
+      name: nameValue,
       type: (d['type'] ?? 'Other') as String,
-      pricePerDay: ((d['pricePerDay'] ?? 0) as num).toDouble(),
+      pricePerDay: price,
       ownerName: (d['ownerName'] ?? '') as String,
       ownerId: (d['ownerId'] ?? '') as String,
       phone: (d['phone'] ?? '') as String,

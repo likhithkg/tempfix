@@ -1,0 +1,46 @@
+{
+  "appName": "ಕೃಷಿಮಿತ್ರ",
+
+  "login": "ಲಾಗಿನ್",
+  "signup": "ಸೈನ್ ಅಪ್",
+  "email": "ಇಮೇಲ್",
+  "password": "ಪಾಸ್‌ವರ್ಡ್",
+
+  "weather": "ಹವಾಮಾನ",
+  "f2bMart": "F2B ಮಾರ್ಟ್",
+  "rentMachine": "ಯಂತ್ರ ಬಾಡಿಗೆ",
+  "plantVendors": "ಸಸ್ಯ ಮಾರಾಟಗಾರರು",
+  "labourHub": "ಕಾರ್ಮಿಕ ಕೇಂದ್ರ",
+  "cropDisease": "ಬೆಳೆ ರೋಗ",
+  "exportHub": "ರಫ್ತು ಕೇಂದ್ರ",
+  "chatbot": "ಚಾಟ್‌ಬಾಟ್",
+
+  "selectLocation": "ಸ್ಥಳ ಆಯ್ಕೆ ಮಾಡಿ",
+  "searchLocation": "ಸ್ಥಳ ಹುಡುಕಿ",
+  "recentLocations": "ಇತ್ತೀಚಿನ ಸ್ಥಳಗಳು",
+
+  "loginEmail": "ಇಮೇಲ್ ಮೂಲಕ ಲಾಗಿನ್",
+  "noAccount": "ಖಾತೆ ಇಲ್ಲವೇ? ಸೈನ್ ಅಪ್ ಮಾಡಿ",
+  "forgotPassword": "ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿದ್ದೀರಾ?",
+  "phoneLogin": "ಫೋನ್ ಮೂಲಕ ಲಾಗಿನ್ / ಸೈನ್ ಅಪ್",
+  "enterOtp": "OTP ನಮೂದಿಸಿ",
+  "verifyOtp": "OTP ಪರಿಶೀಲಿಸಿ",
+  "sendOtp": "OTP ಕಳುಹಿಸಿ",
+  "createAccount": "ನಿಮ್ಮ ಖಾತೆ ರಚಿಸಿ",
+  "resetPassword": "ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ",
+  "sendResetLink": "ರಿಸೆಟ್ ಲಿಂಕ್ ಕಳುಹಿಸಿ",
+
+  "mostlyClear": "ಮುಖ್ಯವಾಗಿ ಸ್ಪಷ್ಟ",
+  "wind": "ಗಾಳಿ",
+  "humidity": "ಆರ್ದ್ರತೆ",
+
+  "farmAdvisory": "ಕೃಷಿ ಸಲಹೆ",
+  "farmingNormal": "ಹವಾಮಾನ ಕೃಷಿಗೆ ಅನುಕೂಲವಾಗಿದೆ",
+
+  "rainAdvisory": "ಮಳೆ ಸಲಹೆ",
+  "noRain": "ಮುಂದಿನ 3 ಗಂಟೆಗಳಲ್ಲಿ ಮಳೆ ನಿರೀಕ್ಷೆಯಿಲ್ಲ",
+  "safeSpray": "ಕೀಟನಾಶಕ ಸಿಂಪಡಿಸಲು ಸುರಕ್ಷಿತ ಸಮಯ",
+
+  "hourlyForecast": "ಗಂಟೆಗಟ್ಟಲೆ ಹವಾಮಾನ",
+  "noData": "ಹವಾಮಾನ ಮಾಹಿತಿ ಲಭ್ಯವಿಲ್ಲ"
+}

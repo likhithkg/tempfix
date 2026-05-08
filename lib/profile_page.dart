@@ -1,8 +1,10 @@
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
+import 'dashboard_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -46,6 +48,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile =
         await picker.pickImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -75,8 +78,41 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          ElevatedButton(
+            child: const Text("Logout"),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _profileService.logout();
+
+      if (!mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
       );
     }
   }
@@ -96,7 +132,6 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Profile Picture
                   GestureDetector(
                     onTap: _pickImage,
                     child: CircleAvatar(
@@ -115,7 +150,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Name field
                   TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(
@@ -123,9 +157,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Phone field
                   TextField(
                     controller: _phoneController,
                     decoration: const InputDecoration(
@@ -134,9 +168,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     keyboardType: TextInputType.phone,
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Address field
                   TextField(
                     controller: _addressController,
                     decoration: const InputDecoration(
@@ -145,33 +179,33 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     maxLines: 2,
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Email (read-only)
                   Text(
                     user?.email ?? "No Email",
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
                   ),
+
                   const SizedBox(height: 30),
 
-                  // Save Button
                   ElevatedButton.icon(
                     icon: const Icon(Icons.save),
                     label: const Text("Save Changes"),
                     onPressed: _saveProfile,
                   ),
+
                   const SizedBox(height: 20),
 
-                  // Logout Option
+                  const Divider(),
+
                   ListTile(
-                    leading: const Icon(Icons.logout),
+                    leading: const Icon(Icons.logout, color: Colors.red),
                     title: const Text("Logout"),
-                    onTap: () async {
-                      await _profileService.logout();
-                      if (context.mounted) {
-                        Navigator.pop(context); // Go back after logout
-                      }
-                    },
+                    onTap: _logout,
                   ),
                 ],
               ),

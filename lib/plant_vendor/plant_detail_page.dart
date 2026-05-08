@@ -1,3 +1,4 @@
+// lib/plant_vendor/plant_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
@@ -7,106 +8,242 @@ class PlantDetailPage extends StatelessWidget {
   final PlantVendor vendor;
   const PlantDetailPage({super.key, required this.vendor});
 
-  String _formatDate(DateTime date) =>
-      DateFormat.yMMMEd().add_jm().format(date);
+  String _formatDate(DateTime date) => DateFormat.yMMMEd().add_jm().format(date);
 
-  Future<void> _call(String phone) async {
-    final uri = Uri.parse('tel:$phone');
+  Future<void> _call(BuildContext context, String? phone) async {
+    final p = (phone ?? '').trim();
+    if (p.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number not available')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse('tel:$p');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot start call')),
+      );
     }
   }
 
-  Future<void> _openMap(double lat, double lng) async {
-    final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+  /// ✅ NEW: WhatsApp Function
+  Future<void> _whatsapp(BuildContext context, String? phone) async {
+    final p = (phone ?? '').trim();
+    if (p.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number not available')),
+      );
+      return;
+    }
+
+    final url =
+        'https://wa.me/$p?text=Hi, I am interested in ${vendor.plantName}';
+    final uri = Uri.parse(url);
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot open WhatsApp')),
+      );
+    }
+  }
+
+  Future<void> _openMap(BuildContext context, double? lat, double? lng) async {
+    if (lat == null || lng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location not available')),
+      );
+      return;
+    }
+
+    final uri =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot open maps')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = (vendor.imageUrl ?? '').isNotEmpty;
+    final plantName =
+        vendor.plantName.isNotEmpty ? vendor.plantName : 'Unknown plant';
+    final rawType = vendor.type.isNotEmpty ? vendor.type : 'Plant';
+
+    final typeParts = rawType.split(' - ');
+    final category = typeParts.first;
+    final typeLabel =
+        typeParts.length > 1 ? typeParts.sublist(1).join(' - ') : '';
+
+    final priceText = '₹${vendor.price.toStringAsFixed(2)}';
+    final qtyText = vendor.quantity.toString();
+    final vendorName =
+        vendor.vendorName.isNotEmpty ? vendor.vendorName : 'Unknown vendor';
+    final phone = vendor.phone;
+    final location =
+        vendor.location.isNotEmpty ? vendor.location : 'Not provided';
+
+    final imageUrl = (vendor.imageUrl ?? '').trim();
+    final hasImage = imageUrl.isNotEmpty;
+
+    final listedOn =
+        vendor.timestamp != null ? _formatDate(vendor.timestamp) : '';
+
+    final accent = Colors.green.shade600;
+    final softBg = Colors.green.shade50;
+
     return Scaffold(
-      appBar: AppBar(title: Text(vendor.plantName)),
+      appBar: AppBar(
+        title: Text(plantName),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.call),
+            onPressed: () => _call(context, phone),
+          ),
+          IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: () =>
+                _openMap(context, vendor.latitude, vendor.longitude),
+          ),
+        ],
+      ),
+
+      /// 🔥 BODY
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                height: 210,
-                width: double.infinity,
-                color: Colors.green.shade50,
-                child: hasImage
-                    ? Image.network(vendor.imageUrl!, fit: BoxFit.cover)
-                    : const Center(
-                        child: Icon(Icons.local_florist,
-                            size: 90, color: Colors.green),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              vendor.plantName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
+
+            /// 🔹 IMAGE + ACTIONS
+            Stack(
               children: [
-                _chip(Icons.category, vendor.type),
-                _chip(Icons.currency_rupee,
-                    '₹${vendor.price.toStringAsFixed(2)}'),
-                _chip(Icons.inventory_2, 'Qty: ${vendor.quantity}'),
-                _chip(Icons.place, vendor.location),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 220,
+                    width: double.infinity,
+                    color: softBg,
+                    child: hasImage
+                        ? Image.network(imageUrl, fit: BoxFit.cover)
+                        : const Center(
+                            child: Icon(Icons.local_florist,
+                                size: 90, color: Colors.green),
+                          ),
+                  ),
+                ),
+
+                /// 🔥 FLOATING BUTTONS
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Row(
+                    children: [
+                      FloatingActionButton.small(
+                        heroTag: 'call',
+                        backgroundColor: Colors.white,
+                        foregroundColor: accent,
+                        onPressed: () => _call(context, phone),
+                        child: const Icon(Icons.call),
+                      ),
+                      const SizedBox(width: 8),
+                      FloatingActionButton.small(
+                        heroTag: 'whatsapp',
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.green,
+                        onPressed: () => _whatsapp(context, phone),
+                        child: const Icon(Icons.chat),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
-            _section('Vendor'),
-            _tile('Name', vendor.vendorName, Icons.person),
-            _tile('Phone', vendor.phone, Icons.phone),
-            _tile('Address', vendor.address, Icons.home),
-            _tile('Posted', _formatDate(vendor.timestamp), Icons.event),
 
             const SizedBox(height: 16),
+
+            /// 🔹 TITLE
+            Text(
+              plantName,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 8),
+
+            /// 🔹 CATEGORY
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(category),
+            ),
+
+            const SizedBox(height: 16),
+
+            /// 🔹 PRICE
+            Text(
+              priceText,
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green),
+            ),
+
+            const SizedBox(height: 16),
+
+            /// 🔹 DETAILS
+            _row("Type", rawType),
+            _row("Quantity", qtyText),
+            _row("Vendor", vendorName),
+            _row("Location", location),
+            _row("Listed on", listedOn),
+
+            const SizedBox(height: 20),
+
+            /// 🔹 ACTION BUTTONS
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _call(vendor.phone),
+                    onPressed: () => _call(context, phone),
                     icon: const Icon(Icons.call),
-                    label: const Text('Call'),
+                    label: const Text("Call"),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Buy flow coming soon…')),
-                      );
-                    },
-                    icon: const Icon(Icons.shopping_cart_checkout),
-                    label: const Text('Buy'),
+                    onPressed: () => _whatsapp(context, phone),
+                    icon: const Icon(Icons.chat),
+                    label: const Text("WhatsApp"),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: () => _openMap(vendor.latitude, vendor.longitude),
-              icon: const Icon(Icons.map),
-              label: const Text('View on Map'),
+            const SizedBox(height: 20),
+
+            /// 🔹 DESCRIPTION
+            const Text("Description",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text(
+              vendor.description.isNotEmpty
+                  ? vendor.description
+                  : "No description provided.",
             ),
           ],
         ),
@@ -114,29 +251,18 @@ class PlantDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _chip(IconData icon, String text) {
-    return Chip(
-      avatar: Icon(icon, size: 18),
-      label: Text(text),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-
-  Widget _section(String title) {
+  Widget _row(String title, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(title,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-    );
-  }
-
-  Widget _tile(String k, String v, IconData icon) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(k),
-      subtitle: Text(v),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+              width: 100,
+              child:
+                  Text("$title:", style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(child: Text(value)),
+        ],
+      ),
     );
   }
 }

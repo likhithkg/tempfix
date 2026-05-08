@@ -1,9 +1,11 @@
 // lib/profile/profile_page.dart
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
+import '../services/locale_service.dart'; // added: use LocaleService to apply language immediately
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,6 +28,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   // UI animation controller for subtle parallax/scale
   late final AnimationController _animController;
   late final Animation<double> _avatarScale;
+
+  int _numListings = 0;
+  int _numRentals = 0;
 
   final List<String> _languages = [
     'English',
@@ -67,6 +72,20 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final isDark = await ProfileService.instance.getDarkMode();
     if (mounted) {
       setState(() => _isDarkMode = isDark);
+    }
+
+    // load simple stats (example collections; adjust to your schema)
+    try {
+      final listingsSnap = await FirebaseFirestore.instance.collection('plant_vendors').where('ownerId', isEqualTo: _user!.uid).get();
+      final rentalsSnap = await FirebaseFirestore.instance.collection('rentals').where('ownerId', isEqualTo: _user!.uid).get();
+      if (mounted) {
+        setState(() {
+          _numListings = listingsSnap.size;
+          _numRentals = rentalsSnap.size;
+        });
+      }
+    } catch (_) {
+      // ignore stats errors
     }
   }
 
@@ -153,6 +172,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         language: _selectedLanguage,
       );
 
+      // Apply locale immediately (map label -> locale code)
+      try {
+        final code = _localeCodeFromLabel(_selectedLanguage);
+        if (code != null) {
+          await LocaleService.instance.setLocale(Locale(code));
+        }
+      } catch (_) {
+        // ignore if LocaleService doesn't behave as expected
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile saved')));
       }
@@ -176,6 +205,83 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _changePassword() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password change not available')));
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset email sent')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send reset email: $e')));
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final confirm = await showDialog<bool?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete account'),
+        content: const Text('This will permanently delete your account and associated user data. Are you sure?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // attempt to delete user-owned Firestore data (adjust collections as needed)
+      await ProfileService.instance.deleteUserData(user.uid);
+
+      await user.delete();
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting account: $e')));
+    }
+  }
+
+  Future<void> _chooseDefaultLocation() async {
+    // Re-uses existing location controller - you can replace this with your LocationIQ dialog
+    final controller = TextEditingController(text: _locationController.text);
+    final chosen = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set default location'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'e.g., Bengaluru, Karnataka'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Save')),
+        ],
+      ),
+    );
+
+    if (chosen != null) {
+      setState(() => _locationController.text = chosen);
+    }
+  }
+
+  Future<void> _exportData() async {
+    // placeholder - implement export CSV/JSON from Firestore via ProfileService
+    try {
+      await ProfileService.instance.exportUserData(_user?.uid ?? '');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Export started (check your email or downloads)')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    }
   }
 
   @override
@@ -221,11 +327,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                         Text('My Profile', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
                         const SizedBox(height: 6),
                         Text(email.isNotEmpty ? email : (phone.isNotEmpty ? phone : '—'), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70)),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          _smallStat('$_numListings', 'Listings'),
+                          const SizedBox(width: 12),
+                          _smallStat('$_numRentals', 'Rentals'),
+                        ])
                       ],
                     ),
                   ),
 
-                  // Animated avatar
+                  // Animated avatar with more actions (popup)
                   ScaleTransition(
                     scale: _avatarScale,
                     child: GestureDetector(
@@ -268,6 +380,21 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       ),
                     ),
                   ),
+
+                  // More actions popup
+                  PopupMenuButton<String>(
+                    onSelected: (v) async {
+                      if (v == 'change_password') await _changePassword();
+                      if (v == 'export') await _exportData();
+                      if (v == 'delete') await _deleteAccount();
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(value: 'change_password', child: Text('Change password')),
+                      const PopupMenuItem(value: 'export', child: Text('Export data')),
+                      const PopupMenuItem(value: 'delete', child: Text('Delete account', style: TextStyle(color: Colors.red))),
+                    ],
+                    color: Colors.white,
+                  )
                 ],
               ),
             ),
@@ -300,16 +427,27 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _locationController,
+                                readOnly: true,
+                                onTap: _chooseDefaultLocation,
                                 decoration: const InputDecoration(labelText: 'Default location', prefixIcon: Icon(Icons.place), hintText: 'e.g. Bengaluru, Karnataka'),
                                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Please provide a default location' : null,
                               ),
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
-                                initialValue: _selectedLanguage,
+                                value: _selectedLanguage,
                                 decoration: const InputDecoration(labelText: 'Preferred language', prefixIcon: Icon(Icons.language)),
                                 items: _languages.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
-                                onChanged: (v) {
-                                  if (v != null && mounted) setState(() => _selectedLanguage = v);
+                                onChanged: (v) async {
+                                  if (v != null && mounted) {
+                                    setState(() => _selectedLanguage = v);
+                                    // Apply language immediately
+                                    final code = _localeCodeFromLabel(v);
+                                    if (code != null) {
+                                      try {
+                                        await LocaleService.instance.setLocale(Locale(code));
+                                      } catch (_) {}
+                                    }
+                                  }
                                 },
                               ),
                               const SizedBox(height: 14),
@@ -441,6 +579,29 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final parts = name.split(' ').where((s) => s.isNotEmpty).toList();
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  Widget _smallStat(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+      ],
+    );
+  }
+
+  /// Helper that maps display language label to a locale code
+  String? _localeCodeFromLabel(String label) {
+    final map = {
+      'English': 'en',
+      'हिन्दी': 'hi',
+      'ಕನ್ನಡ': 'kn',
+      'தமிழ்': 'ta',
+      'తెలుగు': 'te',
+      'मराठी': 'mr',
+    };
+    return map[label];
   }
 }
 

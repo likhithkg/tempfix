@@ -14,47 +14,101 @@ class AutocompleteWidget extends StatelessWidget {
   });
 
   Future<List<String>> _getSuggestions(String query) async {
+
+    query = query.trim();
+
     if (query.isEmpty) return [];
 
-    final url =
-        'https://us1.locationiq.com/v1/autocomplete.php?key=pk.56ccd9d8fb2cd5f3e9d7a656e3b52566&q=$query&countrycodes=in&format=json';
+    try {
 
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode != 200) return [];
+      final url =
+          'https://us1.locationiq.com/v1/autocomplete.php?key=pk.56ccd9d8fb2cd5f3e9d7a656e3b52566&q=$query&countrycodes=in&limit=5&format=json';
 
-    final data = jsonDecode(response.body);
-    return data.map<String>((item) => item['display_name'] as String).toList();
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode != 200) return [];
+
+      final data = jsonDecode(response.body);
+
+      if (data is List) {
+        return data
+            .map<String>((item) => item['display_name'].toString())
+            .toList();
+      }
+
+      return [];
+
+    } catch (e) {
+
+      return [];
+
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<String>(
-      // 🔹 new API: use builder for TextField
+
+      // 🔹 suggestions
+      suggestionsCallback: _getSuggestions,
+
+      // 🔹 builder for input field
       builder: (context, textEditingController, focusNode) {
+
+        // keep controller synced
+        textEditingController.text = controller.text;
+
         return TextField(
-          controller: controller, // still using your passed controller
+          controller: textEditingController,
           focusNode: focusNode,
           decoration: InputDecoration(
             hintText: 'Enter location...',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.clear),
-              onPressed: () => controller.clear(),
+              onPressed: () {
+                controller.clear();
+                textEditingController.clear();
+              },
             ),
           ),
         );
       },
 
-      // 🔹 suggestions callback
-      suggestionsCallback: _getSuggestions,
+      // 🔹 suggestion UI
+      itemBuilder: (context, suggestion) {
+        return ListTile(
+          leading: const Icon(Icons.location_on),
+          title: Text(
+            suggestion,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      },
 
-      // 🔹 how each suggestion looks
-      itemBuilder: (context, suggestion) => ListTile(
-        title: Text(suggestion),
+      // 🔹 selection
+      onSelected: (suggestion) {
+
+        controller.text = suggestion;
+
+        onSelected(suggestion);
+
+      },
+
+      // 🔹 loading indicator
+      loadingBuilder: (context) => const Padding(
+        padding: EdgeInsets.all(10),
+        child: Center(child: CircularProgressIndicator()),
       ),
 
-      // 🔹 when user selects a suggestion
-      onSelected: onSelected,
+      // 🔹 empty UI
+      emptyBuilder: (context) => const Padding(
+        padding: EdgeInsets.all(10),
+        child: Text("No locations found"),
+      ),
     );
   }
 }

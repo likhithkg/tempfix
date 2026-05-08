@@ -6,6 +6,6 @@ class PlantVendorHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PlantListingPage();
+    return const PlantVendorListPage();
   }
 }

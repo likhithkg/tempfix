@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../weather_model.dart';
 import 'package:intl/intl.dart';
+import '../weather_model.dart';
 
 class HourlyForecast extends StatelessWidget {
   final List<HourlyWeather> hourly;
@@ -9,46 +9,74 @@ class HourlyForecast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final now = DateTime.now();
+
+    // 🔹 Filter: show only hours from current time
+    final filteredHourly = hourly.where((h) {
+      return h.time.isAfter(now.subtract(const Duration(minutes: 30)));
+    }).toList();
+
     return SizedBox(
-      height: 130,
+      height: 110,
+
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: hourly.length,
+        itemCount: filteredHourly.length,
+
         itemBuilder: (context, index) {
-          final hourData = hourly[index];
+
+          final h = filteredHourly[index];
+
+          final time = DateFormat('hh a').format(h.time);
+
+          // 🔹 Check if this is current hour
+          final isCurrentHour =
+              h.time.hour == now.hour && h.time.day == now.day;
 
           return Container(
             width: 80,
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            margin: const EdgeInsets.only(right: 10),
+
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isCurrentHour
+                  ? Colors.orange.withOpacity(0.35)
+                  : Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 4,
-                  offset: const Offset(2, 2),
-                )
-              ],
+              border: isCurrentHour
+                  ? Border.all(color: Colors.orange, width: 2)
+                  : null,
             ),
+
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+
                 Text(
-                  DateFormat.H().format(hourData.time.toLocal()) + ":00", // ✅ fixed
-                  style: const TextStyle(fontSize: 16),
+                  time,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 4),
+
+                const SizedBox(height: 6),
+
                 Text(
-                  hourData.emoji,
-                  style: const TextStyle(fontSize: 28),
+                  h.emoji,
+                  style: const TextStyle(fontSize: 26),
                 ),
-                const SizedBox(height: 4),
+
+                const SizedBox(height: 6),
+
                 Text(
-                  '${hourData.temp.toStringAsFixed(1)}°C',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  "${h.temp.toStringAsFixed(0)}°",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+
               ],
             ),
           );

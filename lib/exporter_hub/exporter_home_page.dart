@@ -186,7 +186,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
             tabs: [
               Tab(icon: Icon(Icons.local_florist), text: 'Crops'),
               Tab(icon: Icon(Icons.store_mall_directory), text: 'My Listings'),
-              Tab(icon: Icon(Icons.list_alt), text: 'Buying Orders'),
+              Tab(icon: Icon(Icons.list_alt), text: 'Verified Buyers'),
             ],
           ),
         ),

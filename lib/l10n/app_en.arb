@@ -1,0 +1,46 @@
+{
+  "appName": "KrishiMithra",
+
+  "login": "Login",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+
+  "weather": "Weather",
+  "f2bMart": "F2B Mart",
+  "rentMachine": "Rent Machine",
+  "plantVendors": "Plant Vendors",
+  "labourHub": "Labour Hub",
+  "cropDisease": "Crop Disease",
+  "exportHub": "Export Hub",
+  "chatbot": "Chatbot",
+
+  "selectLocation": "Select Location",
+  "searchLocation": "Search location",
+  "recentLocations": "Recent Locations",
+
+  "loginEmail": "Login with Email",
+  "noAccount": "Don't have an account? Sign Up",
+  "forgotPassword": "Forgot Password?",
+  "phoneLogin": "Login / Sign Up with Phone",
+  "enterOtp": "Enter OTP",
+  "verifyOtp": "Verify OTP",
+  "sendOtp": "Send OTP",
+  "createAccount": "Create Your Account",
+  "resetPassword": "Reset Your Password",
+  "sendResetLink": "Send Reset Link",
+
+  "mostlyClear": "Mostly Clear",
+  "wind": "Wind",
+  "humidity": "Humidity",
+
+  "farmAdvisory": "Farm Advisory",
+  "farmingNormal": "Weather conditions are normal for farming.",
+
+  "rainAdvisory": "Rain Advisory",
+  "noRain": "No rain expected in next 3 hours.",
+  "safeSpray": "Safe time for pesticide spraying.",
+
+  "hourlyForecast": "Hourly Forecast",
+  "noData": "No weather data"
+}

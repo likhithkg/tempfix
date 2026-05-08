@@ -3,7 +3,7 @@ import '../weather_model.dart';
 
 class DailyForecast extends StatelessWidget {
   final List<DailyWeather> daily;
-  final void Function(DailyWeather) onSelected;
+  final Function(DailyWeather) onSelected;
 
   const DailyForecast({
     super.key,
@@ -12,37 +12,70 @@ class DailyForecast extends StatelessWidget {
   });
 
   @override
-Widget build(BuildContext context) {
-  final today = DateTime.now();
+  Widget build(BuildContext context) {
 
-  // Filter out today based on date (make sure day.date is a DateTime)
-  final forecastDays = daily.where((day) {
-    return !(day.date.day == today.day &&
-             day.date.month == today.month &&
-             day.date.year == today.year);
-  }).toList();
+    return Column(
+      children: daily.map((day) {
 
-  return Column(
-    children: forecastDays.map((day) {
-      return GestureDetector(
-        onTap: () => onSelected(day),
-        child: Card(
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
+        return InkWell(
+
+          onTap: () => onSelected(day),
+
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(day.day, style: const TextStyle(fontSize: 16)),
-                Text('${day.emoji}  ${day.tempMin.toStringAsFixed(1)}° / ${day.tempMax.toStringAsFixed(1)}°',
-                    style: const TextStyle(fontSize: 16)),
+
+                Expanded(
+                  child: Text(
+                    day.day,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+
+                Text(
+                  day.emoji,
+                  style: const TextStyle(fontSize: 24),
+                ),
+
+                const SizedBox(width: 20),
+
+                Text(
+                  "${day.tempMax.toStringAsFixed(0)}°",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Text(
+                  "${day.tempMin.toStringAsFixed(0)}°",
+                  style: const TextStyle(
+                    color: Colors.black54,
+                  ),
+                ),
+
               ],
             ),
           ),
-        ),
-      );
-    }).toList(),
-  );
-}
+        );
+
+      }).toList(),
+    );
+  }
 }

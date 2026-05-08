@@ -7,6 +7,14 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'firebase_options.dart';
 import 'weather/weather_page.dart';
 import 'rent/rent_home_page.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+import 'providers/locale_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+import 'services/locale_service.dart';
+ // adjust path if you put it elsewhere
+import 'image_test_page.dart';
 
 
 import 'exporter_hub/exporter_service.dart';
@@ -30,7 +38,7 @@ import 'rent/rent_nearby_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'theme.dart'; 
 import 'splash/splash_screen.dart';
-import 'soil_monitoring/soil_monitoring_page.dart';
+import 'export_hub/export_hub_page.dart';
 import 'chatbot/chatbot_page.dart';
 import 'exporter_hub/exporter_home_page.dart';
 
@@ -50,24 +58,35 @@ Future<void> main() async {
   StackTrace? initStack;
 
   // Load persisted theme preference first (so we can show app with right theme even if init fails)
+   // Load persisted theme preference first (so we can show app with right theme even if init fails)
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('isDarkMode') ?? false;
+
+  // --- Initialize LocaleService so saved locale is available immediately ---
+  await LocaleService.instance.init();
 
   // Try to initialize external services, but catch and store errors instead of crashing.
   try {
     // dotenv (optional — will throw if file missing but we catch it)
-    try {
-      await dotenv.load(fileName: ".env");
-    } catch (e, st) {
-      // Non-fatal: record and continue (you might still want dotenv)
-      print('Warning loading .env: $e\n$st');
-    }
+   try {
+  await dotenv.load(fileName: ".env");
+
+final key = dotenv.env['GEMINI_API_KEY'];
+
+if (key == null || key.isEmpty) {
+  print("⚠ GEMINI_API_KEY not found in .env");
+} else {
+  print("✅ Gemini API Key Loaded");
+}
+} catch (e, st) {
+  print('Warning loading .env: $e\n$st');
+}
+
 
     // Firebase init
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
     // Supabase init (if you use it)
     await sb.Supabase.initialize(
       url: 'https://ticpdepakqlizhdwgxtz.supabase.co',
@@ -204,20 +223,39 @@ class KrishiMithraApp extends StatelessWidget {
   final bool isDark;
   const KrishiMithraApp({super.key, required this.isDark});
 
- @override
+  @override
   Widget build(BuildContext context) {
     return OKToast(
-      child: MaterialApp(
-        title: 'KrishiMithra',
-        theme: kmLightTheme,
-        darkTheme: kmDarkTheme,
-        themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-        debugShowCheckedModeBanner: false,
-        home: const SplashScreen(),
-
-        // ✅ Routes
-        routes: {
-          '/login': (context) => const LoginPage(),
+      child: ValueListenableBuilder<Locale?>(
+        valueListenable: LocaleService.instance.localeNotifier,
+        builder: (context, locale, _) {
+          return MaterialApp(
+            title: 'KrishiMithra',
+            theme: kmLightTheme,
+            darkTheme: kmDarkTheme,
+            themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+            locale: locale,
+            supportedLocales: const [
+              Locale('en'),
+              Locale('hi'),
+              Locale('kn'),
+              Locale('ta'),
+              Locale('te'),
+              Locale('mr'),
+            ],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,  
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              // Add your AppLocalizations.delegate here if you use intl/ARB
+            ],
+            debugShowCheckedModeBanner: false,
+            home: const SplashScreen(),
+            routes: {
+              '/login': (context) => const LoginPage(),
+            },
+          );
         },
       ),
     );
@@ -368,7 +406,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text('Login with Email', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.loginEmail, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
                 TextField(
                   controller: emailController,
@@ -861,12 +899,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
  final List<Map<String, dynamic>> features = [
   {"title": "Weather", "icon": Icons.cloud, "asset": "assets/icons/weather.png"},
-  {"title": "Market Prices", "icon": Icons.attach_money, "asset": "assets/icons/market_prices.png"},
+  {"title": "export hub", "icon": Icons.terrain, "asset": "assets/icons/soil.png"},
+  {"title": "F2B mart", "icon": Icons.attach_money, "asset": "assets/icons/market_prices.png"},
   {"title": "Crop Disease", "icon": Icons.bug_report, "asset": "assets/icons/crop_disease.png"},
   {"title": "Rent Machine", "icon": Icons.agriculture, "asset": "assets/icons/rent_machine.png"},
   {"title": "Plant Vendors", "icon": Icons.local_florist, "asset": "assets/icons/plant_vendors.png"},
   {"title": "Labour Hub", "icon": Icons.groups, "asset": "assets/icons/health.png"},
-  {"title": "Soil Monitoring", "icon": Icons.terrain, "asset": "assets/icons/soil.png"},
   {"title": "Chatbot", "icon": Icons.chat_bubble_outline, "asset": "assets/icons/chatbot.png"}, // ✅ added
 ];
 
@@ -1112,7 +1150,7 @@ class _DashboardPageState extends State<DashboardPage> {
             }
 
             return AlertDialog(
-              title: const Text('Set Location'),
+              title: Text(AppLocalizations.of(context)!.selectLocation),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1123,7 +1161,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           controller: _searchController,
                           focusNode: _focusNode,
                           decoration: InputDecoration(
-                            hintText: 'Search location',
+                            hintText: AppLocalizations.of(context)!.searchLocation,
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -1332,7 +1370,7 @@ Widget build(BuildContext context) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "KrishiMithra",
+  AppLocalizations.of(context)!.appName,
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontFamily: 'Serpentine',
                                 fontSize: 18,
@@ -1351,73 +1389,234 @@ Widget build(BuildContext context) {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary, size: 28),
-                      onPressed: _showLocationDialog,
-                    ),
-                    const SizedBox(width: 4),
-                    const ProfileButton(), // <-- profile avatar button
-                  ],
+               Row(
+  children: [
+
+    // 🌐 Language icon (if you have)
+    IconButton(
+      icon: const Icon(Icons.language),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("Select Language"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: const Text("English"),
+                  onTap: () {
+                    LocaleService.instance.setLocale(const Locale('en'));
+                    Navigator.pop(context);
+                  },
                 ),
+                ListTile(
+                  title: const Text("ಕನ್ನಡ"),
+                  onTap: () {
+                    LocaleService.instance.setLocale(const Locale('kn'));
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+
+    // 📍 LOCATION ICON (ADD THIS)
+    IconButton(
+      icon: const Icon(Icons.location_on, color: Colors.green),
+      onPressed: () {
+        _showLocationDialog();
+      },
+    ),
+
+    // 👤 PROFILE ICON
+    CircleAvatar(
+      child: Text("LK"),
+    ),
+  ],
+),
               ],
             ),
           ),
           Container(height: 1, color: Theme.of(context).dividerColor),
           // ✅ Features Grid
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.0, // square cards
-              ),
-              itemCount: features.length,
-              itemBuilder: (context, index) {
-                final feature = features[index];
-                final String title = feature['title'] ?? 'Feature';
-                final IconData icon = feature['icon'] ?? Icons.help_outline;
-                final String assetPath = feature['asset'] ?? '';
+         Expanded(
+  child: SingleChildScrollView(
+    child: Column(
+      children: [
 
-                // navigation callback
-                VoidCallback onTap = () {
-                  if (title == "Weather") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => WeatherPage(location: selectedLocation),
-                      ),
-                    );
-                  } else if (title == "Rent Machine") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage()));
-                  } else if (title == "Market Prices") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) =>   ExporterHomePage()));
-                  } else if (title == "Plant Vendors") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
-                  } else if (title == "Labour Hub") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage()));
-                  } else if (title == "Crop Disease") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage()));
-                  } else if (title == "Soil Monitoring") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SoilMonitoringPage()));
-                  } else if (title == "Chatbot") {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotPage()));
-                  } else {
-                    // default fallback
-                    showToast("Opening $title");
-                  }
-                };
-
-                return buildFeatureCard(title, assetPath, icon, onTap);
-              },
+        /// 🔥 TOP 4 FEATURES
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.0,
             ),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+  final feature = features[index];
+  final String key = feature['title'];   // ✅ FIX
+  String title;
+
+switch (feature['title']) {
+  case "Weather":
+    title = AppLocalizations.of(context)!.weather;
+    break;
+  case "F2B mart":
+    title = AppLocalizations.of(context)!.f2bMart;
+    break;
+  case "Rent Machine":
+    title = AppLocalizations.of(context)!.rentMachine;
+    break;
+  case "Plant Vendors":
+    title = AppLocalizations.of(context)!.plantVendors;
+    break;
+  case "Labour Hub":
+    title = AppLocalizations.of(context)!.labourHub;
+    break;
+  case "Crop Disease":
+    title = AppLocalizations.of(context)!.cropDisease;
+    break;
+  case "export hub":
+    title = AppLocalizations.of(context)!.exportHub;
+    break;
+  case "Chatbot":
+    title = AppLocalizations.of(context)!.chatbot;
+    break;
+  default:
+    title = feature['title'];
+}
+              final IconData icon = feature['icon'] ?? Icons.help_outline;
+              final String assetPath = feature['asset'] ?? '';
+
+             VoidCallback onTap = () {
+  if (key == "Weather") {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WeatherPage(location: selectedLocation),
+      ),
+    );
+  } else if (key == "Rent Machine") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage()));
+  } else if (key == "F2B mart") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ExporterHomePage()));
+  } else if (key == "Plant Vendors") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
+  } else if (key == "Labour Hub") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage()));
+  } else if (key == "Crop Disease") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage()));
+  } else if (key == "export hub") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ExportHubPage()));
+  } else if (key == "Chatbot") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotPage()));
+  } else {
+    showToast("Opening $title");
+  }
+};
+
+              return buildFeatureCard(title, assetPath, icon, onTap);
+            },
           ),
+        ),
+
+        /// 🔥 REMAINING FEATURES
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: features.length - 4,
+            itemBuilder: (context, index) {
+              final feature = features[index + 4];
+              final String key = feature['title']; 
+              String title;
+              final IconData icon = feature['icon'] ?? Icons.help_outline;
+              final String assetPath = feature['asset'] ?? '';
+
+             VoidCallback onTap = () {
+  if (key == "Weather") {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WeatherPage(location: selectedLocation),
+      ),
+    );
+  } else if (key == "Rent Machine") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage()));
+  } else if (key == "F2B mart") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ExporterHomePage()));
+  } else if (key == "Plant Vendors") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
+  } else if (key == "Labour Hub") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage()));
+  } else if (key == "Crop Disease") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage()));
+  } else if (key == "export hub") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ExportHubPage()));
+  } else if (key == "Chatbot") {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotPage()));
+  } else {
+    showToast("Opening $key");
+  }
+};
+              String ;
+
+switch (key) {
+  case "Weather":
+    title = AppLocalizations.of(context)!.weather;
+    break;
+  case "F2B mart":
+    title = AppLocalizations.of(context)!.f2bMart;
+    break;
+  case "Rent Machine":
+    title = AppLocalizations.of(context)!.rentMachine;
+    break;
+  case "Plant Vendors":
+    title = AppLocalizations.of(context)!.plantVendors;
+    break;
+  case "Labour Hub":
+    title = AppLocalizations.of(context)!.labourHub;
+    break;
+  case "Crop Disease":
+    title = AppLocalizations.of(context)!.cropDisease;
+    break;
+  case "export hub":
+    title = AppLocalizations.of(context)!.exportHub;
+    break;
+  case "Chatbot":
+    title = AppLocalizations.of(context)!.chatbot;
+    break;
+  default:
+    title = key;
+}
+
+return buildFeatureCard(title, assetPath, icon, onTap);
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+)
         ],
       ),
     ),
-  );
-}
-}
+    );
+  }
+}               
