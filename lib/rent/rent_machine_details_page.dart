@@ -6,10 +6,14 @@ import 'rent_list_form_page.dart';
 class RentMachineDetailsPage extends StatelessWidget {
   final RentMachine machine;
 
-  const RentMachineDetailsPage({super.key, required this.machine});
+  const RentMachineDetailsPage({
+    super.key,
+    required this.machine,
+  });
 
   Future<void> _call(String phone) async {
     final uri = Uri.parse("tel:$phone");
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -17,6 +21,7 @@ class RentMachineDetailsPage extends StatelessWidget {
 
   Future<void> _whatsapp(String phone) async {
     final uri = Uri.parse("https://wa.me/$phone");
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -24,10 +29,6 @@ class RentMachineDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final img = machine.imageUrl.isNotEmpty
-        ? NetworkImage(machine.imageUrl)
-        : const AssetImage('assets/farmer_logo.png') as ImageProvider;
-
     return Scaffold(
       body: Stack(
         children: [
@@ -35,10 +36,42 @@ class RentMachineDetailsPage extends StatelessWidget {
           SizedBox(
             height: 280,
             width: double.infinity,
-            child: Image(
-              image: img,
-              fit: BoxFit.cover,
-            ),
+            child: machine.imageUrl.isNotEmpty
+                ? Image.network(
+                    machine.imageUrl,
+                    fit: BoxFit.cover,
+
+                    // LOADING
+                    loadingBuilder: (
+                      context,
+                      child,
+                      loadingProgress,
+                    ) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+
+                    // ERROR
+                    errorBuilder: (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
+                      return Image.asset(
+                        'assets/farmer_logo.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    'assets/farmer_logo.png',
+                    fit: BoxFit.cover,
+                  ),
           ),
 
           /// 🔙 BACK BUTTON
@@ -48,7 +81,10 @@ class RentMachineDetailsPage extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: Colors.black45,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -61,13 +97,17 @@ class RentMachineDetailsPage extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: Colors.black45,
               child: IconButton(
-                icon: const Icon(Icons.edit, color: Colors.white),
+                icon: const Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                ),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          RentListFormPage(existingMachine: machine),
+                      builder: (_) => RentListFormPage(
+                        existingMachine: machine,
+                      ),
                     ),
                   );
                 },
@@ -105,14 +145,21 @@ class RentMachineDetailsPage extends StatelessWidget {
 
                     Row(
                       children: [
-                        Chip(label: Text(machine.type)),
-                        const SizedBox(width: 8),
                         Chip(
-                          backgroundColor: Colors.green.shade100,
+                          label: Text(machine.type),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        Chip(
+                          backgroundColor:
+                              Colors.green.shade100,
                           label: Text(
                             "₹${machine.pricePerDay}/day",
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold),
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -123,11 +170,18 @@ class RentMachineDetailsPage extends StatelessWidget {
                     /// LOCATION
                     Row(
                       children: [
-                        const Icon(Icons.location_on, color: Colors.red),
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                        ),
+
                         const SizedBox(width: 6),
+
                         Expanded(
                           child: Text(
-                              machine.location ?? 'Location not available'),
+                            machine.location ??
+                                'Location not available',
+                          ),
                         ),
                       ],
                     ),
@@ -138,7 +192,9 @@ class RentMachineDetailsPage extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.person),
+
                         const SizedBox(width: 6),
+
                         Text(machine.ownerName),
                       ],
                     ),
@@ -149,7 +205,9 @@ class RentMachineDetailsPage extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.phone),
+
                         const SizedBox(width: 6),
+
                         Text(machine.phone),
                       ],
                     ),
@@ -161,23 +219,49 @@ class RentMachineDetailsPage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _call(machine.phone),
-                            icon: const Icon(Icons.call),
-                            label: const Text("Call"),
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(50),
+                            onPressed: () =>
+                                _call(machine.phone),
+
+                            icon:
+                                const Icon(Icons.call),
+
+                            label:
+                                const Text("Call"),
+
+                            style:
+                                ElevatedButton.styleFrom(
+                              minimumSize:
+                                  const Size.fromHeight(
+                                50,
+                              ),
                             ),
                           ),
                         ),
+
                         const SizedBox(width: 10),
+
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _whatsapp(machine.phone),
-                            icon: const Icon(Icons.message),
-                            label: const Text("WhatsApp"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              minimumSize: const Size.fromHeight(50),
+                            onPressed: () =>
+                                _whatsapp(machine.phone),
+
+                            icon: const Icon(
+                              Icons.message,
+                            ),
+
+                            label: const Text(
+                              "WhatsApp",
+                            ),
+
+                            style:
+                                ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Colors.green,
+
+                              minimumSize:
+                                  const Size.fromHeight(
+                                50,
+                              ),
                             ),
                           ),
                         ),

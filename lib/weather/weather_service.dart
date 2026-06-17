@@ -1,16 +1,18 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'weather_model.dart';
 
 class WeatherService {
-  final String _locationIqKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
-  final String _tomorrowKey = 'tnYx06QaLBQdUqlgCNPeWgH828139AN0';
+
+  final String _locationIqKey =
+      'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
   Future<WeatherData> fetchWeather(String place) async {
 
+    // LOCATION SEARCH
     final locUrl = Uri.parse(
-        'https://us1.locationiq.com/v1/search.php?key=$_locationIqKey&q=$place&format=json');
+      'https://us1.locationiq.com/v1/search.php?key=$_locationIqKey&q=$place&format=json',
+    );
 
     final locRes = await http.get(locUrl);
 
@@ -24,8 +26,16 @@ class WeatherService {
     final lon = locData[0]['lon'];
     final fullPlace = locData[0]['display_name'];
 
+    // OPEN METEO API
     final url = Uri.parse(
-        'https://api.tomorrow.io/v4/weather/forecast?location=$lat,$lon&apikey=$_tomorrowKey&units=metric');
+      'https://api.open-meteo.com/v1/forecast'
+      '?latitude=$lat'
+      '&longitude=$lon'
+      '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code'
+      '&hourly=temperature_2m,weather_code'
+      '&daily=temperature_2m_max,temperature_2m_min,weather_code'
+      '&timezone=auto',
+    );
 
     final response = await http.get(url);
 
@@ -35,300 +45,147 @@ class WeatherService {
 
     final data = jsonDecode(response.body);
 
-    Map<String, dynamic> current = <String, dynamic>{};
+    // CURRENT WEATHER
+    final current = data['current'];
 
-    int weatherCode = 0;
-    String descriptionText = 'Unknown';
-
-    try {
-
-      final timelines = (data['timelines'] is Map)
-          ? data['timelines'] as Map<String, dynamic>
-          : null;
-
-      if (timelines != null &&
-          timelines['minutely'] != null &&
-          (timelines['minutely'] as List).isNotEmpty) {
-
-        final min0 = timelines['minutely'][0] as Map<String, dynamic>;
-
-        current = (min0['values'] as Map).cast<String, dynamic>();
-
-        weatherCode = (current['weatherCode'] ?? 0) is int
-            ? (current['weatherCode'] ?? 0) as int
-            : int.tryParse((current['weatherCode'] ?? 0).toString()) ?? 0;
-      }
-
-      if ((weatherCode == 0) &&
-          timelines != null &&
-          timelines['hourly'] != null &&
-          (timelines['hourly'] as List).isNotEmpty) {
-
-        final hr0 = timelines['hourly'][0] as Map<String, dynamic>;
-
-        final hrValues = (hr0['values'] as Map).cast<String, dynamic>();
-
-        final hrCode = (hrValues['weatherCode'] ?? 0);
-
-        weatherCode =
-            (hrCode is int) ? hrCode : int.tryParse(hrCode.toString()) ?? 0;
-
-        current['temperature'] = hrValues['temperature'];
-        current['humidity'] = hrValues['humidity'];
-        current['windSpeed'] = hrValues['windSpeed'];
-      }
-
-      if ((weatherCode == 0) &&
-          timelines != null &&
-          timelines['daily'] != null &&
-          (timelines['daily'] as List).isNotEmpty) {
-
-        final d0 = timelines['daily'][0] as Map<String, dynamic>;
-
-        final dValues = (d0['values'] as Map).cast<String, dynamic>();
-
-        final dCode = (dValues['weatherCodeMax'] ??
-            dValues['weatherCode'] ??
-            0);
-
-        weatherCode =
-            (dCode is int) ? dCode : int.tryParse(dCode.toString()) ?? 0;
-      }
-
-    } catch (e) {}
-
-    try {
-
-      final precip =
-          (current['precipitationType'] ?? current['precipitation_type'] ?? 0);
-
-      final precipitation =
-          (precip is int) ? precip : int.tryParse(precip.toString()) ?? 0;
-
-      if ((weatherCode == 0) && precipitation != 0) {
-
-        switch (precipitation) {
-
-          case 1:
-            weatherCode = 4001;
-            break;
-
-          case 2:
-            weatherCode = 5000;
-            break;
-
-          case 3:
-            weatherCode = 6001;
-            break;
-
-          case 4:
-            weatherCode = 7000;
-            break;
-        }
-      }
-
-      final precipIntensity =
-          (current['precipitationIntensity'] ??
-              current['precipitation_intensity'] ??
-              0);
-
-      final intensityVal = (precipIntensity is num)
-          ? precipIntensity.toDouble()
-          : double.tryParse(precipIntensity.toString()) ?? 0.0;
-
-      if (precipitation == 1 && intensityVal > 1.5) {
-        weatherCode = 4201;
-      }
-
-    } catch (e) {}
-
-    final currentTemp = (current['temperature'] ?? 0);
-
-    final currentTempDouble = (currentTemp is num)
-        ? currentTemp.toDouble()
-        : double.tryParse(currentTemp.toString()) ?? 0.0;
-
-    final humidityVal = (current['humidity'] ?? 0);
+    final currentTemp =
+        (current['temperature_2m'] ?? 0).toDouble();
 
     final humidity =
-        (humidityVal is int) ? humidityVal : int.tryParse(humidityVal.toString()) ?? 0;
-
-    final wind = (current['windSpeed'] ?? 0);
+        (current['relative_humidity_2m'] ?? 0) as int;
 
     final windSpeed =
-        (wind is num) ? wind.toDouble() : double.tryParse(wind.toString()) ?? 0.0;
+        (current['wind_speed_10m'] ?? 0).toDouble();
 
-    descriptionText = _getWeatherDescription(weatherCode);
+    final weatherCode =
+        (current['weather_code'] ?? 0) as int;
 
-    final nowLocal = DateTime.now().toLocal();
+    final description =
+        _getWeatherDescription(weatherCode);
 
     final emoji = _getWeatherEmoji(
       weatherCode,
-      timestamp: nowLocal,
-      description: descriptionText,
+      timestamp: DateTime.now(),
     );
 
-    // --------------------------
-    // HOURLY FORECAST (FUTURE ONLY)
-    // --------------------------
+    // HOURLY FORECAST
+    final hourlyTimes = data['hourly']['time'];
+    final hourlyTemps = data['hourly']['temperature_2m'];
+    final hourlyCodes = data['hourly']['weather_code'];
 
-    final nowUtc = DateTime.now().toUtc();
+    List<HourlyWeather> hourly = [];
 
-    final hourlyRaw = (data['timelines'] != null &&
-            data['timelines']['hourly'] != null)
-        ? data['timelines']['hourly'] as List
-        : <dynamic>[];
+    for (int i = 0; i < hourlyTimes.length; i++) {
 
-    final hourly = hourlyRaw
-        .map<HourlyWeather?>((item) {
+      final time = DateTime.parse(hourlyTimes[i]);
 
-          final timeStr = item['time'] as String?;
+      if (time.isAfter(DateTime.now())) {
 
-          final timestamp =
-              timeStr != null ? DateTime.tryParse(timeStr) : null;
+        final code = hourlyCodes[i];
 
-          // Only future hours
-          if (timestamp == null || !timestamp.isAfter(nowUtc)) return null;
-
-          final values = (item['values'] as Map).cast<String, dynamic>();
-
-          final tempVal = (values['temperature'] ?? 0);
-
-          final temp = (tempVal is num)
-              ? tempVal.toDouble()
-              : double.tryParse(tempVal.toString()) ?? 0.0;
-
-          final codeVal = (values['weatherCode'] ?? 0);
-
-          final code =
-              (codeVal is int) ? codeVal : int.tryParse(codeVal.toString()) ?? 0;
-
-          final desc = _getWeatherDescription(code);
-
-          return HourlyWeather(
-            time: timestamp.toLocal(),
-            temp: temp,
+        hourly.add(
+          HourlyWeather(
+            time: time,
+            temp: hourlyTemps[i].toDouble(),
             emoji: _getWeatherEmoji(
-                code,
-                timestamp: timestamp,
-                description: desc),
-          );
+              code,
+              timestamp: time,
+            ),
+          ),
+        );
+      }
 
-        })
-        .whereType<HourlyWeather>()
-        .take(12)
-        .toList();
+      if (hourly.length >= 12) break;
+    }
 
-    // --------------------------
     // DAILY FORECAST
-    // --------------------------
+    final dailyTimes = data['daily']['time'];
+    final minTemps = data['daily']['temperature_2m_min'];
+    final maxTemps = data['daily']['temperature_2m_max'];
+    final dailyCodes = data['daily']['weather_code'];
 
-    final todayUtc = DateTime.now().toUtc();
+    List<DailyWeather> daily = [];
 
-    final dailyRaw = (data['timelines'] != null &&
-            data['timelines']['daily'] != null)
-        ? data['timelines']['daily'] as List
-        : <dynamic>[];
+    for (int i = 1; i < dailyTimes.length; i++) {
 
-    final daily = dailyRaw
-        .map<DailyWeather?>((item) {
+      final date = DateTime.parse(dailyTimes[i]);
+      final code = dailyCodes[i];
 
-          final dateStr = item['time'] as String?;
-
-          final date = dateStr != null ? DateTime.tryParse(dateStr) : null;
-
-          if (date == null) return null;
-
-          final isSameDate = date.year == todayUtc.year &&
-              date.month == todayUtc.month &&
-              date.day == todayUtc.day;
-
-          if (isSameDate) return null;
-
-          final values = (item['values'] as Map).cast<String, dynamic>();
-
-          final minVal = (values['temperatureMin'] ?? 0);
-
-          final minTemp = (minVal is num)
-              ? minVal.toDouble()
-              : double.tryParse(minVal.toString()) ?? 0.0;
-
-          final maxVal = (values['temperatureMax'] ?? 0);
-
-          final maxTemp = (maxVal is num)
-              ? maxVal.toDouble()
-              : double.tryParse(maxVal.toString()) ?? 0.0;
-
-          final codeVal =
-              (values['weatherCodeMax'] ?? values['weatherCode'] ?? 0);
-
-          final code =
-              (codeVal is int) ? codeVal : int.tryParse(codeVal.toString()) ?? 0;
-
-          final midday = DateTime(date.year, date.month, date.day, 12);
-
-          return DailyWeather(
-            date: date,
-            day: _getDayName(date.weekday),
-            tempMin: minTemp,
-            tempMax: maxTemp,
-            emoji: _getWeatherEmoji(
-                code,
-                timestamp: midday,
-                description: _getWeatherDescription(code)),
-          );
-
-        })
-        .whereType<DailyWeather>()
-        .take(6)
-        .toList();
+      daily.add(
+        DailyWeather(
+          date: date,
+          day: _getDayName(date.weekday),
+          tempMin: minTemps[i].toDouble(),
+          tempMax: maxTemps[i].toDouble(),
+          emoji: _getWeatherEmoji(
+            code,
+            timestamp: date,
+          ),
+        ),
+      );
+    }
 
     return WeatherData(
       cityName: fullPlace,
-      currentTemp: currentTempDouble,
+      currentTemp: currentTemp,
       humidity: humidity,
-      description: descriptionText,
+      description: description,
       emoji: emoji,
       windSpeed: windSpeed,
-      hourly: hourly,
+      hourly: daily.isNotEmpty ? hourly : [],
       daily: daily,
     );
   }
 
+  // DAY NAME
   String _getDayName(int weekday) {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const days = [
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun'
+    ];
+
     return days[(weekday - 1) % 7];
   }
 
+  // WEATHER DESCRIPTION
   String _getWeatherDescription(int code) {
 
     switch (code) {
 
-      case 1000:
+      case 0:
         return 'Clear';
 
-      case 1100:
-        return 'Mostly Clear';
-
-      case 1101:
-        return 'Partly Cloudy';
-
-      case 1102:
-        return 'Mostly Cloudy';
-
-      case 1001:
+      case 1:
+      case 2:
+      case 3:
         return 'Cloudy';
 
-      case 4001:
+      case 45:
+      case 48:
+        return 'Fog';
+
+      case 51:
+      case 53:
+      case 55:
+        return 'Drizzle';
+
+      case 61:
+      case 63:
+      case 65:
         return 'Rain';
 
-      case 4201:
-        return 'Heavy Rain';
-
-      case 5000:
+      case 71:
+      case 73:
+      case 75:
         return 'Snow';
 
-      case 8000:
+      case 95:
         return 'Thunderstorm';
 
       default:
@@ -336,6 +193,7 @@ class WeatherService {
     }
   }
 
+  // DAY/NIGHT CHECK
   bool _isDayForTimestamp(DateTime timestamp) {
 
     final local = timestamp.toLocal();
@@ -345,8 +203,11 @@ class WeatherService {
     return h >= 6 && h < 18;
   }
 
-  String _getWeatherEmoji(int code,
-      {DateTime? timestamp, String? description}) {
+  // WEATHER EMOJI
+  String _getWeatherEmoji(
+    int code, {
+    DateTime? timestamp,
+  }) {
 
     final isDay = (timestamp != null)
         ? _isDayForTimestamp(timestamp)
@@ -354,56 +215,82 @@ class WeatherService {
 
     switch (code) {
 
-      case 1000:
+      case 0:
         return isDay ? '☀️' : '🌙';
 
-      case 1101:
-        return isDay ? '🌤️' : '☁️🌙';
+      case 1:
+      case 2:
+      case 3:
+        return isDay ? '⛅' : '☁️🌙';
 
-      case 1001:
-        return isDay ? '☁️' : '☁️🌙';
+      case 45:
+      case 48:
+        return '🌫️';
 
-      case 4001:
-      case 4201:
+      case 51:
+      case 53:
+      case 55:
+        return '🌦️';
+
+      case 61:
+      case 63:
+      case 65:
         return isDay ? '🌧️' : '🌧️🌙';
 
-      case 8000:
-        return isDay ? '⛈️' : '⛈️🌙';
+      case 71:
+      case 73:
+      case 75:
+        return '❄️';
+
+      case 95:
+        return '⛈️';
 
       default:
-        return isDay ? '🌈' : '🌈🌙';
+        return '🌈';
     }
   }
 
   // FARM ADVISORY
-
   List<String> getFarmAlerts(
-      double temp, int humidity, double wind, List<DailyWeather> daily) {
+    double temp,
+    int humidity,
+    double wind,
+    List<DailyWeather> daily,
+  ) {
 
     List<String> alerts = [];
 
     if (temp > 35) {
-      alerts.add("🌡 High temperature — irrigate crops.");
+      alerts.add(
+        "🌡 High temperature — irrigate crops.",
+      );
     }
 
     if (humidity > 85) {
-      alerts.add("🍄 High humidity — fungal disease risk.");
+      alerts.add(
+        "🍄 High humidity — fungal disease risk.",
+      );
     }
 
     if (wind > 8) {
-      alerts.add("🌬 Strong wind — avoid pesticide spraying.");
+      alerts.add(
+        "🌬 Strong wind — avoid pesticide spraying.",
+      );
     }
 
     if (alerts.isEmpty) {
-      alerts.add("✅ Weather conditions are normal for farming.");
+      alerts.add(
+        "✅ Weather conditions are normal for farming.",
+      );
     }
 
     return alerts;
   }
 
   // RAIN ADVISORY
-
-  List<String> getRainSprayAdvisory(List<HourlyWeather> hourly) {
+  List<String> getRainSprayAdvisory(
+    List<HourlyWeather> hourly,
+  ) {
 
     List<String> alerts = [];
 
@@ -421,14 +308,27 @@ class WeatherService {
 
     if (rainSoon) {
 
-      alerts.add("🌧 Rain expected in next 3 hours.");
-      alerts.add("🚫 Avoid pesticide spraying.");
-      alerts.add("💧 Delay irrigation.");
+      alerts.add(
+        "🌧 Rain expected in next 3 hours.",
+      );
+
+      alerts.add(
+        "🚫 Avoid pesticide spraying.",
+      );
+
+      alerts.add(
+        "💧 Delay irrigation.",
+      );
 
     } else {
 
-      alerts.add("✅ No rain expected in next 3 hours.");
-      alerts.add("🌾 Safe time for pesticide spraying.");
+      alerts.add(
+        "✅ No rain expected in next 3 hours.",
+      );
+
+      alerts.add(
+        "🌾 Safe time for pesticide spraying.",
+      );
     }
 
     return alerts;

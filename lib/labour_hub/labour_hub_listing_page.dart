@@ -211,18 +211,27 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
 
           Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: labour.available ? Colors.green.shade100 : Colors.red.shade100,
-                backgroundImage: labour.imageUrl != null ? NetworkImage(labour.imageUrl!) : null,
-                child: labour.imageUrl == null
-                    ? Icon(
-                        labour.available ? Icons.check_circle : Icons.cancel,
-                        color: labour.available ? Colors.green : Colors.red,
-                        size: 26,
-                      )
-                    : null,
-              ),
+             CircleAvatar(
+  radius: 28,
+  backgroundColor: labour.available
+      ? Colors.green.shade100
+      : Colors.red.shade100,
+
+  backgroundImage:
+      labour.imageUrl != null &&
+              labour.imageUrl!.isNotEmpty
+          ? NetworkImage(labour.imageUrl!)
+          : const AssetImage(
+                  'assets/farmer_logo.png')
+              as ImageProvider,
+
+  onBackgroundImageError: (_, __) {},
+
+  child: (labour.imageUrl == null ||
+          labour.imageUrl!.isEmpty)
+      ? null
+      : null,
+),
               const SizedBox(width: 12),
 
               Expanded(

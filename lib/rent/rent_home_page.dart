@@ -143,6 +143,9 @@ class _RentHomePageState extends State<RentHomePage> {
 // ----------------------
 // Machine Card
 // ----------------------
+// ----------------------
+// Machine Card
+// ----------------------
 class _MachineCard extends StatelessWidget {
   const _MachineCard({
     required this.m,
@@ -160,10 +163,6 @@ class _MachineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final img = m.imageUrl.isNotEmpty
-        ? NetworkImage(m.imageUrl)
-        : const AssetImage('assets/farmer_logo.png') as ImageProvider;
-
     return Material(
       elevation: 3,
       borderRadius: BorderRadius.circular(16),
@@ -171,24 +170,79 @@ class _MachineCard extends StatelessWidget {
       child: InkWell(
         onTap: onView,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
-                Image(
-                  image: img,
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                // =========================
+                // USER UPLOADED IMAGE
+                // =========================
+
+                m.imageUrl.isNotEmpty
+                    ? Image.network(
+                        m.imageUrl,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+
+                        // LOADING
+                        loadingBuilder: (
+                          context,
+                          child,
+                          loadingProgress,
+                        ) {
+                          if (loadingProgress ==
+                              null) {
+                            return child;
+                          }
+
+                          return const SizedBox(
+                            height: 120,
+                            child: Center(
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        },
+
+                        // ERROR
+                        errorBuilder: (
+                          context,
+                          error,
+                          stackTrace,
+                        ) {
+                          return Image.asset(
+                            'assets/farmer_logo.png',
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        'assets/farmer_logo.png',
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+
+                // =========================
+                // OWNER EDIT MENU
+                // =========================
 
                 if (isOwner)
                   Positioned(
                     top: 6,
                     right: 6,
-                    child: PopupMenuButton<String>(
+                    child:
+                        PopupMenuButton<String>(
                       onSelected: (val) {
-                        if (val == 'edit') onEdit();
+                        if (val == 'edit') {
+                          onEdit();
+                        }
                       },
                       itemBuilder: (_) => const [
                         PopupMenuItem(
@@ -202,28 +256,47 @@ class _MachineCard extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding:
+                  const EdgeInsets.all(10),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   Text(
                     m.name,
-                    style:
-                        const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
                   ),
+
                   const SizedBox(height: 4),
-                  Text("₹${m.pricePerDay}/day"),
+
+                  Text(
+                    "₹${m.pricePerDay}/day",
+                  ),
+
                   const SizedBox(height: 4),
+
                   Text(m.location ?? ''),
+
                   const SizedBox(height: 6),
 
                   Row(
                     children: [
-                      Expanded(child: Text(m.ownerName)),
+                      Expanded(
+                        child:
+                            Text(m.ownerName),
+                      ),
+
                       IconButton(
-                        onPressed: () => onCall(m.phone),
-                        icon: const Icon(Icons.call),
-                      )
+                        onPressed: () =>
+                            onCall(m.phone),
+                        icon: const Icon(
+                          Icons.call,
+                        ),
+                      ),
                     ],
                   )
                 ],

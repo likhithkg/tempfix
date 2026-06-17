@@ -227,9 +227,58 @@ class _ExportHubPageState extends State<ExportHubPage> {
                         ],
                       ),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
+  crossAxisAlignment:
+      CrossAxisAlignment.start,
+
+  children: [
+
+    ClipRRect(
+      borderRadius:
+          BorderRadius.circular(14),
+
+      child: data['imageUrl'] != null &&
+              data['imageUrl']
+                  .toString()
+                  .isNotEmpty
+          ? Image.network(
+              data['imageUrl']
+                  .toString(),
+
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+
+              errorBuilder:
+                  (_, __, ___) {
+                return Image.asset(
+                  'assets/farmer_logo.png',
+
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                );
+              },
+            )
+          : Image.asset(
+              'assets/farmer_logo.png',
+
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+    ),
+
+    const SizedBox(height: 14),
+
+    // PRODUCT NAME
+    Text(
+      product,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight:
+            FontWeight.bold,
+      ),
+    ),
 
                           // PRODUCT NAME
                           Text(
@@ -383,9 +432,59 @@ class _ExportHubPageState extends State<ExportHubPage> {
                       padding:
                           const EdgeInsets.all(14),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
+  crossAxisAlignment:
+      CrossAxisAlignment.start,
+
+  children: [
+
+    ClipRRect(
+      borderRadius:
+          BorderRadius.circular(12),
+
+      child:
+          data['imageUrl'] != null &&
+                  data['imageUrl']
+                      .toString()
+                      .isNotEmpty
+              ? Image.network(
+                  data['imageUrl']
+                      .toString(),
+
+                  height: 170,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+
+                  errorBuilder:
+                      (_, __, ___) {
+                    return Image.asset(
+                      'assets/farmer_logo.png',
+
+                      height: 170,
+                      width:
+                          double.infinity,
+                      fit: BoxFit.cover,
+                    );
+                  },
+                )
+              : Image.asset(
+                  'assets/farmer_logo.png',
+
+                  height: 170,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+    ),
+
+    const SizedBox(height: 12),
+
+    Text(
+      product,
+      style: const TextStyle(
+        fontWeight:
+            FontWeight.bold,
+        fontSize: 16,
+      ),
+    ),
 
                           Text(
                             product,
@@ -516,12 +615,89 @@ class _ExportHubPageState extends State<ExportHubPage> {
                   data['pricePerKg']?.toString() ?? '';
 
               return Card(
-                child: ListTile(
-                  title: Text(product),
-                  subtitle:
-                      Text("Qty: $quantity | Price: $price"),
-                ),
-              );
+  margin:
+      const EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 8,
+  ),
+
+  shape: RoundedRectangleBorder(
+    borderRadius:
+        BorderRadius.circular(16),
+  ),
+
+  child: Padding(
+    padding: const EdgeInsets.all(12),
+
+    child: Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+
+      children: [
+
+        ClipRRect(
+          borderRadius:
+              BorderRadius.circular(
+            14,
+          ),
+
+          child:
+              data['imageUrl'] !=
+                          null &&
+                      data['imageUrl']
+                          .toString()
+                          .isNotEmpty
+                  ? Image.network(
+                      data['imageUrl']
+                          .toString(),
+
+                      height: 180,
+                      width:
+                          double.infinity,
+                      fit: BoxFit.cover,
+
+                      errorBuilder:
+                          (_, __, ___) {
+                        return Image.asset(
+                          'assets/farmer_logo.png',
+
+                          height: 180,
+                          width:
+                              double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      'assets/farmer_logo.png',
+
+                      height: 180,
+                      width:
+                          double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+        ),
+
+        const SizedBox(height: 14),
+
+        Text(
+          product,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight:
+                FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Text("📦 Qty: $quantity"),
+
+        Text("💰 Price: $price"),
+      ],
+    ),
+  ),
+);
             },
           );
         },

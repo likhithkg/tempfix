@@ -366,7 +366,23 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
             elevation: 3,
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              leading: CircleAvatar(backgroundColor: Colors.green.shade100, child: const Icon(Icons.local_florist, color: Colors.green)),
+              leading: CircleAvatar(
+  radius: 28,
+
+  backgroundColor: Colors.green.shade100,
+
+  backgroundImage:
+      product.imageUrl != null &&
+              product.imageUrl!.isNotEmpty
+          ? NetworkImage(product.imageUrl!)
+          : const AssetImage(
+                  'assets/farmer_logo.png')
+              as ImageProvider,
+
+  onBackgroundImageError: (_, __) {},
+
+  child: null,
+),
               title: Text(product.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text('${product.quantity} • ${product.location}\n$sellerIdDisplay'),
               trailing: ConstrainedBox(

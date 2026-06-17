@@ -44,7 +44,7 @@ dependencies:
   google_maps_flutter: ^2.5.0
   flutter_map: ^8.1.1
   latlong2: ^0.9.0
-
+  google_mlkit_translation: ^0.13.0
   # Supabase
   supabase_flutter: ^2.0.6
   mime: ^1.0.4
@@ -55,7 +55,7 @@ dependencies:
 
   # Utilities
   uuid: ^4.0.0
-
+  translator: ^1.0.3+1
   # Image & File Pickers
   image_picker: ^1.0.4
   image_picker_for_web: ^3.0.1

@@ -307,7 +307,31 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
                                     color: Colors.green,
                                     size: 26,
                                   ),
-                                ),
+                                ),CircleAvatar(
+  radius: 28,
+
+  backgroundColor: Colors.green.shade50,
+
+  backgroundImage:
+      (f as dynamic).imageUrl != null &&
+              ((f as dynamic)
+                      .imageUrl)
+                  .toString()
+                  .isNotEmpty
+          ? NetworkImage(
+              ((f as dynamic)
+                      .imageUrl)
+                  .toString(),
+            )
+          : const AssetImage(
+                  'assets/farmer_logo.png')
+              as ImageProvider,
+
+  onBackgroundImageError:
+      (_, __) {},
+
+  child: null,
+),
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(

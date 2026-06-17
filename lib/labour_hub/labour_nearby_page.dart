@@ -349,19 +349,25 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                               ),
                                               child: Row(
                                                 children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: labour.available ? Colors.green.shade50 : Colors.red.shade50,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: Icon(
-                                                      labour.available ? Icons.check_circle : Icons.cancel,
-                                                      color: labour.available ? Colors.green : Colors.red,
-                                                      size: 26,
-                                                    ),
-                                                  ),
+                                                  CircleAvatar(
+  radius: 28,
 
+  backgroundColor: labour.available
+      ? Colors.green.shade50
+      : Colors.red.shade50,
+
+  backgroundImage:
+      labour.imageUrl != null &&
+              labour.imageUrl!.isNotEmpty
+          ? NetworkImage(labour.imageUrl!)
+          : const AssetImage(
+                  'assets/farmer_logo.png')
+              as ImageProvider,
+
+  onBackgroundImageError: (_, __) {},
+
+  child: null,
+),
                                                   const SizedBox(width: 12),
 
                                                   Expanded(

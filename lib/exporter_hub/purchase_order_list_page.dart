@@ -301,7 +301,78 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                           elevation: 2,
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            leading: CircleAvatar(backgroundColor: statusColor.withOpacity(0.12), child: Icon(Icons.local_florist, color: statusColor)),
+                            leading: FutureBuilder<DocumentSnapshot?>(
+  future: (() {
+    final items =
+        (po['items'] as List?)
+                ?.cast<
+                    Map<String, dynamic>>()
+            ??
+            [];
+
+    if (items.isEmpty) {
+      return Future.value(null);
+    }
+
+    final first = items.first;
+
+    final listingId =
+        (first['listingId'] ??
+                first['productId'] ??
+                '')
+            .toString();
+
+    if (listingId.isEmpty) {
+      return Future.value(null);
+    }
+
+    return FirebaseFirestore.instance
+        .collection('export_products')
+        .doc(listingId)
+        .get();
+  })(),
+
+  builder: (context, snap) {
+    ImageProvider imageProvider =
+        const AssetImage(
+      'assets/farmer_logo.png',
+    );
+
+    if (snap.hasData &&
+        snap.data != null &&
+        snap.data!.exists) {
+      final pdata =
+          snap.data!.data()
+              as Map<String, dynamic>;
+
+      final img = pdata['imageUrl'];
+
+      if (img != null &&
+          img.toString().isNotEmpty) {
+        imageProvider = NetworkImage(
+          img.toString(),
+        );
+      }
+    }
+
+    return CircleAvatar(
+      radius: 28,
+
+      backgroundColor:
+          statusColor.withOpacity(
+        0.12,
+      ),
+
+      backgroundImage:
+          imageProvider,
+
+      onBackgroundImageError:
+          (_, __) {},
+
+      child: null,
+    );
+  },
+),
                             title: Text(farmerName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                             subtitle: Padding(padding: const EdgeInsets.only(top: 6.0), child: subtitleWidget),
                             isThreeLine: true,

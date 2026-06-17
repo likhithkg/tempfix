@@ -1,13 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
-
 class ImageUploadService {
   // FOR ANDROID EMULATOR
- static const String baseUrl =
-    "http://172.20.10.3:5000/api/upload";
-
+  static const String baseUrl =
+      "https://km-backend-ug96.onrender.com/api/upload";
   // FOR REAL DEVICE USE:
   // static const String baseUrl = "http://YOUR_PC_IP:5000/api/upload";
 

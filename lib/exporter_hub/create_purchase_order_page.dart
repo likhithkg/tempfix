@@ -158,9 +158,46 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.productName,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
+               Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    CircleAvatar(
+      radius: 35,
+
+      backgroundImage:
+          product.imageUrl != null &&
+                  product.imageUrl!.isNotEmpty
+              ? NetworkImage(product.imageUrl!)
+              : const AssetImage(
+                      'assets/farmer_logo.png')
+                  as ImageProvider,
+
+      onBackgroundImageError: (_, __) {},
+    ),
+
+    const SizedBox(width: 14),
+
+    Expanded(
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Text(
+            product.productName,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          
+        ],
+      ),
+    ),
+  ],
+),
                 const SizedBox(height: 8),
                 Text(sellerLine, style: const TextStyle(color: Colors.grey)),
                 const Divider(height: 24),

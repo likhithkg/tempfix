@@ -542,14 +542,62 @@ class PODetailPage extends StatelessWidget {
                       }
 
                       return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          leading: const Icon(Icons.local_florist, color: Colors.green),
-                          title: Text(productName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text('$qty kg × ₹$price\nAdded: ${_formatTimestamp(itemTs)}'),
-                          isThreeLine: true,
-                        ),
-                      );
+  margin: const EdgeInsets.symmetric(vertical: 6),
+  child: ListTile(
+    leading: CircleAvatar(
+      radius: 28,
+
+      backgroundColor: Colors.green.shade100,
+
+      backgroundImage:
+          snapshot.hasData &&
+                  snapshot.data != null &&
+                  snapshot.data!.exists
+              ? (() {
+                  final productData =
+                      snapshot.data!.data()
+                          as Map<String, dynamic>;
+
+                  final img =
+                      productData['imageUrl'];
+
+                  if (img != null &&
+                      img
+                          .toString()
+                          .isNotEmpty) {
+                    return NetworkImage(
+                      img.toString(),
+                    );
+                  }
+
+                  return const AssetImage(
+                          'assets/farmer_logo.png')
+                      as ImageProvider;
+                })()
+              : const AssetImage(
+                      'assets/farmer_logo.png')
+                  as ImageProvider,
+
+      onBackgroundImageError:
+          (_, __) {},
+
+      child: null,
+    ),
+
+    title: Text(
+      productName,
+      style: const TextStyle(
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+
+    subtitle: Text(
+      '$qty kg × ₹$price\nAdded: ${_formatTimestamp(itemTs)}',
+    ),
+
+    isThreeLine: true,
+  ),
+);
                     },
                   );
                 }).toList(),

@@ -208,10 +208,74 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                         }
 
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: statusColor.withOpacity(0.12),
-                            child: Icon(Icons.shopping_bag, color: statusColor),
-                          ),
+                         leading: FutureBuilder<DocumentSnapshot?>(
+  future: (() async {
+    final items =
+        (m['items'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+
+    if (items.isEmpty) {
+      return null;
+    }
+
+    final first = items.first;
+
+    final listingId =
+        (first['listingId'] ??
+                first['productId'] ??
+                '')
+            .toString();
+
+    if (listingId.isEmpty) {
+      return null;
+    }
+
+    return FirebaseFirestore.instance
+        .collection('export_products')
+        .doc(listingId)
+        .get();
+  })(),
+
+  builder: (context, snap) {
+    ImageProvider imageProvider =
+        const AssetImage(
+      'assets/farmer_logo.png',
+    );
+
+    if (snap.hasData &&
+        snap.data != null &&
+        snap.data!.exists) {
+      final pdata =
+          snap.data!.data()
+              as Map<String, dynamic>;
+
+      final img = pdata['imageUrl'];
+
+      if (img != null &&
+          img.toString().isNotEmpty) {
+        imageProvider = NetworkImage(
+          img.toString(),
+        );
+      }
+    }
+
+    return CircleAvatar(
+      radius: 28,
+
+      backgroundColor:
+          statusColor.withOpacity(0.12),
+
+      backgroundImage:
+          imageProvider,
+
+      onBackgroundImageError:
+          (_, __) {},
+
+      child: null,
+    );
+  },
+),
                           title: Text(
                             cropName,
                             style: const TextStyle(fontWeight: FontWeight.w600),
