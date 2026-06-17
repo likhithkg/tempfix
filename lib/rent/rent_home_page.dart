@@ -8,7 +8,8 @@ import 'package:krishimithra/rent/rent_model.dart';
 import 'package:krishimithra/rent/rent_machine_service.dart';
 import 'rent_list_form_page.dart';
 import 'rent_nearby_page.dart';
-import 'rent_machine_details_page.dart'; // ✅ ADDED
+import 'rent_machine_details_page.dart';
+import '../l10n/app_localizations.dart';
 
 class RentHomePage extends StatefulWidget {
   const RentHomePage({super.key});
@@ -47,10 +48,10 @@ class _RentHomePageState extends State<RentHomePage> {
     return Scaffold(
       /// ✅ ONLY CHANGE HERE (NEARBY BUTTON ADDED)
       appBar: AppBar(
-        title: const Text('Rent Machine'),
+        title: Text(AppLocalizations.of(context)!.rentMachine),
         actions: [
           IconButton(
-            tooltip: 'Nearby Machines',
+            tooltip: AppLocalizations.of(context)!.nearbyMachines,
             icon: const Icon(Icons.near_me_rounded),
             onPressed: () {
               Navigator.push(
@@ -74,7 +75,7 @@ class _RentHomePageState extends State<RentHomePage> {
           );
           setState(() {});
         },
-        label: const Text("List Machine"),
+        label: Text(AppLocalizations.of(context)!.listMachine),
         icon: const Icon(Icons.add),
       ),
 
@@ -242,10 +243,10 @@ class _MachineCard extends StatelessWidget {
                           onEdit();
                         }
                       },
-                      itemBuilder: (_) => const [
+                      itemBuilder: (_) => [
                         PopupMenuItem(
                           value: 'edit',
-                          child: Text('Edit'),
+                          child: Text(AppLocalizations.of(context)!.edit),
                         ),
                       ],
                     ),

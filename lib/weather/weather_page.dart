@@ -475,7 +475,7 @@ class _WeatherPageState extends State<WeatherPage> {
                                     ),
 
                                     Text(
-                                      '🌬 Wind: ${_weather!.windSpeed.toStringAsFixed(1)} m/s',
+                                      '🌬 ${AppLocalizations.of(context)!.wind}: ${_weather!.windSpeed.toStringAsFixed(1)} m/s',
                                     ),
 
                                     const SizedBox(
@@ -483,7 +483,7 @@ class _WeatherPageState extends State<WeatherPage> {
                                     ),
 
                                     Text(
-                                      '💧 Humidity: ${_weather!.humidity}%',
+                                      '💧 ${AppLocalizations.of(context)!.humidity}: ${_weather!.humidity}%',
                                     ),
 
                                     const SizedBox(
@@ -493,15 +493,15 @@ class _WeatherPageState extends State<WeatherPage> {
                                     if (_translatedFarmAlerts
                                         .isNotEmpty) ...[
 
-                                      const Align(
+                                      Align(
                                         alignment:
                                             Alignment.centerLeft,
 
                                         child: Text(
-                                          "🌾 Farm Advisory",
+                                          "🌾 ${AppLocalizations.of(context)!.farmAdvisory}",
 
                                           style:
-                                              TextStyle(
+                                              const TextStyle(
                                             fontSize: 18,
                                             fontWeight:
                                                 FontWeight.bold,
@@ -526,15 +526,15 @@ class _WeatherPageState extends State<WeatherPage> {
                                     if (_translatedRainAlerts
                                         .isNotEmpty) ...[
 
-                                      const Align(
+                                      Align(
                                         alignment:
                                             Alignment.centerLeft,
 
                                         child: Text(
-                                          "🌧 Rain Advisory",
+                                          "🌧 ${AppLocalizations.of(context)!.rainAdvisory}",
 
                                           style:
-                                              TextStyle(
+                                              const TextStyle(
                                             fontSize: 18,
                                             fontWeight:
                                                 FontWeight.bold,
@@ -556,15 +556,15 @@ class _WeatherPageState extends State<WeatherPage> {
                                       ),
                                     ],
 
-                                    const Align(
+                                    Align(
                                       alignment:
                                           Alignment.centerLeft,
 
                                       child: Text(
-                                        "🕒 Hourly Forecast",
+                                        "🕒 ${AppLocalizations.of(context)!.hourlyForecast}",
 
                                         style:
-                                            TextStyle(
+                                            const TextStyle(
                                           fontSize: 18,
                                           fontWeight:
                                               FontWeight.bold,
@@ -585,15 +585,15 @@ class _WeatherPageState extends State<WeatherPage> {
                                       height: 24,
                                     ),
 
-                                    const Align(
+                                    Align(
                                       alignment:
                                           Alignment.centerLeft,
 
                                       child: Text(
-                                        "📅 7-Day Forecast",
+                                        "📅 ${AppLocalizations.of(context)!.sevenDayForecast}",
 
                                         style:
-                                            TextStyle(
+                                            const TextStyle(
                                           fontSize: 18,
                                           fontWeight:
                                               FontWeight.bold,

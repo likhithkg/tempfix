@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import '../services/locale_service.dart'; // added: use LocaleService to apply language immediately
 import '../theme.dart';
+import '../l10n/app_localizations.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -39,7 +40,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     'ಕನ್ನಡ',
     'தமிழ்',
     'తెలుగు',
-    'मराठी'
+    'मराठी',
+    'മലയാളം',
   ];
 
   @override
@@ -295,6 +297,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final photoUrl = _user?.photoURL;
     final email = _user?.email ?? '';
     final phone = _user?.phoneNumber ?? '';
@@ -326,14 +329,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('My Profile', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                        Text(l.profile, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
                         const SizedBox(height: 6),
                         Text(email.isNotEmpty ? email : (phone.isNotEmpty ? phone : '—'), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70)),
                         const SizedBox(height: 8),
                         Row(children: [
-                          _smallStat('$_numListings', 'Listings'),
+                          _smallStat('$_numListings', l.listingsCount),
                           const SizedBox(width: 12),
-                          _smallStat('$_numRentals', 'Rentals'),
+                          _smallStat('$_numRentals', l.rentalsCount),
                         ])
                       ],
                     ),
@@ -423,7 +426,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _displayNameController,
-                                decoration: const InputDecoration(labelText: 'Display name', prefixIcon: Icon(Icons.person)),
+                                decoration: InputDecoration(labelText: l.displayName, prefixIcon: const Icon(Icons.person)),
                                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a name' : null,
                               ),
                               const SizedBox(height: 12),
@@ -437,7 +440,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
                                 value: _selectedLanguage,
-                                decoration: const InputDecoration(labelText: 'Preferred language', prefixIcon: Icon(Icons.language)),
+                                decoration: InputDecoration(labelText: l.languageSetting, prefixIcon: const Icon(Icons.language)),
                                 items: _languages.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
                                 onChanged: (v) async {
                                   if (v != null && mounted) {
@@ -458,7 +461,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       icon: _loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.save),
-                                      label: const Text('Save'),
+                                      label: Text(l.saveChanges),
                                       onPressed: _loading ? null : _updateProfile,
                                       style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                                     ),
@@ -466,7 +469,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                   const SizedBox(width: 12),
                                   OutlinedButton.icon(
                                     icon: const Icon(Icons.logout),
-                                    label: const Text('Sign out'),
+                                    label: Text(l.signOut),
                                     onPressed: _signOut,
                                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                                   ),
@@ -496,7 +499,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                   children: [
                                     Icon(Icons.history, size: 28, color: Theme.of(context).colorScheme.primary),
                                     const SizedBox(height: 8),
-                                    Text('Activity', style: Theme.of(context).textTheme.bodyMedium),
+                                    Text(l.activitySection, style: Theme.of(context).textTheme.bodyMedium),
                                   ],
                                 ),
                               ),
@@ -540,7 +543,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                             SwitchListTile(
                               value: _isDarkMode,
                               onChanged: (v) => _toggleTheme(v),
-                              title: const Text('Dark mode preference'),
+                              title: Text(l.darkMode),
                               subtitle: const Text('Saved locally. Restart to apply.'),
                               secondary: const Icon(Icons.brightness_6),
                             ),
@@ -602,6 +605,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       'தமிழ்': 'ta',
       'తెలుగు': 'te',
       'मराठी': 'mr',
+      'മലയാളം': 'ml',
     };
     return map[label];
   }

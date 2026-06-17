@@ -35,6 +35,9 @@ class LocaleService {
 
     'मराठी':
         const Locale('mr'),
+
+    'മലയാളം':
+        const Locale('ml'),
   };
 
   /// Reverse mapping

@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:math';
 import '../theme.dart';
 import '../widgets/km_widgets.dart';
+import '../l10n/app_localizations.dart';
 
 const String headerImagePath = '/mnt/data/e197c40d-db36-4f5f-ad56-9d5c5aec7599.png';
 
@@ -30,10 +31,10 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   String _searchQuery = '';
   bool _sortByName = true;
 
-  // 🔥 NEW: Category Filter
-  String _selectedCategory = 'All';
+  // Category filter uses English key to match Firestore values
+  String _selectedCategoryKey = 'All';
 
-  // 🔥 NEW: Distance Sorting
+  // Distance Sorting
   bool _sortByDistance = false;
   Position? _currentPosition;
 
@@ -41,7 +42,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   void initState() {
     super.initState();
     _fetchLabours();
-    _getCurrentLocation(); // 🔥 added
+    _getCurrentLocation();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -104,29 +105,38 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   }
 
   void _confirmDelete(String id) {
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Delete Labour'),
-        content: const Text('Are you sure you want to remove this labour?'),
+        title: Text(l.deleteLabour),
+        content: Text(l.deleteLabourConfirm),
         actions: [
           TextButton(
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
+            label: Text(l.delete),
             onPressed: () async {
               Navigator.pop(context);
               try {
                 await _service.deleteLabour(id);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted')));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context)!.deleted)),
+                  );
+                }
                 _fetchLabours();
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${AppLocalizations.of(context)!.deleteFailed}: $e')),
+                  );
+                }
               }
             },
           ),
@@ -140,38 +150,44 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot open dialer')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.cannotOpenDialer)),
+        );
+      }
     }
   }
 
+  // Maps English Firestore keys to localized display labels.
+  Map<String, String> _categoryMap(AppLocalizations l) => {
+    'All': l.all,
+    'Farm Labour': l.farmLabour,
+    'Tractor Driver': l.tractorDriver,
+    'Plantation Worker': l.plantationWorker,
+    'Sprayer Operator': l.sprayerOperator,
+    'Harvester Operator': l.harvesterOperator,
+    'Machine Technician': l.machineTechnician,
+    'Dairy Worker': l.dairyWorker,
+  };
+
   Widget _buildCategoryChips() {
-    final categories = [
-      'All',
-      'Farm Labour',
-      'Tractor Driver',
-      'Plantation Worker',
-      'Sprayer Operator',
-      'Harvester Operator',
-      'Machine Technician',
-      'Dairy Worker',
-    ];
+    final l = AppLocalizations.of(context)!;
+    final catMap = _categoryMap(l);
 
     return SizedBox(
       height: 45,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        children: categories.map((cat) {
-          final isSelected = _selectedCategory == cat;
+        children: catMap.entries.map((entry) {
+          final isSelected = _selectedCategoryKey == entry.key;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
-              label: Text(cat),
+              label: Text(entry.value),
               selected: isSelected,
               onSelected: (_) {
                 setState(() {
-                  _selectedCategory = cat;
+                  _selectedCategoryKey = entry.key;
                 });
               },
             ),
@@ -182,6 +198,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   }
 
   Widget _labourCard(Labour labour, String? currentUserId) {
+    final l = AppLocalizations.of(context)!;
     final bool isOwner = currentUserId != null && labour.createdBy == currentUserId;
 
     double? distance;
@@ -271,9 +288,9 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
                       _confirmDelete(labour.id);
                     }
                   },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(value: 'edit', child: Text(l.edit)),
+                    PopupMenuItem(value: 'delete', child: Text(l.delete)),
                   ],
                 ),
             ],
@@ -296,7 +313,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
 
               Chip(
                 label: Text(
-                  labour.available ? "Available" : "Busy",
+                  labour.available ? l.available : l.busy,
                   style: TextStyle(
                     color: labour.available ? KMColors.available : KMColors.unavailable,
                   ),
@@ -311,11 +328,12 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Labour Hub', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(l.labourHub, style: const TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -324,7 +342,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.location_on, color: Colors.white),
-            tooltip: 'Nearby',
+            tooltip: l.nearby,
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourNearbyPage()));
             },
@@ -340,7 +358,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
           ),
           IconButton(
             icon: const Icon(Icons.near_me, color: Colors.white),
-            tooltip: 'Sort by Distance',
+            tooltip: l.sortByDistanceLabel,
             onPressed: () {
               setState(() {
                 _sortByDistance = !_sortByDistance;
@@ -348,7 +366,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             },
           ),
         ],
-                
+
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(120),
           child: Padding(
@@ -356,7 +374,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             child: Column(
               children: [
                 KMSearchBar(
-                  hintText: 'Search labour...',
+                  hintText: l.searchLabour,
                   onChanged: (value) {
                     setState(() {
                       _searchQuery = value.toLowerCase();
@@ -377,18 +395,18 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading labour data: ${snapshot.error}'));
+            return Center(child: Text('${l.errorLoadingLabour}: ${snapshot.error}'));
           }
 
           var labours = snapshot.data ?? [];
 
-          // 🔎 SEARCH + CATEGORY FILTER
+          // SEARCH + CATEGORY FILTER — compare against English Firestore keys
           labours = labours.where((labour) {
             final q = _searchQuery;
 
             final categoryMatch =
-                _selectedCategory == 'All' ||
-                labour.category == _selectedCategory;
+                _selectedCategoryKey == 'All' ||
+                labour.category == _selectedCategoryKey;
 
             final searchMatch =
                 q.isEmpty ||
@@ -399,10 +417,10 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             return categoryMatch && searchMatch;
           }).toList();
 
-          // 📍 DISTANCE SORTING (NEW – DOES NOT REMOVE EXISTING SORT)
+          // DISTANCE SORTING
           if (_sortByDistance && _currentPosition != null) {
             labours = labours
-                .where((l) => l.latitude != null && l.longitude != null)
+                .where((lab) => lab.latitude != null && lab.longitude != null)
                 .toList();
 
             labours.sort((a, b) {
@@ -423,7 +441,6 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
               return distA.compareTo(distB);
             });
           } else {
-            // 🔤 ORIGINAL SORTING PRESERVED
             if (_sortByName) {
               labours.sort((a, b) => a.name.compareTo(b.name));
             } else {
@@ -433,10 +450,10 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
           }
 
           if (labours.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'No labour entries found.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                l.noLabourFound,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
             );
           }
@@ -465,7 +482,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
 
       floatingActionButton: FloatingActionButton.small(
         onPressed: () => _openForm(),
-        tooltip: 'Add Labour',
+        tooltip: l.addLabour,
         child: const Icon(Icons.add),
       ),
     );

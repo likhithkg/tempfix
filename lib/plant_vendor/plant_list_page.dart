@@ -12,6 +12,7 @@ import 'package:krishimithra/plant_vendor/plant_vendor_nearby_page.dart';
 
 import '../services/libre_translate_service.dart';
 import '../theme.dart';
+import '../l10n/app_localizations.dart';
 
 /// Shows plant vendor listings filtered by category.
 /// category: "Seeds" or "Plant". If null -> defaults to "Plant".
@@ -316,10 +317,12 @@ class _PlantVendorListPageState
     PlantVendor v,
   ) {
 
+    final l = AppLocalizations.of(context)!;
+
     final safePlantName =
         (v.plantName).isNotEmpty
             ? v.plantName
-            : 'Unknown plant';
+            : l.unknownPlant;
 
     final safeType =
         (v.type).isNotEmpty
@@ -679,6 +682,8 @@ class _PlantVendorListPageState
     PlantVendor v,
   ) {
 
+    final l = AppLocalizations.of(context)!;
+
     showModalBottomSheet(
 
       context: context,
@@ -695,7 +700,7 @@ class _PlantVendorListPageState
                   const Icon(Icons.edit),
 
               title:
-                  const Text('Edit'),
+                  Text(l.edit),
 
               onTap: () {
 
@@ -727,9 +732,9 @@ class _PlantVendorListPageState
                 color: Colors.red,
               ),
 
-              title: const Text(
-                'Delete',
-                style: TextStyle(
+              title: Text(
+                l.delete,
+                style: const TextStyle(
                   color: Colors.red,
                 ),
               ),
@@ -746,13 +751,13 @@ class _PlantVendorListPageState
                   builder: (_) =>
                       AlertDialog(
 
-                    title: const Text(
-                      'Delete listing?',
+                    title: Text(
+                      l.deleteListingQ,
                     ),
 
                     content:
-                        const Text(
-                      'This will permanently delete the listing.',
+                        Text(
+                      l.permanentlyDeleteListing,
                     ),
 
                     actions: [
@@ -764,8 +769,8 @@ class _PlantVendorListPageState
                           false,
                         ),
                         child:
-                            const Text(
-                          'Cancel',
+                            Text(
+                          l.cancel,
                         ),
                       ),
 
@@ -776,8 +781,8 @@ class _PlantVendorListPageState
                           true,
                         ),
                         child:
-                            const Text(
-                          'Delete',
+                            Text(
+                          l.delete,
                         ),
                       ),
                     ],
@@ -802,7 +807,7 @@ class _PlantVendorListPageState
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(AppLocalizations l) {
 
     return Column(
 
@@ -826,7 +831,7 @@ class _PlantVendorListPageState
                   ),
 
                   hintText:
-                      'Search plant, type, vendor, location...',
+                      l.searchPlantVendor,
 
                   border:
                       OutlineInputBorder(
@@ -859,26 +864,26 @@ class _PlantVendorListPageState
               underline:
                   Container(height: 0),
 
-              items: const [
+              items: [
 
                 DropdownMenuItem(
                   value: 'Newest',
-                  child: Text('Newest'),
+                  child: Text(l.newest),
                 ),
 
                 DropdownMenuItem(
                   value: 'Oldest',
-                  child: Text('Oldest'),
+                  child: Text(l.oldest),
                 ),
 
                 DropdownMenuItem(
                   value: 'Price: Low',
-                  child: Text('Price: Low'),
+                  child: Text(l.priceLow),
                 ),
 
                 DropdownMenuItem(
                   value: 'Price: High',
-                  child: Text('Price: High'),
+                  child: Text(l.priceHigh),
                 ),
               ],
 
@@ -910,21 +915,21 @@ class _PlantVendorListPageState
                   _filterCategory
                       .toLowerCase(),
 
-              items: const [
+              items: [
 
                 DropdownMenuItem(
                   value: 'all',
-                  child: Text('All'),
+                  child: Text(l.allCategories),
                 ),
 
                 DropdownMenuItem(
                   value: 'plant',
-                  child: Text('Plant'),
+                  child: Text(l.plant),
                 ),
 
                 DropdownMenuItem(
                   value: 'seeds',
-                  child: Text('Seeds'),
+                  child: Text(l.seeds),
                 ),
               ],
 
@@ -953,7 +958,7 @@ class _PlantVendorListPageState
               ),
 
               label:
-                  const Text('Refresh'),
+                  Text(l.refresh),
 
               onPressed: _load,
             ),
@@ -965,7 +970,7 @@ class _PlantVendorListPageState
               ),
 
               label:
-                  const Text('Nearby'),
+                  Text(l.nearby),
 
               onPressed: () async {
 
@@ -992,7 +997,7 @@ class _PlantVendorListPageState
               ),
 
               label:
-                  const Text('Add'),
+                  Text(l.add),
 
               onPressed: () async {
 
@@ -1023,14 +1028,16 @@ class _PlantVendorListPageState
     BuildContext context,
   ) {
 
+    final l = AppLocalizations.of(context)!;
+
     final title =
         widget.category
                     .toLowerCase() ==
                 'seeds'
 
-            ? 'Seeds'
+            ? l.seeds
 
-            : 'Plant Vendors';
+            : l.plantVendors;
 
     return Scaffold(
 
@@ -1064,7 +1071,7 @@ class _PlantVendorListPageState
 
                 children: [
 
-                  _buildTopBar(),
+                  _buildTopBar(l),
 
                   const SizedBox(
                     height: 12,
@@ -1077,7 +1084,7 @@ class _PlantVendorListPageState
 
                             ? Center(
                                 child: Text(
-                                  'No ${widget.category} listings found.',
+                                  l.noListingsFound,
                                 ),
                               )
 
@@ -1161,7 +1168,7 @@ class PlantVendorDetailsPage
     final safePlantName =
         (vendor.plantName).isNotEmpty
             ? vendor.plantName
-            : 'Unknown plant';
+            : AppLocalizations.of(context)!.unknownPlant;
 
     final safePrice = vendor.price;
 
@@ -1184,6 +1191,8 @@ class PlantVendorDetailsPage
         (vendor.description).isNotEmpty
             ? vendor.description
             : 'No description provided.';
+
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
 
@@ -1355,7 +1364,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Type',
+              l.typeLabel,
               typeLabel,
             ),
 
@@ -1364,7 +1373,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Price',
+              l.priceLabel,
               '₹${safePrice.toStringAsFixed(2)}',
             ),
 
@@ -1373,7 +1382,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Quantity',
+              l.quantityLabel,
               safeQty.toString(),
             ),
 
@@ -1382,7 +1391,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Vendor',
+              l.vendorLabel,
               safeVendorName,
             ),
 
@@ -1391,7 +1400,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Location',
+              l.locationLabel,
               safeLocation,
             ),
 
@@ -1400,7 +1409,7 @@ class PlantVendorDetailsPage
             ),
 
             _infoRow(
-              'Listed on',
+              l.listedOnLabel,
               formatDate(
                 safeTimestamp,
               ),
@@ -1410,9 +1419,9 @@ class PlantVendorDetailsPage
               height: 20,
             ),
 
-            const Text(
-              'Description',
-              style: TextStyle(
+            Text(
+              l.descriptionLabel,
+              style: const TextStyle(
                 fontWeight:
                     FontWeight.bold,
               ),

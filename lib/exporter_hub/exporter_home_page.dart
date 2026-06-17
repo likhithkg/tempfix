@@ -10,6 +10,7 @@ import 'po_detail_page.dart';
 import 'nearby_farmers_page.dart';
 import 'nearby_farmers_map_page.dart';
 import 'seller_purchase_order_list_page.dart';
+import '../l10n/app_localizations.dart';
 
 class ExporterHomePage extends StatefulWidget {
   ExporterHomePage({Key? key}) : super(key: key);
@@ -22,7 +23,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
   final _service = ExporterService();
   final TextEditingController _searchController = TextEditingController();
 
-  // Category filter. Keep values lowercase for comparison.
+  // Category filter — keep lowercase English keys for Firestore comparison.
   final List<String> _categories = ['all', 'fruits', 'vegetables', 'grains', 'other'];
   String _selectedCategory = 'all';
 
@@ -44,46 +45,35 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     super.dispose();
   }
 
-  // Apply search and category filter to a list of products
   List<ExportProduct> _applyFiltersToProducts(List<ExportProduct> products) {
     final q = _searchController.text.trim().toLowerCase();
     final cat = _selectedCategory.toLowerCase();
 
     return products.where((p) {
-      // Safely read fields; ExportProduct implementation may differ so we use try/catch to avoid crashes
       String pname = '';
       String farmer = '';
       String loc = '';
       String pcat = '';
 
+      try { pname = (p.productName ?? '').toString().toLowerCase(); } catch (_) {}
+      try { farmer = (p.farmerName ?? '').toString().toLowerCase(); } catch (_) {}
+      try { loc = (p.location ?? '').toString().toLowerCase(); } catch (_) {}
       try {
-        pname = (p.productName ?? '').toString().toLowerCase();
-      } catch (_) {}
-      try {
-        farmer = (p.farmerName ?? '').toString().toLowerCase();
-      } catch (_) {}
-      try {
-        loc = (p.location ?? '').toString().toLowerCase();
-      } catch (_) {}
-      try {
-        // common names for category fields: category, productCategory
         dynamic maybe = (p as dynamic).category ?? (p as dynamic).productCategory ?? '';
         pcat = (maybe ?? '').toString().toLowerCase();
       } catch (_) {}
-      // Category filter
+
       if (cat != 'all') {
         if (pcat.isEmpty) return false;
         if (pcat != cat) return false;
       }
 
-      // Search query filter: match any of name / farmer / location
       if (q.isEmpty) return true;
       if (pname.contains(q) || farmer.contains(q) || loc.contains(q)) return true;
       return false;
     }).toList();
   }
 
-  // Small helper to render category chips
   Widget _buildCategoryChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -106,7 +96,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     );
   }
 
-  Widget _buildSearchHeader() {
+  Widget _buildSearchHeader(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
       child: Column(
@@ -118,7 +108,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search),
-                    hintText: 'Search by crop, farmer name or location',
+                    hintText: l.searchByCropFarmer,
                     contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                   ),
@@ -126,17 +116,15 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Map icon (opens map page showing all farmers)
               IconButton(
-                tooltip: 'Open map',
+                tooltip: l.openMap,
                 icon: const Icon(Icons.map_outlined),
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage()));
                 },
               ),
-              // Nearby list icon (kept in header — top-right AppBar icon was removed)
               IconButton(
-                tooltip: 'Nearby farmers (list)',
+                tooltip: l.nearbyFarmersList,
                 icon: const Icon(Icons.people_outline),
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersPage()));
@@ -153,6 +141,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
 
     return DefaultTabController(
@@ -160,34 +149,33 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text('Exporter Hub'),
+          title: Text(l.exporterHub),
           actions: [
-            // removed the top-right nearby farmer icon as requested
             IconButton(
               icon: const Icon(Icons.shopping_bag_outlined),
-              tooltip: 'Selling Orders',
+              tooltip: l.sellingOrders,
               onPressed: () {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in to view seller orders.')));
+                final u = FirebaseAuth.instance.currentUser;
+                if (u == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewSeller)));
                   return;
                 }
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
               },
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.local_florist), text: 'Crops'),
-              Tab(icon: Icon(Icons.store_mall_directory), text: 'My Listings'),
-              Tab(icon: Icon(Icons.list_alt), text: 'Verified Buyers'),
+              Tab(icon: const Icon(Icons.local_florist), text: l.cropsTab),
+              Tab(icon: const Icon(Icons.store_mall_directory), text: l.myListingsTab),
+              Tab(icon: const Icon(Icons.list_alt), text: l.verifiedBuyersTab),
             ],
           ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             if (user == null) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in to add products.')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToAdd)));
               return;
             }
             Navigator.push(context, MaterialPageRoute(builder: (_) => const ExporterFormPage()));
@@ -204,13 +192,11 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 curve: Curves.easeOut,
                 child: Column(
                   children: [
-                    // search + category header (always visible above tabs content)
-                    _buildSearchHeader(),
-                    // Expanded tab content
+                    _buildSearchHeader(l),
                     Expanded(
                       child: TabBarView(
                         children: [
-                          // Tab 1: Public Products (filtered client-side)
+                          // Tab 1: Public Products
                           StreamBuilder<List<ExportProduct>>(
                             stream: _service.getExportProducts(),
                             builder: (context, snapshot) {
@@ -223,15 +209,15 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                               final products = snapshot.data ?? [];
                               final filtered = _applyFiltersToProducts(products);
                               if (filtered.isEmpty) {
-                                return const Center(child: Text('No export products match your search / filter.'));
+                                return Center(child: Text(l.noExportProductsFound));
                               }
                               return _buildProductList(context, filtered, user, padding: _listPadding(context));
                             },
                           ),
 
-                          // Tab 2: My Listings (also filtered)
+                          // Tab 2: My Listings
                           user == null
-                              ? const Center(child: Text('Please sign in to view your listings'))
+                              ? Center(child: Text(l.pleaseSignInToViewListings))
                               : StreamBuilder<List<ExportProduct>>(
                                   stream: _myProducts(user.uid),
                                   builder: (context, snapshot) {
@@ -244,15 +230,15 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                     final myProducts = snapshot.data ?? [];
                                     final filtered = _applyFiltersToProducts(myProducts);
                                     if (filtered.isEmpty) {
-                                      return const Center(child: Text('No listings match your search / filter.'));
+                                      return Center(child: Text(l.noListingsMatchFilter));
                                     }
                                     return _buildProductList(context, filtered, user, isOwnerTab: true, padding: _listPadding(context));
                                   },
                                 ),
 
-                          // Tab 3: Buying Orders (unchanged)
+                          // Tab 3: Buying Orders
                           user == null
-                              ? const Center(child: Text('Please sign in to view your orders'))
+                              ? Center(child: Text(l.pleaseSignInToViewOrders))
                               : StreamBuilder<List<Map<String, dynamic>>>(
                                   stream: _ordersForBuyer(user.uid),
                                   builder: (context, snapshot) {
@@ -264,7 +250,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                     }
                                     final orders = snapshot.data ?? [];
                                     if (orders.isEmpty) {
-                                      return const Center(child: Text('No purchase orders yet.'));
+                                      return Center(child: Text(l.noPurchaseOrders));
                                     }
 
                                     final fabExtra = _fabExtra();
@@ -300,11 +286,11 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                           default:
                                             statusColor = Colors.orange;
                                         }
+                                        final loc = AppLocalizations.of(context)!;
                                         return Column(
                                           children: [
                                             ListTile(
                                               leading: CircleAvatar(backgroundColor: statusColor.withValues(alpha: 0.12), child: Icon(Icons.shopping_bag, color: statusColor)),
-                                              // show crop / product name when available (if stored in order) else short id
                                               title: Text(po['productName'] ?? po['product_name'] ?? 'Order ${id.toString().substring(0, id.toString().length >= 6 ? 6 : id.toString().length)}'),
                                               subtitle: Text('Total: ₹$total • Status: $status\n$timeLabel'),
                                               isThreeLine: true,
@@ -312,7 +298,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                                 onPressed: () {
                                                   Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id)));
                                                 },
-                                                child: const Text('View Details'),
+                                                child: Text(loc.viewDetails),
                                               ),
                                             ),
                                             const Divider(height: 1, color: Colors.grey),
@@ -336,6 +322,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
   }
 
   Widget _buildProductList(BuildContext context, List<ExportProduct> products, User? user, {bool isOwnerTab = false, EdgeInsets? padding}) {
+    final l = AppLocalizations.of(context)!;
     final pad = padding ?? const EdgeInsets.all(8);
     final fabExtra = _fabExtra();
 
@@ -360,22 +347,14 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               leading: CircleAvatar(
-  radius: 28,
-
-  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-
-  backgroundImage:
-      product.imageUrl != null &&
-              product.imageUrl!.isNotEmpty
-          ? NetworkImage(product.imageUrl!)
-          : const AssetImage(
-                  'assets/farmer_logo.png')
-              as ImageProvider,
-
-  onBackgroundImageError: (_, __) {},
-
-  child: null,
-),
+                radius: 28,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundImage: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    ? NetworkImage(product.imageUrl!) as ImageProvider
+                    : const AssetImage('assets/farmer_logo.png'),
+                onBackgroundImageError: (_, __) {},
+                child: null,
+              ),
               title: Text(product.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text('${product.quantity} • ${product.location}\n$sellerIdDisplay'),
               trailing: ConstrainedBox(
@@ -387,7 +366,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // <- Price made larger, bolder and colored
                       Text(
                         '₹${product.pricePerUnit}',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Theme.of(context).colorScheme.primary),
@@ -397,21 +375,21 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 22), tooltip: 'Edit', onPressed: () {
+                            IconButton(icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 22), tooltip: l.edit, onPressed: () {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => ExporterFormPage(existingProduct: product)));
                             }),
-                            IconButton(icon: const Icon(Icons.delete, color: Colors.redAccent, size: 22), tooltip: 'Delete', onPressed: () async {
+                            IconButton(icon: const Icon(Icons.delete, color: Colors.redAccent, size: 22), tooltip: l.delete, onPressed: () async {
                               final confirm = await showDialog<bool>(context: context, builder: (_) => AlertDialog(
-                                title: const Text('Delete Listing'),
-                                content: const Text('Are you sure you want to delete this product?'),
+                                title: Text(l.deleteListingTitle),
+                                content: Text(l.areYouSureDeleteProduct),
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                                  TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.redAccent))),
+                                  TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.cancel)),
+                                  TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l.delete, style: const TextStyle(color: Colors.redAccent))),
                                 ],
                               ));
                               if (confirm == true) {
                                 await _service.deleteExportProduct(product.id);
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product deleted successfully')));
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.productDeletedSuccessfully)));
                               }
                             }),
                           ],
@@ -421,7 +399,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                           onPressed: () {
                             Navigator.push(context, MaterialPageRoute(builder: (_) => CreatePurchaseOrderPage(listingData: product)));
                           },
-                          child: const Text('Buy'),
+                          child: Text(l.buy),
                         ),
                     ],
                   ),
@@ -439,12 +417,12 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                     '${product.description}',
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                    TextButton(onPressed: () => Navigator.pop(context), child: Text(l.close)),
                     if (!isOwner)
                       TextButton(onPressed: () {
                         Navigator.pop(context);
                         Navigator.push(context, MaterialPageRoute(builder: (_) => CreatePurchaseOrderPage(listingData: product)));
-                      }, child: const Text('Buy now')),
+                      }, child: Text(l.buyNow)),
                   ],
                 ));
               },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'chatbot_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
@@ -13,7 +14,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  String language = "EN"; // 🌐 Language state
+  String language = "EN";
 
   @override
   void initState() {
@@ -29,6 +30,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _isLoading) return;
+
+    final errorMsg = AppLocalizations.of(context)!.chatbotSorryError;
 
     setState(() {
       _messages.add({"role": "user", "content": text});
@@ -48,33 +51,32 @@ class _ChatbotPageState extends State<ChatbotPage> {
       setState(() {
         _messages.add({
           "role": "assistant",
-          "content":
-              "⚠️ Sorry, I couldn't get a response. Please try again."
+          "content": errorMsg,
         });
         _isLoading = false;
       });
     }
   }
 
-  // 🌐 LANGUAGE TOGGLE
   Widget languageToggle() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ChoiceChip(
-          label: const Text("English"),
+          label: Text(l.english),
           selected: language == "EN",
           onSelected: (_) => setState(() => language = "EN"),
         ),
         const SizedBox(width: 8),
         ChoiceChip(
-          label: const Text("Kannada"),
+          label: Text(l.kannada),
           selected: language == "KN",
           onSelected: (_) => setState(() => language = "KN"),
         ),
         const SizedBox(width: 8),
         ChoiceChip(
-          label: const Text("Hindi"),
+          label: Text(l.hindi),
           selected: language == "HI",
           onSelected: (_) => setState(() => language = "HI"),
         ),
@@ -103,7 +105,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 6,
               offset: const Offset(2, 2),
             )
@@ -119,14 +121,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.green.shade50,
       appBar: AppBar(
         backgroundColor: Colors.green,
         elevation: 0,
-        title: const Text(
-          "KrishiMithra Chatbot",
-          style: TextStyle(
+        title: Text(
+          l.krishiMitraAIChatbot,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -137,12 +141,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
           const SizedBox(height: 10),
 
-          // 🌐 Language selector
           languageToggle(),
 
           const SizedBox(height: 10),
 
-          // Chat messages
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -154,11 +156,11 @@ class _ChatbotPageState extends State<ChatbotPage> {
           ),
 
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                "🌾 KrishiMithra is typing...",
-                style: TextStyle(
+                "🌾 ${l.krishiMitraTyping}",
+                style: const TextStyle(
                   color: Colors.green,
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
@@ -166,7 +168,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
               ),
             ),
 
-          // Input box
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             color: Colors.green.shade100,
@@ -180,7 +181,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: "Ask KrishiMithra...",
+                        hintText: l.askKrishiMitraHint,
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: const EdgeInsets.symmetric(

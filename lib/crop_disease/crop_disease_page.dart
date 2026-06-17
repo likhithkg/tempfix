@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../l10n/app_localizations.dart';
 
 class CropDiseasePage extends StatefulWidget {
   const CropDiseasePage({super.key});
@@ -31,7 +31,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
   String language = "EN";
 
   static const String geminiApiKey =
-      "AIzaSyAg2p7PDcea9horKAhEGRoep1NsPNL5dbk"; // 🔴 replace safely
+      "AIzaSyAg2p7PDcea9horKAhEGRoep1NsPNL5dbk";
 
   final picker = ImagePicker();
 
@@ -59,7 +59,6 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     super.dispose();
   }
 
-  // ---------------- IMAGE PICK ----------------
   Future<void> _pickImage(ImageSource source) async {
     final picked = await picker.pickImage(source: source);
 
@@ -69,7 +68,6 @@ class _CropDiseasePageState extends State<CropDiseasePage>
 
     setState(() {
       _imageBytes = bytes;
-
       disease = '';
       category = '';
       symptoms = '';
@@ -79,7 +77,6 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     });
   }
 
-  // ---------------- TRANSLATION ----------------
   Future<String> translateText(String text) async {
     if (language == "EN" || text.trim().isEmpty) return text;
 
@@ -110,7 +107,6 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     return decoded["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ?? text;
   }
 
-  // ---------------- GEMINI API ----------------
   Future<void> _sendToGemini(Uint8List imageBytes) async {
 
     final uri = Uri.parse(
@@ -154,9 +150,6 @@ Confidence: <percentage>
         body: jsonEncode(body),
       );
 
-      print("STATUS CODE: ${res.statusCode}");
-      print("BODY: ${res.body}");
-
       if (res.statusCode != 200) {
         setState(() {
           _loading = false;
@@ -172,7 +165,6 @@ Confidence: <percentage>
 
       _parseResponse(text);
 
-      /// 🔥 TRANSLATION (SAFE ADDITION)
       if (language != "EN") {
         disease = await translateText(disease);
         category = await translateText(category);
@@ -192,8 +184,6 @@ Confidence: <percentage>
 
     } catch (e) {
 
-      print(e);
-
       setState(() {
         _loading = false;
         disease = "Error contacting AI";
@@ -201,7 +191,6 @@ Confidence: <percentage>
     }
   }
 
-  // ---------------- PARSER ----------------
   void _parseResponse(String text) {
 
     for (final line in text.split("\n")) {
@@ -232,7 +221,6 @@ Confidence: <percentage>
     setState(() {});
   }
 
-  // ---------------- SAVE REPORT ----------------
   Future<void> _saveReport() async {
 
     final user = FirebaseAuth.instance.currentUser;
@@ -249,7 +237,6 @@ Confidence: <percentage>
     });
   }
 
-  // ---------------- RESULT CARD ----------------
   Widget resultTile(String title, String value, IconData icon, Color color) {
 
     if (value.trim().isEmpty) return const SizedBox();
@@ -258,7 +245,7 @@ Confidence: <percentage>
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -283,25 +270,25 @@ Confidence: <percentage>
     );
   }
 
-  // ---------------- LANGUAGE ----------------
   Widget languageToggle() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ChoiceChip(
-          label: const Text("English"),
+          label: Text(l.english),
           selected: language == "EN",
           onSelected: (_) => setState(() => language = "EN"),
         ),
         const SizedBox(width: 8),
         ChoiceChip(
-          label: const Text("Kannada"),
+          label: Text(l.kannada),
           selected: language == "KN",
           onSelected: (_) => setState(() => language = "KN"),
         ),
         const SizedBox(width: 8),
         ChoiceChip(
-          label: const Text("Hindi"),
+          label: Text(l.hindi),
           selected: language == "HI",
           onSelected: (_) => setState(() => language = "HI"),
         ),
@@ -309,21 +296,21 @@ Confidence: <percentage>
     );
   }
 
-  // ---------------- IMAGE BUTTONS ----------------
   Widget imageButtons() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton.icon(
           onPressed: () => _pickImage(ImageSource.camera),
           icon: const Icon(Icons.camera_alt),
-          label: const Text("Camera"),
+          label: Text(l.camera),
         ),
         const SizedBox(width: 12),
         ElevatedButton.icon(
           onPressed: () => _pickImage(ImageSource.gallery),
           icon: const Icon(Icons.image),
-          label: const Text("Gallery"),
+          label: Text(l.gallery),
         ),
       ],
     );
@@ -331,10 +318,11 @@ Confidence: <percentage>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Crop Disease Detector"),
+        title: Text(l.cropDiseaseDetector),
         backgroundColor: Colors.green,
       ),
 
@@ -363,7 +351,7 @@ Confidence: <percentage>
 
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
 
                   child: _imageBytes != null
@@ -399,7 +387,7 @@ Confidence: <percentage>
 
                   icon: const Icon(Icons.search),
 
-                  label: const Text("Analyze Disease"),
+                  label: Text(l.analyzeDisease),
 
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade700,
@@ -422,22 +410,22 @@ Confidence: <percentage>
                   child: Column(
                     children: [
 
-                      resultTile("Disease", disease,
+                      resultTile(l.diseaseResult, disease,
                           Icons.bug_report, Colors.red),
 
-                      resultTile("Category", category,
+                      resultTile(l.categoryResult, category,
                           Icons.biotech, Colors.indigo),
 
-                      resultTile("Symptoms", symptoms,
+                      resultTile(l.symptomsResult, symptoms,
                           Icons.warning, Colors.orange),
 
-                      resultTile("Treatment", treatment,
+                      resultTile(l.treatmentResult, treatment,
                           Icons.medical_services, Colors.green),
 
-                      resultTile("Prevention", prevention,
+                      resultTile(l.preventionResult, prevention,
                           Icons.shield, Colors.teal),
 
-                      resultTile("Confidence", confidence,
+                      resultTile(l.confidenceResult, confidence,
                           Icons.analytics, Colors.blue),
                     ],
                   ),
@@ -448,7 +436,7 @@ Confidence: <percentage>
 
           if (_loading)
             Container(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
 
               child: const Center(
                 child: CircularProgressIndicator(
