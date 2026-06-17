@@ -1426,7 +1426,7 @@ Widget build(BuildContext context) {
 
     // 📍 LOCATION ICON (ADD THIS)
     IconButton(
-      icon: const Icon(Icons.location_on, color: Colors.green),
+      icon: const Icon(Icons.location_on),
       onPressed: () {
         _showLocationDialog();
       },
@@ -1434,7 +1434,8 @@ Widget build(BuildContext context) {
 
     // 👤 PROFILE ICON
     CircleAvatar(
-      child: Text("LK"),
+      backgroundColor: KMColors.primary,
+      child: const Text("LK", style: TextStyle(color: KMColors.textOnPrimary)),
     ),
   ],
 ),
@@ -1575,7 +1576,6 @@ switch (feature['title']) {
     showToast("Opening $key");
   }
 };
-              String ;
 
 switch (key) {
   case "Weather":

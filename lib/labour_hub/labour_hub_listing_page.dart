@@ -11,6 +11,8 @@ import 'labour_hub_detail_page.dart';
 import 'labour_nearby_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math';
+import '../theme.dart';
+import '../widgets/km_widgets.dart';
 
 const String headerImagePath = '/mnt/data/e197c40d-db36-4f5f-ad56-9d5c5aec7599.png';
 
@@ -167,7 +169,6 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             child: ChoiceChip(
               label: Text(cat),
               selected: isSelected,
-              selectedColor: Colors.green.shade200,
               onSelected: (_) {
                 setState(() {
                   _selectedCategory = cat;
@@ -199,11 +200,9 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4)),
-        ],
+        boxShadow: KMShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,8 +213,8 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
              CircleAvatar(
   radius: 28,
   backgroundColor: labour.available
-      ? Colors.green.shade100
-      : Colors.red.shade100,
+      ? KMColors.available.withValues(alpha: 0.18)
+      : KMColors.unavailable.withValues(alpha: 0.18),
 
   backgroundImage:
       labour.imageUrl != null &&
@@ -259,7 +258,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
               ),
 
               IconButton(
-                icon: const Icon(Icons.phone, color: Colors.green),
+                icon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                 onPressed: () => _callLabour(labour.contact),
               ),
 
@@ -299,7 +298,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
                 label: Text(
                   labour.available ? "Available" : "Busy",
                   style: TextStyle(
-                    color: labour.available ? Colors.green : Colors.red,
+                    color: labour.available ? KMColors.available : KMColors.unavailable,
                   ),
                 ),
               ),
@@ -315,12 +314,9 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         title: const Text('Labour Hub', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        elevation: 4,
-        backgroundColor: Colors.green.shade700,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.maybePop(context),
@@ -359,26 +355,13 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Column(
               children: [
-                Material(
-                  elevation: 2,
-                  borderRadius: BorderRadius.circular(14),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search labour...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.green),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.toLowerCase();
-                      });
-                    },
-                  ),
+                KMSearchBar(
+                  hintText: 'Search labour...',
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
                 ),
                 const SizedBox(height: 8),
                 _buildCategoryChips(),
@@ -482,9 +465,8 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
 
       floatingActionButton: FloatingActionButton.small(
         onPressed: () => _openForm(),
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.green.shade700,
         tooltip: 'Add Labour',
+        child: const Icon(Icons.add),
       ),
     );
   }
