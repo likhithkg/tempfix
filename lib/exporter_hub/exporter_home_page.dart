@@ -99,9 +99,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               onSelected: (_) {
                 setState(() => _selectedCategory = c);
               },
-              selectedColor: Colors.green.shade300,
-              backgroundColor: Colors.grey.shade200,
-              labelStyle: TextStyle(color: selected ? Colors.white : Colors.black87),
             ),
           );
         }).toList(),
@@ -120,8 +117,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
                     prefixIcon: const Icon(Icons.search),
                     hintText: 'Search by crop, farmer name or location',
                     contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
@@ -166,7 +161,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: const Text('Exporter Hub'),
-          backgroundColor: Colors.green,
           actions: [
             // removed the top-right nearby farmer icon as requested
             IconButton(
@@ -191,7 +185,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
           ),
         ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.green,
           onPressed: () {
             if (user == null) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in to add products.')));
@@ -310,7 +303,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                         return Column(
                                           children: [
                                             ListTile(
-                                              leading: CircleAvatar(backgroundColor: statusColor.withOpacity(0.12), child: Icon(Icons.shopping_bag, color: statusColor)),
+                                              leading: CircleAvatar(backgroundColor: statusColor.withValues(alpha: 0.12), child: Icon(Icons.shopping_bag, color: statusColor)),
                                               // show crop / product name when available (if stored in order) else short id
                                               title: Text(po['productName'] ?? po['product_name'] ?? 'Order ${id.toString().substring(0, id.toString().length >= 6 ? 6 : id.toString().length)}'),
                                               subtitle: Text('Total: ₹$total • Status: $status\n$timeLabel'),
@@ -369,7 +362,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               leading: CircleAvatar(
   radius: 28,
 
-  backgroundColor: Colors.green.shade100,
+  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
 
   backgroundImage:
       product.imageUrl != null &&
@@ -397,7 +390,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                       // <- Price made larger, bolder and colored
                       Text(
                         '₹${product.pricePerUnit}',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.green.shade800),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Theme.of(context).colorScheme.primary),
                       ),
                       const SizedBox(height: 8),
                       if (isOwner)
@@ -425,7 +418,6 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                         )
                       else
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                           onPressed: () {
                             Navigator.push(context, MaterialPageRoute(builder: (_) => CreatePurchaseOrderPage(listingData: product)));
                           },

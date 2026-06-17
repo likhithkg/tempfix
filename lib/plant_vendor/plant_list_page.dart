@@ -11,6 +11,7 @@ import 'package:krishimithra/plant_vendor/plant_list_form_page.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_nearby_page.dart';
 
 import '../services/libre_translate_service.dart';
+import '../theme.dart';
 
 /// Shows plant vendor listings filtered by category.
 /// category: "Seeds" or "Plant". If null -> defaults to "Plant".
@@ -370,8 +371,7 @@ class _PlantVendorListPageState
           decoration:
               BoxDecoration(
 
-            color:
-                Colors.grey.shade200,
+            color: Theme.of(context).cardColor,
 
             borderRadius:
                 BorderRadius.circular(
@@ -482,11 +482,9 @@ class _PlantVendorListPageState
                             .toLowerCase() ==
                         'seeds'
 
-                    ? Colors
-                        .orange.shade100
+                    ? KMColors.warning.withValues(alpha: 0.2)
 
-                    : Colors
-                        .green.shade100,
+                    : Theme.of(context).colorScheme.primaryContainer,
 
                 borderRadius:
                     BorderRadius.circular(
@@ -547,8 +545,7 @@ class _PlantVendorListPageState
 
               style: TextStyle(
                 fontSize: 12,
-                color:
-                    Colors.grey.shade700,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -1219,9 +1216,7 @@ class PlantVendorDetailsPage
                   decoration:
                       BoxDecoration(
 
-                    color:
-                        Colors.grey
-                            .shade200,
+                    color: Theme.of(context).cardColor,
 
                     borderRadius:
                         BorderRadius.circular(
@@ -1338,11 +1333,9 @@ class PlantVendorDetailsPage
                                     .toLowerCase() ==
                                 'seeds'
 
-                            ? Colors.orange
-                                .shade100
+                            ? KMColors.warning.withValues(alpha: 0.2)
 
-                            : Colors.green
-                                .shade100,
+                            : Theme.of(context).colorScheme.primaryContainer,
 
                         borderRadius:
                             BorderRadius.circular(
