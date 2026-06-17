@@ -163,9 +163,7 @@ class _MachineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 3,
-      borderRadius: BorderRadius.circular(16),
+    return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onView,

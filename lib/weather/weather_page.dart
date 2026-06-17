@@ -284,13 +284,6 @@ class _WeatherPageState extends State<WeatherPage> {
         title: Text(
           "🌦 ${AppLocalizations.of(context)!.weather}",
         ),
-        backgroundColor:
-            const Color.fromARGB(
-          255,
-          135,
-          193,
-          237,
-        ),
       ),
 
       body: Container(

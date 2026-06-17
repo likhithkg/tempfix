@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'profile_service.dart';
 import '../services/locale_service.dart'; // added: use LocaleService to apply language immediately
+import '../theme.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -299,15 +300,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final phone = _user?.phoneNumber ?? '';
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.05),
+      backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
       body: SafeArea(
         child: Column(
           children: [
             // Header with gradient and avatar
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [Colors.green.shade700, Colors.green.shade400]),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [KMColors.primaryDark, KMColors.primary]),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
               child: Row(
@@ -356,7 +358,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 radius: 36,
                                 backgroundColor: Colors.white,
                                 backgroundImage: (photoUrl != null && photoUrl.isNotEmpty) ? NetworkImage(photoUrl) as ImageProvider : null,
-                                child: (photoUrl == null || photoUrl.isEmpty) ? Text(_initials(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)) : null,
+                                child: (photoUrl == null || photoUrl.isEmpty) ? Text(_initials(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: KMColors.primary)) : null,
                               ),
                             ),
                             if (_uploadingImage)
@@ -372,7 +374,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 child: Container(
                                   decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                                   padding: const EdgeInsets.all(4),
-                                  child: Container(decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle), padding: const EdgeInsets.all(6), child: const Icon(Icons.camera_alt, size: 12, color: Colors.white)),
+                                  child: Container(decoration: const BoxDecoration(color: KMColors.primary, shape: BoxShape.circle), padding: const EdgeInsets.all(6), child: const Icon(Icons.camera_alt, size: 12, color: KMColors.textOnPrimary)),
                                 ),
                               ),
                           ],
@@ -492,7 +494,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.history, size: 28, color: Colors.green),
+                                    Icon(Icons.history, size: 28, color: Theme.of(context).colorScheme.primary),
                                     const SizedBox(height: 8),
                                     Text('Activity', style: Theme.of(context).textTheme.bodyMedium),
                                   ],
@@ -561,7 +563,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
                     // Footer small note
                     Center(
-                      child: Text('KrishiMithra • v1.0', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
+                      child: Text('KrishiMithra • v1.0', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54))),
                     ),
                   ],
                 ),
@@ -618,7 +620,7 @@ class _ImageSourceButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Column(
         children: [
-          CircleAvatar(radius: 26, backgroundColor: const Color.fromARGB(255, 21, 27, 22), child: Icon(icon, color: Colors.green, size: 24)),
+          CircleAvatar(radius: 26, backgroundColor: KMColors.primaryDark, child: Icon(icon, color: KMColors.textOnPrimary, size: 24)),
           const SizedBox(height: 8),
           Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ],
