@@ -267,7 +267,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
                     ),
                     if (distance != null)
                       Text(
-                        "${distance.toStringAsFixed(1)} km away",
+                        l.kmAway(distance.toStringAsFixed(1)),
                         style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
                       ),
                   ],

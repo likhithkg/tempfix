@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../weather_model.dart';
+import '../../l10n/app_localizations.dart';
 
 class DayDetailPage extends StatelessWidget {
   final DailyWeather dayWeather;
@@ -8,9 +9,10 @@ class DayDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('${dayWeather.day} Forecast'),
+        title: Text(l.dayForecastTitle(dayWeather.day)),
       ),
       body: Center(
         child: Card(
@@ -37,9 +39,9 @@ class DayDetailPage extends StatelessWidget {
                   style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Min / Max Temperature',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  l.minMaxTemperature,
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),

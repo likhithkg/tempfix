@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_detail_page.dart';
 import 'labour_hub_form_page.dart';
 import 'labour_model.dart';
+import '../l10n/app_localizations.dart';
 
 class LabourNearbyPage extends StatefulWidget {
   const LabourNearbyPage({Key? key}) : super(key: key);
@@ -219,10 +220,10 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.maybePop(context),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Nearby Labour',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+              AppLocalizations.of(context)!.nearbyLabourTitle,
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
             ),
           ),
           IconButton(
@@ -263,7 +264,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                           }
                         },
                         decoration: InputDecoration(
-                          hintText: 'Search by name or address',
+                          hintText: AppLocalizations.of(context)!.searchLabourHint,
                           prefixIcon: const Icon(Icons.search, color: Colors.green),
                           filled: true,
                           fillColor: Colors.white,
@@ -306,11 +307,11 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text('Location permission denied.'),
+                                Text(AppLocalizations.of(context)!.locationPermissionDenied),
                                 const SizedBox(height: 8),
                                 ElevatedButton(
                                   onPressed: () => Geolocator.openAppSettings(),
-                                  child: const Text('Open App Settings'),
+                                  child: Text(AppLocalizations.of(context)!.openSettings),
                                 ),
                               ],
                             ),
@@ -318,7 +319,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                         : _error != null
                             ? Center(child: Text('Error: $_error'))
                             : _nearby.isEmpty
-                                ? const Center(child: Text('No nearby labour found.'))
+                                ? Center(child: Text(AppLocalizations.of(context)!.noLabourFoundNearby))
                                 : RefreshIndicator(
                                     onRefresh: _refresh,
                                     child: ListView.separated(
@@ -385,7 +386,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                                           children: [
                                                             const Icon(Icons.location_pin, size: 14, color: Colors.grey),
                                                             const SizedBox(width: 6),
-                                                            Text('${n.distanceKm.toStringAsFixed(1)} km away', style: const TextStyle(fontSize: 13)),
+                                                            Text(AppLocalizations.of(context)!.kmAway(n.distanceKm.toStringAsFixed(1)), style: const TextStyle(fontSize: 13)),
                                                           ],
                                                         ),
                                                       ],

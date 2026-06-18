@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 import 'nearby_farmers_map_page.dart';
 import 'nearby_farmers_service.dart';
+import '../l10n/app_localizations.dart';
 
 const String _locationIqKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
@@ -234,7 +235,7 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
       backgroundColor: Colors.green.shade50,
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text('Nearby Farmers'),
+        title: Text(AppLocalizations.of(context)!.nearbyFarmersTitle),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

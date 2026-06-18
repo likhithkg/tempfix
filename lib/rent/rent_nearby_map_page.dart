@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'rent_machine_service.dart';
 import 'rent_model.dart';
+import '../l10n/app_localizations.dart';
 
 class RentNearbyMapPage extends StatefulWidget {
   final double? focusLat;
@@ -204,7 +205,7 @@ class _RentNearbyMapPageState extends State<RentNearbyMapPage> {
                         _call(m.phone);
                       },
                       icon: const Icon(Icons.call),
-                      label: const Text('Call'),
+                      label: Text(AppLocalizations.of(context)!.call),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
@@ -213,7 +214,7 @@ class _RentNearbyMapPageState extends State<RentNearbyMapPage> {
                         _openMap(m);
                       },
                       icon: const Icon(Icons.map),
-                      label: const Text('Open in Maps'),
+                      label: Text(AppLocalizations.of(context)!.openInMaps),
                     ),
                     const SizedBox(width: 8),
                     if (isOwner)
@@ -223,7 +224,7 @@ class _RentNearbyMapPageState extends State<RentNearbyMapPage> {
                           // navigate to edit screen if you have one
                         },
                         icon: const Icon(Icons.edit),
-                        label: const Text('Edit'),
+                        label: Text(AppLocalizations.of(context)!.edit),
                       ),
                   ],
                 ),
@@ -256,14 +257,14 @@ class _RentNearbyMapPageState extends State<RentNearbyMapPage> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Nearby Machines (Map)'), backgroundColor: Colors.green),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.nearbyMachinesMapTitle), backgroundColor: Colors.green),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Nearby Machines (Map)'), backgroundColor: Colors.green),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.nearbyMachinesMapTitle), backgroundColor: Colors.green),
         body: Center(child: Text('Error: $_error')),
       );
     }

@@ -107,7 +107,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       _user = FirebaseAuth.instance.currentUser;
       if (mounted) {
         setState(() {});
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.profilePhotoUpdated)));
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
@@ -132,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(height: 4, width: 60, margin: const EdgeInsets.only(bottom: 12), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8))),
-                Text('Update profile photo', style: Theme.of(context).textTheme.titleLarge),
+                Text(AppLocalizations.of(context)!.updateProfilePhoto, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -186,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile saved')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.profileSaved)));
       }
       await _loadUser();
     } catch (e) {
@@ -200,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     setState(() => _isDarkMode = value);
     await ProfileService.instance.setDarkMode(value);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Theme preference saved. Restart app to apply immediately.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.themePreferenceSaved)));
     }
   }
 
@@ -213,12 +213,12 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   Future<void> _changePassword() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password change not available')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.passwordChangeNotAvailable)));
       return;
     }
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset email sent')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.passwordResetEmailSent)));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send reset email: $e')));
     }
@@ -230,14 +230,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
     final confirm = await showDialog<bool?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete account'),
-        content: const Text('This will permanently delete your account and associated user data. Are you sure?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
-        ],
-      ),
+      builder: (ctx) {
+        final l2 = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l2.deleteAccountTitle),
+          content: Text(l2.deleteAccountConfirm),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l2.cancel)),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l2.delete)),
+          ],
+        );
+      },
     );
 
     if (confirm != true) return;
@@ -259,17 +262,20 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final controller = TextEditingController(text: _locationController.text);
     final chosen = await showDialog<String?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Set default location'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'e.g., Bengaluru, Karnataka'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: const Text('Save')),
-        ],
-      ),
+      builder: (ctx) {
+        final l2 = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l2.setDefaultLocation),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: l2.locationHintText),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, null), child: Text(l2.cancel)),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: Text(l2.save)),
+          ],
+        );
+      },
     );
 
     if (chosen != null) {
@@ -281,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     // placeholder - implement export CSV/JSON from Firestore via ProfileService
     try {
       await ProfileService.instance.exportUserData(_user?.uid ?? '');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Export started (check your email or downloads)')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.exportStarted)));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
     }
@@ -393,11 +399,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       if (v == 'export') await _exportData();
                       if (v == 'delete') await _deleteAccount();
                     },
-                    itemBuilder: (ctx) => [
-                      const PopupMenuItem(value: 'change_password', child: Text('Change password')),
-                      const PopupMenuItem(value: 'export', child: Text('Export data')),
-                      const PopupMenuItem(value: 'delete', child: Text('Delete account', style: TextStyle(color: Colors.red))),
-                    ],
+                    itemBuilder: (ctx) {
+                      final l2 = AppLocalizations.of(ctx)!;
+                      return [
+                        PopupMenuItem(value: 'change_password', child: Text(l2.changePassword)),
+                        PopupMenuItem(value: 'export', child: Text(l2.exportData)),
+                        PopupMenuItem(value: 'delete', child: Text(l2.deleteAccount, style: const TextStyle(color: Colors.red))),
+                      ];
+                    },
                     color: Colors.white,
                   )
                 ],
@@ -422,20 +431,20 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text('Personal Info', style: Theme.of(context).textTheme.titleLarge),
+                              Text(l.personalInfo, style: Theme.of(context).textTheme.titleLarge),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _displayNameController,
                                 decoration: InputDecoration(labelText: l.displayName, prefixIcon: const Icon(Icons.person)),
-                                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a name' : null,
+                                validator: (v) => (v == null || v.trim().isEmpty) ? l.pleaseEnterName : null,
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _locationController,
                                 readOnly: true,
                                 onTap: _chooseDefaultLocation,
-                                decoration: const InputDecoration(labelText: 'Default location', prefixIcon: Icon(Icons.place), hintText: 'e.g. Bengaluru, Karnataka'),
-                                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please provide a default location' : null,
+                                decoration: InputDecoration(labelText: l.defaultLocationLabel, prefixIcon: const Icon(Icons.place), hintText: l.locationHintText),
+                                validator: (v) => (v == null || v.trim().isEmpty) ? l.pleaseProvideDefaultLocation : null,
                               ),
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
@@ -520,7 +529,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                   children: [
                                     const Icon(Icons.help_center, size: 28, color: Colors.orange),
                                     const SizedBox(height: 8),
-                                    Text('Help', style: Theme.of(context).textTheme.bodyMedium),
+                                    Text(l.help, style: Theme.of(context).textTheme.bodyMedium),
                                   ],
                                 ),
                               ),
@@ -544,17 +553,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               value: _isDarkMode,
                               onChanged: (v) => _toggleTheme(v),
                               title: Text(l.darkMode),
-                              subtitle: const Text('Saved locally. Restart to apply.'),
+                              subtitle: Text(l.darkModeSavedLocally),
                               secondary: const Icon(Icons.brightness_6),
                             ),
                             ListTile(
                               leading: const Icon(Icons.person_outline),
-                              title: const Text('User ID'),
+                              title: Text(l.userId),
                               subtitle: Text(_user?.uid ?? '-'),
                             ),
                             ListTile(
                               leading: const Icon(Icons.verified_user_outlined),
-                              title: const Text('Provider'),
+                              title: Text(l.providerLabel),
                               subtitle: Text(_user?.providerData.isNotEmpty == true ? _user!.providerData.map((p) => p.providerId).join(', ') : 'firebase'),
                             ),
                           ],

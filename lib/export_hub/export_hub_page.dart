@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'post_export_stock_page.dart';
 import 'export_listing_detail_page.dart';
+import '../l10n/app_localizations.dart';
 
 class ExportHubPage extends StatefulWidget {
   const ExportHubPage({super.key});
@@ -51,22 +52,23 @@ class _ExportHubPageState extends State<ExportHubPage> {
     }
 
     if (role == 'admin') {
-      return adminView();
+      return adminView(context);
     } else if (role == 'exporter') {
-      return exporterView();
+      return exporterView(context);
     } else {
-      return farmerView();
+      return farmerView(context);
     }
   }
 
   // ================= ADMIN VIEW =================
 
-  Widget adminView() {
+  Widget adminView(BuildContext context) {
+  final l = AppLocalizations.of(context)!;
   return Scaffold(
     backgroundColor: const Color(0xfff4f7f5),
     appBar: AppBar(
       elevation: 0,
-      title: const Text("Export Hub - Admin"),
+      title: Text(l.exportHub),
       flexibleSpace: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -98,8 +100,8 @@ class _ExportHubPageState extends State<ExportHubPage> {
               ],
             ),
             child: TextField(
-              decoration: const InputDecoration(
-                hintText: "Search product, farmer, location...",
+              decoration: InputDecoration(
+                hintText: l.searchByCropFarmer,
                 prefixIcon: Icon(Icons.search),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(
@@ -153,10 +155,10 @@ class _ExportHubPageState extends State<ExportHubPage> {
               }).toList();
 
               if (filtered.isEmpty) {
-                return const Center(
+                return Center(
                     child: Text(
-                        "No listings found",
-                        style: TextStyle(
+                        l.noListingsFound,
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight:
                                 FontWeight.w500)));
@@ -337,12 +339,13 @@ class _ExportHubPageState extends State<ExportHubPage> {
 }
   // ================= FARMER VIEW =================
 
-  Widget farmerView() {
+  Widget farmerView(BuildContext context) {
+  final l = AppLocalizations.of(context)!;
   final user = FirebaseAuth.instance.currentUser;
 
   return Scaffold(
     appBar: AppBar(
-      title: const Text("Export Hub - Farmer"),
+      title: Text(l.exportHub),
     ),
     body: Column(
       children: [
@@ -352,7 +355,7 @@ class _ExportHubPageState extends State<ExportHubPage> {
         // POST BUTTON
         ElevatedButton.icon(
           icon: const Icon(Icons.add),
-          label: const Text("Post Export Stock"),
+          label: Text(l.postExportStock),
           onPressed: () {
             Navigator.push(
               context,
@@ -367,9 +370,9 @@ class _ExportHubPageState extends State<ExportHubPage> {
 
         const Divider(),
 
-        const Text(
-          "My Listings",
-          style: TextStyle(
+        Text(
+          l.myListings,
+          style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16),
         ),
@@ -392,8 +395,8 @@ class _ExportHubPageState extends State<ExportHubPage> {
               final listings = snapshot.data!.docs;
 
               if (listings.isEmpty) {
-                return const Center(
-                    child: Text("No listings posted yet"));
+                return Center(
+                    child: Text(l.noListingsYet));
               }
 
               return ListView.builder(
@@ -533,7 +536,7 @@ class _ExportHubPageState extends State<ExportHubPage> {
                                   );
                                 },
                                 child:
-                                    const Text("Edit"),
+                                    Text(l.edit),
                               ),
 
                               const SizedBox(
@@ -554,8 +557,8 @@ class _ExportHubPageState extends State<ExportHubPage> {
                                       .doc(doc.id)
                                       .delete();
                                 },
-                                child: const Text(
-                                    "Delete"),
+                                child: Text(
+                                    l.delete),
                               ),
                             ],
                           ),
@@ -574,13 +577,14 @@ class _ExportHubPageState extends State<ExportHubPage> {
 }
   // ================= EXPORTER VIEW =================
 
-  Widget exporterView() {
+  Widget exporterView(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(
           title:
-              const Text("Export Hub - Export Partner")),
+              Text(l.exportHub)),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('export_listings')
@@ -596,8 +600,8 @@ class _ExportHubPageState extends State<ExportHubPage> {
           final listings = snapshot.data!.docs;
 
           if (listings.isEmpty) {
-            return const Center(
-                child: Text("No assigned export products"));
+            return Center(
+                child: Text(l.noListingsFound));
           }
 
           return ListView.builder(

@@ -409,4 +409,766 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get activitySection => 'क्रियाकलाप';
+
+  @override
+  String get selectLanguage => 'भाषा निवडा';
+
+  @override
+  String get loading => 'लोड होत आहे...';
+
+  @override
+  String get submit => 'सबमिट करा';
+
+  @override
+  String get update => 'अपडेट करा';
+
+  @override
+  String get confirm => 'पुष्टी करा';
+
+  @override
+  String get complete => 'पूर्ण करा';
+
+  @override
+  String get view => 'पहा';
+
+  @override
+  String get call => 'कॉल करा';
+
+  @override
+  String get whatsApp => 'व्हाट्सअ‍ॅप';
+
+  @override
+  String get openMaps => 'नकाशा उघडा';
+
+  @override
+  String get openInMaps => 'नकाशात उघडा';
+
+  @override
+  String get pickImage => 'प्रतिमा निवडा';
+
+  @override
+  String get uploadImage => 'प्रतिमा अपलोड करा';
+
+  @override
+  String get noImageSelected => 'कोणतीही प्रतिमा निवडलेली नाही';
+
+  @override
+  String get pickImageFirst => 'आधी प्रतिमा निवडा';
+
+  @override
+  String get imageUploadedSuccessfully => 'प्रतिमा यशस्वीरित्या अपलोड झाली';
+
+  @override
+  String get imageUploadFailed => 'प्रतिमा अपलोड अयशस्वी';
+
+  @override
+  String get imageUploaded => 'प्रतिमा अपलोड झाली';
+
+  @override
+  String get uploadFailed => 'अपलोड अयशस्वी';
+
+  @override
+  String get setLocation => 'स्थान सेट करा';
+
+  @override
+  String get searchPlace => 'स्थान शोधा...';
+
+  @override
+  String get fetchingLocation => 'स्थान मिळवत आहे...';
+
+  @override
+  String get locationSet => 'स्थान सेट झाले';
+
+  @override
+  String get pricePerUnitLabel => 'प्रति युनिट किंमत (₹)';
+
+  @override
+  String get categoryLabel => 'श्रेणी';
+
+  @override
+  String get productNameLabel => 'उत्पादनाचे नाव';
+
+  @override
+  String get statusLabel => 'स्थिती:';
+
+  @override
+  String get totalLabel => 'एकूण:';
+
+  @override
+  String get farmerLabel => 'शेतकरी:';
+
+  @override
+  String get mobileLabel => 'मोबाईल:';
+
+  @override
+  String get qtyLabel => 'प्रमाण:';
+
+  @override
+  String get sellerLabel => 'विक्रेता:';
+
+  @override
+  String get buyerLabel => 'खरेदीदार:';
+
+  @override
+  String get ownerLabel => 'मालक:';
+
+  @override
+  String get notAvailable => 'उपलब्ध नाही';
+
+  @override
+  String get other => 'इतर';
+
+  @override
+  String get allListingsTab => 'सर्व नोंदी';
+
+  @override
+  String get pendingApprovalTab => 'मंजुरी प्रतीक्षेत';
+
+  @override
+  String get postExportStock => 'निर्यात स्टॉक पोस्ट करा';
+
+  @override
+  String get noPendingListings => 'प्रतीक्षेत नोंदी नाहीत.';
+
+  @override
+  String get approve => 'मंजूर करा';
+
+  @override
+  String get reject => 'नाकारा';
+
+  @override
+  String get myListings => 'माझ्या नोंदी';
+
+  @override
+  String get postStock => 'स्टॉक पोस्ट करा';
+
+  @override
+  String get noListingsYet => 'अद्याप नोंदी नाहीत.';
+
+  @override
+  String get deleteListingConfirm => 'ही नोंद हटवायची आहे का?';
+
+  @override
+  String get listingDeleted => 'नोंद हटवली.';
+
+  @override
+  String get browseExportListings => 'निर्यात नोंदी ब्राउझ करा';
+
+  @override
+  String get noProductsAvailable => 'उत्पादने उपलब्ध नाहीत.';
+
+  @override
+  String get createPurchaseOrder => 'खरेदी ऑर्डर तयार करा';
+
+  @override
+  String get listingDetailsTitle => 'नोंद तपशील';
+
+  @override
+  String get statusPending => 'प्रतीक्षेत';
+
+  @override
+  String get statusApproved => 'मंजूर';
+
+  @override
+  String get statusRejected => 'नाकारले';
+
+  @override
+  String get approveListing => 'नोंद मंजूर करा';
+
+  @override
+  String get rejectListing => 'नोंद नाकारा';
+
+  @override
+  String get listingApproved => 'नोंद मंजूर केली.';
+
+  @override
+  String get listingRejected => 'नोंद नाकारली.';
+
+  @override
+  String get errorUpdatingListing => 'नोंद अपडेट करताना त्रुटी.';
+
+  @override
+  String get editExportStockTitle => 'निर्यात स्टॉक संपादित करा';
+
+  @override
+  String get pleaseEnterProductName => 'कृपया उत्पादनाचे नाव टाका';
+
+  @override
+  String get pleaseEnterQuantity => 'कृपया प्रमाण टाका';
+
+  @override
+  String get pleaseEnterPrice => 'कृपया किंमत टाका';
+
+  @override
+  String get pleaseEnterLocation => 'कृपया स्थान टाका';
+
+  @override
+  String get listingSubmittedSuccessfully => 'नोंद यशस्वीरित्या सबमिट झाली.';
+
+  @override
+  String get listingUpdatedSuccessfully => 'नोंद यशस्वीरित्या अपडेट झाली.';
+
+  @override
+  String get failedToSubmitListing => 'नोंद सबमिट करणे अयशस्वी.';
+
+  @override
+  String get addExportProductTitle => 'निर्यात उत्पादन जोडा';
+
+  @override
+  String get editExportProductTitle => 'निर्यात उत्पादन संपादित करा';
+
+  @override
+  String get descriptionOptionalLabel => 'वर्णन (पर्यायी)';
+
+  @override
+  String get enterProductName => 'उत्पादनाचे नाव टाका';
+
+  @override
+  String get enterQuantity => 'प्रमाण टाका';
+
+  @override
+  String get enterValidPrice => 'योग्य किंमत टाका';
+
+  @override
+  String get selectCategory => 'श्रेणी निवडा';
+
+  @override
+  String get productAddedSuccessfully => 'उत्पादन यशस्वीरित्या जोडले.';
+
+  @override
+  String get productUpdatedSuccessfully => 'उत्पादन यशस्वीरित्या अपडेट झाले.';
+
+  @override
+  String get failedToSubmitProduct => 'उत्पादन सबमिट करणे अयशस्वी.';
+
+  @override
+  String get buyerNameLabel => 'खरेदीदाराचे नाव';
+
+  @override
+  String get deliveryAddressLabel => 'वितरण पत्ता';
+
+  @override
+  String get notesOptionalLabel => 'नोंदी (पर्यायी)';
+
+  @override
+  String get enterBuyerName => 'खरेदीदाराचे नाव टाका';
+
+  @override
+  String get enterValidNumber => 'योग्य संख्या टाका';
+
+  @override
+  String get enterDeliveryAddress => 'वितरण पत्ता टाका';
+
+  @override
+  String get placeOrder => 'ऑर्डर द्या';
+
+  @override
+  String get orderPlacedSuccessfully => 'ऑर्डर यशस्वीरित्या दिली!';
+
+  @override
+  String get failedToPlaceOrder => 'ऑर्डर देणे अयशस्वी.';
+
+  @override
+  String get myPurchaseOrdersTitle => 'माझे खरेदी ऑर्डर';
+
+  @override
+  String get loadingProduct => 'उत्पादन लोड होत आहे...';
+
+  @override
+  String get productNotFound => 'उत्पादन आढळले नाही';
+
+  @override
+  String get noPurchaseOrdersYet => 'अद्याप खरेदी ऑर्डर नाहीत.';
+
+  @override
+  String get noOrdersReceivedYet => 'अद्याप ऑर्डर प्राप्त झाले नाहीत.';
+
+  @override
+  String get purchaseOrderTitle => 'खरेदी ऑर्डर';
+
+  @override
+  String get orderDetails => 'ऑर्डर तपशील';
+
+  @override
+  String get notesLabel => 'नोंदी:';
+
+  @override
+  String get confirmOrder => 'ऑर्डर पुष्टी करा';
+
+  @override
+  String get completeOrder => 'ऑर्डर पूर्ण करा';
+
+  @override
+  String get cancelOrder => 'ऑर्डर रद्द करा';
+
+  @override
+  String get confirmOrderConfirm => 'हा ऑर्डर पुष्टी करायचा आहे का?';
+
+  @override
+  String get completeOrderConfirm => 'हा ऑर्डर पूर्ण करायचा आहे का?';
+
+  @override
+  String get cancelOrderConfirm => 'हा ऑर्डर रद्द करायचा आहे का?';
+
+  @override
+  String get orderConfirmed => 'ऑर्डर पुष्टी झाली.';
+
+  @override
+  String get orderCompleted => 'ऑर्डर पूर्ण झाली.';
+
+  @override
+  String get orderCancelled => 'ऑर्डर रद्द केली.';
+
+  @override
+  String get errorUpdatingOrder => 'ऑर्डर अपडेट करताना त्रुटी.';
+
+  @override
+  String get orderNotFound => 'ऑर्डर आढळला नाही.';
+
+  @override
+  String get productDetails => 'उत्पादन तपशील';
+
+  @override
+  String get nearbyFarmersTitle => 'जवळपासचे शेतकरी';
+
+  @override
+  String get nearbyFarmersMapTitle => 'जवळपासचे शेतकरी (नकाशा)';
+
+  @override
+  String kmAway(String distance) {
+    return '$distance किमी दूर';
+  }
+
+  @override
+  String get labourDetails => 'कामगार तपशील';
+
+  @override
+  String get callLabour => 'कामगाराला कॉल करा';
+
+  @override
+  String get hireLabour => 'कामगार नियुक्त करा';
+
+  @override
+  String get deleteOptionAvailableInListingPage => 'नोंद पृष्ठावर हटवण्याचा पर्याय उपलब्ध आहे.';
+
+  @override
+  String get editLabour => 'कामगार संपादित करा';
+
+  @override
+  String get addLabourTitle => 'कामगार जोडा';
+
+  @override
+  String get editLabourTitle => 'कामगार संपादित करा';
+
+  @override
+  String get fullNameLabel => 'पूर्ण नाव';
+
+  @override
+  String get skillProfessionLabel => 'कौशल्य / व्यवसाय';
+
+  @override
+  String get contactNumberLabel => 'संपर्क क्रमांक';
+
+  @override
+  String get dailyWageLabel => 'दैनिक वेतन (₹)';
+
+  @override
+  String get enterName => 'नाव टाका';
+
+  @override
+  String get enterSkill => 'कौशल्य टाका';
+
+  @override
+  String get enterContact => 'संपर्क टाका';
+
+  @override
+  String get daily => 'दैनिक';
+
+  @override
+  String get weekly => 'साप्ताहिक';
+
+  @override
+  String get monthly => 'मासिक';
+
+  @override
+  String get saveLabour => 'कामगार जतन करा';
+
+  @override
+  String get updateLabour => 'कामगार अपडेट करा';
+
+  @override
+  String get labourSavedSuccessfully => 'कामगार यशस्वीरित्या जतन केला.';
+
+  @override
+  String get labourUpdatedSuccessfully => 'कामगार यशस्वीरित्या अपडेट केला.';
+
+  @override
+  String get failedToSaveLabour => 'कामगार जतन करणे अयशस्वी.';
+
+  @override
+  String hireLabourTitle(String name) {
+    return '$name यांना नियुक्त करा';
+  }
+
+  @override
+  String get yourNameLabel => 'तुमचे नाव';
+
+  @override
+  String get yourContactLabel => 'तुमचा संपर्क';
+
+  @override
+  String get startDateLabel => 'सुरुवातीची तारीख';
+
+  @override
+  String get endDateLabel => 'शेवटची तारीख';
+
+  @override
+  String get numberOfDaysLabel => 'दिवसांची संख्या';
+
+  @override
+  String get workTypeLabel => 'कामाचा प्रकार';
+
+  @override
+  String get enterYourName => 'तुमचे नाव टाका';
+
+  @override
+  String get enterStartDate => 'सुरुवातीची तारीख टाका';
+
+  @override
+  String get enterEndDate => 'शेवटची तारीख टाका';
+
+  @override
+  String get enterNumberOfDays => 'दिवसांची संख्या टाका';
+
+  @override
+  String get harvesting => 'कापणी';
+
+  @override
+  String get planting => 'लागवड';
+
+  @override
+  String get spraying => 'फवारणी';
+
+  @override
+  String get ploughing => 'नांगरणी';
+
+  @override
+  String get sendHireRequest => 'नियुक्ती विनंती पाठवा';
+
+  @override
+  String get hireRequestSentSuccessfully => 'नियुक्ती विनंती यशस्वीरित्या पाठवली!';
+
+  @override
+  String get failedToSendHireRequest => 'नियुक्ती विनंती पाठवणे अयशस्वी.';
+
+  @override
+  String get mustBeSignedInToHire => 'नियुक्ती विनंती पाठवण्यासाठी साइन इन करा.';
+
+  @override
+  String get nearbyLabourTitle => 'जवळपासचे कामगार';
+
+  @override
+  String get searchLabourHint => 'नाव, कौशल्य किंवा स्थान शोधा';
+
+  @override
+  String get selectRadius => 'त्रिज्या निवडा';
+
+  @override
+  String get locationPermissionDenied => 'स्थान परवानगी नाकारली. सेटिंग्जमध्ये सक्षम करा.';
+
+  @override
+  String get openSettings => 'सेटिंग्ज उघडा';
+
+  @override
+  String get noLabourFoundNearby => 'जवळपास कामगार आढळले नाहीत.';
+
+  @override
+  String get failedToLoadLabour => 'कामगार लोड करणे अयशस्वी.';
+
+  @override
+  String get couldNotGetLocation => 'तुमचे स्थान मिळवता आले नाही.';
+
+  @override
+  String get failedToLoadPlants => 'वनस्पती लोड करणे अयशस्वी';
+
+  @override
+  String get errorLoadingPlantDetails => 'वनस्पती तपशील लोड करताना त्रुटी';
+
+  @override
+  String get unknownVendor => 'अज्ञात विक्रेता';
+
+  @override
+  String get notProvided => 'प्रदान केलेले नाही';
+
+  @override
+  String get noDescriptionProvided => 'वर्णन नाही.';
+
+  @override
+  String get couldNotOpenWhatsApp => 'व्हाट्सअ‍ॅप उघडता आले नाही';
+
+  @override
+  String get descriptionHeader => 'वर्णन';
+
+  @override
+  String get addPlantTitle => 'वनस्पती जोडा';
+
+  @override
+  String get editPlantTitle => 'वनस्पती संपादित करा';
+
+  @override
+  String get plantNameLabel => 'वनस्पतीचे नाव';
+
+  @override
+  String get plantTypeLabel => 'वनस्पतीचा प्रकार';
+
+  @override
+  String get quantityAvailableLabel => 'उपलब्ध प्रमाण';
+
+  @override
+  String get vendorNurseryNameLabel => 'विक्रेता / नर्सरी नाव';
+
+  @override
+  String get floweringPlant => 'फुलांची वनस्पती';
+
+  @override
+  String get fruitPlant => 'फळांची वनस्पती';
+
+  @override
+  String get vegetablePlant => 'भाज्यांची वनस्पती';
+
+  @override
+  String get medicinalPlant => 'औषधी वनस्पती';
+
+  @override
+  String get ornamental => 'सजावटीची वनस्पती';
+
+  @override
+  String get enterPlantName => 'वनस्पतीचे नाव टाका';
+
+  @override
+  String get enterType => 'प्रकार टाका';
+
+  @override
+  String get enterVendorName => 'विक्रेत्याचे नाव टाका';
+
+  @override
+  String get savePlant => 'वनस्पती जतन करा';
+
+  @override
+  String get updatePlant => 'वनस्पती अपडेट करा';
+
+  @override
+  String get plantSavedSuccessfully => 'वनस्पती यशस्वीरित्या जतन केली.';
+
+  @override
+  String get plantUpdatedSuccessfully => 'वनस्पती यशस्वीरित्या अपडेट झाली.';
+
+  @override
+  String get failedToSavePlant => 'वनस्पती जतन करणे अयशस्वी.';
+
+  @override
+  String get nearbyPlantVendorsTitle => 'जवळपासचे वनस्पती विक्रेते';
+
+  @override
+  String get locationNotVerified => 'स्थान सत्यापित नाही';
+
+  @override
+  String get perDay => '/दिवस';
+
+  @override
+  String get locationNotAvailable => 'स्थान उपलब्ध नाही';
+
+  @override
+  String get listNewMachineTitle => 'नवीन यंत्र सूचीबद्ध करा';
+
+  @override
+  String get editMachineTitle => 'यंत्र संपादित करा';
+
+  @override
+  String get machineNameLabel => 'यंत्राचे नाव';
+
+  @override
+  String get machineTypeLabel => 'यंत्राचा प्रकार';
+
+  @override
+  String get pricePerDayLabel => 'दररोज किंमत (₹)';
+
+  @override
+  String get ownerNameLabel => 'मालकाचे नाव';
+
+  @override
+  String get phoneNumberLabel => 'फोन नंबर';
+
+  @override
+  String get machineTractor => 'ट्रॅक्टर';
+
+  @override
+  String get machineHarvester => 'हार्वेस्टर';
+
+  @override
+  String get machinePlough => 'नांगर';
+
+  @override
+  String get machineSeeder => 'बियाणे यंत्र';
+
+  @override
+  String get machineSprayer => 'फवारणी यंत्र';
+
+  @override
+  String get machineTiller => 'टिलर';
+
+  @override
+  String get machineBaler => 'बेलर';
+
+  @override
+  String get enterMachineName => 'यंत्राचे नाव टाका';
+
+  @override
+  String get selectAType => 'एक प्रकार निवडा';
+
+  @override
+  String get enterOwnerName => 'मालकाचे नाव टाका';
+
+  @override
+  String get enterPhone => 'फोन टाका';
+
+  @override
+  String get currentLocationSet => 'सध्याचे स्थान सेट केले';
+
+  @override
+  String get locationNotSet => 'स्थान सेट केलेले नाही';
+
+  @override
+  String get selectMachineType => 'यंत्राचा प्रकार निवडा';
+
+  @override
+  String get setLocationFirst => 'आधी स्थान सेट करा';
+
+  @override
+  String get enterValidNumericPrice => 'योग्य संख्यात्मक किंमत टाका';
+
+  @override
+  String get submitListing => 'नोंद सबमिट करा';
+
+  @override
+  String get updateListing => 'नोंद अपडेट करा';
+
+  @override
+  String get nearestFirst => 'जवळचे आधी';
+
+  @override
+  String get lowestPriceFirst => 'कमी किंमत आधी';
+
+  @override
+  String get searchByNameOwnerLocation => 'नाव, मालक किंवा स्थान शोधा';
+
+  @override
+  String get referenceLocationNotAvailable => 'संदर्भ स्थान उपलब्ध नाही';
+
+  @override
+  String get noMachinesFoundNearby => 'जवळपास यंत्रे आढळली नाहीत';
+
+  @override
+  String get nearbyMachinesMapTitle => 'जवळपासची यंत्रे (नकाशा)';
+
+  @override
+  String get searchAndSetLocation => 'शोधा आणि स्थान सेट करा';
+
+  @override
+  String dayForecastTitle(String day) {
+    return '$day अंदाज';
+  }
+
+  @override
+  String get minMaxTemperature => 'किमान / कमाल तापमान';
+
+  @override
+  String get enterLocationHint => 'स्थान टाका...';
+
+  @override
+  String get noLocationsFound => 'स्थाने आढळली नाहीत';
+
+  @override
+  String get diseaseDetected => 'रोग आढळला';
+
+  @override
+  String get errorContactingAI => 'AI शी संपर्क करताना त्रुटी';
+
+  @override
+  String get chatbotWelcomeMessage => 'नमस्कार! 👋 मी कृषिमित्र AI आहे. शेतीबद्दल मी तुम्हाला कशी मदत करू?';
+
+  @override
+  String get profilePhotoUpdated => 'प्रोफाइल फोटो अपडेट झाला';
+
+  @override
+  String get updateProfilePhoto => 'प्रोफाइल फोटो बदला';
+
+  @override
+  String get profileSaved => 'प्रोफाइल जतन झाला';
+
+  @override
+  String get themePreferenceSaved => 'थीम प्राधान्य जतन झाले. लागू करण्यासाठी अ‍ॅप रीस्टार्ट करा.';
+
+  @override
+  String get passwordChangeNotAvailable => 'पासवर्ड बदल उपलब्ध नाही';
+
+  @override
+  String get passwordResetEmailSent => 'पासवर्ड रीसेट ईमेल पाठवला';
+
+  @override
+  String get failedToSendResetEmail => 'रीसेट ईमेल पाठवणे अयशस्वी';
+
+  @override
+  String get deleteAccountTitle => 'खाते हटवा';
+
+  @override
+  String get deleteAccountConfirm => 'हे तुमचे खाते कायमचे हटवेल. खात्री आहे का?';
+
+  @override
+  String get exportStarted => 'निर्यात सुरू झाली (ईमेल किंवा डाउनलोड तपासा)';
+
+  @override
+  String get exportFailed => 'निर्यात अयशस्वी';
+
+  @override
+  String get setDefaultLocation => 'डीफॉल्ट स्थान सेट करा';
+
+  @override
+  String get locationHintText => 'उदा., पुणे, महाराष्ट्र';
+
+  @override
+  String get personalInfo => 'वैयक्तिक माहिती';
+
+  @override
+  String get pleaseEnterName => 'कृपया नाव टाका';
+
+  @override
+  String get defaultLocationLabel => 'डीफॉल्ट स्थान';
+
+  @override
+  String get pleaseProvideDefaultLocation => 'कृपया डीफॉल्ट स्थान द्या';
+
+  @override
+  String get help => 'मदत';
+
+  @override
+  String get darkModeSavedLocally => 'स्थानिकपणे जतन केले. लागू करण्यासाठी रीस्टार्ट करा.';
+
+  @override
+  String get userId => 'वापरकर्ता ID';
+
+  @override
+  String get providerLabel => 'प्रदाता';
+
+  @override
+  String get changePassword => 'पासवर्ड बदला';
+
+  @override
+  String get exportData => 'डेटा निर्यात करा';
+
+  @override
+  String get deleteAccount => 'खाते हटवा';
+
+  @override
+  String get errorDeletingAccount => 'खाते हटवताना त्रुटी';
 }

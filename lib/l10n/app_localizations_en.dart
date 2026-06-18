@@ -409,4 +409,766 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activitySection => 'Activity';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get submit => 'Submit';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get complete => 'Complete';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get call => 'Call';
+
+  @override
+  String get whatsApp => 'WhatsApp';
+
+  @override
+  String get openMaps => 'Open Maps';
+
+  @override
+  String get openInMaps => 'Open in Maps';
+
+  @override
+  String get pickImage => 'Pick Image';
+
+  @override
+  String get uploadImage => 'Upload Image';
+
+  @override
+  String get noImageSelected => 'No image selected';
+
+  @override
+  String get pickImageFirst => 'Pick an image first';
+
+  @override
+  String get imageUploadedSuccessfully => 'Image uploaded successfully';
+
+  @override
+  String get imageUploadFailed => 'Image upload failed';
+
+  @override
+  String get imageUploaded => 'Image uploaded';
+
+  @override
+  String get uploadFailed => 'Upload failed';
+
+  @override
+  String get setLocation => 'Set Location';
+
+  @override
+  String get searchPlace => 'Search place...';
+
+  @override
+  String get fetchingLocation => 'Fetching location...';
+
+  @override
+  String get locationSet => 'Location set';
+
+  @override
+  String get pricePerUnitLabel => 'Price per unit (₹)';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get productNameLabel => 'Product Name';
+
+  @override
+  String get statusLabel => 'Status:';
+
+  @override
+  String get totalLabel => 'Total:';
+
+  @override
+  String get farmerLabel => 'Farmer:';
+
+  @override
+  String get mobileLabel => 'Mobile:';
+
+  @override
+  String get qtyLabel => 'Qty:';
+
+  @override
+  String get sellerLabel => 'Seller:';
+
+  @override
+  String get buyerLabel => 'Buyer:';
+
+  @override
+  String get ownerLabel => 'Owner:';
+
+  @override
+  String get notAvailable => 'Not Available';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get allListingsTab => 'All Listings';
+
+  @override
+  String get pendingApprovalTab => 'Pending Approval';
+
+  @override
+  String get postExportStock => 'Post Export Stock';
+
+  @override
+  String get noPendingListings => 'No pending listings.';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get myListings => 'My Listings';
+
+  @override
+  String get postStock => 'Post Stock';
+
+  @override
+  String get noListingsYet => 'You have no listings yet.';
+
+  @override
+  String get deleteListingConfirm => 'Are you sure you want to delete this listing?';
+
+  @override
+  String get listingDeleted => 'Listing deleted.';
+
+  @override
+  String get browseExportListings => 'Browse Export Listings';
+
+  @override
+  String get noProductsAvailable => 'No products available.';
+
+  @override
+  String get createPurchaseOrder => 'Create Purchase Order';
+
+  @override
+  String get listingDetailsTitle => 'Listing Details';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get approveListing => 'Approve Listing';
+
+  @override
+  String get rejectListing => 'Reject Listing';
+
+  @override
+  String get listingApproved => 'Listing approved.';
+
+  @override
+  String get listingRejected => 'Listing rejected.';
+
+  @override
+  String get errorUpdatingListing => 'Error updating listing.';
+
+  @override
+  String get editExportStockTitle => 'Edit Export Stock';
+
+  @override
+  String get pleaseEnterProductName => 'Please enter product name';
+
+  @override
+  String get pleaseEnterQuantity => 'Please enter quantity';
+
+  @override
+  String get pleaseEnterPrice => 'Please enter price';
+
+  @override
+  String get pleaseEnterLocation => 'Please enter location';
+
+  @override
+  String get listingSubmittedSuccessfully => 'Listing submitted successfully.';
+
+  @override
+  String get listingUpdatedSuccessfully => 'Listing updated successfully.';
+
+  @override
+  String get failedToSubmitListing => 'Failed to submit listing.';
+
+  @override
+  String get addExportProductTitle => 'Add Export Product';
+
+  @override
+  String get editExportProductTitle => 'Edit Export Product';
+
+  @override
+  String get descriptionOptionalLabel => 'Description (optional)';
+
+  @override
+  String get enterProductName => 'Enter product name';
+
+  @override
+  String get enterQuantity => 'Enter quantity';
+
+  @override
+  String get enterValidPrice => 'Enter valid price';
+
+  @override
+  String get selectCategory => 'Select category';
+
+  @override
+  String get productAddedSuccessfully => 'Product added successfully.';
+
+  @override
+  String get productUpdatedSuccessfully => 'Product updated successfully.';
+
+  @override
+  String get failedToSubmitProduct => 'Failed to submit product.';
+
+  @override
+  String get buyerNameLabel => 'Buyer Name';
+
+  @override
+  String get deliveryAddressLabel => 'Delivery Address';
+
+  @override
+  String get notesOptionalLabel => 'Notes (optional)';
+
+  @override
+  String get enterBuyerName => 'Enter buyer name';
+
+  @override
+  String get enterValidNumber => 'Enter valid number';
+
+  @override
+  String get enterDeliveryAddress => 'Enter delivery address';
+
+  @override
+  String get placeOrder => 'Place Order';
+
+  @override
+  String get orderPlacedSuccessfully => 'Order placed successfully!';
+
+  @override
+  String get failedToPlaceOrder => 'Failed to place order.';
+
+  @override
+  String get myPurchaseOrdersTitle => 'My Purchase Orders';
+
+  @override
+  String get loadingProduct => 'Loading product...';
+
+  @override
+  String get productNotFound => 'Product not found';
+
+  @override
+  String get noPurchaseOrdersYet => 'No purchase orders yet.';
+
+  @override
+  String get noOrdersReceivedYet => 'No orders received yet.';
+
+  @override
+  String get purchaseOrderTitle => 'Purchase Order';
+
+  @override
+  String get orderDetails => 'Order Details';
+
+  @override
+  String get notesLabel => 'Notes:';
+
+  @override
+  String get confirmOrder => 'Confirm Order';
+
+  @override
+  String get completeOrder => 'Complete Order';
+
+  @override
+  String get cancelOrder => 'Cancel Order';
+
+  @override
+  String get confirmOrderConfirm => 'Are you sure you want to confirm this order?';
+
+  @override
+  String get completeOrderConfirm => 'Are you sure you want to complete this order?';
+
+  @override
+  String get cancelOrderConfirm => 'Are you sure you want to cancel this order?';
+
+  @override
+  String get orderConfirmed => 'Order confirmed.';
+
+  @override
+  String get orderCompleted => 'Order completed.';
+
+  @override
+  String get orderCancelled => 'Order cancelled.';
+
+  @override
+  String get errorUpdatingOrder => 'Error updating order.';
+
+  @override
+  String get orderNotFound => 'Order not found.';
+
+  @override
+  String get productDetails => 'Product Details';
+
+  @override
+  String get nearbyFarmersTitle => 'Nearby Farmers';
+
+  @override
+  String get nearbyFarmersMapTitle => 'Nearby Farmers (Map)';
+
+  @override
+  String kmAway(String distance) {
+    return '$distance km away';
+  }
+
+  @override
+  String get labourDetails => 'Labour Details';
+
+  @override
+  String get callLabour => 'Call Labour';
+
+  @override
+  String get hireLabour => 'Hire Labour';
+
+  @override
+  String get deleteOptionAvailableInListingPage => 'Delete option available in listing page.';
+
+  @override
+  String get editLabour => 'Edit Labour';
+
+  @override
+  String get addLabourTitle => 'Add Labour';
+
+  @override
+  String get editLabourTitle => 'Edit Labour';
+
+  @override
+  String get fullNameLabel => 'Full Name';
+
+  @override
+  String get skillProfessionLabel => 'Skill / Profession';
+
+  @override
+  String get contactNumberLabel => 'Contact Number';
+
+  @override
+  String get dailyWageLabel => 'Daily Wage (₹)';
+
+  @override
+  String get enterName => 'Enter name';
+
+  @override
+  String get enterSkill => 'Enter skill';
+
+  @override
+  String get enterContact => 'Enter contact';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get saveLabour => 'Save Labour';
+
+  @override
+  String get updateLabour => 'Update Labour';
+
+  @override
+  String get labourSavedSuccessfully => 'Labour saved successfully.';
+
+  @override
+  String get labourUpdatedSuccessfully => 'Labour updated successfully.';
+
+  @override
+  String get failedToSaveLabour => 'Failed to save labour.';
+
+  @override
+  String hireLabourTitle(String name) {
+    return 'Hire $name';
+  }
+
+  @override
+  String get yourNameLabel => 'Your Name';
+
+  @override
+  String get yourContactLabel => 'Your Contact';
+
+  @override
+  String get startDateLabel => 'Start Date';
+
+  @override
+  String get endDateLabel => 'End Date';
+
+  @override
+  String get numberOfDaysLabel => 'Number of Days';
+
+  @override
+  String get workTypeLabel => 'Work Type';
+
+  @override
+  String get enterYourName => 'Enter your name';
+
+  @override
+  String get enterStartDate => 'Enter start date';
+
+  @override
+  String get enterEndDate => 'Enter end date';
+
+  @override
+  String get enterNumberOfDays => 'Enter number of days';
+
+  @override
+  String get harvesting => 'Harvesting';
+
+  @override
+  String get planting => 'Planting';
+
+  @override
+  String get spraying => 'Spraying';
+
+  @override
+  String get ploughing => 'Ploughing';
+
+  @override
+  String get sendHireRequest => 'Send Hire Request';
+
+  @override
+  String get hireRequestSentSuccessfully => 'Hire request sent successfully!';
+
+  @override
+  String get failedToSendHireRequest => 'Failed to send hire request.';
+
+  @override
+  String get mustBeSignedInToHire => 'You must be signed in to send a hire request.';
+
+  @override
+  String get nearbyLabourTitle => 'Nearby Labour';
+
+  @override
+  String get searchLabourHint => 'Search by name, skill, or location';
+
+  @override
+  String get selectRadius => 'Select Radius';
+
+  @override
+  String get locationPermissionDenied => 'Location permission denied. Please enable in settings.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get noLabourFoundNearby => 'No labour found nearby.';
+
+  @override
+  String get failedToLoadLabour => 'Failed to load labour.';
+
+  @override
+  String get couldNotGetLocation => 'Could not get your location.';
+
+  @override
+  String get failedToLoadPlants => 'Failed to load plants';
+
+  @override
+  String get errorLoadingPlantDetails => 'Error loading plant details';
+
+  @override
+  String get unknownVendor => 'Unknown vendor';
+
+  @override
+  String get notProvided => 'Not provided';
+
+  @override
+  String get noDescriptionProvided => 'No description provided.';
+
+  @override
+  String get couldNotOpenWhatsApp => 'Could not open WhatsApp';
+
+  @override
+  String get descriptionHeader => 'Description';
+
+  @override
+  String get addPlantTitle => 'Add Plant';
+
+  @override
+  String get editPlantTitle => 'Edit Plant';
+
+  @override
+  String get plantNameLabel => 'Plant Name';
+
+  @override
+  String get plantTypeLabel => 'Plant Type';
+
+  @override
+  String get quantityAvailableLabel => 'Quantity Available';
+
+  @override
+  String get vendorNurseryNameLabel => 'Vendor / Nursery Name';
+
+  @override
+  String get floweringPlant => 'Flowering Plant';
+
+  @override
+  String get fruitPlant => 'Fruit Plant';
+
+  @override
+  String get vegetablePlant => 'Vegetable Plant';
+
+  @override
+  String get medicinalPlant => 'Medicinal Plant';
+
+  @override
+  String get ornamental => 'Ornamental';
+
+  @override
+  String get enterPlantName => 'Enter plant name';
+
+  @override
+  String get enterType => 'Enter type';
+
+  @override
+  String get enterVendorName => 'Enter vendor name';
+
+  @override
+  String get savePlant => 'Save Plant';
+
+  @override
+  String get updatePlant => 'Update Plant';
+
+  @override
+  String get plantSavedSuccessfully => 'Plant saved successfully.';
+
+  @override
+  String get plantUpdatedSuccessfully => 'Plant updated successfully.';
+
+  @override
+  String get failedToSavePlant => 'Failed to save plant.';
+
+  @override
+  String get nearbyPlantVendorsTitle => 'Nearby Plant Vendors';
+
+  @override
+  String get locationNotVerified => 'Location not verified';
+
+  @override
+  String get perDay => '/day';
+
+  @override
+  String get locationNotAvailable => 'Location not available';
+
+  @override
+  String get listNewMachineTitle => 'List New Machine';
+
+  @override
+  String get editMachineTitle => 'Edit Machine';
+
+  @override
+  String get machineNameLabel => 'Machine Name';
+
+  @override
+  String get machineTypeLabel => 'Machine Type';
+
+  @override
+  String get pricePerDayLabel => 'Price per day (₹)';
+
+  @override
+  String get ownerNameLabel => 'Owner Name';
+
+  @override
+  String get phoneNumberLabel => 'Phone Number';
+
+  @override
+  String get machineTractor => 'Tractor';
+
+  @override
+  String get machineHarvester => 'Harvester';
+
+  @override
+  String get machinePlough => 'Plough';
+
+  @override
+  String get machineSeeder => 'Seeder';
+
+  @override
+  String get machineSprayer => 'Sprayer';
+
+  @override
+  String get machineTiller => 'Tiller';
+
+  @override
+  String get machineBaler => 'Baler';
+
+  @override
+  String get enterMachineName => 'Enter machine name';
+
+  @override
+  String get selectAType => 'Select a type';
+
+  @override
+  String get enterOwnerName => 'Enter owner name';
+
+  @override
+  String get enterPhone => 'Enter phone';
+
+  @override
+  String get currentLocationSet => 'Current location set';
+
+  @override
+  String get locationNotSet => 'Location not set';
+
+  @override
+  String get selectMachineType => 'Select a machine type';
+
+  @override
+  String get setLocationFirst => 'Set location first';
+
+  @override
+  String get enterValidNumericPrice => 'Enter a valid numeric price';
+
+  @override
+  String get submitListing => 'Submit Listing';
+
+  @override
+  String get updateListing => 'Update Listing';
+
+  @override
+  String get nearestFirst => 'Nearest first';
+
+  @override
+  String get lowestPriceFirst => 'Lowest price first';
+
+  @override
+  String get searchByNameOwnerLocation => 'Search by name, owner, or location';
+
+  @override
+  String get referenceLocationNotAvailable => 'Reference location not available';
+
+  @override
+  String get noMachinesFoundNearby => 'No machines found nearby';
+
+  @override
+  String get nearbyMachinesMapTitle => 'Nearby Machines (Map)';
+
+  @override
+  String get searchAndSetLocation => 'Search & set location';
+
+  @override
+  String dayForecastTitle(String day) {
+    return '$day Forecast';
+  }
+
+  @override
+  String get minMaxTemperature => 'Min / Max Temperature';
+
+  @override
+  String get enterLocationHint => 'Enter location...';
+
+  @override
+  String get noLocationsFound => 'No locations found';
+
+  @override
+  String get diseaseDetected => 'Disease detected';
+
+  @override
+  String get errorContactingAI => 'Error contacting AI';
+
+  @override
+  String get chatbotWelcomeMessage => 'Hello! 👋 I am KrishiMithra AI. How can I help you with farming today?';
+
+  @override
+  String get profilePhotoUpdated => 'Profile photo updated';
+
+  @override
+  String get updateProfilePhoto => 'Update profile photo';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get themePreferenceSaved => 'Theme preference saved. Restart app to apply immediately.';
+
+  @override
+  String get passwordChangeNotAvailable => 'Password change not available';
+
+  @override
+  String get passwordResetEmailSent => 'Password reset email sent';
+
+  @override
+  String get failedToSendResetEmail => 'Failed to send reset email';
+
+  @override
+  String get deleteAccountTitle => 'Delete account';
+
+  @override
+  String get deleteAccountConfirm => 'This will permanently delete your account and associated user data. Are you sure?';
+
+  @override
+  String get exportStarted => 'Export started (check your email or downloads)';
+
+  @override
+  String get exportFailed => 'Export failed';
+
+  @override
+  String get setDefaultLocation => 'Set default location';
+
+  @override
+  String get locationHintText => 'e.g., Bengaluru, Karnataka';
+
+  @override
+  String get personalInfo => 'Personal Info';
+
+  @override
+  String get pleaseEnterName => 'Please enter a name';
+
+  @override
+  String get defaultLocationLabel => 'Default location';
+
+  @override
+  String get pleaseProvideDefaultLocation => 'Please provide a default location';
+
+  @override
+  String get help => 'Help';
+
+  @override
+  String get darkModeSavedLocally => 'Saved locally. Restart to apply.';
+
+  @override
+  String get userId => 'User ID';
+
+  @override
+  String get providerLabel => 'Provider';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get exportData => 'Export data';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get errorDeletingAccount => 'Error deleting account';
 }

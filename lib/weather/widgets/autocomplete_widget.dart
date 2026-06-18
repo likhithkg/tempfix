@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../l10n/app_localizations.dart';
 
 class AutocompleteWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -62,7 +63,7 @@ class AutocompleteWidget extends StatelessWidget {
           controller: textEditingController,
           focusNode: focusNode,
           decoration: InputDecoration(
-            hintText: 'Enter location...',
+            hintText: AppLocalizations.of(context)!.enterLocationHint,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -105,9 +106,9 @@ class AutocompleteWidget extends StatelessWidget {
       ),
 
       // 🔹 empty UI
-      emptyBuilder: (context) => const Padding(
-        padding: EdgeInsets.all(10),
-        child: Text("No locations found"),
+      emptyBuilder: (context) => Padding(
+        padding: const EdgeInsets.all(10),
+        child: Text(AppLocalizations.of(context)!.noLocationsFound),
       ),
     );
   }

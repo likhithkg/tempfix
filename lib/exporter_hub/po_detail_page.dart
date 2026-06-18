@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'exporter_service.dart';
+import '../l10n/app_localizations.dart';
 
 /// Purchase Order Detail Page
 /// Shows a single PO (real-time) and allows actions:
@@ -327,7 +328,7 @@ class PODetailPage extends StatelessWidget {
         if (snap.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Purchase Order Details'),
+              title: Text(AppLocalizations.of(context)!.orderDetails),
               backgroundColor: Colors.green,
             ),
             body: const Center(child: CircularProgressIndicator()),
@@ -337,10 +338,10 @@ class PODetailPage extends StatelessWidget {
         if (!snap.hasData || !snap.data!.exists) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Purchase Order Details'),
+              title: Text(AppLocalizations.of(context)!.orderDetails),
               backgroundColor: Colors.green,
             ),
-            body: const Center(child: Text('Order not found.')),
+            body: Center(child: Text(AppLocalizations.of(context)!.orderNotFound)),
           );
         }
 

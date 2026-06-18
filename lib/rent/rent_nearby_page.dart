@@ -19,6 +19,7 @@ import 'rent_machine_service.dart';
 
 // Import the fullscreen map page (single, aliased import)
 import 'rent_nearby_map_page.dart' as rent_map_page;
+import '../l10n/app_localizations.dart';
 
 import 'package:latlong2/latlong.dart' as ll;
 
@@ -253,7 +254,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
   void _openFullMap(List<RentMachine> machines) {
     if (_pos == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reference location not available')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.referenceLocationNotAvailable)),
       );
       return;
     }
@@ -274,7 +275,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.referenceName ?? 'Nearby Machines'),
+        title: Text(widget.referenceName ?? AppLocalizations.of(context)!.nearbyMachines),
         actions: [
           DropdownButton<int>(
             value: _selectedRadius,
@@ -288,10 +289,13 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
             onSelected: (v) => setState(() => _sortBy = v),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: "distance", child: Text("Nearest first")),
-              PopupMenuItem(value: "price", child: Text("Lowest price first")),
-            ],
+            itemBuilder: (ctx) {
+              final l2 = AppLocalizations.of(ctx)!;
+              return [
+                PopupMenuItem(value: "distance", child: Text(l2.nearestFirst)),
+                PopupMenuItem(value: "price", child: Text(l2.lowestPriceFirst)),
+              ];
+            },
           ),
           
           IconButton(
@@ -316,7 +320,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
               controller: _locFilterCtrl,
               onChanged: (v) => setState(() => _locFilter = v),
               decoration: InputDecoration(
-                hintText: 'Search by name, owner, or location',
+                hintText: AppLocalizations.of(context)!.searchByNameOwnerLocation,
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 border: OutlineInputBorder(
@@ -330,9 +334,9 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : (_pos == null)
-              ? const Center(child: Text('Reference location not available'))
+              ? Center(child: Text(AppLocalizations.of(context)!.referenceLocationNotAvailable))
               : filtered.isEmpty
-                  ? const Center(child: Text('No machines found nearby'))
+                  ? Center(child: Text(AppLocalizations.of(context)!.noMachinesFoundNearby))
                   : _mapView
                       ? SizedBox(
                           height: 300,
@@ -404,13 +408,13 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
               ElevatedButton.icon(
                 onPressed: () => _call(m.phone),
                 icon: const Icon(Icons.call),
-                label: const Text('Call'),
+                label: Text(AppLocalizations.of(context)!.call),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: () => _openMaps(m),
                 icon: const Icon(Icons.map),
-                label: const Text('Open in Maps'),
+                label: Text(AppLocalizations.of(ctx)!.openInMaps),
               ),
               const SizedBox(width: 8),
               if (isOwner)
@@ -419,7 +423,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                     Navigator.pop(ctx);
                   },
                   icon: const Icon(Icons.edit),
-                  label: const Text('Edit'),
+                  label: Text(AppLocalizations.of(ctx)!.edit),
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                 ),

@@ -13,6 +13,7 @@ import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_service.dart';
 
 import '../services/image_upload_service.dart';
+import '../l10n/app_localizations.dart';
 
 // ---------- CONFIG ----------
 const String LOCATIONIQ_API_KEY =
@@ -1180,7 +1181,7 @@ class _LocationPickerDialogState
                     null,
                   ),
                   child:
-                      const Text('Close'),
+                      Text(AppLocalizations.of(context)!.close),
                 ),
               ),
             ],

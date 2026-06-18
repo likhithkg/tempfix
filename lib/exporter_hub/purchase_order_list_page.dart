@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'exporter_service.dart';
 import 'po_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../l10n/app_localizations.dart';
 
 /// PurchaseOrderListPage
 /// - If `buyerId` is provided, it will show orders for that buyerId.
@@ -137,7 +138,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Purchase Orders'),
+        title: Text(AppLocalizations.of(context)!.myPurchaseOrdersTitle),
         backgroundColor: Colors.green,
       ),
       body: effectiveBuyerId == null

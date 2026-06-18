@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'rent_model.dart';
 import 'rent_list_form_page.dart';
+import '../l10n/app_localizations.dart';
 
 class RentMachineDetailsPage extends StatelessWidget {
   final RentMachine machine;
@@ -226,7 +227,7 @@ class RentMachineDetailsPage extends StatelessWidget {
                                 const Icon(Icons.call),
 
                             label:
-                                const Text("Call"),
+                                Text(AppLocalizations.of(context)!.call),
 
                             style:
                                 ElevatedButton.styleFrom(

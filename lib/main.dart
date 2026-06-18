@@ -10,7 +10,6 @@ import 'rent/rent_home_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'providers/locale_provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'services/locale_service.dart';
  // adjust path if you put it elsewhere
@@ -310,9 +309,9 @@ class LoginPage extends StatelessWidget {
                     labelColor: labelColor,
                     unselectedLabelColor: Colors.grey[300],
                     indicatorColor: indicatorColor,
-                    tabs: const [
-                      Tab(icon: Icon(Icons.email), text: "Email"),
-                      Tab(icon: Icon(Icons.phone), text: "Phone"),
+                    tabs: [
+                      Tab(icon: const Icon(Icons.email), text: AppLocalizations.of(context)!.email),
+                      const Tab(icon: Icon(Icons.phone), text: "Phone"),
                     ],
                   ),
                   // Expanded content area for forms
@@ -412,7 +411,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: "Email",
+                    labelText: AppLocalizations.of(context)!.email,
                     prefixIcon: const Icon(Icons.email),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -422,7 +421,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
                   controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: "Password",
+                    labelText: AppLocalizations.of(context)!.password,
                     prefixIcon: const Icon(Icons.lock),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -580,7 +579,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                         controller: otpController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: "Enter OTP",
+                          labelText: AppLocalizations.of(context)!.enterOtp,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                       ),
@@ -594,7 +593,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: loading ? const CircularProgressIndicator(color: Colors.white) : const Text("Verify OTP"),
+                          child: loading ? const CircularProgressIndicator(color: Colors.white) : Text(AppLocalizations.of(context)!.verifyOtp),
                         ),
                       ),
                     ],
@@ -733,7 +732,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         TextField(
                           controller: emailController,
                           decoration: InputDecoration(
-                            labelText: "Email",
+                            labelText: AppLocalizations.of(context)!.email,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
@@ -742,7 +741,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           controller: passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
-                            labelText: "Password",
+                            labelText: AppLocalizations.of(context)!.password,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
@@ -835,7 +834,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: "Email",
+                            labelText: AppLocalizations.of(context)!.email,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
@@ -849,7 +848,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: loading ? const CircularProgressIndicator(color: Colors.white) : const Text("Send Reset Link"),
+                            child: loading ? const CircularProgressIndicator(color: Colors.white) : Text(AppLocalizations.of(context)!.sendResetLink),
                           ),
                         ),
                       ],
@@ -1199,7 +1198,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Recent Locations',
+                        Text(AppLocalizations.of(context)!.recentLocations,
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).textTheme.bodyMedium?.color)),
                         const SizedBox(height: 8),
                         ..._recentLocations.map((loc) => ListTile(
@@ -1399,8 +1398,8 @@ Widget build(BuildContext context) {
         final currentCode = LocaleService.instance.currentLanguageCode;
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Select Language"),
+          builder: (ctx) { final l2 = AppLocalizations.of(ctx)!; return AlertDialog(
+            title: Text(l2.selectLanguage),
             contentPadding: const EdgeInsets.symmetric(vertical: 8),
             content: SizedBox(
               width: double.maxFinite,
@@ -1427,7 +1426,7 @@ Widget build(BuildContext context) {
                 }).toList(),
               ),
             ),
-          ),
+          ); },
         );
       },
     ),

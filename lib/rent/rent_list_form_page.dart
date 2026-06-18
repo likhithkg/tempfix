@@ -10,6 +10,7 @@ import 'rent_model.dart';
 import 'package:krishimithra/rent/rent_machine_service.dart';
 
 import '../services/image_upload_service.dart';
+import '../l10n/app_localizations.dart';
 
 class RentListFormPage extends StatefulWidget {
   final RentMachine? existingMachine;
@@ -152,9 +153,9 @@ class _RentListFormPageState
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('📍 Current location set'),
+              Text(AppLocalizations.of(context)!.currentLocationSet),
         ),
       );
     } catch (e) {
@@ -195,9 +196,9 @@ class _RentListFormPageState
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Pick an image first'),
+              Text(AppLocalizations.of(context)!.pickImageFirst),
         ),
       );
 
@@ -237,9 +238,9 @@ class _RentListFormPageState
 
         ScaffoldMessenger.of(context)
             .showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text('Image upload failed'),
+                Text(AppLocalizations.of(context)!.imageUploadFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -389,9 +390,9 @@ class _RentListFormPageState
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Select a machine type'),
+              Text(AppLocalizations.of(context)!.selectMachineType),
         ),
       );
 
@@ -403,9 +404,9 @@ class _RentListFormPageState
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Set location first'),
+              Text(AppLocalizations.of(context)!.setLocationFirst),
         ),
       );
 
@@ -524,14 +525,15 @@ class _RentListFormPageState
     final isEdit =
         widget.existingMachine != null;
 
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           isEdit
-              ? 'Edit Machine'
-              : 'List New Machine',
+              ? l.editMachineTitle
+              : l.listNewMachineTitle,
         ),
       ),
       body: Form(
@@ -601,7 +603,7 @@ class _RentListFormPageState
                     Icons.image,
                   ),
                   label:
-                      const Text('Pick image'),
+                      Text(l.pickImage),
                 ),
 
                 OutlinedButton.icon(
@@ -610,8 +612,8 @@ class _RentListFormPageState
                   icon: const Icon(
                     Icons.cloud_upload,
                   ),
-                  label: const Text(
-                    'Upload Image',
+                  label: Text(
+                    l.uploadImage,
                   ),
                 ),
               ],

@@ -14,6 +14,7 @@ import 'labour_model.dart';
 import 'labour_hub_service.dart';
 
 import '../services/image_upload_service.dart';
+import '../l10n/app_localizations.dart';
 
 class LabourHubFormPage extends StatefulWidget {
   final Labour? labour;
@@ -323,12 +324,13 @@ class _LabourHubFormPageState
         });
 
         if (mounted) {
+          final l2 = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(
                   context)
               .showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                "Image uploaded successfully",
+                l2.imageUploadedSuccessfully,
               ),
               backgroundColor:
                   Colors.green,
@@ -337,12 +339,13 @@ class _LabourHubFormPageState
         }
       } else {
         if (mounted) {
+          final l2 = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(
                   context)
               .showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                "Image upload failed",
+                l2.imageUploadFailed,
               ),
               backgroundColor:
                   Colors.red,
@@ -566,14 +569,15 @@ class _LabourHubFormPageState
   @override
   Widget build(
       BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor:
           Colors.grey.shade100,
       appBar: AppBar(
         title: Text(
           widget.labour == null
-              ? "Add Labour"
-              : "Edit Labour",
+              ? l.addLabourTitle
+              : l.editLabourTitle,
         ),
         backgroundColor:
             Colors.green.shade700,
@@ -998,9 +1002,9 @@ class _LabourHubFormPageState
                   icon: const Icon(
                     Icons.save,
                   ),
-                  label: const Text(
-                    "Save Labour",
-                    style: TextStyle(
+                  label: Text(
+                    l.saveLabour,
+                    style: const TextStyle(
                       fontSize: 16,
                     ),
                   ),

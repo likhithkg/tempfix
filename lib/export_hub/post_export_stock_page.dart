@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 import '../services/image_upload_service.dart';
+import '../l10n/app_localizations.dart';
 
 class PostExportStockPage extends StatefulWidget {
   final bool isEdit;
@@ -331,9 +332,9 @@ class _PostExportStockPageState
 
         ScaffoldMessenger.of(context)
             .showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text("Listing updated"),
+                Text(AppLocalizations.of(context)!.listingUpdatedSuccessfully),
           ),
         );
       } else {
@@ -349,9 +350,9 @@ class _PostExportStockPageState
 
         ScaffoldMessenger.of(context)
             .showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "Export stock posted successfully",
+              AppLocalizations.of(context)!.listingSubmittedSuccessfully,
             ),
           ),
         );
@@ -376,12 +377,13 @@ class _PostExportStockPageState
   @override
   Widget build(
       BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.isEdit
-              ? "Edit Export Stock"
-              : "Post Export Stock",
+              ? l.editExportStockTitle
+              : l.postExportStock,
         ),
       ),
       body: Padding(

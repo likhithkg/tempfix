@@ -7,6 +7,7 @@ import 'labour_hub_form_page.dart';
 import 'hire_request_form_page.dart';
 
 import '../services/libre_translate_service.dart';
+import '../l10n/app_localizations.dart';
 
 class LabourHubDetailPage extends StatefulWidget {
   final Labour labour;
@@ -72,14 +73,9 @@ class _LabourHubDetailPageState
 
                 : "Not Available";
 
-        translatedTitle =
-            "Labour Details";
-
-        translatedCall =
-            "Call Labour";
-
-        translatedHire =
-            "Hire Labour";
+        translatedTitle = '';
+        translatedCall = '';
+        translatedHire = '';
 
         loading = false;
       });
@@ -117,27 +113,6 @@ class _LabourHubDetailPageState
       targetLanguage: lang,
     );
 
-    translatedTitle =
-        await LibreTranslateService
-            .translateText(
-      text: "Labour Details",
-      targetLanguage: lang,
-    );
-
-    translatedCall =
-        await LibreTranslateService
-            .translateText(
-      text: "Call Labour",
-      targetLanguage: lang,
-    );
-
-    translatedHire =
-        await LibreTranslateService
-            .translateText(
-      text: "Hire Labour",
-      targetLanguage: lang,
-    );
-
     if (mounted) {
 
       setState(() {
@@ -168,6 +143,7 @@ class _LabourHubDetailPageState
   ) {
 
     final labour = widget.labour;
+    final l = AppLocalizations.of(context)!;
 
     final String? currentUserId =
         FirebaseAuth
@@ -185,8 +161,8 @@ class _LabourHubDetailPageState
         title: Text(
 
           loading
-              ? "Loading..."
-              : translatedTitle,
+              ? l.loading
+              : l.labourDetails,
         ),
 
         backgroundColor:
@@ -230,10 +206,10 @@ class _LabourHubDetailPageState
                           context)
                       .showSnackBar(
 
-                    const SnackBar(
+                    SnackBar(
 
                       content: Text(
-                        "Delete option available in listing page.",
+                        l.deleteOptionAvailableInListingPage,
                       ),
                     ),
                   );
@@ -241,19 +217,19 @@ class _LabourHubDetailPageState
               },
 
               itemBuilder:
-                  (context) => const [
+                  (context) => [
 
                 PopupMenuItem(
                   value: 'edit',
                   child: Text(
-                    "Edit Labour",
+                    l.editLabour,
                   ),
                 ),
 
                 PopupMenuItem(
                   value: 'delete',
                   child: Text(
-                    "Delete Labour",
+                    l.deleteLabour,
                   ),
                 ),
               ],
@@ -573,7 +549,7 @@ class _LabourHubDetailPageState
 
                       label: Text(
 
-                        translatedCall,
+                        l.callLabour,
 
                         style:
                             const TextStyle(
@@ -629,7 +605,7 @@ class _LabourHubDetailPageState
 
                       label: Text(
 
-                        translatedHire,
+                        l.hireLabour,
 
                         style:
                             const TextStyle(

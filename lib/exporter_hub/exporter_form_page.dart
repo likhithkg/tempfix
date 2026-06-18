@@ -23,6 +23,7 @@ import 'exporter_model.dart';
 import 'exporter_service.dart';
 
 import '../services/image_upload_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ExporterFormPage extends StatefulWidget {
   final ExportProduct? existingProduct;
@@ -234,9 +235,9 @@ class _ExporterFormPageState
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Image upload failed'),
+              Text(AppLocalizations.of(context)!.imageUploadFailed),
         ),
       );
 
@@ -722,9 +723,9 @@ class _ExporterFormPageState
 
         ScaffoldMessenger.of(context)
             .showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text('Product updated'),
+                Text(AppLocalizations.of(context)!.productUpdatedSuccessfully),
           ),
         );
 
@@ -755,7 +756,7 @@ class _ExporterFormPageState
             .showSnackBar(
           SnackBar(
             content: Text(
-              'Product created: ${docRef.id}',
+              AppLocalizations.of(context)!.productAddedSuccessfully,
             ),
           ),
         );
@@ -792,12 +793,13 @@ class _ExporterFormPageState
         widget.existingProduct !=
             null;
 
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           editing
-              ? 'Edit Product'
-              : 'Add Export Product',
+              ? l.editExportProductTitle
+              : l.addExportProductTitle,
         ),
         backgroundColor:
             Colors.green,
@@ -1039,8 +1041,8 @@ class _ExporterFormPageState
                             )
                           : Text(
                               editing
-                                  ? 'Update Product'
-                                  : 'Add Product',
+                                  ? l.update
+                                  : l.addExportProductTitle,
                               style:
                                   const TextStyle(
                                 fontSize:
@@ -1094,7 +1096,7 @@ class _ExporterFormPageState
                     Icons.photo_camera,
                   ),
                   label:
-                      const Text('Camera'),
+                      Text(AppLocalizations.of(context)!.camera),
                 ),
 
                 const SizedBox(
@@ -1109,7 +1111,7 @@ class _ExporterFormPageState
                     Icons.photo_library,
                   ),
                   label:
-                      const Text('Gallery'),
+                      Text(AppLocalizations.of(context)!.gallery),
                 ),
               ],
             ),

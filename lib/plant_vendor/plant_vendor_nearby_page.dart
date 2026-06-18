@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 
 import 'plant_vendor_model.dart';
 import 'plant_detail_page.dart';
+import '../l10n/app_localizations.dart';
 
 /// ⚠️ Do NOT commit this key to public GitHub
 const String _locationIqKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
@@ -209,7 +210,7 @@ class _PlantVendorNearbyPageState extends State<PlantVendorNearbyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nearby Plant Vendors'),
+        title: Text(AppLocalizations.of(context)!.nearbyPlantVendorsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

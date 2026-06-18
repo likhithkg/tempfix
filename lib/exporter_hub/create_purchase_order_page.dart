@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'exporter_model.dart';
 import 'exporter_service.dart';
-import 'purchase_order_list_page.dart'; // assumes file is in same folder
+import 'purchase_order_list_page.dart';
+import '../l10n/app_localizations.dart';
 
 class CreatePurchaseOrderPage extends StatefulWidget {
   final ExportProduct listingData;
@@ -145,9 +146,10 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
     final sellerIdOrMobile = sellerMobile.isNotEmpty ? ' • $sellerMobile' : '';
     final sellerLine = 'Seller: ${product.farmerName}$sellerIdOrMobile';
 
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buy from Farmer'),
+        title: Text(l.purchaseOrderTitle),
         backgroundColor: Colors.green.shade700,
       ),
       body: Padding(
@@ -205,9 +207,9 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
                 TextFormField(
                   controller: _qtyCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Quantity (kg)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l.quantityLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (val) {
                     final parsed = _cleanNumber(val ?? '');
@@ -221,9 +223,9 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
 
                 TextFormField(
                   controller: _buyerNameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Your name (buyer)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l.yourNameLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (val) =>
                       val == null || val.trim().isEmpty ? 'Enter your name' : null,
@@ -232,9 +234,9 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
 
                 TextFormField(
                   controller: _contactCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Contact number',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l.contactNumberLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (val) =>
                       val == null || val.trim().isEmpty ? 'Enter contact number' : null,
@@ -259,8 +261,8 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
                       onPressed: _isSubmitting ? null : _submit,
                       child: _isSubmitting
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Place Order',
-                              style: TextStyle(
+                          : Text(l.placeOrder,
+                              style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),

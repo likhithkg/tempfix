@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'hire_request_model.dart';
+import '../l10n/app_localizations.dart';
 
 class HireRequestFormPage extends StatefulWidget {
   final String labourId;
@@ -54,8 +55,9 @@ class _HireRequestFormPageState extends State<HireRequestFormPage> {
       await FirebaseFirestore.instance.collection('hire_requests').add(hireRequest.toMap());
 
       if (mounted) {
+        final l2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hire request sent to ${widget.labourName}')),
+          SnackBar(content: Text(l2.hireRequestSentSuccessfully)),
         );
         Navigator.pop(context);
       }
@@ -81,8 +83,9 @@ class _HireRequestFormPageState extends State<HireRequestFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Hire ${widget.labourName}')),
+      appBar: AppBar(title: Text(l.hireLabourTitle(widget.labourName))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -140,8 +143,8 @@ class _HireRequestFormPageState extends State<HireRequestFormPage> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
                 child: _isSubmitting
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Submit Hire Request'),
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(l.sendHireRequest),
               ),
             ],
           ),

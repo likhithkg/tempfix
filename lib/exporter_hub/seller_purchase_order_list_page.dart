@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'po_detail_page.dart';
+import '../l10n/app_localizations.dart';
 
 class SellerPurchaseOrderListPage extends StatefulWidget {
   const SellerPurchaseOrderListPage({Key? key}) : super(key: key);
@@ -30,7 +31,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
     final current = _user;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Orders for my listings'),
+        title: Text(AppLocalizations.of(context)!.myListingsTab),
         backgroundColor: Colors.green,
       ),
       body: current == null
@@ -287,7 +288,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                               context,
                               MaterialPageRoute(builder: (_) => PODetailPage(poId: id)),
                             ),
-                            child: const Text('View'),
+                            child: Text(AppLocalizations.of(context)!.view),
                           ),
                           onTap: () => Navigator.push(
                             context,

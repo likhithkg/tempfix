@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../l10n/app_localizations.dart';
 
 class ExportListingDetailPage extends StatefulWidget {
   final String docId;
@@ -47,6 +48,7 @@ class _ExportListingDetailPageState
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final data = widget.data;
 
     final String farmerName = data['farmerName'] ?? 'Unknown';
@@ -64,7 +66,7 @@ class _ExportListingDetailPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Listing Details"),
+        title: Text(l.listingDetailsTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -138,7 +140,7 @@ class _ExportListingDetailPageState
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.call),
-                    label: const Text("Call Farmer"),
+                    label: Text(l.callLabour),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding:
@@ -171,7 +173,7 @@ class _ExportListingDetailPageState
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text("Accept"),
+                        child: Text(l.approveListing),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -188,7 +190,7 @@ class _ExportListingDetailPageState
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text("Reject"),
+                        child: Text(l.reject),
                       ),
                     ),
                   ],

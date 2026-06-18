@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/app_localizations.dart';
 
 class PlantDetailPage extends StatelessWidget {
   final PlantVendor vendor;
@@ -14,7 +15,7 @@ class PlantDetailPage extends StatelessWidget {
     final p = (phone ?? '').trim();
     if (p.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number not available')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.notProvided)),
       );
       return;
     }
@@ -24,7 +25,7 @@ class PlantDetailPage extends StatelessWidget {
       await launchUrl(uri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot start call')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.cannotOpenDialer)),
       );
     }
   }
@@ -34,7 +35,7 @@ class PlantDetailPage extends StatelessWidget {
     final p = (phone ?? '').trim();
     if (p.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number not available')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.notProvided)),
       );
       return;
     }
@@ -47,7 +48,7 @@ class PlantDetailPage extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot open WhatsApp')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenWhatsApp)),
       );
     }
   }
@@ -55,7 +56,7 @@ class PlantDetailPage extends StatelessWidget {
   Future<void> _openMap(BuildContext context, double? lat, double? lng) async {
     if (lat == null || lng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location not available')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.locationNotAvailable)),
       );
       return;
     }
@@ -67,16 +68,17 @@ class PlantDetailPage extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot open maps')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.locationNotAvailable)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final plantName =
-        vendor.plantName.isNotEmpty ? vendor.plantName : 'Unknown plant';
-    final rawType = vendor.type.isNotEmpty ? vendor.type : 'Plant';
+        vendor.plantName.isNotEmpty ? vendor.plantName : l.unknownVendor;
+    final rawType = vendor.type.isNotEmpty ? vendor.type : l.plant;
 
     final typeParts = rawType.split(' - ');
     final category = typeParts.first;
@@ -220,7 +222,7 @@ class PlantDetailPage extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _call(context, phone),
                     icon: const Icon(Icons.call),
-                    label: const Text("Call"),
+                    label: Text(l.call),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -228,7 +230,7 @@ class PlantDetailPage extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _whatsapp(context, phone),
                     icon: const Icon(Icons.chat),
-                    label: const Text("WhatsApp"),
+                    label: Text(l.whatsApp),
                   ),
                 ),
               ],
@@ -237,7 +239,7 @@ class PlantDetailPage extends StatelessWidget {
             const SizedBox(height: 20),
 
             /// 🔹 DESCRIPTION
-            const Text("Description",
+            Text(l.descriptionHeader,
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Text(
