@@ -2,7 +2,6 @@
 // FINAL VERSION – AUTO GEOCODE + ROAD DISTANCE (LocationIQ)
 
 import 'dart:convert';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,7 +15,7 @@ import '../l10n/app_localizations.dart';
 const String _locationIqKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
 class PlantVendorNearbyPage extends StatefulWidget {
-  const PlantVendorNearbyPage({Key? key}) : super(key: key);
+  const PlantVendorNearbyPage({super.key});
 
   @override
   State<PlantVendorNearbyPage> createState() => _PlantVendorNearbyPageState();
@@ -60,7 +59,7 @@ class _PlantVendorNearbyPageState extends State<PlantVendorNearbyPage> {
     }
 
     _currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.best,
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
     );
   }
 

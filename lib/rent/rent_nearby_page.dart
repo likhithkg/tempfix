@@ -21,7 +21,6 @@ import 'rent_machine_service.dart';
 import 'rent_nearby_map_page.dart' as rent_map_page;
 import '../l10n/app_localizations.dart';
 
-import 'package:latlong2/latlong.dart' as ll;
 
 class RentNearbyPage extends StatefulWidget {
   final Position? userLocation; // coords from Dashboard (optional)
@@ -45,7 +44,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
   // Filters
   final List<int> _radiusOptions = [5, 10, 25, 50, -1];
   int _selectedRadius = 10;
-  bool _mapView = false;
+  final bool _mapView = false;
   String _sortBy = "distance";
   final TextEditingController _locFilterCtrl = TextEditingController();
   String _locFilter = "";
@@ -354,26 +353,45 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                             final m = filtered[i];
                             final dist = _distKmSafe(
                                 _pos!.latitude, _pos!.longitude, m.latitude, m.longitude);
-                            return Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              child: ListTile(
-                                onTap: () => _showMachineBottomSheet(m),
-                                leading: CircleAvatar(
-                                  radius: 28,
-                                  backgroundImage: m.imageUrl.isNotEmpty
-                                      ? NetworkImage(m.imageUrl)
-                                      : const AssetImage('assets/farmer_logo.png')
-                                          as ImageProvider,
-                                ),
-                                title: Text(m.name),
-                                subtitle: Text(
-                                  '${m.type} • ${_formatDistance(dist)}\n📍 ${m.location ?? "Unknown"}\n👤 ${m.ownerName}',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.call_rounded),
-                                  onPressed: () => _call(m.phone),
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Card(
+                                clipBehavior: Clip.antiAlias,
+                                child: ListTile(
+                                  onTap: () => _showMachineBottomSheet(m),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                  leading: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: m.imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            m.imageUrl,
+                                            width: 56,
+                                            height: 56,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                const Icon(Icons.agriculture, size: 32),
+                                          )
+                                        : const SizedBox(
+                                            width: 56,
+                                            height: 56,
+                                            child: Center(
+                                              child: Icon(Icons.agriculture, size: 32),
+                                            ),
+                                          ),
+                                  ),
+                                  title: Text(m.name,
+                                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                                  subtitle: Text(
+                                    '${m.type} • ${_formatDistance(dist)}'
+                                    '\n📍 ${m.location ?? "Unknown"}'
+                                    '\n👤 ${m.ownerName}',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.call_rounded),
+                                    onPressed: () => _call(m.phone),
+                                  ),
                                 ),
                               ),
                             );

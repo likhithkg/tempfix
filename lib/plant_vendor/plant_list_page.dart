@@ -1,5 +1,4 @@
 // lib/plant_vendor/plant_list_page.dart
-
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +11,9 @@ import 'package:krishimithra/plant_vendor/plant_vendor_nearby_page.dart';
 
 import '../services/libre_translate_service.dart';
 import '../theme.dart';
+import '../widgets/km_widgets.dart';
+import '../widgets/km_listing_card.dart';
+import '../widgets/km_status_chip.dart';
 import '../l10n/app_localizations.dart';
 
 /// Shows plant vendor listings filtered by category.
@@ -25,778 +27,188 @@ class PlantVendorListPage extends StatefulWidget {
   });
 
   @override
-  State<PlantVendorListPage> createState() =>
-      _PlantVendorListPageState();
+  State<PlantVendorListPage> createState() => _PlantVendorListPageState();
 }
 
-class _PlantVendorListPageState
-    extends State<PlantVendorListPage> {
-  final PlantVendorService _service =
-      PlantVendorService();
+class _PlantVendorListPageState extends State<PlantVendorListPage> {
+  final PlantVendorService _service = PlantVendorService();
 
   List<PlantVendor> _vendors = [];
-
   List<PlantVendor> _filtered = [];
-
   bool _loading = true;
 
   String _search = '';
-
   String _sort = 'Newest';
-
   String _filterCategory = '';
 
-  final Map<String, String>
-      _translationCache = {};
+  final Map<String, String> _translationCache = {};
+  final _searchCtrl = TextEditingController();
 
-  StreamSubscription<List<PlantVendor>>?
-      _streamSub;
+  StreamSubscription<List<PlantVendor>>? _streamSub;
 
   @override
   void initState() {
     super.initState();
-
     _filterCategory = widget.category;
-
     _load();
-
-    _streamSub = _service
-        .streamVendors()
-        .listen((list) {
-      _vendors = list;
-
-      _applyFilters();
-
-    }, onError: (e) {
-
-      if (mounted) {
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(
-              'Realtime load error: $e',
+    _streamSub = _service.streamVendors().listen(
+      (list) {
+        _vendors = list;
+        _applyFilters();
+      },
+      onError: (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Realtime load error: $e'),
+              backgroundColor: KMColors.error,
             ),
-            backgroundColor:
-                Colors.red,
-          ),
-        );
-      }
-    });
+          );
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
     _streamSub?.cancel();
-
+    _searchCtrl.dispose();
     super.dispose();
   }
 
-  Future<String> _translate(
-    String text,
-  ) async {
-
-    if (text.trim().isEmpty) {
-      return text;
+  Future<String> _translate(String text) async {
+    if (text.trim().isEmpty) return text;
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'en') return text;
+    final cacheKey = '$lang-$text';
+    if (_translationCache.containsKey(cacheKey)) {
+      return _translationCache[cacheKey]!;
     }
-
-    final lang =
-        Localizations.localeOf(context)
-            .languageCode;
-
-    if (lang == 'en') {
-      return text;
-    }
-
-    final cacheKey =
-        '$lang-$text';
-
-    if (_translationCache
-        .containsKey(cacheKey)) {
-
-      return _translationCache[
-          cacheKey]!;
-    }
-
-    final translated =
-        await LibreTranslateService
-            .translateText(
+    final translated = await LibreTranslateService.translateText(
       text: text,
       targetLanguage: lang,
     );
-
-    _translationCache[cacheKey] =
-        translated;
-
+    _translationCache[cacheKey] = translated;
     return translated;
   }
 
   Future<void> _load() async {
-
     setState(() => _loading = true);
-
     try {
-
-      final vendors =
-          await _service
-              .getPlantVendors();
-
+      final vendors = await _service.getPlantVendors();
       _vendors = vendors;
-
       _applyFilters();
-
     } catch (e) {
-
       if (mounted) {
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Error loading vendors: $e',
-            ),
-            backgroundColor:
-                Colors.red,
+            content: Text('Error loading vendors: $e'),
+            backgroundColor: KMColors.error,
           ),
         );
       }
-
     } finally {
-
-      if (mounted) {
-
-        setState(
-          () => _loading = false,
-        );
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   void _applyFilters() {
-
-    final cat =
-        _filterCategory
-            .trim()
-            .toLowerCase();
-
-    final search =
-        _search
-            .trim()
-            .toLowerCase();
+    final cat = _filterCategory.trim().toLowerCase();
+    final search = _search.trim().toLowerCase();
 
     _filtered = _vendors.where((v) {
+      final rawType = v.type.toString();
+      final derivedCategory = rawType.contains(' - ')
+          ? rawType.split(' - ').first.toLowerCase()
+          : 'plant';
 
-      final rawType =
-          (v.type).toString();
+      final catMatches = (cat == 'all') ? true : (derivedCategory == cat);
 
-      String derivedCategory =
-          'plant';
-
-      if (rawType.contains(' - ')) {
-
-        derivedCategory =
-            rawType
-                .split(' - ')
-                .first
-                .toLowerCase();
-
-      } else {
-
-        derivedCategory =
-            'plant';
-      }
-
-      final catMatches =
-          (cat == 'all')
-              ? true
-              : (derivedCategory ==
-                  cat);
-
-      final typeText =
-          rawType.contains(' - ')
-              ? rawType
-                  .split(' - ')
-                  .sublist(1)
-                  .join(' - ')
-              : rawType;
+      final typeText = rawType.contains(' - ')
+          ? rawType.split(' - ').sublist(1).join(' - ')
+          : rawType;
 
       final haystack =
           '${v.plantName} $typeText ${v.vendorName} ${v.location}'
               .toLowerCase();
-
       final searchMatches =
-          search.isEmpty
-              ? true
-              : haystack
-                  .contains(search);
+          search.isEmpty ? true : haystack.contains(search);
 
-      return catMatches &&
-          searchMatches;
-
+      return catMatches && searchMatches;
     }).toList();
 
-    // sort
-    if (_sort == 'Newest') {
-
-      _filtered.sort(
-        (a, b) => b.timestamp
-            .compareTo(
-                a.timestamp),
-      );
-
-    } else if (_sort ==
-        'Oldest') {
-
-      _filtered.sort(
-        (a, b) => a.timestamp
-            .compareTo(
-                b.timestamp),
-      );
-
-    } else if (_sort ==
-        'Price: Low') {
-
-      _filtered.sort(
-        (a, b) => a.price
-            .compareTo(
-                b.price),
-      );
-
-    } else if (_sort ==
-        'Price: High') {
-
-      _filtered.sort(
-        (a, b) => b.price
-            .compareTo(
-                a.price),
-      );
+    switch (_sort) {
+      case 'Newest':
+        _filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      case 'Oldest':
+        _filtered.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      case 'Price: Low':
+        _filtered.sort((a, b) => a.price.compareTo(b.price));
+      case 'Price: High':
+        _filtered.sort((a, b) => b.price.compareTo(a.price));
     }
 
-    if (mounted) {
-
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
-  String _displayCategoryLabel(
-    PlantVendor v,
-  ) {
-
-    final rawType =
-        (v.type).toString();
-
-    if (rawType.contains(' - ')) {
-
-      return rawType
-          .split(' - ')
-          .first;
-    }
-
-    return 'Plant';
+  String _categoryLabel(PlantVendor v) {
+    final raw = v.type.toString();
+    return raw.contains(' - ') ? raw.split(' - ').first : 'Plant';
   }
 
-  String _displayTypeLabel(
-    PlantVendor v,
-  ) {
-
-    final rawType =
-        (v.type).toString();
-
-    if (rawType.contains(' - ')) {
-
-      return rawType
-          .split(' - ')
-          .sublist(1)
-          .join(' - ');
-    }
-
-    return rawType;
+  String _typeLabel(PlantVendor v) {
+    final raw = v.type.toString();
+    return raw.contains(' - ')
+        ? raw.split(' - ').sublist(1).join(' - ')
+        : raw;
   }
 
-  Widget _buildTile(
-    PlantVendor v,
-  ) {
-
+  void _showActions(PlantVendor v) {
     final l = AppLocalizations.of(context)!;
-
-    final safePlantName =
-        (v.plantName).isNotEmpty
-            ? v.plantName
-            : l.unknownPlant;
-
-    final safeType =
-        (v.type).isNotEmpty
-            ? v.type
-            : 'Plant';
-
-    final safeLocation =
-        (v.location).isNotEmpty
-            ? v.location
-            : '';
-
-    final safePrice = v.price;
-
-    final safeQty = v.quantity;
-
-    final safeTimestamp =
-        v.timestamp;
-
-    final category =
-        _displayCategoryLabel(v);
-
-    final typeLabel =
-        _displayTypeLabel(v);
-
-    return Card(
-
-      margin:
-          const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
-
-      shape:
-          RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.circular(12),
-      ),
-
-      child: ListTile(
-
-        leading: Container(
-
-          width: 56,
-
-          height: 56,
-
-          clipBehavior:
-              Clip.antiAlias,
-
-          decoration:
-              BoxDecoration(
-
-            color: Theme.of(context).cardColor,
-
-            borderRadius:
-                BorderRadius.circular(
-              10,
-            ),
-          ),
-
-          child:
-              (v.imageUrl != null &&
-                      v.imageUrl!
-                          .isNotEmpty)
-
-                  ? Image.network(
-
-                      v.imageUrl!,
-
-                      fit: BoxFit.cover,
-
-                      loadingBuilder: (
-                        context,
-                        child,
-                        loadingProgress,
-                      ) {
-
-                        if (loadingProgress ==
-                            null) {
-
-                          return child;
-                        }
-
-                        return const Center(
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        );
-                      },
-
-                      errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-
-                        return const Icon(
-                          Icons.local_florist,
-                          size: 30,
-                        );
-                      },
-                    )
-
-                  : const Icon(
-                      Icons.local_florist,
-                      size: 30,
-                    ),
-        ),
-
-        title: Row(
-
-          children: [
-
-            Expanded(
-
-              child:
-                  FutureBuilder<String>(
-
-                future: _translate(
-                  safePlantName,
-                ),
-
-                builder: (
-                  context,
-                  snapshot,
-                ) {
-
-                  return Text(
-
-                    snapshot.data ??
-                        safePlantName,
-
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            Container(
-
-              margin:
-                  const EdgeInsets.only(
-                left: 8,
-              ),
-
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
-
-              decoration:
-                  BoxDecoration(
-
-                color: category
-                            .toLowerCase() ==
-                        'seeds'
-
-                    ? KMColors.warning.withValues(alpha: 0.2)
-
-                    : Theme.of(context).colorScheme.primaryContainer,
-
-                borderRadius:
-                    BorderRadius.circular(
-                  8,
-                ),
-              ),
-
-              child: Text(
-                category,
-                style:
-                    const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        subtitle: Column(
-
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-
-          children: [
-
-            const SizedBox(
-              height: 6,
-            ),
-
-            FutureBuilder<String>(
-
-              future: _translate(
-                '$typeLabel ${safeLocation.isNotEmpty ? safeLocation : ''}',
-              ),
-
-              builder: (
-                context,
-                snapshot,
-              ) {
-
-                final translated =
-                    snapshot.data ??
-                        '$typeLabel ${safeLocation.isNotEmpty ? safeLocation : ''}';
-
-                return Text(
-                  '$translated • ₹${safePrice.toStringAsFixed(2)}',
-                );
-              },
-            ),
-
-            const SizedBox(
-              height: 6,
-            ),
-
-            Text(
-
-              'Qty: $safeQty • ${formatDate(safeTimestamp)}',
-
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-
-        isThreeLine: true,
-
-        onTap: () async {
-
-          try {
-
-            final uid =
-                FirebaseAuth
-                        .instance
-                        .currentUser
-                        ?.uid ??
-                    '';
-
-            final owner =
-                (v.createdBy
-                        .isNotEmpty
-
-                    ? v.createdBy
-
-                    : (v.ownerId
-                            .isNotEmpty
-                        ? v.ownerId
-                        : ''));
-
-            if (owner.isNotEmpty &&
-                owner == uid) {
-
-              final changed =
-                  await Navigator.push<bool>(
-
-                context,
-
-                MaterialPageRoute(
-                  builder: (_) =>
-                      PlantListFormPage(
-                    existingVendor: v,
-                  ),
-                ),
-              );
-
-              if (changed == true) {
-                _load();
-              }
-
-            } else {
-
-              await Navigator.push(
-
-                context,
-
-                MaterialPageRoute(
-                  builder: (_) =>
-                      PlantVendorDetailsPage(
-                    vendor: v,
-                  ),
-                ),
-              );
-            }
-
-          } catch (err, st) {
-
-            if (mounted) {
-
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
-
-                SnackBar(
-                  content: Text(
-                    'Unable to open listing: $err',
-                  ),
-                  backgroundColor:
-                      Colors.red,
-                ),
-              );
-            }
-
-            print(
-              'Navigation error: $err\n$st',
-            );
-          }
-        },
-
-        trailing: (() {
-
-          final uid =
-              FirebaseAuth
-                      .instance
-                      .currentUser
-                      ?.uid ??
-                  "";
-
-          final owner =
-              (v.createdBy
-                      .isNotEmpty
-
-                  ? v.createdBy
-
-                  : (v.ownerId
-                          .isNotEmpty
-                      ? v.ownerId
-                      : ''));
-
-          if (owner.isNotEmpty &&
-              owner == uid) {
-
-            return IconButton(
-
-              icon: const Icon(
-                Icons.more_vert,
-              ),
-
-              onPressed: () {
-                _showActions(v);
-              },
-            );
-          }
-
-          return const SizedBox();
-
-        }()),
-      ),
-    );
-  }
-
-  void _showActions(
-    PlantVendor v,
-  ) {
-
-    final l = AppLocalizations.of(context)!;
-
     showModalBottomSheet(
-
       context: context,
-
       builder: (_) => SafeArea(
-
         child: Wrap(
-
           children: [
-
             ListTile(
-
-              leading:
-                  const Icon(Icons.edit),
-
-              title:
-                  Text(l.edit),
-
+              leading: const Icon(Icons.edit),
+              title: Text(l.edit),
               onTap: () {
-
                 Navigator.pop(context);
-
                 Navigator.push<bool>(
-
                   context,
-
                   MaterialPageRoute(
-                    builder: (_) =>
-                        PlantListFormPage(
-                      existingVendor: v,
-                    ),
+                    builder: (_) => PlantListFormPage(existingVendor: v),
                   ),
                 ).then((changed) {
-
-                  if (changed == true) {
-                    _load();
-                  }
+                  if (changed == true) _load();
                 });
               },
             ),
-
             ListTile(
-
-              leading: const Icon(
-                Icons.delete,
-                color: Colors.red,
-              ),
-
-              title: Text(
-                l.delete,
-                style: const TextStyle(
-                  color: Colors.red,
-                ),
-              ),
-
+              leading: const Icon(Icons.delete, color: KMColors.error),
+              title: Text(l.delete, style: const TextStyle(color: KMColors.error)),
               onTap: () async {
-
                 Navigator.pop(context);
-
-                final confirmed =
-                    await showDialog<bool>(
-
+                final confirmed = await showDialog<bool>(
                   context: context,
-
-                  builder: (_) =>
-                      AlertDialog(
-
-                    title: Text(
-                      l.deleteListingQ,
-                    ),
-
-                    content:
-                        Text(
-                      l.permanentlyDeleteListing,
-                    ),
-
+                  builder: (_) => AlertDialog(
+                    title: Text(l.deleteListingQ),
+                    content: Text(l.permanentlyDeleteListing),
                     actions: [
-
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pop(
-                          context,
-                          false,
-                        ),
-                        child:
-                            Text(
-                          l.cancel,
-                        ),
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(l.cancel),
                       ),
-
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pop(
-                          context,
-                          true,
-                        ),
-                        child:
-                            Text(
-                          l.delete,
-                        ),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text(l.delete),
                       ),
                     ],
                   ),
                 );
-
-                if (confirmed ==
-                    true) {
-
-                  await _service
-                      .deletePlantVendor(
-                    v.id,
-                  );
-
+                if (confirmed == true) {
+                  await _service.deletePlantVendor(v.id);
                   _load();
                 }
               },
@@ -807,336 +219,251 @@ class _PlantVendorListPageState
     );
   }
 
-  Widget _buildTopBar(AppLocalizations l) {
+  Widget _buildCard(PlantVendor v) {
+    final l = AppLocalizations.of(context)!;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final owner =
+        v.createdBy.isNotEmpty ? v.createdBy : v.ownerId;
+    final isOwner = owner.isNotEmpty && owner == uid;
 
-    return Column(
+    final safePlantName =
+        v.plantName.isNotEmpty ? v.plantName : l.unknownPlant;
+    final typeLabel = _typeLabel(v);
+    final category = _categoryLabel(v);
 
-      children: [
+    final categoryColor = category.toLowerCase() == 'seeds'
+        ? KMColors.warning
+        : KMColors.primary;
 
-        Row(
-
-          children: [
-
-            Expanded(
-
-              child:
-                  TextFormField(
-
-                decoration:
-                    InputDecoration(
-
-                  prefixIcon:
-                      const Icon(
-                    Icons.search,
-                  ),
-
-                  hintText:
-                      l.searchPlantVendor,
-
-                  border:
-                      OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      12,
-                    ),
-                  ),
-
-                  filled: true,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: KMSpacing.md),
+      child: KMListingCard(
+        imageUrl: v.imageUrl,
+        fallbackIcon: Icons.local_florist,
+        imageHeight: 150,
+        title: safePlantName,
+        subtitle: '₹${v.price.toStringAsFixed(2)} • Qty: ${v.quantity}',
+        caption: v.location.isNotEmpty ? v.location : null,
+        statusBadge: KMStatusChip(label: category, color: categoryColor),
+        menuButton: isOwner
+            ? IconButton(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onPressed: () => _showActions(v),
+              )
+            : null,
+        infoRow: FutureBuilder<String>(
+          future: _translate('$typeLabel ${v.vendorName}'),
+          builder: (_, snap) => Text(
+            snap.data ?? '$typeLabel • ${v.vendorName}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
                 ),
-
-                onChanged: (s) {
-
-                  _search = s;
-
-                  _applyFilters();
-                },
-              ),
-            ),
-
-            const SizedBox(
-              width: 12,
-            ),
-
-            DropdownButton<String>(
-
-              value: _sort,
-
-              underline:
-                  Container(height: 0),
-
-              items: [
-
-                DropdownMenuItem(
-                  value: 'Newest',
-                  child: Text(l.newest),
-                ),
-
-                DropdownMenuItem(
-                  value: 'Oldest',
-                  child: Text(l.oldest),
-                ),
-
-                DropdownMenuItem(
-                  value: 'Price: Low',
-                  child: Text(l.priceLow),
-                ),
-
-                DropdownMenuItem(
-                  value: 'Price: High',
-                  child: Text(l.priceHigh),
-                ),
-              ],
-
-              onChanged: (v) {
-
-                if (v == null) {
-                  return;
-                }
-
-                _sort = v;
-
-                _applyFilters();
-              },
-            ),
-          ],
+          ),
         ),
-
-        const SizedBox(
-          height: 8,
-        ),
-
-        Row(
-
-          children: [
-
-            DropdownButton<String>(
-
-              value:
-                  _filterCategory
-                      .toLowerCase(),
-
-              items: [
-
-                DropdownMenuItem(
-                  value: 'all',
-                  child: Text(l.allCategories),
+        onTap: () async {
+          try {
+            if (isOwner) {
+              final changed = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PlantListFormPage(existingVendor: v),
                 ),
-
-                DropdownMenuItem(
-                  value: 'plant',
-                  child: Text(l.plant),
+              );
+              if (changed == true) _load();
+            } else {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PlantVendorDetailsPage(vendor: v),
                 ),
-
-                DropdownMenuItem(
-                  value: 'seeds',
-                  child: Text(l.seeds),
+              );
+            }
+          } catch (err) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Unable to open listing: $err'),
+                  backgroundColor: KMColors.error,
                 ),
-              ],
-
-              onChanged: (v) {
-
-                if (v == null) {
-                  return;
-                }
-
-                _filterCategory =
-                    v[0].toUpperCase() +
-                        v.substring(1);
-
-                _applyFilters();
-              },
-            ),
-
-            const SizedBox(
-              width: 12,
-            ),
-
-            ElevatedButton.icon(
-
-              icon: const Icon(
-                Icons.refresh,
-              ),
-
-              label:
-                  Text(l.refresh),
-
-              onPressed: _load,
-            ),
-
-            ElevatedButton.icon(
-
-              icon: const Icon(
-                Icons.location_on,
-              ),
-
-              label:
-                  Text(l.nearby),
-
-              onPressed: () async {
-
-                await Navigator.push(
-
-                  context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const PlantVendorNearbyPage(),
-                  ),
-                );
-
-                _load();
-              },
-            ),
-
-            const Spacer(),
-
-            ElevatedButton.icon(
-
-              icon: const Icon(
-                Icons.add,
-              ),
-
-              label:
-                  Text(l.add),
-
-              onPressed: () async {
-
-                final added =
-                    await Navigator.push<bool>(
-
-                  context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const PlantListFormPage(),
-                  ),
-                );
-
-                if (added == true) {
-                  _load();
-                }
-              },
-            ),
-          ],
-        ),
-      ],
+              );
+            }
+          }
+        },
+      ),
     );
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final title = widget.category.toLowerCase() == 'seeds'
+        ? l.seeds
+        : l.plantVendors;
 
-    final title =
-        widget.category
-                    .toLowerCase() ==
-                'seeds'
+    // Sort dropdown items
+    final sortItems = [
+      DropdownMenuItem(value: 'Newest', child: Text(l.newest)),
+      DropdownMenuItem(value: 'Oldest', child: Text(l.oldest)),
+      DropdownMenuItem(value: 'Price: Low', child: Text(l.priceLow)),
+      DropdownMenuItem(value: 'Price: High', child: Text(l.priceHigh)),
+    ];
 
-            ? l.seeds
-
-            : l.plantVendors;
+    // Category filter keys/labels
+    final catEntries = [
+      MapEntry('all', l.allCategories),
+      MapEntry('plant', l.plant),
+      MapEntry('seeds', l.seeds),
+    ];
 
     return Scaffold(
-
       appBar: AppBar(
-
         title: Text(title),
-
         actions: [
-
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
           IconButton(
-            onPressed: _load,
-            icon:
-                const Icon(Icons.refresh),
+            icon: const Icon(Icons.location_on),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PlantVendorNearbyPage()),
+              );
+              _load();
+            },
           ),
         ],
       ),
 
-      body: Padding(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final added = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const PlantListFormPage()),
+          );
+          if (added == true) _load();
+        },
+        icon: const Icon(Icons.add),
+        label: Text(l.add),
+      ),
 
-        padding:
-            const EdgeInsets.all(12),
-
-        child: _loading
-
-            ? const Center(
-                child:
-                    CircularProgressIndicator(),
-              )
-
-            : Column(
-
-                children: [
-
-                  _buildTopBar(l),
-
-                  const SizedBox(
-                    height: 12,
+      body: Column(
+        children: [
+          // ── Search + Sort ──────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KMSpacing.lg,
+              KMSpacing.md,
+              KMSpacing.lg,
+              KMSpacing.xs,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: KMSearchBar(
+                    controller: _searchCtrl,
+                    hintText: l.searchPlantVendor,
+                    onChanged: (s) {
+                      _search = s;
+                      _applyFilters();
+                    },
+                    onClear: () {
+                      _search = '';
+                      _searchCtrl.clear();
+                      _applyFilters();
+                    },
                   ),
-
-                  Expanded(
-
-                    child:
-                        _filtered.isEmpty
-
-                            ? Center(
-                                child: Text(
-                                  l.noListingsFound,
-                                ),
-                              )
-
-                            : ListView.builder(
-
-                                itemCount:
-                                    _filtered.length,
-
-                                itemBuilder:
-                                    (_, i) =>
-                                        _buildTile(
-                                  _filtered[i],
-                                ),
-                              ),
+                ),
+                const SizedBox(width: KMSpacing.sm),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _sort,
+                    items: sortItems,
+                    onChanged: (v) {
+                      if (v == null) return;
+                      _sort = v;
+                      _applyFilters();
+                    },
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+
+          // ── Category chips ─────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: KMSpacing.lg,
+              vertical: KMSpacing.xs,
+            ),
+            child: SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: catEntries.map((entry) {
+                  final isSelected =
+                      _filterCategory.toLowerCase() == entry.key;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: KMSpacing.sm),
+                    child: KMCategoryChip(
+                      label: entry.value,
+                      selected: isSelected,
+                      onSelected: (_) {
+                        _filterCategory =
+                            entry.key[0].toUpperCase() + entry.key.substring(1);
+                        _applyFilters();
+                      },
+                    ),
+                  );
+                }).toList(),
               ),
+            ),
+          ),
+
+          // ── List ───────────────────────────────────────────────────────
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _filtered.isEmpty
+                    ? KMEmptyState(
+                        message: l.noListingsFound,
+                        icon: Icons.local_florist_outlined,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                          KMSpacing.md,
+                          KMSpacing.xs,
+                          KMSpacing.md,
+                          KMSpacing.xl + 64,
+                        ),
+                        itemCount: _filtered.length,
+                        itemBuilder: (_, i) => _buildCard(_filtered[i]),
+                      ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Simple read-only details page
-class PlantVendorDetailsPage
-    extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// PlantVendorDetailsPage — read-only detail view (unchanged functionality)
+// ─────────────────────────────────────────────────────────────────────────────
 
+class PlantVendorDetailsPage extends StatelessWidget {
   final PlantVendor vendor;
 
-  const PlantVendorDetailsPage({
-    super.key,
-    required this.vendor,
-  });
+  const PlantVendorDetailsPage({super.key, required this.vendor});
 
-  Future<String> _translate(
-    BuildContext context,
-    String text,
-  ) async {
-
-    if (text.trim().isEmpty) {
-      return text;
-    }
-
-    final lang =
-        Localizations.localeOf(context)
-            .languageCode;
-
-    if (lang == 'en') {
-      return text;
-    }
-
-    return await LibreTranslateService
-        .translateText(
+  Future<String> _translate(BuildContext context, String text) async {
+    if (text.trim().isEmpty) return text;
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'en') return text;
+    return await LibreTranslateService.translateText(
       text: text,
       targetLanguage: lang,
     );
@@ -1144,395 +471,149 @@ class PlantVendorDetailsPage
 
   @override
   Widget build(BuildContext context) {
-
-    final safeType =
-        (vendor.type).isNotEmpty
-            ? vendor.type
-            : 'Plant';
-
+    final safeType = vendor.type.isNotEmpty ? vendor.type : 'Plant';
     final category =
-        safeType.contains(' - ')
-            ? safeType
-                .split(' - ')
-                .first
-            : 'Plant';
-
-    final typeLabel =
-        safeType.contains(' - ')
-            ? safeType
-                .split(' - ')
-                .sublist(1)
-                .join(' - ')
-            : safeType;
-
-    final safePlantName =
-        (vendor.plantName).isNotEmpty
-            ? vendor.plantName
-            : AppLocalizations.of(context)!.unknownPlant;
-
-    final safePrice = vendor.price;
-
-    final safeQty = vendor.quantity;
-
-    final safeVendorName =
-        (vendor.vendorName).isNotEmpty
-            ? vendor.vendorName
-            : 'Unknown vendor';
-
-    final safeLocation =
-        (vendor.location).isNotEmpty
-            ? vendor.location
-            : 'Not provided';
-
-    final safeTimestamp =
-        vendor.timestamp;
-
-    final safeDescription =
-        (vendor.description).isNotEmpty
-            ? vendor.description
-            : 'No description provided.';
+        safeType.contains(' - ') ? safeType.split(' - ').first : 'Plant';
+    final typeLabel = safeType.contains(' - ')
+        ? safeType.split(' - ').sublist(1).join(' - ')
+        : safeType;
 
     final l = AppLocalizations.of(context)!;
+    final safePlantName =
+        vendor.plantName.isNotEmpty ? vendor.plantName : l.unknownPlant;
+    final safeVendorName =
+        vendor.vendorName.isNotEmpty ? vendor.vendorName : l.unknownVendor;
+    final safeLocation =
+        vendor.location.isNotEmpty ? vendor.location : l.notProvided;
+    final safeDescription =
+        vendor.description.isNotEmpty ? vendor.description : l.noDescriptionProvided;
+
+    final categoryColor = category.toLowerCase() == 'seeds'
+        ? KMColors.warning
+        : KMColors.primary;
 
     return Scaffold(
-
-      appBar: AppBar(
-        title: Text(safePlantName),
-      ),
-
-      body: Padding(
-
-        padding:
-            const EdgeInsets.all(16),
-
-        child: ListView(
-
-          children: [
-
-            Row(
-
-              children: [
-
-                Container(
-
-                  width: 72,
-
-                  height: 72,
-
-                  clipBehavior:
-                      Clip.antiAlias,
-
-                  decoration:
-                      BoxDecoration(
-
+      appBar: AppBar(title: Text(safePlantName)),
+      body: ListView(
+        padding: const EdgeInsets.all(KMSpacing.lg),
+        children: [
+          // ── Hero image ────────────────────────────────────────────────
+          ClipRRect(
+            borderRadius: BorderRadius.circular(KMRadius.lg),
+            child: (vendor.imageUrl != null && vendor.imageUrl!.isNotEmpty)
+                ? Image.network(
+                    vendor.imageUrl!,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (_, child, progress) =>
+                        progress == null ? child : const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+                    errorBuilder: (_, __, ___) => const SizedBox(
+                      height: 200,
+                      child: Center(child: Icon(Icons.local_florist, size: 64)),
+                    ),
+                  )
+                : Container(
+                    height: 200,
                     color: Theme.of(context).cardColor,
-
-                    borderRadius:
-                        BorderRadius.circular(
-                      12,
-                    ),
+                    child: const Center(
+                        child: Icon(Icons.local_florist, size: 64)),
                   ),
+          ),
 
-                  child:
-                      (vendor.imageUrl !=
-                                  null &&
-                              vendor.imageUrl!
-                                  .isNotEmpty)
+          const SizedBox(height: KMSpacing.lg),
 
-                          ? Image.network(
-
-                              vendor.imageUrl!,
-
-                              fit: BoxFit.cover,
-
-                              loadingBuilder: (
-                                context,
-                                child,
-                                loadingProgress,
-                              ) {
-
-                                if (loadingProgress ==
-                                    null) {
-
-                                  return child;
-                                }
-
-                                return const Center(
-                                  child:
-                                      CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                );
-                              },
-
-                              errorBuilder: (
-                                context,
-                                error,
-                                stackTrace,
-                              ) {
-
-                                return const Icon(
-                                  Icons.local_florist,
-                                  size: 40,
-                                );
-                              },
-                            )
-
-                          : const Icon(
-                              Icons.local_florist,
-                              size: 40,
-                            ),
-                ),
-
-                const SizedBox(
-                  width: 12,
-                ),
-
-                Column(
-
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-
-                  children: [
-
-                    FutureBuilder<String>(
-
-                      future: _translate(
-                        context,
-                        safePlantName,
-                      ),
-
-                      builder: (
-                        context,
-                        snapshot,
-                      ) {
-
-                        return Text(
-
-                          snapshot.data ??
-                              safePlantName,
-
-                          style:
-                              const TextStyle(
-                            fontSize: 20,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(
-                      height: 6,
-                    ),
-
-                    Container(
-
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-
-                        color: category
-                                    .toLowerCase() ==
-                                'seeds'
-
-                            ? KMColors.warning.withValues(alpha: 0.2)
-
-                            : Theme.of(context).colorScheme.primaryContainer,
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          8,
+          // ── Name + Category ───────────────────────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: FutureBuilder<String>(
+                  future: _translate(context, safePlantName),
+                  builder: (_, snap) => Text(
+                    snap.data ?? safePlantName,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-
-                      child: Text(category),
-                    ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
-
-            const SizedBox(
-              height: 20,
-            ),
-
-            _infoRow(
-              l.typeLabel,
-              typeLabel,
-            ),
-
-            const SizedBox(
-              height: 8,
-            ),
-
-            _infoRow(
-              l.priceLabel,
-              '₹${safePrice.toStringAsFixed(2)}',
-            ),
-
-            const SizedBox(
-              height: 8,
-            ),
-
-            _infoRow(
-              l.quantityLabel,
-              safeQty.toString(),
-            ),
-
-            const SizedBox(
-              height: 8,
-            ),
-
-            _infoRow(
-              l.vendorLabel,
-              safeVendorName,
-            ),
-
-            const SizedBox(
-              height: 8,
-            ),
-
-            _infoRow(
-              l.locationLabel,
-              safeLocation,
-            ),
-
-            const SizedBox(
-              height: 8,
-            ),
-
-            _infoRow(
-              l.listedOnLabel,
-              formatDate(
-                safeTimestamp,
               ),
-            ),
+              const SizedBox(width: KMSpacing.sm),
+              KMStatusChip(label: category, color: categoryColor),
+            ],
+          ),
 
-            const SizedBox(
-              height: 20,
-            ),
+          const SizedBox(height: KMSpacing.lg),
 
-            Text(
-              l.descriptionLabel,
-              style: const TextStyle(
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
+          _infoRow(context, l.typeLabel, typeLabel),
+          const SizedBox(height: KMSpacing.sm),
+          _infoRow(context, l.priceLabel,
+              '₹${vendor.price.toStringAsFixed(2)}'),
+          const SizedBox(height: KMSpacing.sm),
+          _infoRow(context, l.quantityLabel, vendor.quantity.toString()),
+          const SizedBox(height: KMSpacing.sm),
+          _infoRow(context, l.vendorLabel, safeVendorName),
+          const SizedBox(height: KMSpacing.sm),
+          _infoRow(context, l.locationLabel, safeLocation),
+          const SizedBox(height: KMSpacing.sm),
+          _infoRow(context, l.listedOnLabel, formatDate(vendor.timestamp)),
 
-            const SizedBox(
-              height: 8,
-            ),
+          const SizedBox(height: KMSpacing.xl),
 
-            FutureBuilder<String>(
-
-              future: _translate(
-                context,
-                safeDescription,
-              ),
-
-              builder: (
-                context,
-                snapshot,
-              ) {
-
-                return Text(
-                  snapshot.data ??
-                      safeDescription,
-                );
-              },
-            ),
-          ],
-        ),
+          Text(
+            l.descriptionLabel,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: KMSpacing.sm),
+          FutureBuilder<String>(
+            future: _translate(context, safeDescription),
+            builder: (_, snap) =>
+                Text(snap.data ?? safeDescription),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _infoRow(
-    String label,
-    String value,
-  ) {
-
+  Widget _infoRow(BuildContext context, String label, String value) {
     return Row(
-
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         SizedBox(
-
           width: 100,
-
           child: Text(
-
             '$label:',
-
-            style:
-                const TextStyle(
-              fontWeight:
-                  FontWeight.bold,
-            ),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
-
-        Expanded(
-          child: Text(value),
-        ),
+        Expanded(child: Text(value)),
       ],
     );
   }
 }
 
-/// Date formatter
-String formatDate(
-  DateTime dt,
-) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Date formatter (shared utility)
+// ─────────────────────────────────────────────────────────────────────────────
 
-  final month =
-      _monthName(dt.month);
-
+String formatDate(DateTime dt) {
+  final month = _monthName(dt.month);
   final hour =
-      dt.hour > 12
-
-          ? dt.hour - 12
-
-          : (dt.hour == 0
-              ? 12
-              : dt.hour);
-
-  final ampm =
-      dt.hour >= 12
-          ? 'PM'
-          : 'AM';
-
+      dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+  final ampm = dt.hour >= 12 ? 'PM' : 'AM';
   return '$month ${dt.day} $hour:${dt.minute.toString().padLeft(2, '0')} $ampm';
 }
 
-String _monthName(
-  int m,
-) {
-
+String _monthName(int m) {
   const names = [
-
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
-
-  return names[
-      (m - 1).clamp(0, 11)];
+  return names[(m - 1).clamp(0, 11)];
 }

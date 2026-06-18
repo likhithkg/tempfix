@@ -4,16 +4,18 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'labour_hub_detail_page.dart';
-import 'labour_hub_form_page.dart';
 import 'labour_model.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/km_listing_card.dart';
+import '../widgets/km_action_button.dart';
+import '../widgets/km_status_chip.dart';
+import '../theme.dart';
 
 class LabourNearbyPage extends StatefulWidget {
-  const LabourNearbyPage({Key? key}) : super(key: key);
+  const LabourNearbyPage({super.key});
 
   @override
   State<LabourNearbyPage> createState() => _LabourNearbyPageState();
@@ -21,7 +23,6 @@ class LabourNearbyPage extends StatefulWidget {
 
 class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _loading = true;
   String? _error;
@@ -32,7 +33,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
   bool _permissionDenied = false;
 
   String _query = '';
-  String _skillFilter = 'All';
+  final String _skillFilter = 'All';
 
   // header image path (not used anymore but kept for reference)
   final String headerImageUrl = '/mnt/data/e197c40d-db36-4f5f-ad56-9d5c5aec7599.png';
@@ -94,7 +95,9 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
       }
     }
 
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+    return await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
+    );
   }
 
   Future<void> _loadNearbyLabours(double myLat, double myLng, double radiusKm) async {
@@ -156,20 +159,20 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
 
   double _deg2rad(double deg) => deg * (pi / 180.0);
 
-  void _openOnMap(double lat, double lng) async {
+  Future<void> _openOnMap(double lat, double lng) async {
     final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open maps')));
     }
   }
 
-  void _callNumber(String phone) async {
+  Future<void> _callNumber(String phone) async {
     final uri = Uri(scheme: 'tel', path: phone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));
     }
   }
@@ -196,7 +199,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                 onPressed: () => Navigator.pop(ctx, v.toDouble()),
                 child: Text('$v km'),
               );
-            }).toList(),
+            }),
           ],
         );
       },
@@ -210,44 +213,22 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
     }
   }
 
-  Widget _buildHeaderRow() {
-    return Container(
-      color: Colors.green.shade700,
-      padding: const EdgeInsets.only(top: 12, bottom: 10),
-      child: Row(
-        children: [
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.nearbyLabourTitle),
+        actions: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.maybePop(context),
-          ),
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context)!.nearbyLabourTitle,
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh),
             onPressed: _refresh,
           ),
         ],
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currentUserId = _auth.currentUser?.uid;
-
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      // FAB removed as requested
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeaderRow(),
             const SizedBox(height: 6),
-            // removed header image block (no blank space above search)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
@@ -330,85 +311,63 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                         final n = _nearby[i];
                                         final labour = n.labour;
 
-                                        final anim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+                                        final anim = CurvedAnimation(
+                                          parent: _animController,
+                                          curve: Curves.easeOut,
+                                        );
+                                        final l = AppLocalizations.of(context)!;
                                         return SizeTransition(
                                           sizeFactor: anim,
                                           axis: Axis.vertical,
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(14),
-                                            onTap: () {
-                                              Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubDetailPage(labour: labour)));
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.circular(14),
-                                                boxShadow: [
-                                                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 3)),
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(bottom: 8),
+                                            child: KMListingCard(
+                                              imageUrl: labour.imageUrl,
+                                              fallbackIcon: Icons.person_outline,
+                                              imageHeight: 130,
+                                              title: labour.name,
+                                              subtitle: labour.skill.trim().isNotEmpty
+                                                  ? labour.skill
+                                                  : null,
+                                              caption: labour.location,
+                                              statusBadge: KMStatusChip(
+                                                label: labour.available ? l.available : l.busy,
+                                                color: labour.available
+                                                    ? KMColors.available
+                                                    : KMColors.unavailable,
+                                              ),
+                                              infoRow: Row(
+                                                children: [
+                                                  const Icon(Icons.location_pin,
+                                                      size: 14, color: Colors.grey),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    l.kmAway(n.distanceKm.toStringAsFixed(1)),
+                                                    style: const TextStyle(fontSize: 13),
+                                                  ),
                                                 ],
                                               ),
-                                              child: Row(
+                                              actionRow: Row(
                                                 children: [
-                                                  CircleAvatar(
-  radius: 28,
-
-  backgroundColor: labour.available
-      ? Colors.green.shade50
-      : Colors.red.shade50,
-
-  backgroundImage:
-      labour.imageUrl != null &&
-              labour.imageUrl!.isNotEmpty
-          ? NetworkImage(labour.imageUrl!)
-          : const AssetImage(
-                  'assets/farmer_logo.png')
-              as ImageProvider,
-
-  onBackgroundImageError: (_, __) {},
-
-  child: null,
-),
-                                                  const SizedBox(width: 12),
-
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(labour.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                                        const SizedBox(height: 6),
-                                                        if (labour.skill.trim().isNotEmpty)
-                                                          Text(labour.skill.toLowerCase(), style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
-                                                        const SizedBox(height: 8),
-                                                        Text(labour.location, style: TextStyle(fontSize: 13, color: Colors.grey.shade800), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                                        const SizedBox(height: 8),
-                                                        Row(
-                                                          children: [
-                                                            const Icon(Icons.location_pin, size: 14, color: Colors.grey),
-                                                            const SizedBox(width: 6),
-                                                            Text(AppLocalizations.of(context)!.kmAway(n.distanceKm.toStringAsFixed(1)), style: const TextStyle(fontSize: 13)),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
+                                                  KMCallIconButton(
+                                                    onPressed: () =>
+                                                        _callNumber(labour.contact),
                                                   ),
-
                                                   const SizedBox(width: 8),
-
-                                                  Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      IconButton(
-                                                        icon: const Icon(Icons.call, color: Colors.green),
-                                                        onPressed: () => _callNumber(labour.contact),
-                                                      ),
-                                                      IconButton(
-                                                        icon: const Icon(Icons.map, color: Colors.blue),
-                                                        onPressed: () => _openOnMap(n.lat, n.lng),
-                                                      ),
-                                                    ],
+                                                  IconButton(
+                                                    icon: const Icon(Icons.map,
+                                                        color: Colors.blue),
+                                                    onPressed: () =>
+                                                        _openOnMap(n.lat, n.lng),
                                                   ),
                                                 ],
+                                              ),
+                                              onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      LabourHubDetailPage(labour: labour),
+                                                ),
                                               ),
                                             ),
                                           ),

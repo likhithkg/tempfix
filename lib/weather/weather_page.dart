@@ -10,7 +10,9 @@ import 'widgets/autocomplete_widget.dart';
 import 'widgets/day_detail_page.dart';
 import '../l10n/app_localizations.dart';
 import '../services/libre_translate_service.dart';
+import '../theme.dart';
 
+// Semantic gradient backgrounds keyed to weather condition — intentional design.
 BoxDecoration getWeatherBackground(String condition) {
   if (condition.contains("Clear")) {
     return const BoxDecoration(
@@ -20,8 +22,7 @@ BoxDecoration getWeatherBackground(String condition) {
         end: Alignment.bottomCenter,
       ),
     );
-  } else if (condition.contains("Cloudy") ||
-      condition.contains("Overcast")) {
+  } else if (condition.contains("Cloudy") || condition.contains("Overcast")) {
     return const BoxDecoration(
       gradient: LinearGradient(
         colors: [Color(0xFF757F9A), Color(0xFFD7DDE8)],
@@ -37,15 +38,10 @@ BoxDecoration getWeatherBackground(String condition) {
         end: Alignment.bottomCenter,
       ),
     );
-  } else if (condition.contains("Storm") ||
-      condition.contains("Thunder")) {
+  } else if (condition.contains("Storm") || condition.contains("Thunder")) {
     return const BoxDecoration(
       gradient: LinearGradient(
-        colors: [
-          Color(0xFF0F2027),
-          Color(0xFF203A43),
-          Color(0xFF2C5364)
-        ],
+        colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ),
@@ -80,26 +76,15 @@ class WeatherPage extends StatefulWidget {
 
 class _WeatherPageState extends State<WeatherPage> {
   final WeatherService _service = WeatherService();
-
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   WeatherData? _weather;
-
   bool _loading = true;
-
   String _error = '';
-
   String _lastSearched = 'Bengaluru';
 
-  List<String> _farmAlerts = [];
-
-  List<String> _rainAlerts = [];
-
   String _translatedDescription = '';
-
   List<String> _translatedFarmAlerts = [];
-
   List<String> _translatedRainAlerts = [];
 
   @override
@@ -108,509 +93,336 @@ class _WeatherPageState extends State<WeatherPage> {
     _loadLocationAndFetch();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadLocationAndFetch() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    final saved =
-        prefs.getString('lastLocation') ??
-            'Bengaluru';
-
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('lastLocation') ?? 'Bengaluru';
     final place = widget.location ?? saved;
-
     setState(() {
       _lastSearched = place;
       _searchController.text = place;
     });
-
     _fetchWeather(place);
   }
 
   Future<void> _translateWeatherContent(
-  WeatherData data,
-  List<String> farmAlerts,
-  List<String> rainAlerts,
-) async {
+    WeatherData data,
+    List<String> farmAlerts,
+    List<String> rainAlerts,
+  ) async {
+    final lang = Localizations.localeOf(context).languageCode;
 
-  print(
-    'APP LANGUAGE: '
-    '${Localizations.localeOf(context).languageCode}',
-  );
+    final translatedDescription = await LibreTranslateService.translateText(
+      text: data.description,
+      targetLanguage: lang,
+    );
 
-  final lang =
-      Localizations.localeOf(context)
-          .languageCode;
-
-  final translatedDescription =
-      await LibreTranslateService.translateText(
-    text: data.description,
-    targetLanguage: lang,
-  );
-
-  List<String> translatedFarm = [];
-
-  for (String alert in farmAlerts) {
-
-    translatedFarm.add(
-      await LibreTranslateService.translateText(
+    final translatedFarm = <String>[];
+    for (final alert in farmAlerts) {
+      translatedFarm.add(await LibreTranslateService.translateText(
         text: alert,
         targetLanguage: lang,
-      ),
-    );
-  }
+      ));
+    }
 
-  List<String> translatedRain = [];
-
-  for (String alert in rainAlerts) {
-
-    translatedRain.add(
-      await LibreTranslateService.translateText(
+    final translatedRain = <String>[];
+    for (final alert in rainAlerts) {
+      translatedRain.add(await LibreTranslateService.translateText(
         text: alert,
         targetLanguage: lang,
-      ),
-    );
+      ));
+    }
+
+    setState(() {
+      _translatedDescription = translatedDescription;
+      _translatedFarmAlerts = translatedFarm;
+      _translatedRainAlerts = translatedRain;
+    });
   }
-
-  setState(() {
-
-    _translatedDescription =
-        translatedDescription;
-
-    _translatedFarmAlerts =
-        translatedFarm;
-
-    _translatedRainAlerts =
-        translatedRain;
-  });
-}
 
   Future<void> _fetchWeather(String place) async {
-
     setState(() {
       _loading = true;
       _error = '';
     });
-
     try {
+      final data = await _service.fetchWeather(place);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('lastLocation', place);
 
-      final data =
-          await _service.fetchWeather(place);
-
-      final prefs =
-          await SharedPreferences.getInstance();
-
-      await prefs.setString(
-        'lastLocation',
-        place,
-      );
-
-      final farmAlerts =
-          _service.getFarmAlerts(
+      final farmAlerts = _service.getFarmAlerts(
         data.currentTemp,
         data.humidity,
         data.windSpeed,
         data.daily,
       );
+      final rainAlerts = _service.getRainSprayAdvisory(data.hourly);
 
-      final rainAlerts =
-          _service.getRainSprayAdvisory(
-        data.hourly,
-      );
-
-      await _translateWeatherContent(
-        data,
-        farmAlerts,
-        rainAlerts,
-      );
+      await _translateWeatherContent(data, farmAlerts, rainAlerts);
 
       setState(() {
-
         _weather = data;
-
-        _farmAlerts = farmAlerts;
-
-        _rainAlerts = rainAlerts;
-
         _loading = false;
-
         _lastSearched = place;
-
         _searchController.text = place;
       });
-
     } catch (e) {
-
       setState(() {
-
         _error = '❌ ${e.toString()}';
-
         _loading = false;
       });
     }
   }
 
-  void _onDaySelected(
-    DailyWeather selectedDay,
-  ) {
-
+  void _onDaySelected(DailyWeather selectedDay) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            DayDetailPage(
-          dayWeather: selectedDay,
-        ),
+        builder: (context) => DayDetailPage(dayWeather: selectedDay),
       ),
     );
   }
 
   void _searchWeather() {
-
-    final query =
-        _searchController.text.trim();
-
+    final query = _searchController.text.trim();
     if (query.isEmpty) return;
-
     _fetchWeather(query);
-
     FocusScope.of(context).unfocus();
+  }
+
+  // Section header styled for the gradient background (white text).
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: KMSpacing.sm),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          shadows: [Shadow(color: Colors.black38, blurRadius: 4)],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "🌦 ${AppLocalizations.of(context)!.weather}",
-        ),
+        title: Text('🌦 ${l.weather}'),
       ),
-
       body: Container(
-
-        decoration:
-            getWeatherBackground(
-          _weather?.description ??
-              "Clear",
-        ),
-
+        decoration: getWeatherBackground(_weather?.description ?? 'Clear'),
         child: Column(
           children: [
-
+            // ── Search row ───────────────────────────────────────────────
             Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(
-                16,
-                10,
-                16,
-                0,
-              ),
-
+              padding: const EdgeInsets.fromLTRB(
+                KMSpacing.lg, KMSpacing.md, KMSpacing.sm, 0),
               child: Row(
                 children: [
-
                   Expanded(
                     child: AutocompleteWidget(
-                      controller:
-                          _searchController,
-
-                      onSelected: (place) {
-                        _fetchWeather(place);
-                      },
+                      controller: _searchController,
+                      onSelected: (place) => _fetchWeather(place),
                     ),
                   ),
-
                   IconButton(
-                    icon:
-                        const Icon(Icons.search),
-
-                    onPressed:
-                        _searchWeather,
+                    icon: const Icon(Icons.search, color: Colors.white),
+                    onPressed: _searchWeather,
                   ),
                 ],
               ),
             ),
 
+            // ── Main content ─────────────────────────────────────────────
             Expanded(
               child: _loading
-
                   ? const Center(
-                      child:
-                          CircularProgressIndicator(),
-                    )
-
+                      child: CircularProgressIndicator(color: Colors.white))
                   : _error.isNotEmpty
-
                       ? Center(
-                          child: Text(_error),
+                          child: Text(
+                            _error,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         )
-
-                      : (_weather == null)
-
+                      : _weather == null
                           ? Center(
                               child: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!
-                                    .noData,
+                                l.noData,
+                                style: const TextStyle(color: Colors.white),
                               ),
                             )
-
                           : RefreshIndicator(
-
-                              onRefresh: () =>
-                                  _fetchWeather(
-                                    _lastSearched,
-                                  ),
-
-                              child:
-                                  SingleChildScrollView(
-
+                              onRefresh: () => _fetchWeather(_lastSearched),
+                              child: SingleChildScrollView(
                                 physics:
                                     const AlwaysScrollableScrollPhysics(),
-
-                                padding:
-                                    const EdgeInsets.all(
-                                  16,
-                                ),
-
+                                padding: const EdgeInsets.all(KMSpacing.lg),
                                 child: Column(
-
                                   crossAxisAlignment:
                                       CrossAxisAlignment.center,
-
                                   children: [
-
+                                    // Date
                                     Text(
                                       DateFormat(
                                         'EEEE, MMM d, y – hh:mm a',
-                                      ).format(
-                                        DateTime.now(),
-                                      ),
-
-                                      style:
-                                          const TextStyle(
-                                        fontSize: 16,
-                                        color:
-                                            Colors.black54,
+                                      ).format(DateTime.now()),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white70,
                                       ),
                                     ),
 
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
+                                    const SizedBox(height: KMSpacing.sm),
 
+                                    // City name
                                     Text(
-                                      _weather!
-                                          .cityName
+                                      _weather!.cityName
                                           .split(',')[0]
                                           .trim(),
-
-                                      style:
-                                          const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight:
-                                            FontWeight.bold,
+                                      style: const TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
 
-                                    const SizedBox(
-                                      height: 4,
-                                    ),
+                                    const SizedBox(height: KMSpacing.xs),
 
                                     Text(
-                                      _weather!
-                                          .cityName,
-
-                                      style:
-                                          const TextStyle(
-                                        fontSize: 14,
-                                        color:
-                                            Colors.black54,
+                                      _weather!.cityName,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white70,
                                       ),
-
-                                      textAlign:
-                                          TextAlign.center,
+                                      textAlign: TextAlign.center,
                                     ),
 
-                                    const SizedBox(
-                                      height: 16,
-                                    ),
+                                    const SizedBox(height: KMSpacing.lg),
 
+                                    // Weather emoji + temp
                                     Text(
                                       _weather!.emoji,
-
-                                      style:
-                                          const TextStyle(
-                                        fontSize: 72,
-                                      ),
+                                      style: const TextStyle(fontSize: 72),
                                     ),
 
                                     Text(
                                       '${_weather!.currentTemp.toStringAsFixed(1)}°C',
-
-                                      style:
-                                          const TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 40,
-                                        fontWeight:
-                                            FontWeight.bold,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
 
                                     Text(
-                                      _translatedDescription
-                                              .isEmpty
-                                          ? _weather!
-                                              .description
+                                      _translatedDescription.isEmpty
+                                          ? _weather!.description
                                           : _translatedDescription,
-
-                                      style:
-                                          const TextStyle(
-                                        fontSize: 18,
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        color: Colors.white,
                                       ),
                                     ),
 
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
+                                    const SizedBox(height: KMSpacing.sm),
 
+                                    // Wind + Humidity
                                     Text(
-                                      '🌬 ${AppLocalizations.of(context)!.wind}: ${_weather!.windSpeed.toStringAsFixed(1)} m/s',
+                                      '🌬 ${l.wind}: ${_weather!.windSpeed.toStringAsFixed(1)} m/s',
+                                      style: const TextStyle(
+                                          color: Colors.white),
                                     ),
-
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-
+                                    const SizedBox(height: KMSpacing.xs),
                                     Text(
-                                      '💧 ${AppLocalizations.of(context)!.humidity}: ${_weather!.humidity}%',
+                                      '💧 ${l.humidity}: ${_weather!.humidity}%',
+                                      style: const TextStyle(
+                                          color: Colors.white),
                                     ),
 
-                                    const SizedBox(
-                                      height: 24,
-                                    ),
+                                    const SizedBox(height: KMSpacing.xl),
 
-                                    if (_translatedFarmAlerts
-                                        .isNotEmpty) ...[
-
+                                    // Farm advisory
+                                    if (_translatedFarmAlerts.isNotEmpty) ...[
                                       Align(
-                                        alignment:
-                                            Alignment.centerLeft,
-
-                                        child: Text(
-                                          "🌾 ${AppLocalizations.of(context)!.farmAdvisory}",
-
-                                          style:
-                                              const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight:
-                                                FontWeight.bold,
+                                        alignment: Alignment.centerLeft,
+                                        child: _sectionHeader(
+                                          '🌾 ${l.farmAdvisory}',
+                                        ),
+                                      ),
+                                      ..._translatedFarmAlerts.map(
+                                        (a) => Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: KMSpacing.xs),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              a,
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
                                           ),
                                         ),
                                       ),
-
-                                      const SizedBox(
-                                        height: 8,
-                                      ),
-
-                                      ..._translatedFarmAlerts
-                                          .map(
-                                        (a) => Text(a),
-                                      ),
-
-                                      const SizedBox(
-                                        height: 24,
-                                      ),
+                                      const SizedBox(height: KMSpacing.xl),
                                     ],
 
-                                    if (_translatedRainAlerts
-                                        .isNotEmpty) ...[
-
+                                    // Rain advisory
+                                    if (_translatedRainAlerts.isNotEmpty) ...[
                                       Align(
-                                        alignment:
-                                            Alignment.centerLeft,
-
-                                        child: Text(
-                                          "🌧 ${AppLocalizations.of(context)!.rainAdvisory}",
-
-                                          style:
-                                              const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight:
-                                                FontWeight.bold,
+                                        alignment: Alignment.centerLeft,
+                                        child: _sectionHeader(
+                                          '🌧 ${l.rainAdvisory}',
+                                        ),
+                                      ),
+                                      ..._translatedRainAlerts.map(
+                                        (a) => Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: KMSpacing.xs),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              a,
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
                                           ),
                                         ),
                                       ),
-
-                                      const SizedBox(
-                                        height: 8,
-                                      ),
-
-                                      ..._translatedRainAlerts
-                                          .map(
-                                        (a) => Text(a),
-                                      ),
-
-                                      const SizedBox(
-                                        height: 24,
-                                      ),
+                                      const SizedBox(height: KMSpacing.xl),
                                     ],
 
+                                    // Hourly forecast
                                     Align(
-                                      alignment:
-                                          Alignment.centerLeft,
-
-                                      child: Text(
-                                        "🕒 ${AppLocalizations.of(context)!.hourlyForecast}",
-
-                                        style:
-                                            const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight:
-                                              FontWeight.bold,
-                                        ),
+                                      alignment: Alignment.centerLeft,
+                                      child: _sectionHeader(
+                                        '🕒 ${l.hourlyForecast}',
                                       ),
                                     ),
+                                    HourlyForecast(hourly: _weather!.hourly),
 
-                                    const SizedBox(
-                                      height: 8,
-                                    ),
+                                    const SizedBox(height: KMSpacing.xl),
 
-                                    HourlyForecast(
-                                      hourly:
-                                          _weather!.hourly,
-                                    ),
-
-                                    const SizedBox(
-                                      height: 24,
-                                    ),
-
+                                    // 7-day forecast
                                     Align(
-                                      alignment:
-                                          Alignment.centerLeft,
-
-                                      child: Text(
-                                        "📅 ${AppLocalizations.of(context)!.sevenDayForecast}",
-
-                                        style:
-                                            const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight:
-                                              FontWeight.bold,
-                                        ),
+                                      alignment: Alignment.centerLeft,
+                                      child: _sectionHeader(
+                                        '📅 ${l.sevenDayForecast}',
                                       ),
                                     ),
-
-                                    const SizedBox(
-                                      height: 8,
-                                    ),
-
                                     DailyForecast(
-                                      daily:
-                                          _weather!.daily,
-
-                                      onSelected:
-                                          _onDaySelected,
+                                      daily: _weather!.daily,
+                                      onSelected: _onDaySelected,
                                     ),
                                   ],
                                 ),

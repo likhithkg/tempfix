@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:krishimithra/rent/rent_model.dart';
 import 'package:krishimithra/rent/rent_machine_service.dart';
@@ -10,6 +9,10 @@ import 'rent_list_form_page.dart';
 import 'rent_nearby_page.dart';
 import 'rent_machine_details_page.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/km_widgets.dart';
+import '../widgets/km_listing_card.dart';
+import '../widgets/km_action_button.dart';
+import '../theme.dart';
 
 class RentHomePage extends StatefulWidget {
   const RentHomePage({super.key});
@@ -20,11 +23,25 @@ class RentHomePage extends StatefulWidget {
 
 class _RentHomePageState extends State<RentHomePage> {
   final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+  late Future<List<RentMachine>> _machinesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _reload() {
+    setState(() {
+      _machinesFuture = RentMachineService.instance.getRentMachines();
+    });
   }
 
   Future<void> _call(String phone) async {
@@ -39,28 +56,21 @@ class _RentHomePageState extends State<RentHomePage> {
     return uid.isNotEmpty && uid == m.ownerId;
   }
 
-  Future<List<RentMachine>> _loadMachines() {
-    return RentMachineService.instance.getRentMachines();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
     return Scaffold(
-      /// ✅ ONLY CHANGE HERE (NEARBY BUTTON ADDED)
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.rentMachine),
+        title: Text(l.rentMachine),
         actions: [
           IconButton(
-            tooltip: AppLocalizations.of(context)!.nearbyMachines,
+            tooltip: l.nearbyMachines,
             icon: const Icon(Icons.near_me_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const RentNearbyPage(),
-                ),
-              );
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RentNearbyPage()),
+            ),
           ),
         ],
       ),
@@ -69,240 +79,137 @@ class _RentHomePageState extends State<RentHomePage> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const RentListFormPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const RentListFormPage()),
           );
-          setState(() {});
+          _reload();
         },
-        label: Text(AppLocalizations.of(context)!.listMachine),
+        label: Text(l.listMachine),
         icon: const Icon(Icons.add),
       ),
 
-      body: FutureBuilder<List<RentMachine>>(
-        future: _loadMachines(),
-        builder: (context, snap) {
-          if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final items = snap.data!;
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(12),
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: .75,
+      body: Column(
+        children: [
+          // ── Search bar ────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KMSpacing.lg,
+              KMSpacing.md,
+              KMSpacing.lg,
+              KMSpacing.sm,
             ),
-            itemCount: items.length,
-            itemBuilder: (_, i) {
-              final machine = items[i];
+            child: KMSearchBar(
+              controller: _searchCtrl,
+              hintText: l.searchByNameOwnerLocation,
+              onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+              onClear: () => setState(() {
+                _searchQuery = '';
+                _searchCtrl.clear();
+              }),
+            ),
+          ),
 
-              return _MachineCard(
-                m: machine,
-                onCall: _call,
+          // ── Grid ─────────────────────────────────────────────────────────
+          Expanded(
+            child: FutureBuilder<List<RentMachine>>(
+              future: _machinesFuture,
+              builder: (context, snap) {
+                if (!snap.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                /// ✅ VIEW DETAILS
-                onView: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          RentMachineDetailsPage(machine: machine),
-                    ),
+                final machines = snap.data!.where((m) {
+                  if (_searchQuery.isEmpty) return true;
+                  return m.name.toLowerCase().contains(_searchQuery) ||
+                      m.type.toLowerCase().contains(_searchQuery) ||
+                      m.ownerName.toLowerCase().contains(_searchQuery) ||
+                      (m.location?.toLowerCase().contains(_searchQuery) ??
+                          false);
+                }).toList();
+
+                if (machines.isEmpty) {
+                  return KMEmptyState(
+                    message: l.noMachinesFoundNearby,
+                    icon: Icons.agriculture_outlined,
                   );
-                },
+                }
 
-                /// ✅ EDIT (ONLY OWNER)
-                onEdit: _isOwner(machine)
-                    ? () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => RentListFormPage(
-                              existingMachine: machine,
-                            ),
-                          ),
-                        );
-                        setState(() {});
-                      }
-                    : () {},
-
-                isOwner: _isOwner(machine),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ----------------------
-// Machine Card
-// ----------------------
-// ----------------------
-// Machine Card
-// ----------------------
-class _MachineCard extends StatelessWidget {
-  const _MachineCard({
-    required this.m,
-    required this.onCall,
-    required this.onEdit,
-    required this.onView,
-    required this.isOwner,
-  });
-
-  final RentMachine m;
-  final void Function(String phone) onCall;
-  final VoidCallback onEdit;
-  final VoidCallback onView;
-  final bool isOwner;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onView,
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                // =========================
-                // USER UPLOADED IMAGE
-                // =========================
-
-                m.imageUrl.isNotEmpty
-                    ? Image.network(
-                        m.imageUrl,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-
-                        // LOADING
-                        loadingBuilder: (
-                          context,
-                          child,
-                          loadingProgress,
-                        ) {
-                          if (loadingProgress ==
-                              null) {
-                            return child;
-                          }
-
-                          return const SizedBox(
-                            height: 120,
-                            child: Center(
-                              child:
-                                  CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          );
-                        },
-
-                        // ERROR
-                        errorBuilder: (
-                          context,
-                          error,
-                          stackTrace,
-                        ) {
-                          return Image.asset(
-                            'assets/farmer_logo.png',
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          );
-                        },
-                      )
-                    : Image.asset(
-                        'assets/farmer_logo.png',
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-
-                // =========================
-                // OWNER EDIT MENU
-                // =========================
-
-                if (isOwner)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child:
-                        PopupMenuButton<String>(
-                      onSelected: (val) {
-                        if (val == 'edit') {
-                          onEdit();
-                        }
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Text(AppLocalizations.of(context)!.edit),
-                        ),
-                      ],
-                    ),
+                return GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(
+                    KMSpacing.md,
+                    KMSpacing.xs,
+                    KMSpacing.md,
+                    KMSpacing.xl + 64,
                   ),
-              ],
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: KMSpacing.md,
+                    mainAxisSpacing: KMSpacing.md,
+                    childAspectRatio: 0.70,
+                  ),
+                  itemCount: machines.length,
+                  itemBuilder: (_, i) {
+                    final m = machines[i];
+                    return KMListingCard(
+                      imageUrl: m.imageUrl.isNotEmpty ? m.imageUrl : null,
+                      fallbackIcon: Icons.agriculture,
+                      imageHeight: 120,
+                      fillHeight: true,
+                      title: m.name,
+                      subtitle: '₹${m.pricePerDay}${l.perDay} • ${m.type}',
+                      caption: m.location ?? l.locationNotAvailable,
+                      menuButton: _isOwner(m)
+                          ? PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert,
+                                  color: Colors.white),
+                              onSelected: (val) {
+                                if (val == 'edit') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RentListFormPage(
+                                        existingMachine: m,
+                                      ),
+                                    ),
+                                  ).then((_) => _reload());
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(l.edit),
+                                ),
+                              ],
+                            )
+                          : null,
+                      infoRow: Text(
+                        m.ownerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
+                      ),
+                      actionRow: Align(
+                        alignment: Alignment.centerRight,
+                        child: KMCallIconButton(onPressed: () => _call(m.phone)),
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RentMachineDetailsPage(machine: m),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-
-            Padding(
-              padding:
-                  const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
-                children: [
-                  Text(
-                    m.name,
-                    style: const TextStyle(
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    "₹${m.pricePerDay}/day",
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(m.location ?? ''),
-
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child:
-                            Text(m.ownerName),
-                      ),
-
-                      IconButton(
-                        onPressed: () =>
-                            onCall(m.phone),
-                        icon: const Icon(
-                          Icons.call,
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
