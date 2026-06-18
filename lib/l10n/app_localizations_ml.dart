@@ -1171,4 +1171,261 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get errorDeletingAccount => 'അക്കൗണ്ട് ഇല്ലാതാക്കുന്നതിൽ പിശക്';
+
+  @override
+  String get nameLabel => 'Name';
+
+  @override
+  String get pricePerKgLabel => 'Price/kg';
+
+  @override
+  String get farmerDetailsTitle => 'Farmer Details';
+
+  @override
+  String get yes => 'അതെ';
+
+  @override
+  String get by => 'By';
+
+  @override
+  String get at => 'At';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusAccepted => 'Accepted';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get statusIssued => 'Issued';
+
+  @override
+  String get statusOpen => 'Open';
+
+  @override
+  String get statusClosed => 'Closed';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get statusInactive => 'Inactive';
+
+  @override
+  String get pleaseSignInToPerformAction => 'Please sign in to perform this action';
+
+  @override
+  String get onlySellerCanPerformAction => 'Only the seller can perform this action';
+
+  @override
+  String get acceptResponseTitle => 'Accept Response';
+
+  @override
+  String acceptBuyerResponseConfirm(String name) {
+    return 'Accept buyer response from \"$name\"?';
+  }
+
+  @override
+  String get buyerResponseAccepted => 'Buyer response accepted. PO status set to confirmed.';
+
+  @override
+  String get failedToAcceptResponse => 'Failed to accept response';
+
+  @override
+  String get rejectResponseTitle => 'Reject Response';
+
+  @override
+  String rejectBuyerResponseConfirm(String name) {
+    return 'Reject buyer response from \"$name\"?';
+  }
+
+  @override
+  String get buyerResponseRejected => 'Buyer response rejected.';
+
+  @override
+  String get failedToRejectResponse => 'Failed to reject response';
+
+  @override
+  String get acceptPurchaseOrderTitle => 'Accept Purchase Order';
+
+  @override
+  String get acceptPurchaseOrderConfirm => 'Accept this purchase order? This will set PO status to accepted.';
+
+  @override
+  String get purchaseOrderAccepted => 'Purchase order accepted.';
+
+  @override
+  String get failedToAcceptPO => 'Failed to accept purchase order';
+
+  @override
+  String get rejectPurchaseOrderTitle => 'Reject Purchase Order';
+
+  @override
+  String get rejectPurchaseOrderConfirm => 'Reject this purchase order? This will also reject pending buyer responses.';
+
+  @override
+  String get purchaseOrderRejectedFull => 'Purchase order rejected. Pending buyer responses were also rejected.';
+
+  @override
+  String get failedToRejectPO => 'Failed to reject purchase order';
+
+  @override
+  String orderIdLabel(String id) {
+    return 'Order ID: $id';
+  }
+
+  @override
+  String createdAtLabel(String date) {
+    return 'Created: $date';
+  }
+
+  @override
+  String get acceptOrderButton => 'Accept Order';
+
+  @override
+  String get rejectOrderButton => 'Reject Order';
+
+  @override
+  String poFinalizedMessage(String status) {
+    return 'PO is finalized (status: $status). No further accept/reject allowed.';
+  }
+
+  @override
+  String buyerContactSubtitle(String contact) {
+    return 'Buyer • Contact: $contact';
+  }
+
+  @override
+  String get loadingSellerInfo => 'Loading seller info...';
+
+  @override
+  String get sellerNotFound => 'Seller not found';
+
+  @override
+  String farmerIdLabel(String id) {
+    return 'Farmer ID: $id';
+  }
+
+  @override
+  String contactColonLabel(String contact) {
+    return 'Contact: $contact';
+  }
+
+  @override
+  String get itemsSection => 'Items';
+
+  @override
+  String addedAtLabel(String date) {
+    return 'Added: $date';
+  }
+
+  @override
+  String totalAmountLabel(Object amount) {
+    return 'Total: ₹$amount';
+  }
+
+  @override
+  String get buyerResponsesSection => 'Buyer Responses';
+
+  @override
+  String get errorLoadingResponses => 'Error loading responses';
+
+  @override
+  String get noBuyerResponsesYet => 'No buyer responses yet.';
+
+  @override
+  String atDateLabel(String date) {
+    return 'At: $date';
+  }
+
+  @override
+  String get historySection => 'History';
+
+  @override
+  String get noHistoryEntries => 'No history entries.';
+
+  @override
+  String contactSellerSnackbar(String phone) {
+    return 'Contact Seller: $phone';
+  }
+
+  @override
+  String get contactSellerButton => 'Contact Seller';
+
+  @override
+  String get refreshing => 'Refreshing...';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get productNA => 'Product: N/A';
+
+  @override
+  String get productLoading => 'Product: loading...';
+
+  @override
+  String get productNotFoundItem => 'Product: not found';
+
+  @override
+  String productNameItem(String name) {
+    return 'Product: $name';
+  }
+
+  @override
+  String get errorLoadingOrders => 'Error loading orders';
+
+  @override
+  String get noOrdersPlacedYet => 'No orders placed yet.';
+
+  @override
+  String totalAmountValue(Object amount) {
+    return 'Total: ₹$amount';
+  }
+
+  @override
+  String dateValue(String date) {
+    return 'Date: $date';
+  }
+
+  @override
+  String get goToLogin => 'Go to Login';
+
+  @override
+  String get pleaseSignInViewPurchaseOrders => 'Please sign in to view your purchase orders.';
+
+  @override
+  String get noOrdersForListingsYet => 'No orders for your listings yet.';
+
+  @override
+  String get notLoggedIn => 'Not logged in';
+
+  @override
+  String get noProfileDataFound => 'No profile data found';
+
+  @override
+  String welcomeUser(String name) {
+    return 'Welcome, $name 👋';
+  }
+
+  @override
+  String get couldNotOpenMaps => 'Could not open maps';
+
+  @override
+  String get couldNotOpenDialer => 'Could not open dialer';
+
+  @override
+  String get openFullMap => 'Open full map';
+
+  @override
+  String get locationServicesDisabled => 'Location services disabled';
+
+  @override
+  String get locationPermissionPermanentlyDenied => 'Location permission permanently denied';
 }

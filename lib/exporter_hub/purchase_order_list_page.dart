@@ -12,7 +12,7 @@ import '../l10n/app_localizations.dart';
 /// - If no user is signed in, shows a friendly prompt and a button to open login.
 class PurchaseOrderListPage extends StatefulWidget {
   final String? buyerId;
-  const PurchaseOrderListPage({Key? key, this.buyerId}) : super(key: key);
+  const PurchaseOrderListPage({super.key, this.buyerId});
 
   @override
   State<PurchaseOrderListPage> createState() => _PurchaseOrderListPageState();
@@ -66,32 +66,33 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
   Widget _productNameWidget(Map<String, dynamic> po) {
     final items = (po['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     if (items.isEmpty) {
-      return const Text('Product: N/A');
+      return Builder(builder: (ctx) => Text(AppLocalizations.of(ctx)!.productNA));
     }
     final first = items[0];
     final productNameField = (first['productName'] ?? first['name'])?.toString();
     final listingId = (first['listingId'] ?? '').toString();
 
     if (productNameField != null && productNameField.isNotEmpty) {
-      return Text('Product: $productNameField');
+      return Builder(builder: (ctx) => Text(AppLocalizations.of(ctx)!.productNameItem(productNameField)));
     }
 
     if (listingId.isEmpty) {
-      return const Text('Product: N/A');
+      return Builder(builder: (ctx) => Text(AppLocalizations.of(ctx)!.productNA));
     }
 
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('export_products').doc(listingId).get(),
       builder: (context, snap) {
+        final l = AppLocalizations.of(context)!;
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Text('Product: loading...');
+          return Text(l.productLoading);
         }
         if (!snap.hasData || !snap.data!.exists) {
-          return const Text('Product: not found');
+          return Text(l.productNotFoundItem);
         }
         final pdata = snap.data!.data() as Map<String, dynamic>;
         final name = (pdata['productName'] ?? pdata['name'] ?? pdata['title'])?.toString() ?? 'Unnamed Product';
-        return Text('Product: $name');
+        return Text(l.productNameItem(name));
       },
     );
   }
@@ -118,18 +119,32 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
       default:
         color = Colors.grey;
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
-      ),
-    );
+    return Builder(builder: (ctx) {
+      String label;
+      final l = AppLocalizations.of(ctx)!;
+      switch (status.toLowerCase()) {
+        case 'approved': label = l.statusApproved; break;
+        case 'pending': label = l.statusPending; break;
+        case 'rejected': label = l.statusRejected; break;
+        case 'accepted': label = l.statusAccepted; break;
+        case 'confirmed': label = l.statusConfirmed; break;
+        case 'completed': label = l.statusCompleted; break;
+        case 'issued': label = l.statusIssued; break;
+        default: label = status;
+      }
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+        ),
+      );
+    });
   }
 
   @override
@@ -156,7 +171,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          Text('Error loading orders: ${snap.error}', style: const TextStyle(color: Colors.red)),
+                          Text('${AppLocalizations.of(context)!.errorLoadingOrders}: ${snap.error}', style: const TextStyle(color: Colors.red)),
                           const SizedBox(height: 12),
                           const Text(
                             'If you see a "requires an index" message, create the composite index in Firebase console for (ownerId or buyerId) + createdAt. '
@@ -169,7 +184,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                 }
                 final orders = snap.data ?? [];
                 if (orders.isEmpty) {
-                  return const Center(child: Text('No orders placed yet.'));
+                  return Center(child: Text(AppLocalizations.of(context)!.noOrdersPlacedYet));
                 }
 
                 return ListView.separated(
@@ -222,7 +237,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                           onPressed: () {
                             Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id)));
                           },
-                          child: const Text('View Details'),
+                          child: Text(AppLocalizations.of(context)!.viewDetails),
                         );
 
                         // Build subtitle — show product, total, status badge + date (and optional response snippet)
@@ -231,13 +246,13 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                           children: [
                             _productNameWidget(po),
                             const SizedBox(height: 6),
-                            Text('Total: ₹$total', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            Text(AppLocalizations.of(context)!.totalAmountValue(total), style: const TextStyle(fontWeight: FontWeight.w600)),
                             const SizedBox(height: 6),
                             Row(
                               children: [
                                 _statusBadge(status),
                                 const SizedBox(width: 12),
-                                Text('Date: $when', style: const TextStyle(color: Colors.grey)),
+                                Text(AppLocalizations.of(context)!.dateValue(when), style: const TextStyle(color: Colors.grey)),
                               ],
                             ),
                           ],
@@ -271,7 +286,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                             children: [
                               _productNameWidget(po),
                               const SizedBox(height: 6),
-                              Text('Total: ₹$total', style: const TextStyle(fontWeight: FontWeight.w600)),
+                              Text(AppLocalizations.of(context)!.totalAmountValue(total), style: const TextStyle(fontWeight: FontWeight.w600)),
                               const SizedBox(height: 6),
                               Row(
                                 children: [
@@ -280,18 +295,18 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: respColor.withOpacity(0.12),
+                                      color: respColor.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: respColor),
                                     ),
                                     child: Text(respStatus.toUpperCase(), style: TextStyle(color: respColor, fontWeight: FontWeight.w700, fontSize: 12)),
                                   ),
                                   const SizedBox(width: 12),
-                                  Expanded(child: Text(snippet.isNotEmpty ? snippet : 'Buyer responded', overflow: TextOverflow.ellipsis)),
+                                  Expanded(child: Text(snippet.isNotEmpty ? snippet : AppLocalizations.of(context)!.buyerResponsesSection, overflow: TextOverflow.ellipsis)),
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              Text('Date: $when', style: const TextStyle(color: Colors.grey)),
+                              Text(AppLocalizations.of(context)!.dateValue(when), style: const TextStyle(color: Colors.grey)),
                             ],
                           );
                         }
@@ -360,7 +375,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
       radius: 28,
 
       backgroundColor:
-          statusColor.withOpacity(
+          statusColor.withValues(alpha:
         0.12,
       ),
 
@@ -395,15 +410,14 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Please sign in to view your purchase orders.', textAlign: TextAlign.center),
+          Text(AppLocalizations.of(context)!.pleaseSignInViewPurchaseOrders, textAlign: TextAlign.center),
           const SizedBox(height: 12),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () {
-              // Navigate to your app's login route. Adjust if your route name is different.
               Navigator.pushNamed(context, '/login');
             },
-            child: const Text('Go to Login'),
+            child: Text(AppLocalizations.of(context)!.goToLogin),
           )
         ]),
       ),

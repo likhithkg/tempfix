@@ -66,12 +66,13 @@ class _LabourHubDetailPageState
         translatedLocation =
             widget.labour.location;
 
+        final l = AppLocalizations.of(context)!;
         translatedAvailability =
             widget.labour.available
 
-                ? "Available"
+                ? l.available
 
-                : "Not Available";
+                : l.notAvailable;
 
         translatedTitle = '';
         translatedCall = '';
@@ -111,7 +112,7 @@ class _LabourHubDetailPageState
           ? "Available"
           : "Not Available",
       targetLanguage: lang,
-    );
+    );  // LibreTranslate used for user-data translation; English source is intentional
 
     if (mounted) {
 
@@ -279,7 +280,7 @@ class _LabourHubDetailPageState
 
                           color: Colors
                               .black
-                              .withOpacity(
+                              .withValues(alpha:
                             0.06,
                           ),
 
@@ -429,7 +430,7 @@ class _LabourHubDetailPageState
 
                           color: Colors
                               .black
-                              .withOpacity(
+                              .withValues(alpha:
                             0.06,
                           ),
 

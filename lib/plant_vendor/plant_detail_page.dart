@@ -23,7 +23,7 @@ class PlantDetailPage extends StatelessWidget {
     final uri = Uri.parse('tel:$p');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
-    } else {
+    } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.cannotOpenDialer)),
       );
@@ -46,7 +46,7 @@ class PlantDetailPage extends StatelessWidget {
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenWhatsApp)),
       );
@@ -66,7 +66,7 @@ class PlantDetailPage extends StatelessWidget {
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.locationNotAvailable)),
       );
@@ -82,8 +82,6 @@ class PlantDetailPage extends StatelessWidget {
 
     final typeParts = rawType.split(' - ');
     final category = typeParts.first;
-    final typeLabel =
-        typeParts.length > 1 ? typeParts.sublist(1).join(' - ') : '';
 
     final priceText = '₹${vendor.price.toStringAsFixed(2)}';
     final qtyText = vendor.quantity.toString();
@@ -96,8 +94,7 @@ class PlantDetailPage extends StatelessWidget {
     final imageUrl = (vendor.imageUrl ?? '').trim();
     final hasImage = imageUrl.isNotEmpty;
 
-    final listedOn =
-        vendor.timestamp != null ? _formatDate(vendor.timestamp) : '';
+    final listedOn = _formatDate(vendor.timestamp);
 
     final accent = Colors.green.shade600;
     final softBg = Colors.green.shade50;
@@ -207,11 +204,11 @@ class PlantDetailPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             /// 🔹 DETAILS
-            _row("Type", rawType),
-            _row("Quantity", qtyText),
-            _row("Vendor", vendorName),
-            _row("Location", location),
-            _row("Listed on", listedOn),
+            _row(l.typeLabel, rawType),
+            _row(l.quantityLabel, qtyText),
+            _row(l.vendorLabel, vendorName),
+            _row(l.locationLabel, location),
+            _row(l.listedOnLabel, listedOn),
 
             const SizedBox(height: 20),
 
@@ -240,7 +237,7 @@ class PlantDetailPage extends StatelessWidget {
 
             /// 🔹 DESCRIPTION
             Text(l.descriptionHeader,
-                style: TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Text(
               vendor.description.isNotEmpty

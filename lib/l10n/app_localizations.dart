@@ -2420,6 +2420,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error deleting account'**
   String get errorDeletingAccount;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameLabel;
+
+  /// No description provided for @pricePerKgLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price/kg'**
+  String get pricePerKgLabel;
+
+  /// No description provided for @farmerDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Details'**
+  String get farmerDetailsTitle;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @by.
+  ///
+  /// In en, this message translates to:
+  /// **'By'**
+  String get by;
+
+  /// No description provided for @at.
+  ///
+  /// In en, this message translates to:
+  /// **'At'**
+  String get at;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get statusAccepted;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @statusIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued'**
+  String get statusIssued;
+
+  /// No description provided for @statusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get statusOpen;
+
+  /// No description provided for @statusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get statusClosed;
+
+  /// No description provided for @statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get statusActive;
+
+  /// No description provided for @statusInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get statusInactive;
+
+  /// No description provided for @pleaseSignInToPerformAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to perform this action'**
+  String get pleaseSignInToPerformAction;
+
+  /// No description provided for @onlySellerCanPerformAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the seller can perform this action'**
+  String get onlySellerCanPerformAction;
+
+  /// No description provided for @acceptResponseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Response'**
+  String get acceptResponseTitle;
+
+  /// No description provided for @acceptBuyerResponseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept buyer response from \"{name}\"?'**
+  String acceptBuyerResponseConfirm(String name);
+
+  /// No description provided for @buyerResponseAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer response accepted. PO status set to confirmed.'**
+  String get buyerResponseAccepted;
+
+  /// No description provided for @failedToAcceptResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to accept response'**
+  String get failedToAcceptResponse;
+
+  /// No description provided for @rejectResponseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Response'**
+  String get rejectResponseTitle;
+
+  /// No description provided for @rejectBuyerResponseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject buyer response from \"{name}\"?'**
+  String rejectBuyerResponseConfirm(String name);
+
+  /// No description provided for @buyerResponseRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer response rejected.'**
+  String get buyerResponseRejected;
+
+  /// No description provided for @failedToRejectResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reject response'**
+  String get failedToRejectResponse;
+
+  /// No description provided for @acceptPurchaseOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Purchase Order'**
+  String get acceptPurchaseOrderTitle;
+
+  /// No description provided for @acceptPurchaseOrderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this purchase order? This will set PO status to accepted.'**
+  String get acceptPurchaseOrderConfirm;
+
+  /// No description provided for @purchaseOrderAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase order accepted.'**
+  String get purchaseOrderAccepted;
+
+  /// No description provided for @failedToAcceptPO.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to accept purchase order'**
+  String get failedToAcceptPO;
+
+  /// No description provided for @rejectPurchaseOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Purchase Order'**
+  String get rejectPurchaseOrderTitle;
+
+  /// No description provided for @rejectPurchaseOrderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject this purchase order? This will also reject pending buyer responses.'**
+  String get rejectPurchaseOrderConfirm;
+
+  /// No description provided for @purchaseOrderRejectedFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase order rejected. Pending buyer responses were also rejected.'**
+  String get purchaseOrderRejectedFull;
+
+  /// No description provided for @failedToRejectPO.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reject purchase order'**
+  String get failedToRejectPO;
+
+  /// No description provided for @orderIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order ID: {id}'**
+  String orderIdLabel(String id);
+
+  /// No description provided for @createdAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: {date}'**
+  String createdAtLabel(String date);
+
+  /// No description provided for @acceptOrderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Order'**
+  String get acceptOrderButton;
+
+  /// No description provided for @rejectOrderButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Order'**
+  String get rejectOrderButton;
+
+  /// No description provided for @poFinalizedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'PO is finalized (status: {status}). No further accept/reject allowed.'**
+  String poFinalizedMessage(String status);
+
+  /// No description provided for @buyerContactSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer • Contact: {contact}'**
+  String buyerContactSubtitle(String contact);
+
+  /// No description provided for @loadingSellerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading seller info...'**
+  String get loadingSellerInfo;
+
+  /// No description provided for @sellerNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Seller not found'**
+  String get sellerNotFound;
+
+  /// No description provided for @farmerIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer ID: {id}'**
+  String farmerIdLabel(String id);
+
+  /// No description provided for @contactColonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact: {contact}'**
+  String contactColonLabel(String contact);
+
+  /// No description provided for @itemsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get itemsSection;
+
+  /// No description provided for @addedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Added: {date}'**
+  String addedAtLabel(String date);
+
+  /// No description provided for @totalAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: ₹{amount}'**
+  String totalAmountLabel(Object amount);
+
+  /// No description provided for @buyerResponsesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer Responses'**
+  String get buyerResponsesSection;
+
+  /// No description provided for @errorLoadingResponses.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading responses'**
+  String get errorLoadingResponses;
+
+  /// No description provided for @noBuyerResponsesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No buyer responses yet.'**
+  String get noBuyerResponsesYet;
+
+  /// No description provided for @atDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'At: {date}'**
+  String atDateLabel(String date);
+
+  /// No description provided for @historySection.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historySection;
+
+  /// No description provided for @noHistoryEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No history entries.'**
+  String get noHistoryEntries;
+
+  /// No description provided for @contactSellerSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Seller: {phone}'**
+  String contactSellerSnackbar(String phone);
+
+  /// No description provided for @contactSellerButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Seller'**
+  String get contactSellerButton;
+
+  /// No description provided for @refreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing...'**
+  String get refreshing;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @productNA.
+  ///
+  /// In en, this message translates to:
+  /// **'Product: N/A'**
+  String get productNA;
+
+  /// No description provided for @productLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Product: loading...'**
+  String get productLoading;
+
+  /// No description provided for @productNotFoundItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Product: not found'**
+  String get productNotFoundItem;
+
+  /// No description provided for @productNameItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Product: {name}'**
+  String productNameItem(String name);
+
+  /// No description provided for @errorLoadingOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading orders'**
+  String get errorLoadingOrders;
+
+  /// No description provided for @noOrdersPlacedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders placed yet.'**
+  String get noOrdersPlacedYet;
+
+  /// No description provided for @totalAmountValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: ₹{amount}'**
+  String totalAmountValue(Object amount);
+
+  /// No description provided for @dateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {date}'**
+  String dateValue(String date);
+
+  /// No description provided for @goToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Login'**
+  String get goToLogin;
+
+  /// No description provided for @pleaseSignInViewPurchaseOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to view your purchase orders.'**
+  String get pleaseSignInViewPurchaseOrders;
+
+  /// No description provided for @noOrdersForListingsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders for your listings yet.'**
+  String get noOrdersForListingsYet;
+
+  /// No description provided for @notLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged in'**
+  String get notLoggedIn;
+
+  /// No description provided for @noProfileDataFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No profile data found'**
+  String get noProfileDataFound;
+
+  /// No description provided for @welcomeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, {name} 👋'**
+  String welcomeUser(String name);
+
+  /// No description provided for @couldNotOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open maps'**
+  String get couldNotOpenMaps;
+
+  /// No description provided for @couldNotOpenDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open dialer'**
+  String get couldNotOpenDialer;
+
+  /// No description provided for @openFullMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full map'**
+  String get openFullMap;
+
+  /// No description provided for @locationServicesDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services disabled'**
+  String get locationServicesDisabled;
+
+  /// No description provided for @locationPermissionPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission permanently denied'**
+  String get locationPermissionPermanentlyDenied;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

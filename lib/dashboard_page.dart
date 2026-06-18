@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'profile_page.dart';
 import 'profile_service.dart';
+import 'l10n/app_localizations.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -31,8 +32,8 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     if (_user == null) {
-      return const Scaffold(
-        body: Center(child: Text("Not logged in")),
+      return Scaffold(
+        body: Center(child: Text(AppLocalizations.of(context)!.notLoggedIn)),
       );
     }
 
@@ -89,7 +90,7 @@ class _DashboardPageState extends State<DashboardPage> {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("No profile data found"));
+            return Center(child: Text(AppLocalizations.of(context)!.noProfileDataFound));
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -114,7 +115,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 // Name
                 Text(
-                  "Welcome, ${data["name"] ?? "Farmer"} 👋",
+                  AppLocalizations.of(context)!.welcomeUser(data["name"] ?? "Farmer"),
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold),
                 ),

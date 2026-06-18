@@ -480,6 +480,7 @@ class _LabourHubFormPageState
             'Updated labour doc: ${saved.data()}');
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(
         const SnackBar(
@@ -490,6 +491,7 @@ class _LabourHubFormPageState
       Navigator.of(context)
           .pop(true);
     } on FirebaseException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(
         SnackBar(
@@ -498,6 +500,7 @@ class _LabourHubFormPageState
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(
         SnackBar(

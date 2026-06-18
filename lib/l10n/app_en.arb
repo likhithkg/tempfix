@@ -421,5 +421,139 @@
   "changePassword": "Change password",
   "exportData": "Export data",
   "deleteAccount": "Delete account",
-  "errorDeletingAccount": "Error deleting account"
+  "errorDeletingAccount": "Error deleting account",
+
+  "nameLabel": "Name",
+  "pricePerKgLabel": "Price/kg",
+  "farmerDetailsTitle": "Farmer Details",
+  "yes": "Yes",
+  "by": "By",
+  "at": "At",
+
+  "statusConfirmed": "Confirmed",
+  "statusAccepted": "Accepted",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
+  "statusIssued": "Issued",
+  "statusOpen": "Open",
+  "statusClosed": "Closed",
+  "statusActive": "Active",
+  "statusInactive": "Inactive",
+
+  "pleaseSignInToPerformAction": "Please sign in to perform this action",
+  "onlySellerCanPerformAction": "Only the seller can perform this action",
+
+  "acceptResponseTitle": "Accept Response",
+  "acceptBuyerResponseConfirm": "Accept buyer response from \"{name}\"?",
+  "@acceptBuyerResponseConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "buyerResponseAccepted": "Buyer response accepted. PO status set to confirmed.",
+  "failedToAcceptResponse": "Failed to accept response",
+
+  "rejectResponseTitle": "Reject Response",
+  "rejectBuyerResponseConfirm": "Reject buyer response from \"{name}\"?",
+  "@rejectBuyerResponseConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "buyerResponseRejected": "Buyer response rejected.",
+  "failedToRejectResponse": "Failed to reject response",
+
+  "acceptPurchaseOrderTitle": "Accept Purchase Order",
+  "acceptPurchaseOrderConfirm": "Accept this purchase order? This will set PO status to accepted.",
+  "purchaseOrderAccepted": "Purchase order accepted.",
+  "failedToAcceptPO": "Failed to accept purchase order",
+
+  "rejectPurchaseOrderTitle": "Reject Purchase Order",
+  "rejectPurchaseOrderConfirm": "Reject this purchase order? This will also reject pending buyer responses.",
+  "purchaseOrderRejectedFull": "Purchase order rejected. Pending buyer responses were also rejected.",
+  "failedToRejectPO": "Failed to reject purchase order",
+
+  "orderIdLabel": "Order ID: {id}",
+  "@orderIdLabel": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "createdAtLabel": "Created: {date}",
+  "@createdAtLabel": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "acceptOrderButton": "Accept Order",
+  "rejectOrderButton": "Reject Order",
+  "poFinalizedMessage": "PO is finalized (status: {status}). No further accept/reject allowed.",
+  "@poFinalizedMessage": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "buyerContactSubtitle": "Buyer • Contact: {contact}",
+  "@buyerContactSubtitle": {
+    "placeholders": { "contact": { "type": "String" } }
+  },
+  "loadingSellerInfo": "Loading seller info...",
+  "sellerNotFound": "Seller not found",
+  "farmerIdLabel": "Farmer ID: {id}",
+  "@farmerIdLabel": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "contactColonLabel": "Contact: {contact}",
+  "@contactColonLabel": {
+    "placeholders": { "contact": { "type": "String" } }
+  },
+  "itemsSection": "Items",
+  "addedAtLabel": "Added: {date}",
+  "@addedAtLabel": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "totalAmountLabel": "Total: ₹{amount}",
+  "@totalAmountLabel": {
+    "placeholders": { "amount": { "type": "Object" } }
+  },
+  "buyerResponsesSection": "Buyer Responses",
+  "errorLoadingResponses": "Error loading responses",
+  "noBuyerResponsesYet": "No buyer responses yet.",
+  "atDateLabel": "At: {date}",
+  "@atDateLabel": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "historySection": "History",
+  "noHistoryEntries": "No history entries.",
+  "contactSellerSnackbar": "Contact Seller: {phone}",
+  "@contactSellerSnackbar": {
+    "placeholders": { "phone": { "type": "String" } }
+  },
+  "contactSellerButton": "Contact Seller",
+  "refreshing": "Refreshing...",
+  "accept": "Accept",
+
+  "productNA": "Product: N/A",
+  "productLoading": "Product: loading...",
+  "productNotFoundItem": "Product: not found",
+  "productNameItem": "Product: {name}",
+  "@productNameItem": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "errorLoadingOrders": "Error loading orders",
+  "noOrdersPlacedYet": "No orders placed yet.",
+  "totalAmountValue": "Total: ₹{amount}",
+  "@totalAmountValue": {
+    "placeholders": { "amount": { "type": "Object" } }
+  },
+  "dateValue": "Date: {date}",
+  "@dateValue": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "goToLogin": "Go to Login",
+  "pleaseSignInViewPurchaseOrders": "Please sign in to view your purchase orders.",
+  "noOrdersForListingsYet": "No orders for your listings yet.",
+
+  "notLoggedIn": "Not logged in",
+  "noProfileDataFound": "No profile data found",
+  "welcomeUser": "Welcome, {name} 👋",
+  "@welcomeUser": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "couldNotOpenMaps": "Could not open maps",
+  "couldNotOpenDialer": "Could not open dialer",
+  "openFullMap": "Open full map",
+  "locationServicesDisabled": "Location services disabled",
+  "locationPermissionPermanentlyDenied": "Location permission permanently denied"
 }

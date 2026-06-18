@@ -408,14 +408,17 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               onTap: () {
                 showDialog(context: context, builder: (_) => AlertDialog(
                   title: Text(product.productName),
-                  content: Text(
-                    'Farmer: ${product.farmerName}\n'
-                    'Mobile: ${product.farmerMobile ?? product.farmerId}\n'
-                    'Qty: ${product.quantity}\n'
-                    'Price: ₹${product.pricePerUnit}\n'
-                    'Location: ${product.location}\n\n'
-                    '${product.description}',
-                  ),
+                  content: Builder(builder: (ctx) {
+                    final l = AppLocalizations.of(ctx)!;
+                    return Text(
+                      '${l.farmerLabel} ${product.farmerName}\n'
+                      '${l.mobileLabel} ${product.farmerMobile ?? product.farmerId}\n'
+                      '${l.qtyLabel} ${product.quantity}\n'
+                      '${l.priceLabel}: ₹${product.pricePerUnit}\n'
+                      '${l.locationLabel}: ${product.location}\n\n'
+                      '${product.description}',
+                    );
+                  }),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(context), child: Text(l.close)),
                     if (!isOwner)

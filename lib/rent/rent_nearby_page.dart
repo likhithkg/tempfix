@@ -298,7 +298,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
           ),
           
           IconButton(
-            tooltip: 'Open full map',
+            tooltip: AppLocalizations.of(context)!.openFullMap,
             icon: const Icon(Icons.map_outlined),
             onPressed: () => _openFullMap(filtered),
           ),

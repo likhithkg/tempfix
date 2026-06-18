@@ -240,7 +240,12 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!))
+              ? Center(child: Text(
+                  _error!.contains('Location services disabled') ? AppLocalizations.of(context)!.locationServicesDisabled :
+                  _error!.contains('permanently denied') ? AppLocalizations.of(context)!.locationPermissionPermanentlyDenied :
+                  _error!.contains('Location permission denied') ? AppLocalizations.of(context)!.locationPermissionDenied :
+                  _error!,
+                ))
               : ListView.builder(
                   padding: const EdgeInsets.only(top: 8, bottom: 16),
                   itemCount: _nearby.length,

@@ -18,6 +18,23 @@ class ExportListingDetailPage extends StatefulWidget {
       _ExportListingDetailPageState();
 }
 
+String _localizedStatus(AppLocalizations l, String status) {
+  switch (status.toLowerCase()) {
+    case 'approved': return l.statusApproved;
+    case 'pending':  return l.statusPending;
+    case 'rejected': return l.statusRejected;
+    case 'open':     return l.statusOpen;
+    case 'closed':   return l.statusClosed;
+    case 'accepted': return l.statusAccepted;
+    case 'confirmed': return l.statusConfirmed;
+    case 'completed': return l.statusCompleted;
+    case 'cancelled': return l.statusCancelled;
+    case 'active':   return l.statusActive;
+    case 'inactive': return l.statusInactive;
+    default:         return status;
+  }
+}
+
 class _ExportListingDetailPageState
     extends State<ExportListingDetailPage> {
 
@@ -41,8 +58,10 @@ class _ExportListingDetailPageState
       widget.data['status'] = status;
     });
 
+    if (!mounted) return;
+    final l = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Listing $status successfully")),
+      SnackBar(content: Text(status == 'approved' ? l.listingApproved : l.listingRejected)),
     );
   }
 
@@ -93,10 +112,10 @@ class _ExportListingDetailPageState
                 const SizedBox(height: 15),
 
                 // PRODUCT DETAILS
-                Text("Category: ${data['category'] ?? ''}"),
-                Text("Quantity: ${data['quantity'] ?? ''}"),
-                Text("Price/kg: ${data['pricePerKg'] ?? ''}"),
-                Text("Location: ${data['location'] ?? ''}"),
+                Text("${l.categoryLabel}: ${data['category'] ?? ''}"),
+                Text("${l.quantityLabel}: ${data['quantity'] ?? ''}"),
+                Text("${l.pricePerKgLabel}: ${data['pricePerKg'] ?? ''}"),
+                Text("${l.locationLabel}: ${data['location'] ?? ''}"),
 
                 const SizedBox(height: 10),
 
@@ -105,11 +124,11 @@ class _ExportListingDetailPageState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "Status: $status",
+                    "${l.statusLabel} ${_localizedStatus(l, status)}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: statusColor,
@@ -120,9 +139,9 @@ class _ExportListingDetailPageState
                 const Divider(height: 30),
 
                 // FARMER DETAILS
-                const Text(
-                  "Farmer Details",
-                  style: TextStyle(
+                Text(
+                  l.farmerDetailsTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -130,8 +149,8 @@ class _ExportListingDetailPageState
 
                 const SizedBox(height: 12),
 
-                Text("Name: $farmerName"),
-                Text("Mobile: $farmerPhone"),
+                Text("${l.nameLabel}: $farmerName"),
+                Text("${l.mobileLabel} $farmerPhone"),
 
                 const SizedBox(height: 25),
 

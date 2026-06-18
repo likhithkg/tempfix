@@ -164,7 +164,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open maps')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenMaps)));
     }
   }
 
@@ -173,7 +173,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenDialer)));
     }
   }
 
@@ -192,7 +192,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
       context: context,
       builder: (ctx) {
         return SimpleDialog(
-          title: const Text('Select radius'),
+          title: Text(AppLocalizations.of(context)!.selectRadius),
           children: [
             ...[5, 10, 20, 50, 100, 150, 200, 500].map((v) {
               return SimpleDialogOption(

@@ -6,10 +6,24 @@ import 'po_detail_page.dart';
 import '../l10n/app_localizations.dart';
 
 class SellerPurchaseOrderListPage extends StatefulWidget {
-  const SellerPurchaseOrderListPage({Key? key}) : super(key: key);
+  const SellerPurchaseOrderListPage({super.key});
 
   @override
   State<SellerPurchaseOrderListPage> createState() => _SellerPurchaseOrderListPageState();
+}
+
+String _localizedStatus(AppLocalizations l, String status) {
+  switch (status.toLowerCase()) {
+    case 'pending':   return l.statusPending;
+    case 'approved':  return l.statusApproved;
+    case 'rejected':  return l.statusRejected;
+    case 'accepted':  return l.statusAccepted;
+    case 'confirmed': return l.statusConfirmed;
+    case 'completed': return l.statusCompleted;
+    case 'cancelled': return l.statusCancelled;
+    case 'issued':    return l.statusIssued;
+    default:          return status;
+  }
 }
 
 class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPage> {
@@ -55,7 +69,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
 
                 final docs = snap.data!.docs;
                 if (docs.isEmpty) {
-                  return const Center(child: Text('No orders for your listings yet.'));
+                  return Center(child: Text(AppLocalizations.of(context)!.noOrdersForListingsYet));
                 }
 
                 return ListView.separated(
@@ -70,7 +84,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                     final createdAt = m['createdAt'];
 
                     // 🔹 Extract crop/product name
-                    String _extractCropName(Map<String, dynamic> order) {
+                    String extractCropName(Map<String, dynamic> order) {
                       String? getStr(dynamic v) {
                         if (v is String && v.trim().isNotEmpty) return v.trim();
                         return null;
@@ -111,7 +125,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                       return 'Order ${id.length >= 6 ? id.substring(0, 6) : id}';
                     }
 
-                    final cropName = _extractCropName(m);
+                    final cropName = extractCropName(m);
 
                     // date formatting
                     String when = '';
@@ -156,7 +170,8 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                     return StreamBuilder<QuerySnapshot>(
                       stream: respStream,
                       builder: (context, rs) {
-                        Widget subtitle = Text('Total: ₹$total  •  Status: $status\n$when');
+                        final l = AppLocalizations.of(context)!;
+                        Widget subtitle = Text('${l.totalLabel} ₹$total  •  ${l.statusLabel} ${_localizedStatus(l, status)}\n$when');
 
                         if (rs.hasData && rs.data!.docs.isNotEmpty) {
                           final rd = rs.data!.docs.first;
@@ -182,19 +197,19 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                           subtitle = Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Total: ₹$total  •  Status: $status'),
+                              Text('${l.totalLabel} ₹$total  •  ${l.statusLabel} ${_localizedStatus(l, status)}'),
                               const SizedBox(height: 6),
                               Row(
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: respColor.withOpacity(0.12),
+                                      color: respColor.withValues(alpha: 0.12),
                                       border: Border.all(color: respColor),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      respStatus.toUpperCase(),
+                                      _localizedStatus(l, respStatus).toUpperCase(),
                                       style: TextStyle(color: respColor, fontWeight: FontWeight.w700, fontSize: 12),
                                     ),
                                   ),
@@ -265,7 +280,7 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
       radius: 28,
 
       backgroundColor:
-          statusColor.withOpacity(0.12),
+          statusColor.withValues(alpha: 0.12),
 
       backgroundImage:
           imageProvider,
@@ -311,14 +326,14 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Please sign in to view orders for your listings.', textAlign: TextAlign.center),
+            Text(AppLocalizations.of(context)!.pleaseSignInToViewSeller, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               onPressed: () {
                 Navigator.pushNamed(context, '/login');
               },
-              child: const Text('Go to Login'),
+              child: Text(AppLocalizations.of(context)!.goToLogin),
             )
           ],
         ),

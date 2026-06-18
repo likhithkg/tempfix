@@ -137,15 +137,15 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _ImageSourceButton(icon: Icons.photo_library, label: 'Gallery', onTap: () {
+                    _ImageSourceButton(icon: Icons.photo_library, label: AppLocalizations.of(context)!.gallery, onTap: () {
                       Navigator.of(ctx).pop();
                       _pickAndUploadImage(ImageSource.gallery);
                     }),
-                    _ImageSourceButton(icon: Icons.camera_alt, label: 'Camera', onTap: () {
+                    _ImageSourceButton(icon: Icons.camera_alt, label: AppLocalizations.of(context)!.camera, onTap: () {
                       Navigator.of(ctx).pop();
                       _pickAndUploadImage(ImageSource.camera);
                     }),
-                    _ImageSourceButton(icon: Icons.close, label: 'Cancel', onTap: () => Navigator.of(ctx).pop()),
+                    _ImageSourceButton(icon: Icons.close, label: AppLocalizations.of(context)!.cancel, onTap: () => Navigator.of(ctx).pop()),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -361,7 +361,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 4))],
+                                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 4))],
                               ),
                               child: CircleAvatar(
                                 radius: 36,

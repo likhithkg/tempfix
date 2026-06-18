@@ -6,6 +6,22 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'exporter_service.dart';
 import '../l10n/app_localizations.dart';
 
+String _localizedPoStatus(AppLocalizations l, String status) {
+  switch (status.toLowerCase()) {
+    case 'pending':   return l.statusPending;
+    case 'approved':  return l.statusApproved;
+    case 'rejected':  return l.statusRejected;
+    case 'accepted':  return l.statusAccepted;
+    case 'confirmed': return l.statusConfirmed;
+    case 'completed': return l.statusCompleted;
+    case 'cancelled': return l.statusCancelled;
+    case 'issued':    return l.statusIssued;
+    case 'open':      return l.statusOpen;
+    case 'closed':    return l.statusClosed;
+    default:          return status;
+  }
+}
+
 /// Purchase Order Detail Page
 /// Shows a single PO (real-time) and allows actions:
 /// - update PO status (confirmed/completed)
@@ -37,48 +53,31 @@ class PODetailPage extends StatelessWidget {
     }
   }
 
-  Future<void> _changeStatus(BuildContext context, String newStatus) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in to perform this action')));
-      return;
-    }
-
-    try {
-      await svc.updatePOStatus(poId, newStatus, user.uid, note: 'Status changed to $newStatus');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status updated to $newStatus')));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update status: ${e.toString()}')));
-      }
-    }
-  }
-
   Future<bool?> _confirmDialog(BuildContext context, String title, String body) {
+    final l = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(body),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Yes')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l.cancel)),
+          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l.yes)),
         ],
       ),
     );
   }
 
   Future<void> _acceptResponse(BuildContext context, DocumentReference responseRef, Map<String, dynamic> respData, String poFarmerId) async {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to perform this action')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
       return;
     }
 
     final buyerName = respData['buyerName'] ?? respData['from'] ?? 'Buyer';
-    final confirmed = await _confirmDialog(context, 'Accept response', 'Accept buyer response from "$buyerName"?');
+    final confirmed = await _confirmDialog(context, l.acceptResponseTitle, l.acceptBuyerResponseConfirm(buyerName));
     if (confirmed != true) return;
 
     final poRef = svc.poRef.doc(poId);
@@ -104,24 +103,25 @@ class PODetailPage extends StatelessWidget {
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Buyer response accepted. PO status set to confirmed.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.buyerResponseAccepted)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to accept response: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToAcceptResponse)));
       }
     }
   }
 
   Future<void> _rejectResponse(BuildContext context, DocumentReference responseRef, Map<String, dynamic> respData) async {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to perform this action')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
       return;
     }
 
     final buyerName = respData['buyerName'] ?? respData['from'] ?? 'Buyer';
-    final confirmed = await _confirmDialog(context, 'Reject response', 'Reject buyer response from "$buyerName"?');
+    final confirmed = await _confirmDialog(context, l.rejectResponseTitle, l.rejectBuyerResponseConfirm(buyerName));
     if (confirmed != true) return;
 
     try {
@@ -145,28 +145,29 @@ class PODetailPage extends StatelessWidget {
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Buyer response rejected.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.buyerResponseRejected)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to reject response: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToRejectResponse)));
       }
     }
   }
 
   // --- New: PO-level accept (seller accepts the entire purchase order) ---
   Future<void> _acceptPO(BuildContext context, String farmerId) async {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to perform this action')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
       return;
     }
     if (user.uid != farmerId) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Only the seller can accept this order')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.onlySellerCanPerformAction)));
       return;
     }
 
-    final confirmed = await _confirmDialog(context, 'Accept Purchase Order', 'Accept this purchase order (this will set PO status to "accepted")?');
+    final confirmed = await _confirmDialog(context, l.acceptPurchaseOrderTitle, l.acceptPurchaseOrderConfirm);
     if (confirmed != true) return;
 
     final poRef = svc.poRef.doc(poId);
@@ -191,28 +192,29 @@ class PODetailPage extends StatelessWidget {
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchase order accepted.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.purchaseOrderAccepted)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to accept PO: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToAcceptPO)));
       }
     }
   }
 
   // --- New: PO-level reject (seller rejects the entire purchase order) ---
   Future<void> _rejectPO(BuildContext context, String farmerId) async {
+    final l = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in to perform this action')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
       return;
     }
     if (user.uid != farmerId) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Only the seller can reject this order')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.onlySellerCanPerformAction)));
       return;
     }
 
-    final confirmed = await _confirmDialog(context, 'Reject Purchase Order', 'Reject this purchase order? This will also reject pending buyer responses.');
+    final confirmed = await _confirmDialog(context, l.rejectPurchaseOrderTitle, l.rejectPurchaseOrderConfirm);
     if (confirmed != true) return;
 
     final poRef = svc.poRef.doc(poId);
@@ -246,18 +248,18 @@ class PODetailPage extends StatelessWidget {
       await batch.commit();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchase order rejected. Pending buyer responses were also rejected.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.purchaseOrderRejectedFull)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to reject PO: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.failedToRejectPO)));
       }
     }
   }
 
-  Widget _statusBadge(String status) {
+  Widget _statusBadge(String rawStatus, {String? displayLabel}) {
     Color color;
-    switch (status.toLowerCase()) {
+    switch (rawStatus.toLowerCase()) {
       case 'completed':
       case 'accepted':
       case 'accepted_by_buyer':
@@ -275,15 +277,18 @@ class PODetailPage extends StatelessWidget {
       default:
         color = Colors.grey;
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
-    );
+    return Builder(builder: (ctx) {
+      final label = displayLabel ?? _localizedPoStatus(AppLocalizations.of(ctx)!, rawStatus);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color),
+        ),
+        child: Text(label.toUpperCase(), style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+      );
+    });
   }
 
   // helper: try to extract product/crop name from PO data (items first)
@@ -364,7 +369,7 @@ class PODetailPage extends StatelessWidget {
 
         if (inlineName != null) {
           titleWidget = Text(inlineName);
-        } else if (items.isNotEmpty && items.first is Map && (items.first['listingId'] ?? items.first['productId']) != null) {
+        } else if (items.isNotEmpty && (items.first['listingId'] ?? items.first['productId']) != null) {
           final listingId = (items.first['listingId'] ?? items.first['productId']).toString();
           titleWidget = FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance.collection('export_products').doc(listingId).get(),
@@ -400,7 +405,7 @@ class PODetailPage extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 onPressed: () {
                   // simply re-build since Stream is live; show quick feedback
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refreshing...')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.refreshing)));
                 },
               )
             ],
@@ -419,14 +424,14 @@ class PODetailPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // we still show order id below the product name area (not in title)
-                          Text('Order ID: $poId', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text(AppLocalizations.of(context)!.orderIdLabel(poId), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 6),
                           Row(children: [
-                            const Text('Status: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                            Text('${AppLocalizations.of(context)!.statusLabel} ', style: const TextStyle(fontWeight: FontWeight.w600)),
                             _statusBadge(status),
                           ]),
                           const SizedBox(height: 6),
-                          Text('Created: ${_formatTimestamp(createdAt)}', style: const TextStyle(color: Colors.grey)),
+                          Text(AppLocalizations.of(context)!.createdAtLabel(_formatTimestamp(createdAt)), style: const TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ),
@@ -442,14 +447,14 @@ class PODetailPage extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: () => _acceptPO(context, farmerId),
                         icon: const Icon(Icons.thumb_up),
-                        label: const Text('Accept Order'),
+                        label: Text(AppLocalizations.of(context)!.acceptOrderButton),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                       ),
                       const SizedBox(width: 12),
                       OutlinedButton.icon(
                         onPressed: () => _rejectPO(context, farmerId),
                         icon: const Icon(Icons.thumb_down),
-                        label: const Text('Reject Order'),
+                        label: Text(AppLocalizations.of(context)!.rejectOrderButton),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.red),
                         ),
@@ -460,7 +465,7 @@ class PODetailPage extends StatelessWidget {
                 if (canActOnPO && poFinalized)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text('PO is finalized (status: ${status.toUpperCase()}). No further PO-level accept/reject allowed.', style: const TextStyle(color: Colors.grey)),
+                    child: Text(AppLocalizations.of(context)!.poFinalizedMessage(_localizedPoStatus(AppLocalizations.of(context)!, status).toUpperCase()), style: const TextStyle(color: Colors.grey)),
                   ),
 
                 const SizedBox(height: 16),
@@ -471,7 +476,7 @@ class PODetailPage extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.person, color: Colors.green),
                   title: Text(buyerName),
-                  subtitle: Text('Buyer • Contact: $buyerContact'),
+                  subtitle: Text(AppLocalizations.of(context)!.buyerContactSubtitle(buyerContact)),
                 ),
                 const SizedBox(height: 12),
 
@@ -486,16 +491,16 @@ class PODetailPage extends StatelessWidget {
                           future: FirebaseFirestore.instance.collection('users').doc(farmerId).get(),
                           builder: (context, snap) {
                             if (snap.connectionState == ConnectionState.waiting) {
-                              return const ListTile(
-                                leading: Icon(Icons.store, color: Colors.green),
-                                title: Text('Loading seller info...'),
+                              return ListTile(
+                                leading: const Icon(Icons.store, color: Colors.green),
+                                title: Text(AppLocalizations.of(context)!.loadingSellerInfo),
                               );
                             }
                             if (!snap.hasData || !snap.data!.exists) {
                               return ListTile(
                                 leading: const Icon(Icons.store, color: Colors.green),
-                                title: Text('Seller not found'),
-                                subtitle: Text('Farmer ID: $farmerId'),
+                                title: Text(AppLocalizations.of(context)!.sellerNotFound),
+                                subtitle: Text(AppLocalizations.of(context)!.farmerIdLabel(farmerId)),
                               );
                             }
 
@@ -507,7 +512,7 @@ class PODetailPage extends StatelessWidget {
                               contentPadding: EdgeInsets.zero,
                               leading: const Icon(Icons.store, color: Colors.green),
                               title: Text(sellerName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text('Contact: $sellerContact'),
+                              subtitle: Text(AppLocalizations.of(context)!.contactColonLabel(sellerContact)),
                             );
                           },
                         );
@@ -520,16 +525,16 @@ class PODetailPage extends StatelessWidget {
                 const Divider(),
 
                 // Items list
-                const Text('Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(AppLocalizations.of(context)!.itemsSection, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 8),
-                ...items.map((it) {
+                ...items.map<Widget>((it) {
                   final listingId = it['listingId'] ?? it['productId'] ?? '—';
                   final qty = it['qtyKg'] ?? it['qty'] ?? 0;
                   final price = it['pricePerKg'] ?? it['price'] ?? 0;
                   final itemTs = it['createdAt'];
 
-                  return FutureBuilder<DocumentSnapshot>(
-                    future: (listingId != '—') ? FirebaseFirestore.instance.collection('export_products').doc(listingId.toString()).get() : Future.value(null),
+                  return FutureBuilder<DocumentSnapshot?>(
+                    future: (listingId != '—') ? FirebaseFirestore.instance.collection('export_products').doc(listingId.toString()).get() : Future<DocumentSnapshot?>.value(null),
                     builder: (context, snapshot) {
                       String productName = 'Loading...';
                       if (snapshot.connectionState == ConnectionState.done) {
@@ -593,7 +598,7 @@ class PODetailPage extends StatelessWidget {
     ),
 
     subtitle: Text(
-      '$qty kg × ₹$price\nAdded: ${_formatTimestamp(itemTs)}',
+      '$qty kg × ₹$price\n${AppLocalizations.of(context)!.addedAtLabel(_formatTimestamp(itemTs))}',
     ),
 
     isThreeLine: true,
@@ -601,35 +606,30 @@ class PODetailPage extends StatelessWidget {
 );
                     },
                   );
-                }).toList(),
+                }),
 
                 const SizedBox(height: 12),
-                Text('Total: ₹$totalAmount', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.totalAmountLabel(totalAmount), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 18),
 
                 const Divider(),
 
                 // Buyer responses
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('Buyer Responses', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+                Text(AppLocalizations.of(context)!.buyerResponsesSection, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
 
                 StreamBuilder<QuerySnapshot>(
                   stream: responsesStream,
                   builder: (context, rsnap) {
                     if (rsnap.hasError) {
-                      return Text('Error loading responses: ${rsnap.error}', style: const TextStyle(color: Colors.red));
+                      return Text(AppLocalizations.of(context)!.errorLoadingResponses, style: const TextStyle(color: Colors.red));
                     }
                     if (!rsnap.hasData) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final docs = rsnap.data!.docs;
                     if (docs.isEmpty) {
-                      return const Text('No buyer responses yet.');
+                      return Text(AppLocalizations.of(context)!.noBuyerResponsesYet);
                     }
 
                     return Column(
@@ -641,7 +641,7 @@ class PODetailPage extends StatelessWidget {
                         final created = r['createdAt'];
                         final respRef = rd.reference;
 
-                        final canAct = currentUid != null && farmerId != null && farmerId.toString() != '' && currentUid == farmerId.toString();
+                        final canAct = currentUid != null && farmerId.isNotEmpty && currentUid == farmerId;
 
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 6),
@@ -661,7 +661,7 @@ class PODetailPage extends StatelessWidget {
                                 const SizedBox(height: 6),
                                 Text(msg),
                                 const SizedBox(height: 8),
-                                Text('At: ${_formatTimestamp(created)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text(AppLocalizations.of(context)!.atDateLabel(_formatTimestamp(created)), style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 const SizedBox(height: 8),
                                 if (canAct && respStatus.toLowerCase() == 'pending')
                                   Row(
@@ -669,14 +669,14 @@ class PODetailPage extends StatelessWidget {
                                       ElevatedButton.icon(
                                         onPressed: () => _acceptResponse(context, respRef, r, farmerId.toString()),
                                         icon: const Icon(Icons.check),
-                                        label: const Text('Accept'),
+                                        label: Text(AppLocalizations.of(context)!.accept),
                                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                       ),
                                       const SizedBox(width: 8),
                                       OutlinedButton.icon(
                                         onPressed: () => _rejectResponse(context, respRef, r),
                                         icon: const Icon(Icons.close),
-                                        label: const Text('Reject'),
+                                        label: Text(AppLocalizations.of(context)!.reject),
                                       ),
                                     ],
                                   ),
@@ -692,10 +692,10 @@ class PODetailPage extends StatelessWidget {
 
                 const SizedBox(height: 18),
 
-                const Text('History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.historySection, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 if (history.isEmpty)
-                  const Text('No history entries.')
+                  Text(AppLocalizations.of(context)!.noHistoryEntries)
                 else
                   Column(
                     children: history.reversed.map((h) {
@@ -703,11 +703,12 @@ class PODetailPage extends StatelessWidget {
                       final hBy = h['by'] ?? '';
                       final hNote = h['note'] ?? '';
                       final hTs = h['ts'];
+                      final l = AppLocalizations.of(context)!;
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.history, color: Colors.green),
                         title: Text(hStatus),
-                        subtitle: Text('By: $hBy\n$hNote\nAt: ${_formatTimestamp(hTs)}'),
+                        subtitle: Text('${l.by}: $hBy\n$hNote\n${l.at}: ${_formatTimestamp(hTs)}'),
                       );
                     }).toList(),
                   ),
@@ -719,19 +720,19 @@ class PODetailPage extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () async {
                         final sellerPhone = data['sellerContact'] ?? data['farmerPhone'] ?? data['ownerPhone'] ?? 'Not available';
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Contact Seller: $sellerPhone')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.contactSellerSnackbar(sellerPhone))));
                       },
                       icon: const Icon(Icons.phone),
-                      label: const Text('Contact Seller'),
+                      label: Text(AppLocalizations.of(context)!.contactSellerButton),
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Refreshing...')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.refreshing)));
                       },
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
+                      label: Text(AppLocalizations.of(context)!.refresh),
                     ),
                   ],
                 ),
