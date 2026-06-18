@@ -1392,32 +1392,40 @@ Widget build(BuildContext context) {
                Row(
   children: [
 
-    // 🌐 Language icon (if you have)
     IconButton(
       icon: const Icon(Icons.language),
       onPressed: () {
+        final languages = LocaleService.instance.supportedLanguages;
+        final currentCode = LocaleService.instance.currentLanguageCode;
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
             title: const Text("Select Language"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const Text("English"),
-                  onTap: () {
-                    LocaleService.instance.setLocale(const Locale('en'));
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const Text("ಕನ್ನಡ"),
-                  onTap: () {
-                    LocaleService.instance.setLocale(const Locale('kn'));
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: languages.entries.map((entry) {
+                  final isSelected = entry.value.languageCode == currentCode;
+                  return ListTile(
+                    title: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: KMColors.primary)
+                        : null,
+                    onTap: () {
+                      LocaleService.instance.setLocale(entry.value);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
+              ),
             ),
           ),
         );
@@ -1432,11 +1440,7 @@ Widget build(BuildContext context) {
       },
     ),
 
-    // 👤 PROFILE ICON
-    CircleAvatar(
-      backgroundColor: KMColors.primary,
-      child: const Text("LK", style: TextStyle(color: KMColors.textOnPrimary)),
-    ),
+    const ProfileButton(),
   ],
 ),
               ],
