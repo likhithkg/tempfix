@@ -3464,6 +3464,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exported'**
   String get statusExported;
+
+  /// No description provided for @advancedDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Details'**
+  String get advancedDetails;
+
+  /// No description provided for @isOrganicSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Certified organic produce'**
+  String get isOrganicSubtitle;
+
+  /// No description provided for @expectedPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected Price'**
+  String get expectedPriceLabel;
+
+  /// No description provided for @productImageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Image'**
+  String get productImageLabel;
+
+  /// No description provided for @additionalImagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Images (up to 4)'**
+  String get additionalImagesLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

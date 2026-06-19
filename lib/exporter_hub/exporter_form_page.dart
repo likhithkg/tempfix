@@ -1,12 +1,4 @@
 // lib/exporter_hub/exporter_form_page.dart
-// Advanced Add/Edit product page with:
-// ✅ Cloudinary Upload
-// ✅ MongoDB-ready image URLs
-// ✅ Auto location
-// ✅ Location search
-// ✅ Image preview
-// ✅ Edit support
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -21,7 +13,6 @@ import 'package:http/http.dart' as http;
 
 import 'exporter_model.dart';
 import 'exporter_service.dart';
-
 import '../services/image_upload_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -34,438 +25,236 @@ class ExporterFormPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ExporterFormPage> createState() =>
-      _ExporterFormPageState();
+  State<ExporterFormPage> createState() => _ExporterFormPageState();
 }
 
-class _ExporterFormPageState
-    extends State<ExporterFormPage> {
+class _ExporterFormPageState extends State<ExporterFormPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _svc = ExporterService();
+  final _picker = ImagePicker();
 
-  // Controllers
+  // ── Basic Controllers ──
+  final _productNameCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  final _quantityCtrl = TextEditingController();
+  final _farmerNameCtrl = TextEditingController();
+  final _farmerMobileCtrl = TextEditingController();
+  final _locationCtrl = TextEditingController();
+  final _descriptionCtrl = TextEditingController();
 
-  final _productNameCtrl =
-      TextEditingController();
+  // ── Phase 3 Controllers ──
+  final _expectedPriceCtrl = TextEditingController();
+  final _minOrderQtyCtrl = TextEditingController();
+  final _varietyCtrl = TextEditingController();
+  final _moistureLevelCtrl = TextEditingController();
+  final _storageLocationCtrl = TextEditingController();
+  final _packagingTypeCtrl = TextEditingController();
 
-  final _priceCtrl =
-      TextEditingController();
-
-  final _quantityCtrl =
-      TextEditingController();
-
-  final _farmerNameCtrl =
-      TextEditingController();
-
-  final _farmerMobileCtrl =
-      TextEditingController();
-
-  final _locationCtrl =
-      TextEditingController();
-
-  final _descriptionCtrl =
-      TextEditingController();
-
-  final _customCategoryCtrl =
-      TextEditingController();
-
-  // UI state
-
+  // ── State ──
   bool _isSubmitting = false;
-
   bool _isUploadingImage = false;
-
   bool _detectingLocation = false;
-
-  // advanced fields
+  bool _advancedExpanded = false;
 
   String _category = 'Crops';
-
   String _unit = 'kg';
+  String? _grade;         // 'A', 'B', 'C'
+  bool _isOrganic = false;
+  DateTime? _harvestDate;
 
+  // Primary image (backward-compat)
   File? _pickedImageFile;
-
   String? _imageUrl;
 
-  final ImagePicker _picker =
-      ImagePicker();
+  // Additional images (Phase 3 — imageUrls array)
+  final List<File> _additionalFiles = [];
+  final List<String> _additionalUrls = [];
 
   double? _selectedLat;
-
   double? _selectedLon;
 
-  final List<String> _categories = [
-    'Crops',
-    'Fruits',
-    'Vegetables',
-    'Grains',
-    'Spices',
-    'Other'
-  ];
+  final List<String> _categories = ['Crops', 'Fruits', 'Vegetables', 'Grains', 'Spices', 'Other'];
+  final List<String?> _grades = [null, 'A', 'B', 'C'];
 
-  static const String _locationIQKey =
-      'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
+  static const String _locationIQKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
   @override
   void initState() {
     super.initState();
-
     _loadExisting();
   }
 
   void _loadExisting() {
     final p = widget.existingProduct;
+    if (p == null) return;
 
-    if (p != null) {
-      _productNameCtrl.text =
-          p.productName;
+    _productNameCtrl.text = p.productName;
+    _priceCtrl.text = p.pricePerUnit;
 
-      _priceCtrl.text =
-          p.pricePerUnit;
+    final parts = p.quantity.split(' ');
+    _quantityCtrl.text = parts.isNotEmpty ? parts[0] : p.quantity;
+    if (parts.length > 1) _unit = parts[1];
 
-      final qty = p.quantity;
+    _farmerNameCtrl.text = p.farmerName;
+    _farmerMobileCtrl.text = p.farmerMobile ?? p.farmerId;
+    _locationCtrl.text = p.location;
+    _descriptionCtrl.text = p.description;
+    _category = p.category.isNotEmpty ? p.category : _category;
+    _imageUrl = p.imageUrl;
 
-      final parts = qty.split(' ');
+    // Phase 3
+    _grade = p.grade;
+    _isOrganic = p.isOrganic;
+    _harvestDate = p.harvestDate;
+    _expectedPriceCtrl.text = p.expectedPrice ?? '';
+    _minOrderQtyCtrl.text = p.minOrderQty ?? '';
+    _varietyCtrl.text = p.variety ?? '';
+    _moistureLevelCtrl.text = p.moistureLevel ?? '';
+    _storageLocationCtrl.text = p.storageLocation ?? '';
+    _packagingTypeCtrl.text = p.packagingType ?? '';
+    _additionalUrls.addAll(p.imageUrls.where((u) => u != _imageUrl));
 
-      if (parts.isNotEmpty) {
-        _quantityCtrl.text =
-            parts[0];
-      }
-
-      if (parts.length > 1) {
-        _unit = parts[1];
-      }
-
-      _farmerNameCtrl.text =
-          p.farmerName;
-
-      _farmerMobileCtrl.text =
-          p.farmerMobile ??
-              p.farmerId;
-
-      _locationCtrl.text =
-          p.location;
-
-      _descriptionCtrl.text =
-          p.description;
-
-      _category =
-          p.category.isNotEmpty
-              ? p.category
-              : _category;
-
-      _imageUrl = p.imageUrl;
+    if (_grade != null || _isOrganic || _harvestDate != null ||
+        _expectedPriceCtrl.text.isNotEmpty || _minOrderQtyCtrl.text.isNotEmpty) {
+      _advancedExpanded = true;
     }
   }
 
   @override
   void dispose() {
     _productNameCtrl.dispose();
-
     _priceCtrl.dispose();
-
     _quantityCtrl.dispose();
-
     _farmerNameCtrl.dispose();
-
     _farmerMobileCtrl.dispose();
-
     _locationCtrl.dispose();
-
     _descriptionCtrl.dispose();
-
-    _customCategoryCtrl.dispose();
-
+    _expectedPriceCtrl.dispose();
+    _minOrderQtyCtrl.dispose();
+    _varietyCtrl.dispose();
+    _moistureLevelCtrl.dispose();
+    _storageLocationCtrl.dispose();
+    _packagingTypeCtrl.dispose();
     super.dispose();
   }
 
-  // =========================
-  // IMAGE PICKER
-  // =========================
+  // ── Image Picker ──
 
-  Future<void> _pickImage(
-    ImageSource src,
-  ) async {
+  Future<void> _pickImage(ImageSource src) async {
     try {
-      final picked =
-          await _picker.pickImage(
-        source: src,
-        imageQuality: 80,
-        maxWidth: 1200,
-      );
-
-      if (picked != null) {
-        setState(() {
-          _pickedImageFile =
-              File(picked.path);
-        });
-      }
+      final picked = await _picker.pickImage(source: src, imageQuality: 80, maxWidth: 1200);
+      if (picked != null) setState(() => _pickedImageFile = File(picked.path));
     } on PlatformException catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            'Image pick failed: ${e.message}',
-          ),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image pick failed: ${e.message}')));
+      }
     }
   }
 
-  // =========================
-  // CLOUDINARY IMAGE UPLOAD
-  // =========================
-
-  Future<String?> _uploadImage(
-    File file,
-  ) async {
-    setState(() {
-      _isUploadingImage = true;
-    });
-
-    try {
-      final imageUrl =
-          await ImageUploadService
-              .uploadImage(file);
-
-      if (imageUrl != null) {
-        return imageUrl;
+  Future<void> _pickAdditionalImage() async {
+    if (_additionalFiles.length + _additionalUrls.length >= 4) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Max 4 additional images')));
       }
+      return;
+    }
+    try {
+      final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1200);
+      if (picked != null) setState(() => _additionalFiles.add(File(picked.path)));
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image pick failed: ${e.message}')));
+      }
+    }
+  }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.imageUploadFailed),
-        ),
-      );
-
-      return null;
+  Future<String?> _uploadImage(File file) async {
+    setState(() => _isUploadingImage = true);
+    try {
+      final imageUrl = await ImageUploadService.uploadImage(file);
+      if (imageUrl == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.imageUploadFailed)));
+      }
+      return imageUrl;
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content:
-              Text('Upload Error: $e'),
-        ),
-      );
-
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload Error: $e')));
+      }
       return null;
     } finally {
-      if (mounted) {
-        setState(() {
-          _isUploadingImage = false;
-        });
-      }
+      if (mounted) setState(() => _isUploadingImage = false);
     }
   }
 
-  // =========================
-  // LOCATION SEARCH MODAL
-  // =========================
+  // ── Location ──
 
-  Future<void>
-      _openLocationSearchModal() async {
-    final ctrl =
-        TextEditingController();
-
+  Future<void> _openLocationSearchModal() async {
+    final ctrl = TextEditingController();
     try {
-      final result = await showDialog<
-          Map<String, dynamic>>(
+      final result = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (ctx) {
           List<dynamic> results = [];
-
           bool loading = false;
-
           String? error;
-
           Timer? debounce;
 
-          Future<void> doSearch(
-            String val,
-            void Function(void Function())
-                setStateDialog,
-          ) async {
-            if (val.trim().length < 2) {
-              results = [];
-
-              error = null;
-
-              setStateDialog(() {});
-
-              return;
-            }
-
-            loading = true;
-
-            error = null;
-
-            setStateDialog(() {});
-
-            final q =
-                Uri.encodeQueryComponent(
-                    val.trim());
-
-            final url =
-                "https://us1.locationiq.com/v1/search.php?key=$_locationIQKey&q=$q&format=json&limit=8&countrycodes=in";
-
+          Future<void> doSearch(String val, void Function(void Function()) setStateDialog) async {
+            if (val.trim().length < 2) { results = []; error = null; setStateDialog(() {}); return; }
+            loading = true; error = null; setStateDialog(() {});
+            final q = Uri.encodeQueryComponent(val.trim());
+            final url = "https://us1.locationiq.com/v1/search.php?key=$_locationIQKey&q=$q&format=json&limit=8&countrycodes=in";
             try {
-              final resp = await http
-                  .get(Uri.parse(url))
-                  .timeout(
-                    const Duration(
-                        seconds: 8),
-                  );
-
-              if (resp.statusCode ==
-                  200) {
-                final body =
-                    json.decode(
-                        resp.body);
-
-                if (body is List) {
-                  results = body;
-                }
+              final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+              if (resp.statusCode == 200) {
+                final body = json.decode(resp.body);
+                if (body is List) results = body;
               }
-            } catch (e) {
-              error = 'Network error';
-            } finally {
-              loading = false;
-
-              setStateDialog(() {});
-            }
+            } catch (e) { error = 'Network error'; }
+            finally { loading = false; setStateDialog(() {}); }
           }
 
           return StatefulBuilder(
-            builder: (
-              ctx2,
-              setStateDialog,
-            ) =>
-                AlertDialog(
-              title: const Text(
-                  'Search location'),
+            builder: (ctx2, setStateDialog) => AlertDialog(
+              title: const Text('Search location'),
               content: SizedBox(
-                width:
-                    double.maxFinite,
+                width: double.maxFinite,
                 height: 360,
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: ctrl,
-                      decoration:
-                          const InputDecoration(
-                        prefixIcon:
-                            Icon(Icons
-                                .search),
-                        hintText:
-                            'Type location...',
-                      ),
-                      onChanged: (val) {
-                        debounce
-                            ?.cancel();
-
-                        debounce = Timer(
-                          const Duration(
-                              milliseconds:
-                                  400),
-                          () {
-                            doSearch(
-                              val,
-                              setStateDialog,
-                            );
-                          },
-                        );
-                      },
-                    ),
-
-                    const SizedBox(
-                        height: 10),
-
-                    if (loading)
-                      const LinearProgressIndicator(),
-
-                    if (error != null)
-                      Padding(
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          vertical: 8,
-                        ),
-                        child: Text(
-                          error!,
-                          style:
-                              const TextStyle(
-                            color: Colors.red,
+                child: Column(children: [
+                  TextField(
+                    controller: ctrl,
+                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Type location...'),
+                    onChanged: (val) {
+                      debounce?.cancel();
+                      debounce = Timer(const Duration(milliseconds: 400), () => doSearch(val, setStateDialog));
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  if (loading) const LinearProgressIndicator(),
+                  if (error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(error!, style: const TextStyle(color: Colors.red))),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: results.isEmpty
+                        ? Center(child: Text(loading ? 'Searching...' : 'No results'))
+                        : ListView.builder(
+                            itemCount: results.length,
+                            itemBuilder: (_, i) {
+                              final r = results[i];
+                              return ListTile(
+                                leading: const Icon(Icons.location_on),
+                                title: Text(r['display_name'], maxLines: 2, overflow: TextOverflow.ellipsis),
+                                onTap: () => Navigator.pop(ctx, {
+                                  'display': r['display_name'],
+                                  'lat': double.tryParse(r['lat']) ?? 0,
+                                  'lon': double.tryParse(r['lon']) ?? 0,
+                                }),
+                              );
+                            },
                           ),
-                        ),
-                      ),
-
-                    const SizedBox(
-                        height: 8),
-
-                    Expanded(
-                      child:
-                          results.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    loading
-                                        ? 'Searching...'
-                                        : 'No results',
-                                  ),
-                                )
-                              : ListView
-                                  .builder(
-                                  itemCount:
-                                      results
-                                          .length,
-                                  itemBuilder:
-                                      (_, i) {
-                                    final r =
-                                        results[
-                                            i];
-
-                                    return ListTile(
-                                      leading:
-                                          const Icon(
-                                        Icons
-                                            .location_on,
-                                      ),
-                                      title:
-                                          Text(
-                                        r['display_name'],
-                                        maxLines:
-                                            2,
-                                        overflow:
-                                            TextOverflow.ellipsis,
-                                      ),
-                                      onTap:
-                                          () {
-                                        Navigator.pop(
-                                          ctx,
-                                          {
-                                            'display':
-                                                r['display_name'],
-                                            'lat':
-                                                double.tryParse(
-                                                      r['lat'],
-                                                    ) ??
-                                                    0,
-                                            'lon':
-                                                double.tryParse(
-                                                      r['lon'],
-                                                    ) ??
-                                                    0,
-                                          },
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                    ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
             ),
           );
@@ -474,14 +263,9 @@ class _ExporterFormPageState
 
       if (result != null) {
         setState(() {
-          _locationCtrl.text =
-              result['display'];
-
-          _selectedLat =
-              result['lat'];
-
-          _selectedLon =
-              result['lon'];
+          _locationCtrl.text = result['display'];
+          _selectedLat = result['lat'];
+          _selectedLon = result['lon'];
         });
       }
     } finally {
@@ -489,570 +273,326 @@ class _ExporterFormPageState
     }
   }
 
-  // =========================
-  // AUTO DETECT LOCATION
-  // =========================
-
   Future<void> _detectLocation() async {
-    setState(() {
-      _detectingLocation = true;
-    });
-
+    setState(() => _detectingLocation = true);
     try {
-      bool serviceEnabled =
-          await Geolocator
-              .isLocationServiceEnabled();
-
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Location services disabled'),
-          ),
-        );
-
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location services disabled')));
         return;
       }
-
-      LocationPermission permission =
-          await Geolocator
-              .checkPermission();
-
-      if (permission ==
-          LocationPermission.denied) {
-        permission =
-            await Geolocator
-                .requestPermission();
-      }
-
-      if (permission ==
-              LocationPermission
-                  .denied ||
-          permission ==
-              LocationPermission
-                  .deniedForever) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Location permission denied'),
-          ),
-        );
-
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permission denied')));
         return;
       }
-
-      final pos =
-          await Geolocator
-              .getCurrentPosition(
-        desiredAccuracy:
-            LocationAccuracy.best,
-      );
-
+      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       _selectedLat = pos.latitude;
-
       _selectedLon = pos.longitude;
-
-      final placemarks =
-          await placemarkFromCoordinates(
-        pos.latitude,
-        pos.longitude,
-      );
-
+      final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
       if (placemarks.isNotEmpty) {
-        final pm =
-            placemarks.first;
-
-        final parts = [
-          if (pm.locality != null)
-            pm.locality,
-          if (pm.subAdministrativeArea !=
-              null)
-            pm.subAdministrativeArea,
-          if (pm.administrativeArea !=
-              null)
-            pm.administrativeArea,
-        ];
-
-        final loc = parts
-            .where(
-                (e) => e != null)
-            .join(', ');
-
-        setState(() {
-          _locationCtrl.text = loc;
-        });
+        final pm = placemarks.first;
+        final parts = [pm.locality, pm.subAdministrativeArea, pm.administrativeArea]
+            .where((e) => e != null).join(', ');
+        if (mounted) setState(() => _locationCtrl.text = parts);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content:
-              Text('Location error: $e'),
-        ),
-      );
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Location error: $e')));
     } finally {
-      if (mounted) {
-        setState(() {
-          _detectingLocation =
-              false;
-        });
-      }
+      if (mounted) setState(() => _detectingLocation = false);
     }
   }
 
-  // =========================
-  // SAVE PRODUCT
-  // =========================
+  // ── Save ──
 
   Future<void> _save() async {
-    if (!_formKey.currentState!
-        .validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    final user =
-        FirebaseAuth
-            .instance.currentUser;
-
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content:
-              Text('Please login first'),
-        ),
-      );
-
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login first')));
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
+      // Upload primary image
       if (_pickedImageFile != null) {
-        final uploaded =
-            await _uploadImage(
-          _pickedImageFile!,
-        );
-
-        if (uploaded != null) {
-          _imageUrl = uploaded;
-        }
+        final uploaded = await _uploadImage(_pickedImageFile!);
+        if (uploaded != null) _imageUrl = uploaded;
       }
 
-      final editing =
-          widget.existingProduct !=
-                  null &&
-              widget.existingProduct!
-                  .id
-                  .isNotEmpty;
+      // Upload additional images
+      final uploadedAdditional = List<String>.from(_additionalUrls);
+      for (final file in _additionalFiles) {
+        final url = await _uploadImage(file);
+        if (url != null) uploadedAdditional.add(url);
+      }
 
+      // Build imageUrls list (primary + additional)
+      final allImageUrls = <String>[];
+      if (_imageUrl != null && _imageUrl!.isNotEmpty) allImageUrls.add(_imageUrl!);
+      allImageUrls.addAll(uploadedAdditional);
+
+      final editing = widget.existingProduct != null && widget.existingProduct!.id.isNotEmpty;
       final productId = editing
           ? widget.existingProduct!.id
-          : DateTime.now()
-              .millisecondsSinceEpoch
-              .toString();
+          : DateTime.now().millisecondsSinceEpoch.toString();
 
-      final farmerMobile =
-          _farmerMobileCtrl.text
-              .trim();
+      final farmerMobile = _farmerMobileCtrl.text.trim();
 
-      final product =
-          ExportProduct(
+      final product = ExportProduct(
         id: productId,
-        productName:
-            _productNameCtrl.text
-                .trim(),
-        pricePerUnit:
-            _priceCtrl.text.trim(),
-        quantity:
-            '${_quantityCtrl.text.trim()} $_unit',
+        productName: _productNameCtrl.text.trim(),
+        pricePerUnit: _priceCtrl.text.trim(),
+        quantity: '${_quantityCtrl.text.trim()} $_unit',
         farmerId: farmerMobile,
-        farmerName:
-            _farmerNameCtrl.text
-                .trim(),
-        location:
-            _locationCtrl.text
-                .trim(),
-        description:
-            _descriptionCtrl.text
-                .trim(),
+        farmerName: _farmerNameCtrl.text.trim(),
+        location: _locationCtrl.text.trim(),
+        description: _descriptionCtrl.text.trim(),
         category: _category,
-        farmerMobile:
-            farmerMobile,
+        farmerMobile: farmerMobile,
         imageUrl: _imageUrl,
-        createdAt: widget
-            .existingProduct
-            ?.createdAt,
+        createdAt: widget.existingProduct?.createdAt,
         ownerId: user.uid,
-        ownerEmail:
-            user.email,
-        ownerName:
-            user.displayName,
-        ownerPhone:
-            user.phoneNumber,
+        ownerEmail: user.email,
+        ownerName: user.displayName,
+        ownerPhone: user.phoneNumber,
+        // Phase 3 fields
+        grade: _grade,
+        isOrganic: _isOrganic,
+        harvestDate: _harvestDate,
+        expectedPrice: _expectedPriceCtrl.text.trim().isNotEmpty ? _expectedPriceCtrl.text.trim() : null,
+        minOrderQty: _minOrderQtyCtrl.text.trim().isNotEmpty ? _minOrderQtyCtrl.text.trim() : null,
+        variety: _varietyCtrl.text.trim().isNotEmpty ? _varietyCtrl.text.trim() : null,
+        moistureLevel: _moistureLevelCtrl.text.trim().isNotEmpty ? _moistureLevelCtrl.text.trim() : null,
+        storageLocation: _storageLocationCtrl.text.trim().isNotEmpty ? _storageLocationCtrl.text.trim() : null,
+        packagingType: _packagingTypeCtrl.text.trim().isNotEmpty ? _packagingTypeCtrl.text.trim() : null,
+        listingStatus: widget.existingProduct?.listingStatus ?? 'listed',
+        imageUrls: allImageUrls,
       );
 
       if (editing) {
-        final payload =
-            product.toMap();
-
-        payload['ownerId'] =
-            user.uid;
-
-        if (_selectedLat != null &&
-            _selectedLon != null) {
-          payload['locationLat'] =
-              _selectedLat;
-
-          payload['locationLon'] =
-              _selectedLon;
+        final payload = product.toMap();
+        payload['ownerId'] = user.uid;
+        if (_selectedLat != null && _selectedLon != null) {
+          payload['locationLat'] = _selectedLat;
+          payload['locationLon'] = _selectedLon;
         }
-
-        await _svc
-            .updateExportProduct(
-          productId,
-          payload,
-        );
-
+        await _svc.updateExportProduct(productId, payload);
         if (!mounted) return;
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.productUpdatedSuccessfully),
-          ),
-        );
-
-        Navigator.pop(
-          context,
-          true,
-        );
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.productUpdatedSuccessfully)));
+        Navigator.pop(context, true);
       } else {
-        final docRef =
-            await _svc
-                .addExportProduct(
-          product,
-        );
-
-        if (_selectedLat != null &&
-            _selectedLon != null) {
-          await docRef.update({
-            'locationLat':
-                _selectedLat,
-            'locationLon':
-                _selectedLon,
-          });
+        final docRef = await _svc.addExportProduct(product);
+        if (_selectedLat != null && _selectedLon != null) {
+          await docRef.update({'locationLat': _selectedLat, 'locationLon': _selectedLon});
         }
-
         if (!mounted) return;
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.productAddedSuccessfully,
-            ),
-          ),
-        );
-
-        Navigator.pop(
-          context,
-          true,
-        );
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.productAddedSuccessfully)));
+        Navigator.pop(context, true);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content:
-              Text('Save failed: $e'),
-        ),
-      );
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  // =========================
-  // UI
-  // =========================
+  // ── UI ──
 
   @override
   Widget build(BuildContext context) {
-    final editing =
-        widget.existingProduct !=
-            null;
-
+    final editing = widget.existingProduct != null;
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          editing
-              ? l.editExportProductTitle
-              : l.addExportProductTitle,
-        ),
-        backgroundColor:
-            Colors.green,
+        title: Text(editing ? l.editExportProductTitle : l.addExportProductTitle),
       ),
-      body:
-          SingleChildScrollView(
-        padding:
-            const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller:
-                    _productNameCtrl,
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Product Name',
-                  border:
-                      OutlineInputBorder(),
-                ),
-                validator: (v) =>
-                    (v ?? '')
-                            .trim()
-                            .isEmpty
-                        ? 'Enter product name'
-                        : null,
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              DropdownButtonFormField<
-                  String>(
+              // ── Basic Fields ──
+              _Field(child: TextFormField(
+                controller: _productNameCtrl,
+                decoration: const InputDecoration(labelText: 'Product Name', border: OutlineInputBorder()),
+                validator: (v) => (v ?? '').trim().isEmpty ? 'Enter product name' : null,
+              )),
+              _Field(child: DropdownButtonFormField<String>(
                 value: _category,
-                items: _categories
-                    .map(
-                      (c) =>
-                          DropdownMenuItem(
-                        value: c,
-                        child:
-                            Text(c),
+                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                onChanged: (v) { if (v != null) setState(() => _category = v); },
+                decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+              )),
+              _Field(child: TextFormField(
+                controller: _priceCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Price per unit (₹)', border: OutlineInputBorder()),
+              )),
+              _Field(child: Row(children: [
+                Expanded(child: TextFormField(
+                  controller: _quantityCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Available Quantity', border: OutlineInputBorder()),
+                )),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _unit,
+                  items: ['kg', 'MT', 'quintal', 'ton', 'piece']
+                      .map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _unit = v); },
+                ),
+              ])),
+              _Field(child: TextFormField(
+                controller: _farmerNameCtrl,
+                decoration: const InputDecoration(labelText: 'Farmer Name', border: OutlineInputBorder()),
+              )),
+              _Field(child: TextFormField(
+                controller: _farmerMobileCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Farmer Mobile', border: OutlineInputBorder()),
+              )),
+              _Field(child: Row(children: [
+                Expanded(child: TextFormField(
+                  controller: _locationCtrl,
+                  readOnly: true,
+                  onTap: _openLocationSearchModal,
+                  decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder()),
+                )),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: _detectingLocation ? null : _detectLocation,
+                  icon: const Icon(Icons.my_location, size: 18),
+                  label: Text(_detectingLocation ? 'Detecting' : 'Auto'),
+                ),
+              ])),
+              _Field(child: TextFormField(
+                controller: _descriptionCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+              )),
+
+              // ── Primary Image ──
+              _buildPrimaryImageSection(l),
+
+              const SizedBox(height: 16),
+
+              // ── Advanced Details (Phase 3) ──
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: _advancedExpanded,
+                  onExpansionChanged: (v) => setState(() => _advancedExpanded = v),
+                  title: Row(children: [
+                    Icon(Icons.tune, color: Theme.of(context).colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(l.advancedDetails,
+                        style: TextStyle(fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary)),
+                  ]),
+                  children: [
+                    _Field(child: DropdownButtonFormField<String?>(
+                      value: _grade,
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('No grade selected')),
+                        ..._grades.skip(1).map((g) => DropdownMenuItem(value: g, child: Text('Grade $g'))),
+                      ],
+                      onChanged: (v) => setState(() => _grade = v),
+                      decoration: InputDecoration(labelText: l.grade, border: const OutlineInputBorder()),
+                    )),
+                    _Field(child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l.organic),
+                      subtitle: Text(l.isOrganicSubtitle),
+                      value: _isOrganic,
+                      onChanged: (v) => setState(() => _isOrganic = v),
+                    )),
+                    _Field(child: InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _harvestDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) setState(() => _harvestDate = picked);
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(labelText: l.harvestDate, border: const OutlineInputBorder()),
+                        child: Text(
+                          _harvestDate != null
+                              ? '${_harvestDate!.day}/${_harvestDate!.month}/${_harvestDate!.year}'
+                              : 'Tap to select date',
+                          style: TextStyle(
+                              color: _harvestDate != null ? null : Colors.grey.shade500),
+                        ),
                       ),
-                    )
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setState(() {
-                      _category =
-                          v;
-                    });
-                  }
-                },
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Category',
-                  border:
-                      OutlineInputBorder(),
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _varietyCtrl,
+                      decoration: InputDecoration(labelText: l.varietyLabel, border: const OutlineInputBorder(),
+                          hintText: 'e.g. Alphonso, Basmati'),
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _expectedPriceCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(labelText: '${l.expectedPriceLabel} (₹)', border: const OutlineInputBorder()),
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _minOrderQtyCtrl,
+                      decoration: InputDecoration(labelText: l.minOrder, border: const OutlineInputBorder(),
+                          hintText: 'e.g. 100 kg'),
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _moistureLevelCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(labelText: l.moistureLevelLabel, border: const OutlineInputBorder(),
+                          hintText: 'e.g. 12.5'),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _storageLocationCtrl,
+                      decoration: InputDecoration(labelText: l.storageLocationLabel, border: const OutlineInputBorder()),
+                    )),
+                    _Field(child: TextFormField(
+                      controller: _packagingTypeCtrl,
+                      decoration: InputDecoration(labelText: l.packagingTypeLabel, border: const OutlineInputBorder(),
+                          hintText: 'e.g. Jute bags, Poly bags'),
+                    )),
+
+                    // ── Additional Images ──
+                    _buildAdditionalImagesSection(l),
+                  ],
                 ),
               ),
 
-              const SizedBox(
-                  height: 12),
-
-              TextFormField(
-                controller:
-                    _priceCtrl,
-                keyboardType:
-                    const TextInputType
-                        .numberWithOptions(
-                  decimal: true,
-                ),
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Price',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              TextFormField(
-                controller:
-                    _quantityCtrl,
-                keyboardType:
-                    TextInputType
-                        .number,
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Quantity',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              TextFormField(
-                controller:
-                    _farmerNameCtrl,
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Farmer Name',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              TextFormField(
-                controller:
-                    _farmerMobileCtrl,
-                keyboardType:
-                    TextInputType
-                        .phone,
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Farmer Mobile',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child:
-                        TextFormField(
-                      controller:
-                          _locationCtrl,
-                      readOnly:
-                          true,
-                      onTap:
-                          _openLocationSearchModal,
-                      decoration:
-                          const InputDecoration(
-                        labelText:
-                            'Location',
-                        border:
-                            OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                      width: 8),
-
-                  ElevatedButton.icon(
-                    onPressed:
-                        _detectingLocation
-                            ? null
-                            : _detectLocation,
-                    icon:
-                        const Icon(
-                      Icons
-                          .my_location,
-                    ),
-                    label: Text(
-                      _detectingLocation
-                          ? 'Detecting'
-                          : 'Auto',
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(
-                  height: 12),
-
-              TextFormField(
-                controller:
-                    _descriptionCtrl,
-                maxLines: 4,
-                decoration:
-                    const InputDecoration(
-                  labelText:
-                      'Description',
-                  border:
-                      OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(
-                  height: 16),
-
-              _buildImageSection(),
-
-              const SizedBox(
-                  height: 20),
+              const SizedBox(height: 20),
 
               SizedBox(
-                width:
-                    double.infinity,
-                child:
-                    ElevatedButton(
-                  onPressed:
-                      _isSubmitting
-                          ? null
-                          : _save,
-                  style:
-                      ElevatedButton
-                          .styleFrom(
-                    backgroundColor:
-                        Colors.green,
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      vertical: 14,
-                    ),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child:
-                      _isSubmitting
-                          ? const SizedBox(
-                              height:
-                                  18,
-                              width:
-                                  18,
-                              child:
-                                  CircularProgressIndicator(
-                                color: Colors
-                                    .white,
-                                strokeWidth:
-                                    2,
-                              ),
-                            )
-                          : Text(
-                              editing
-                                  ? l.update
-                                  : l.addExportProductTitle,
-                              style:
-                                  const TextStyle(
-                                fontSize:
-                                    16,
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
-                            ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 18, width: 18,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(editing ? l.update : l.addExportProductTitle,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -1060,130 +600,191 @@ class _ExporterFormPageState
     );
   }
 
-  // =========================
-  // IMAGE UI
-  // =========================
-
-  Widget _buildImageSection() {
-    return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Product Image',
-          style: TextStyle(
-            fontWeight:
-                FontWeight.w600,
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        Row(
-          children: [
+  Widget _buildPrimaryImageSection(AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.productImageLabel, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          const SizedBox(height: 8),
+          Row(children: [
             _imagePreviewWidget(),
-
             const SizedBox(width: 12),
+            Column(children: [
+              ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.camera),
+                icon: const Icon(Icons.photo_camera),
+                label: Text(l.camera),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library),
+                label: Text(l.gallery),
+              ),
+            ]),
+          ]),
+          if (_isUploadingImage)
+            const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator()),
+        ],
+      ),
+    );
+  }
 
-            Column(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _pickImage(
-                    ImageSource.camera,
-                  ),
-                  icon: const Icon(
-                    Icons.photo_camera,
-                  ),
-                  label:
-                      Text(AppLocalizations.of(context)!.camera),
-                ),
+  Widget _buildAdditionalImagesSection(AppLocalizations l) {
+    final allPreviews = <Widget>[];
 
-                const SizedBox(
-                    height: 8),
+    // Existing uploaded URLs
+    for (final url in _additionalUrls) {
+      allPreviews.add(_AdditionalImageThumb(
+        url: url,
+        onRemove: () => setState(() => _additionalUrls.remove(url)),
+      ));
+    }
 
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _pickImage(
-                    ImageSource.gallery,
-                  ),
-                  icon: const Icon(
-                    Icons.photo_library,
-                  ),
-                  label:
-                      Text(AppLocalizations.of(context)!.gallery),
-                ),
-              ],
-            ),
-          ],
-        ),
+    // Newly picked files
+    for (final file in _additionalFiles) {
+      allPreviews.add(_AdditionalFileThumb(
+        file: file,
+        onRemove: () => setState(() => _additionalFiles.remove(file)),
+      ));
+    }
 
-        if (_isUploadingImage)
-          const Padding(
-            padding:
-                EdgeInsets.only(top: 8),
-            child:
-                LinearProgressIndicator(),
+    // Add button
+    if (_additionalFiles.length + _additionalUrls.length < 4) {
+      allPreviews.add(GestureDetector(
+        onTap: _pickAdditionalImage,
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), width: 2),
+            borderRadius: BorderRadius.circular(8),
           ),
-      ],
+          child: Icon(Icons.add_photo_alternate_outlined,
+              color: Theme.of(context).colorScheme.primary, size: 32),
+        ),
+      ));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.additionalImagesLabel,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 90,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: allPreviews.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, i) => allPreviews[i],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _imagePreviewWidget() {
     const double size = 120;
-
     if (_pickedImageFile != null) {
       return ClipRRect(
-        borderRadius:
-            BorderRadius.circular(8),
-        child: Image.file(
-          _pickedImageFile!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-        ),
-      );
+          borderRadius: BorderRadius.circular(8),
+          child: Image.file(_pickedImageFile!, width: size, height: size, fit: BoxFit.cover));
     }
-
-    if (_imageUrl != null &&
-        _imageUrl!.isNotEmpty) {
+    if (_imageUrl != null && _imageUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius:
-            BorderRadius.circular(8),
-        child: Image.network(
-          _imageUrl!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (_, __, ___) {
-            return Container(
-              width: size,
-              height: size,
-              color:
-                  Colors.grey.shade200,
-              child: const Icon(
-                Icons.broken_image,
-              ),
-            );
-          },
-        ),
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(_imageUrl!, width: size, height: size, fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+                width: size, height: size, color: Colors.grey.shade200,
+                child: const Icon(Icons.broken_image))),
       );
     }
-
     return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius:
-            BorderRadius.circular(8),
-        color: Colors.grey.shade100,
-      ),
-      child: const Icon(
-        Icons.photo,
-        size: 44,
-        color: Colors.grey,
-      ),
+      width: size, height: size,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.grey.shade100),
+      child: const Icon(Icons.photo, size: 44, color: Colors.grey),
+    );
+  }
+}
+
+// ── Helper widgets ─────────────────────────────────────────────────────────────
+
+class _Field extends StatelessWidget {
+  final Widget child;
+  const _Field({required this.child});
+
+  @override
+  Widget build(BuildContext context) =>
+      Padding(padding: const EdgeInsets.only(bottom: 12), child: child);
+}
+
+class _AdditionalImageThumb extends StatelessWidget {
+  final String url;
+  final VoidCallback onRemove;
+  const _AdditionalImageThumb({required this.url, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(url, width: 80, height: 80, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(width: 80, height: 80, color: Colors.grey.shade200,
+                  child: const Icon(Icons.broken_image))),
+        ),
+        Positioned(
+          top: -6, right: -6,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5)),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdditionalFileThumb extends StatelessWidget {
+  final File file;
+  final VoidCallback onRemove;
+  const _AdditionalFileThumb({required this.file, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.file(file, width: 80, height: 80, fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: -6, right: -6,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5)),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -623,6 +623,12 @@
   "statusQcApproved": "QC Approved",
   "statusQcRejected": "QC Rejected",
   "statusReadyForExport": "Ready For Export",
-  "statusExported": "Exported"
+  "statusExported": "Exported",
+
+  "advancedDetails": "Advanced Details",
+  "isOrganicSubtitle": "Certified organic produce",
+  "expectedPriceLabel": "Expected Price",
+  "productImageLabel": "Primary Image",
+  "additionalImagesLabel": "Additional Images (up to 4)"
 }
 

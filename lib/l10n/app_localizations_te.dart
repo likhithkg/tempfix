@@ -1729,4 +1729,19 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get statusExported => 'Exported';
+
+  @override
+  String get advancedDetails => 'Advanced Details';
+
+  @override
+  String get isOrganicSubtitle => 'Certified organic produce';
+
+  @override
+  String get expectedPriceLabel => 'Expected Price';
+
+  @override
+  String get productImageLabel => 'Primary Image';
+
+  @override
+  String get additionalImagesLabel => 'Additional Images (up to 4)';
 }
