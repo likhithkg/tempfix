@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'po_detail_page.dart';
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 class SellerPurchaseOrderListPage extends StatefulWidget {
   const SellerPurchaseOrderListPage({super.key});
@@ -125,7 +126,9 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                       return 'Order ${id.length >= 6 ? id.substring(0, 6) : id}';
                     }
 
-                    final cropName = extractCropName(m);
+                    final rawCropName = extractCropName(m);
+                    final langCode = Localizations.localeOf(context).languageCode;
+                    final cropName = ContentTranslationService.translateCropName(rawCropName, langCode);
 
                     // date formatting
                     String when = '';

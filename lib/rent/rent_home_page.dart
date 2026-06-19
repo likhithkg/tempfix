@@ -13,6 +13,7 @@ import '../widgets/km_widgets.dart';
 import '../widgets/km_listing_card.dart';
 import '../widgets/km_action_button.dart';
 import '../theme.dart';
+import '../services/content_translation_service.dart';
 
 class RentHomePage extends StatefulWidget {
   const RentHomePage({super.key});
@@ -59,6 +60,7 @@ class _RentHomePageState extends State<RentHomePage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       appBar: AppBar(
@@ -156,8 +158,8 @@ class _RentHomePageState extends State<RentHomePage> {
                       imageHeight: 120,
                       fillHeight: true,
                       title: m.name,
-                      subtitle: '₹${m.pricePerDay}${l.perDay} • ${m.type}',
-                      caption: m.location ?? l.locationNotAvailable,
+                      subtitle: '₹${m.pricePerDay}${l.perDay} • ${ContentTranslationService.translateMachineType(m.type, langCode)}',
+                      caption: m.location != null ? ContentTranslationService.translateLocation(m.location!, langCode) : l.locationNotAvailable,
                       menuButton: _isOwner(m)
                           ? PopupMenuButton<String>(
                               icon: const Icon(Icons.more_vert,

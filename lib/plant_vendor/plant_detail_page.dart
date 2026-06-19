@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 class PlantDetailPage extends StatelessWidget {
   final PlantVendor vendor;
@@ -76,20 +77,24 @@ class PlantDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
     final plantName =
         vendor.plantName.isNotEmpty ? vendor.plantName : l.unknownVendor;
     final rawType = vendor.type.isNotEmpty ? vendor.type : l.plant;
 
     final typeParts = rawType.split(' - ');
     final category = typeParts.first;
+    final translatedCategory = ContentTranslationService.translatePlantCategory(category, langCode);
+    final translatedType = ContentTranslationService.translatePlantCategory(rawType, langCode);
 
     final priceText = '₹${vendor.price.toStringAsFixed(2)}';
     final qtyText = vendor.quantity.toString();
     final vendorName =
-        vendor.vendorName.isNotEmpty ? vendor.vendorName : 'Unknown vendor';
+        vendor.vendorName.isNotEmpty ? vendor.vendorName : l.unknownVendor;
     final phone = vendor.phone;
-    final location =
-        vendor.location.isNotEmpty ? vendor.location : 'Not provided';
+    final location = vendor.location.isNotEmpty
+        ? ContentTranslationService.translateLocation(vendor.location, langCode)
+        : l.notProvided;
 
     final imageUrl = (vendor.imageUrl ?? '').trim();
     final hasImage = imageUrl.isNotEmpty;
@@ -187,7 +192,7 @@ class PlantDetailPage extends StatelessWidget {
                 color: Colors.green.shade100,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(category),
+              child: Text(translatedCategory),
             ),
 
             const SizedBox(height: 16),
@@ -204,7 +209,7 @@ class PlantDetailPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             /// 🔹 DETAILS
-            _row(l.typeLabel, rawType),
+            _row(l.typeLabel, translatedType),
             _row(l.quantityLabel, qtyText),
             _row(l.vendorLabel, vendorName),
             _row(l.locationLabel, location),

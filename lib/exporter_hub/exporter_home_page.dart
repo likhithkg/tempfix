@@ -11,6 +11,7 @@ import 'nearby_farmers_page.dart';
 import 'nearby_farmers_map_page.dart';
 import 'seller_purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 class ExporterHomePage extends StatefulWidget {
   const ExporterHomePage({super.key});
@@ -303,11 +304,16 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                             statusColor = Colors.orange;
                                         }
                                         final loc = AppLocalizations.of(context)!;
+                                        final poLang = Localizations.localeOf(context).languageCode;
+                                        final rawPoName = po['productName'] ?? po['product_name'] ?? '';
+                                        final poProductName = rawPoName.toString().isNotEmpty
+                                            ? ContentTranslationService.translateCropName(rawPoName.toString(), poLang)
+                                            : 'Order ${id.toString().substring(0, id.toString().length >= 6 ? 6 : id.toString().length)}';
                                         return Column(
                                           children: [
                                             ListTile(
                                               leading: CircleAvatar(backgroundColor: statusColor.withValues(alpha: 0.12), child: Icon(Icons.shopping_bag, color: statusColor)),
-                                              title: Text(po['productName'] ?? po['product_name'] ?? 'Order ${id.toString().substring(0, id.toString().length >= 6 ? 6 : id.toString().length)}'),
+                                              title: Text(poProductName),
                                               subtitle: Text('${loc.totalLabel} ₹$total • ${loc.statusLabel} ${_localizedStatus(loc, status)}\n$timeLabel'),
                                               isThreeLine: true,
                                               trailing: TextButton(
@@ -339,6 +345,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
 
   Widget _buildProductList(BuildContext context, List<ExportProduct> products, User? user, {bool isOwnerTab = false, EdgeInsets? padding}) {
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
     final pad = padding ?? const EdgeInsets.all(8);
     final fabExtra = _fabExtra();
 
@@ -351,6 +358,8 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
 
         final product = products[index];
         final isOwner = user != null && product.ownerId == user.uid;
+        final translatedProductName = ContentTranslationService.translateCropName(product.productName, langCode);
+        final translatedLocation = ContentTranslationService.translateLocation(product.location, langCode);
         final sellerIdDisplay = (product.farmerMobile != null && product.farmerMobile!.isNotEmpty)
             ? '${l.mobileLabel} ${product.farmerMobile}'
             : (product.farmerId.isNotEmpty ? 'ID: ${product.farmerId}' : '${l.sellerLabel} ${product.farmerName}');
@@ -371,8 +380,8 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 onBackgroundImageError: (_, __) {},
                 child: null,
               ),
-              title: Text(product.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('${l.quantityLabel}: ${product.quantity} • ${l.locationLabel}: ${product.location}\n$sellerIdDisplay'),
+              title: Text(translatedProductName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('${l.quantityLabel}: ${product.quantity} • ${l.locationLabel}: $translatedLocation\n$sellerIdDisplay'),
               trailing: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 140),
                 child: FittedBox(
@@ -423,15 +432,17 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               ),
               onTap: () {
                 showDialog(context: context, builder: (_) => AlertDialog(
-                  title: Text(product.productName),
+                  title: Text(translatedProductName),
                   content: Builder(builder: (ctx) {
                     final l = AppLocalizations.of(ctx)!;
+                    final lc = Localizations.localeOf(ctx).languageCode;
+                    final loc = ContentTranslationService.translateLocation(product.location, lc);
                     return Text(
                       '${l.farmerLabel} ${product.farmerName}\n'
                       '${l.mobileLabel} ${product.farmerMobile ?? product.farmerId}\n'
                       '${l.qtyLabel} ${product.quantity}\n'
                       '${l.priceLabel}: ₹${product.pricePerUnit}\n'
-                      '${l.locationLabel}: ${product.location}\n\n'
+                      '${l.locationLabel}: $loc\n\n'
                       '${product.description}',
                     );
                   }),

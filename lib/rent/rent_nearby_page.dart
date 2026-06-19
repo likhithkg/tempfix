@@ -20,6 +20,7 @@ import 'rent_machine_service.dart';
 // Import the fullscreen map page (single, aliased import)
 import 'rent_nearby_map_page.dart' as rent_map_page;
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 
 class RentNearbyPage extends StatefulWidget {
@@ -271,6 +272,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
     final filtered = _applyFiltersAndSort();
 
     return Scaffold(
@@ -384,8 +386,8 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                                   title: Text(m.name,
                                       style: const TextStyle(fontWeight: FontWeight.w700)),
                                   subtitle: Text(
-                                    '${l.machineTypeLabel}: ${m.type} • ${_formatDistance(dist)}'
-                                    '\n📍 ${l.locationLabel}: ${m.location ?? l.locationNotAvailable}'
+                                    '${l.machineTypeLabel}: ${ContentTranslationService.translateMachineType(m.type, langCode)} • ${_formatDistance(dist)}'
+                                    '\n📍 ${l.locationLabel}: ${m.location != null ? ContentTranslationService.translateLocation(m.location!, langCode) : l.locationNotAvailable}'
                                     '\n👤 ${l.ownerLabel} ${m.ownerName}',
                                     style: theme.textTheme.bodySmall,
                                   ),
@@ -422,7 +424,11 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                   Text(m.name, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Builder(builder: (ctx) {
                 final lc = AppLocalizations.of(ctx)!;
-                return Text('📍 ${lc.locationLabel}: ${m.location ?? lc.locationNotAvailable}\n${lc.ownerLabel} ${m.ownerName}');
+                final lc2 = Localizations.localeOf(ctx).languageCode;
+                final loc = m.location != null
+                    ? ContentTranslationService.translateLocation(m.location!, lc2)
+                    : lc.locationNotAvailable;
+                return Text('📍 ${lc.locationLabel}: $loc\n${lc.ownerLabel} ${m.ownerName}');
               }),
             ),
             Row(children: [

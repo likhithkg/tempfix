@@ -13,6 +13,7 @@ import '../widgets/km_listing_card.dart';
 import '../widgets/km_action_button.dart';
 import '../widgets/km_status_chip.dart';
 import '../theme.dart';
+import '../services/content_translation_service.dart';
 
 class LabourNearbyPage extends StatefulWidget {
   const LabourNearbyPage({super.key});
@@ -316,6 +317,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                           curve: Curves.easeOut,
                                         );
                                         final l = AppLocalizations.of(context)!;
+                                        final langCode = Localizations.localeOf(context).languageCode;
                                         return SizeTransition(
                                           sizeFactor: anim,
                                           axis: Axis.vertical,
@@ -327,9 +329,9 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                               imageHeight: 130,
                                               title: labour.name,
                                               subtitle: labour.skill.trim().isNotEmpty
-                                                  ? '${l.skillProfessionLabel}: ${labour.skill}'
+                                                  ? '${l.skillProfessionLabel}: ${ContentTranslationService.translateLabourSkill(labour.skill, langCode)}'
                                                   : null,
-                                              caption: '${l.locationLabel}: ${labour.location}',
+                                              caption: '${l.locationLabel}: ${ContentTranslationService.translateLocation(labour.location, langCode)}',
                                               statusBadge: KMStatusChip(
                                                 label: labour.available ? l.available : l.busy,
                                                 color: labour.available

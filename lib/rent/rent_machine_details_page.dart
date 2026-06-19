@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'rent_model.dart';
 import 'rent_list_form_page.dart';
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 class RentMachineDetailsPage extends StatelessWidget {
   final RentMachine machine;
@@ -45,6 +46,11 @@ class RentMachineDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final translatedType = ContentTranslationService.translateMachineType(machine.type, langCode);
+    final translatedLocation = machine.location != null
+        ? ContentTranslationService.translateLocation(machine.location!, langCode)
+        : null;
     return Scaffold(
       body: Stack(
         children: [
@@ -162,9 +168,9 @@ class RentMachineDetailsPage extends StatelessWidget {
                     const Divider(),
                     const SizedBox(height: 4),
 
-                    _row(l.machineTypeLabel, machine.type),
+                    _row(l.machineTypeLabel, translatedType),
                     _row(l.pricePerDayLabel, '₹${machine.pricePerDay}'),
-                    _row(l.locationLabel, machine.location ?? l.locationNotAvailable),
+                    _row(l.locationLabel, translatedLocation ?? l.locationNotAvailable),
                     _row(l.ownerLabel, machine.ownerName),
                     _row(l.mobileLabel, machine.phone),
 

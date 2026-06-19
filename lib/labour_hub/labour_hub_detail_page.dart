@@ -6,8 +6,8 @@ import 'labour_model.dart';
 import 'labour_hub_form_page.dart';
 import 'hire_request_form_page.dart';
 
-import '../services/libre_translate_service.dart';
 import '../l10n/app_localizations.dart';
+import '../services/content_translation_service.dart';
 
 class LabourHubDetailPage extends StatefulWidget {
   final Labour labour;
@@ -24,104 +24,6 @@ class LabourHubDetailPage extends StatefulWidget {
 
 class _LabourHubDetailPageState
     extends State<LabourHubDetailPage> {
-
-  String translatedName = '';
-
-  String translatedSkill = '';
-
-  String translatedLocation = '';
-
-  String translatedAvailability = '';
-
-  String translatedTitle = '';
-
-  String translatedCall = '';
-
-  String translatedHire = '';
-
-  bool loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _translateAll();
-  }
-
-  Future<void> _translateAll() async {
-
-    final lang =
-        Localizations.localeOf(context)
-            .languageCode;
-
-    if (lang == 'en') {
-
-      setState(() {
-
-        translatedName =
-            widget.labour.name;
-
-        translatedSkill =
-            widget.labour.skill;
-
-        translatedLocation =
-            widget.labour.location;
-
-        final l = AppLocalizations.of(context)!;
-        translatedAvailability =
-            widget.labour.available
-
-                ? l.available
-
-                : l.notAvailable;
-
-        translatedTitle = '';
-        translatedCall = '';
-        translatedHire = '';
-
-        loading = false;
-      });
-
-      return;
-    }
-
-    translatedName =
-        await LibreTranslateService
-            .translateText(
-      text: widget.labour.name,
-      targetLanguage: lang,
-    );
-
-    translatedSkill =
-        await LibreTranslateService
-            .translateText(
-      text: widget.labour.skill,
-      targetLanguage: lang,
-    );
-
-    translatedLocation =
-        await LibreTranslateService
-            .translateText(
-      text: widget.labour.location,
-      targetLanguage: lang,
-    );
-
-    translatedAvailability =
-        await LibreTranslateService
-            .translateText(
-      text: widget.labour.available
-          ? "Available"
-          : "Not Available",
-      targetLanguage: lang,
-    );  // LibreTranslate used for user-data translation; English source is intentional
-
-    if (mounted) {
-
-      setState(() {
-
-        loading = false;
-      });
-    }
-  }
 
   Future<void> _callNumber(
     String number,
@@ -145,6 +47,10 @@ class _LabourHubDetailPageState
 
     final labour = widget.labour;
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final translatedSkill = ContentTranslationService.translateLabourSkill(labour.skill, langCode);
+    final translatedLocation = ContentTranslationService.translateLocation(labour.location, langCode);
+    final translatedAvailability = labour.available ? l.available : l.notAvailable;
 
     final String? currentUserId =
         FirebaseAuth
@@ -159,12 +65,7 @@ class _LabourHubDetailPageState
 
       appBar: AppBar(
 
-        title: Text(
-
-          loading
-              ? l.loading
-              : l.labourDetails,
-        ),
+        title: Text(l.labourDetails),
 
         backgroundColor:
             Colors.green.shade700,
@@ -238,14 +139,7 @@ class _LabourHubDetailPageState
         ],
       ),
 
-      body: loading
-
-          ? const Center(
-              child:
-                  CircularProgressIndicator(),
-            )
-
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
 
               padding:
                   const EdgeInsets.all(
@@ -341,7 +235,7 @@ class _LabourHubDetailPageState
 
                         Text(
 
-                          translatedName,
+                          labour.name,
 
                           style:
                               const TextStyle(

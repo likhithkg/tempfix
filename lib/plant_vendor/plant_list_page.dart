@@ -9,7 +9,7 @@ import 'package:krishimithra/plant_vendor/plant_vendor_service.dart';
 import 'package:krishimithra/plant_vendor/plant_list_form_page.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_nearby_page.dart';
 
-import '../services/libre_translate_service.dart';
+import '../services/content_translation_service.dart';
 import '../theme.dart';
 import '../widgets/km_widgets.dart';
 import '../widgets/km_listing_card.dart';
@@ -41,7 +41,6 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
   String _sort = 'Newest';
   String _filterCategory = '';
 
-  final Map<String, String> _translationCache = {};
   final _searchCtrl = TextEditingController();
 
   StreamSubscription<List<PlantVendor>>? _streamSub;
@@ -74,22 +73,6 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
     _streamSub?.cancel();
     _searchCtrl.dispose();
     super.dispose();
-  }
-
-  Future<String> _translate(String text) async {
-    if (text.trim().isEmpty) return text;
-    final lang = Localizations.localeOf(context).languageCode;
-    if (lang == 'en') return text;
-    final cacheKey = '$lang-$text';
-    if (_translationCache.containsKey(cacheKey)) {
-      return _translationCache[cacheKey]!;
-    }
-    final translated = await LibreTranslateService.translateText(
-      text: text,
-      targetLanguage: lang,
-    );
-    _translationCache[cacheKey] = translated;
-    return translated;
   }
 
   Future<void> _load() async {
@@ -221,6 +204,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
 
   Widget _buildCard(PlantVendor v) {
     final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final owner =
         v.createdBy.isNotEmpty ? v.createdBy : v.ownerId;
@@ -229,7 +213,11 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
     final safePlantName =
         v.plantName.isNotEmpty ? v.plantName : l.unknownPlant;
     final typeLabel = _typeLabel(v);
+    final translatedType = ContentTranslationService.translatePlantCategory(typeLabel, langCode);
     final category = _categoryLabel(v);
+    final translatedLocation = v.location.isNotEmpty
+        ? ContentTranslationService.translateLocation(v.location, langCode)
+        : '';
 
     final categoryColor = category.toLowerCase() == 'seeds'
         ? KMColors.warning
@@ -243,7 +231,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
         imageHeight: 150,
         title: safePlantName,
         subtitle: '${l.priceLabel}: ₹${v.price.toStringAsFixed(2)} • ${l.qtyLabel} ${v.quantity}',
-        caption: v.location.isNotEmpty ? '${l.locationLabel}: ${v.location}' : null,
+        caption: translatedLocation.isNotEmpty ? '${l.locationLabel}: $translatedLocation' : null,
         statusBadge: KMStatusChip(label: category, color: categoryColor),
         menuButton: isOwner
             ? IconButton(
@@ -251,19 +239,16 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
                 onPressed: () => _showActions(v),
               )
             : null,
-        infoRow: FutureBuilder<String>(
-          future: _translate('$typeLabel ${v.vendorName}'),
-          builder: (_, snap) => Text(
-            snap.data ?? '$typeLabel • ${v.vendorName}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
-                ),
-          ),
+        infoRow: Text(
+          '$translatedType • ${v.vendorName}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
         onTap: () async {
           try {
@@ -459,18 +444,11 @@ class PlantVendorDetailsPage extends StatelessWidget {
 
   const PlantVendorDetailsPage({super.key, required this.vendor});
 
-  Future<String> _translate(BuildContext context, String text) async {
-    if (text.trim().isEmpty) return text;
-    final lang = Localizations.localeOf(context).languageCode;
-    if (lang == 'en') return text;
-    return await LibreTranslateService.translateText(
-      text: text,
-      targetLanguage: lang,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
+
     final safeType = vendor.type.isNotEmpty ? vendor.type : 'Plant';
     final category =
         safeType.contains(' - ') ? safeType.split(' - ').first : 'Plant';
@@ -478,13 +456,16 @@ class PlantVendorDetailsPage extends StatelessWidget {
         ? safeType.split(' - ').sublist(1).join(' - ')
         : safeType;
 
-    final l = AppLocalizations.of(context)!;
+    final translatedCategory = ContentTranslationService.translatePlantCategory(category, langCode);
+    final translatedTypeLabel = ContentTranslationService.translatePlantCategory(typeLabel, langCode);
+
     final safePlantName =
         vendor.plantName.isNotEmpty ? vendor.plantName : l.unknownPlant;
     final safeVendorName =
         vendor.vendorName.isNotEmpty ? vendor.vendorName : l.unknownVendor;
-    final safeLocation =
-        vendor.location.isNotEmpty ? vendor.location : l.notProvided;
+    final safeLocation = vendor.location.isNotEmpty
+        ? ContentTranslationService.translateLocation(vendor.location, langCode)
+        : l.notProvided;
     final safeDescription =
         vendor.description.isNotEmpty ? vendor.description : l.noDescriptionProvided;
 
@@ -528,24 +509,21 @@ class PlantVendorDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: FutureBuilder<String>(
-                  future: _translate(context, safePlantName),
-                  builder: (_, snap) => Text(
-                    snap.data ?? safePlantName,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+                child: Text(
+                  safePlantName,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
               const SizedBox(width: KMSpacing.sm),
-              KMStatusChip(label: category, color: categoryColor),
+              KMStatusChip(label: translatedCategory, color: categoryColor),
             ],
           ),
 
           const SizedBox(height: KMSpacing.lg),
 
-          _infoRow(context, l.typeLabel, typeLabel),
+          _infoRow(context, l.typeLabel, translatedTypeLabel),
           const SizedBox(height: KMSpacing.sm),
           _infoRow(context, l.priceLabel,
               '₹${vendor.price.toStringAsFixed(2)}'),
@@ -568,11 +546,7 @@ class PlantVendorDetailsPage extends StatelessWidget {
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: KMSpacing.sm),
-          FutureBuilder<String>(
-            future: _translate(context, safeDescription),
-            builder: (_, snap) =>
-                Text(snap.data ?? safeDescription),
-          ),
+          Text(safeDescription),
         ],
       ),
     );
