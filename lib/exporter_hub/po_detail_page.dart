@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'exporter_service.dart';
+import 'qc_report_page.dart';
 import '../l10n/app_localizations.dart';
 
 // ── 13-Status Procurement Workflow ────────────────────────────────────────────
@@ -727,6 +728,29 @@ class PODetailPage extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 20),
+
+                // ── QC Report button (shown when collected) ──
+                if (_normalizeStatus(status) == 'collected' ||
+                    _normalizeStatus(status) == 'qc_pending')
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        final listingId = items.isNotEmpty
+                            ? (items.first['listingId'] ?? items.first['productId'] ?? '').toString()
+                            : '';
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => QCReportPage(
+                            poId: poId,
+                            listingId: listingId,
+                            isAdminView: currentUid != null && farmerId.isNotEmpty && currentUid != farmerId,
+                          ),
+                        ));
+                      },
+                      icon: const Icon(Icons.science_outlined),
+                      label: Text(AppLocalizations.of(context)!.addQcReport),
+                    ),
+                  ),
 
                 // ── Contact / Refresh actions ──
                 Row(children: [

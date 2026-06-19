@@ -3494,6 +3494,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Additional Images (up to 4)'**
   String get additionalImagesLabel;
+
+  /// No description provided for @qcReport.
+  ///
+  /// In en, this message translates to:
+  /// **'QC Report'**
+  String get qcReport;
+
+  /// No description provided for @qcReportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the quality control details for this batch'**
+  String get qcReportSubtitle;
+
+  /// No description provided for @qcHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'QC History'**
+  String get qcHistory;
+
+  /// No description provided for @noQcReportsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No QC reports submitted yet'**
+  String get noQcReportsYet;
+
+  /// No description provided for @qcReportSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'QC report submitted successfully'**
+  String get qcReportSubmitted;
+
+  /// No description provided for @qcStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'QC status updated'**
+  String get qcStatusUpdated;
+
+  /// No description provided for @qcInspectorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspector: {name}'**
+  String qcInspectorLabel(String name);
+
+  /// No description provided for @qcPhotosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos (up to 5)'**
+  String get qcPhotosLabel;
+
+  /// No description provided for @submitQcReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit QC Report'**
+  String get submitQcReport;
+
+  /// No description provided for @colorGradeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Color Grade'**
+  String get colorGradeLabel;
+
+  /// No description provided for @foreignMatterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign Matter %'**
+  String get foreignMatterLabel;
+
+  /// No description provided for @defectsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Defects %'**
+  String get defectsLabel;
+
+  /// No description provided for @inspectorNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspector Notes'**
+  String get inspectorNotesLabel;
+
+  /// No description provided for @addQcReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Add QC Report'**
+  String get addQcReport;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -629,6 +629,24 @@
   "isOrganicSubtitle": "Certified organic produce",
   "expectedPriceLabel": "Expected Price",
   "productImageLabel": "Primary Image",
-  "additionalImagesLabel": "Additional Images (up to 4)"
+  "additionalImagesLabel": "Additional Images (up to 4)",
+
+  "qcReport": "QC Report",
+  "qcReportSubtitle": "Fill in the quality control details for this batch",
+  "qcHistory": "QC History",
+  "noQcReportsYet": "No QC reports submitted yet",
+  "qcReportSubmitted": "QC report submitted successfully",
+  "qcStatusUpdated": "QC status updated",
+  "qcInspectorLabel": "Inspector: {name}",
+  "@qcInspectorLabel": { "placeholders": { "name": { "type": "String" } } },
+  "qcPhotosLabel": "Photos (up to 5)",
+  "submitQcReport": "Submit QC Report",
+  "colorGradeLabel": "Color Grade",
+  "foreignMatterLabel": "Foreign Matter %",
+  "defectsLabel": "Defects %",
+  "inspectorNotesLabel": "Inspector Notes",
+  "approve": "Approve",
+  "reject": "Reject",
+  "addQcReport": "Add QC Report"
 }
 

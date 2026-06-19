@@ -531,10 +531,10 @@ class AppLocalizationsKn extends AppLocalizations {
   String get noPendingListings => 'à²¯à²¾à²µà³à²¦à³‡ à²¬à²¾à²•à²¿ à²ªà²Ÿà³à²Ÿà²¿à²—à²³à²¿à²²à³à²².';
 
   @override
-  String get approve => 'à²…à²¨à³à²®à³‹à²¦à²¿à²¸à²¿';
+  String get approve => 'Approve';
 
   @override
-  String get reject => 'à²¤à²¿à²°à²¸à³à²•à²°à²¿à²¸à²¿';
+  String get reject => 'Reject';
 
   @override
   String get myListings => 'à²¨à²¨à³à²¨ à²ªà²Ÿà³à²Ÿà²¿à²—à²³à³';
@@ -1744,4 +1744,48 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get additionalImagesLabel => 'Additional Images (up to 4)';
+
+  @override
+  String get qcReport => 'QC Report';
+
+  @override
+  String get qcReportSubtitle => 'Fill in the quality control details for this batch';
+
+  @override
+  String get qcHistory => 'QC History';
+
+  @override
+  String get noQcReportsYet => 'No QC reports submitted yet';
+
+  @override
+  String get qcReportSubmitted => 'QC report submitted successfully';
+
+  @override
+  String get qcStatusUpdated => 'QC status updated';
+
+  @override
+  String qcInspectorLabel(String name) {
+    return 'Inspector: $name';
+  }
+
+  @override
+  String get qcPhotosLabel => 'Photos (up to 5)';
+
+  @override
+  String get submitQcReport => 'Submit QC Report';
+
+  @override
+  String get colorGradeLabel => 'Color Grade';
+
+  @override
+  String get foreignMatterLabel => 'Foreign Matter %';
+
+  @override
+  String get defectsLabel => 'Defects %';
+
+  @override
+  String get inspectorNotesLabel => 'Inspector Notes';
+
+  @override
+  String get addQcReport => 'Add QC Report';
 }

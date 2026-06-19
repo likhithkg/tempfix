@@ -531,10 +531,10 @@ class AppLocalizationsMl extends AppLocalizations {
   String get noPendingListings => 'à´•à´¾à´¤àµà´¤à´¿à´°à´¿à´•àµà´•àµà´¨àµà´¨ à´²à´¿à´¸àµà´±àµà´±à´¿à´‚à´—àµâ€Œà´•àµ¾ à´‡à´²àµà´².';
 
   @override
-  String get approve => 'à´…à´¨àµà´®à´¤à´¿ à´¨àµ½à´•àµà´•';
+  String get approve => 'Approve';
 
   @override
-  String get reject => 'à´¨à´¿à´°à´¸à´¿à´•àµà´•àµà´•';
+  String get reject => 'Reject';
 
   @override
   String get myListings => 'à´Žàµ»àµà´±àµ† à´²à´¿à´¸àµà´±àµà´±à´¿à´‚à´—àµâ€Œà´•àµ¾';
@@ -1744,4 +1744,48 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get additionalImagesLabel => 'Additional Images (up to 4)';
+
+  @override
+  String get qcReport => 'QC Report';
+
+  @override
+  String get qcReportSubtitle => 'Fill in the quality control details for this batch';
+
+  @override
+  String get qcHistory => 'QC History';
+
+  @override
+  String get noQcReportsYet => 'No QC reports submitted yet';
+
+  @override
+  String get qcReportSubmitted => 'QC report submitted successfully';
+
+  @override
+  String get qcStatusUpdated => 'QC status updated';
+
+  @override
+  String qcInspectorLabel(String name) {
+    return 'Inspector: $name';
+  }
+
+  @override
+  String get qcPhotosLabel => 'Photos (up to 5)';
+
+  @override
+  String get submitQcReport => 'Submit QC Report';
+
+  @override
+  String get colorGradeLabel => 'Color Grade';
+
+  @override
+  String get foreignMatterLabel => 'Foreign Matter %';
+
+  @override
+  String get defectsLabel => 'Defects %';
+
+  @override
+  String get inspectorNotesLabel => 'Inspector Notes';
+
+  @override
+  String get addQcReport => 'Add QC Report';
 }
