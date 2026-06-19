@@ -2970,7 +2970,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search products, farmers, locations...'**
+  /// **'Search crops, machines, labour, products...'**
   String get searchHint;
 
   /// No description provided for @filterProducts.
@@ -4274,6 +4274,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add more listings and purchase orders to generate insights'**
   String get notEnoughDataForInsights;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @greenBazaar.
+  ///
+  /// In en, this message translates to:
+  /// **'GreenBazaar'**
+  String get greenBazaar;
+
+  /// No description provided for @quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get quickActions;
+
+  /// No description provided for @smartServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Services'**
+  String get smartServices;
+
+  /// No description provided for @exportOpportunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Opportunities'**
+  String get exportOpportunities;
+
+  /// No description provided for @nearbyFarmersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers Near You'**
+  String get nearbyFarmersSection;
+
+  /// No description provided for @personalizedInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'For You'**
+  String get personalizedInsights;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivity;
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Morning'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Afternoon'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Evening'**
+  String get goodEvening;
+
+  /// No description provided for @sellDirectlyBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell Your Produce Directly'**
+  String get sellDirectlyBanner;
+
+  /// No description provided for @checkWeatherBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Today\'s Weather'**
+  String get checkWeatherBanner;
+
+  /// No description provided for @rentEquipmentBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent Farm Equipment Nearby'**
+  String get rentEquipmentBanner;
+
+  /// No description provided for @exportBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Through KrishiMithra'**
+  String get exportBanner;
+
+  /// No description provided for @hireLabourBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Hire Agricultural Labour'**
+  String get hireLabourBanner;
+
+  /// No description provided for @greenBazaarHighlights.
+  ///
+  /// In en, this message translates to:
+  /// **'GreenBazaar Highlights'**
+  String get greenBazaarHighlights;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -767,6 +767,26 @@
   "markAllRead": "Mark all read",
 
   "aiInsights": "AI Insights",
-  "notEnoughDataForInsights": "Add more listings and purchase orders to generate insights"
+  "notEnoughDataForInsights": "Add more listings and purchase orders to generate insights",
+
+  "home": "Home",
+  "greenBazaar": "GreenBazaar",
+  "searchHint": "Search crops, machines, labour, products...",
+  "quickActions": "Quick Actions",
+  "smartServices": "Smart Services",
+  "exportOpportunities": "Export Opportunities",
+  "nearbyFarmersSection": "Farmers Near You",
+  "personalizedInsights": "For You",
+  "recentActivity": "Recent Activity",
+  "goodMorning": "Good Morning",
+  "goodAfternoon": "Good Afternoon",
+  "goodEvening": "Good Evening",
+  "sellDirectlyBanner": "Sell Your Produce Directly",
+  "checkWeatherBanner": "Check Today's Weather",
+  "rentEquipmentBanner": "Rent Farm Equipment Nearby",
+  "exportBanner": "Export Through KrishiMithra",
+  "hireLabourBanner": "Hire Agricultural Labour",
+
+  "greenBazaarHighlights": "GreenBazaar Highlights"
 }
 

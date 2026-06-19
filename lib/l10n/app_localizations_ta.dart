@@ -1478,7 +1478,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get specifications => 'Specifications';
 
   @override
-  String get searchHint => 'Search products, farmers, locations...';
+  String get searchHint => 'Search crops, machines, labour, products...';
 
   @override
   String get filterProducts => 'Filter Products';
@@ -2140,4 +2140,55 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get notEnoughDataForInsights => 'Add more listings and purchase orders to generate insights';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get greenBazaar => 'GreenBazaar';
+
+  @override
+  String get quickActions => 'Quick Actions';
+
+  @override
+  String get smartServices => 'Smart Services';
+
+  @override
+  String get exportOpportunities => 'Export Opportunities';
+
+  @override
+  String get nearbyFarmersSection => 'Farmers Near You';
+
+  @override
+  String get personalizedInsights => 'For You';
+
+  @override
+  String get recentActivity => 'Recent Activity';
+
+  @override
+  String get goodMorning => 'Good Morning';
+
+  @override
+  String get goodAfternoon => 'Good Afternoon';
+
+  @override
+  String get goodEvening => 'Good Evening';
+
+  @override
+  String get sellDirectlyBanner => 'Sell Your Produce Directly';
+
+  @override
+  String get checkWeatherBanner => 'Check Today\'s Weather';
+
+  @override
+  String get rentEquipmentBanner => 'Rent Farm Equipment Nearby';
+
+  @override
+  String get exportBanner => 'Export Through KrishiMithra';
+
+  @override
+  String get hireLabourBanner => 'Hire Agricultural Labour';
+
+  @override
+  String get greenBazaarHighlights => 'GreenBazaar Highlights';
 }

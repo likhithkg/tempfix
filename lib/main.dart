@@ -41,6 +41,7 @@ import 'export_hub/export_hub_page.dart';
 import 'chatbot/chatbot_page.dart';
 import 'exporter_hub/exporter_home_page.dart';
 import 'f2b_mart/f2b_home_page.dart';
+import 'home/home_page.dart';
 
 
 
@@ -363,7 +364,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
     } on fb.FirebaseAuthException catch (e) {
       showToast(
         e.code == 'user-not-found'
@@ -491,7 +492,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
         await fb.FirebaseAuth.instance.signInWithCredential(cred);
         await _saveUserToFirestore();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
       },
       verificationFailed: (e) {
         showToast("Verification failed: ${e.message}");
@@ -522,7 +523,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
       await fb.FirebaseAuth.instance.signInWithCredential(cred);
       await _saveUserToFirestore();
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
     } catch (e) {
       showToast("Invalid OTP");
     } finally {
@@ -677,7 +678,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DashboardPage()),
+        MaterialPageRoute(builder: (_) => const KrishiMithraHome()),
       );
     } on fb.FirebaseAuthException catch (e) {
       showToast("Sign-up failed: ${e.message}");
