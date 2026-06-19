@@ -3296,6 +3296,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View on Map'**
   String get viewOnMap;
+
+  /// No description provided for @procurementDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'KM Procurement Platform'**
+  String get procurementDashboard;
+
+  /// No description provided for @procurementAdminNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only KM Admin can raise purchase orders. Farmers list produce; Admin sources and exports.'**
+  String get procurementAdminNote;
+
+  /// No description provided for @totalFarmers.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers'**
+  String get totalFarmers;
+
+  /// No description provided for @pendingPOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending POs'**
+  String get pendingPOs;
+
+  /// No description provided for @exportReadyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Ready'**
+  String get exportReadyCount;
+
+  /// No description provided for @recentlyListedProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Listed Produce'**
+  String get recentlyListedProduce;
+
+  /// No description provided for @highQuantityListings.
+  ///
+  /// In en, this message translates to:
+  /// **'High Quantity Listings'**
+  String get highQuantityListings;
+
+  /// No description provided for @exportReadyProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Ready Produce'**
+  String get exportReadyProduce;
+
+  /// No description provided for @noProcurementItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No items available yet'**
+  String get noProcurementItems;
+
+  /// No description provided for @varietyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Variety'**
+  String get varietyLabel;
+
+  /// No description provided for @moistureLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moisture %'**
+  String get moistureLevelLabel;
+
+  /// No description provided for @storageLocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Location'**
+  String get storageLocationLabel;
+
+  /// No description provided for @packagingTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Packaging'**
+  String get packagingTypeLabel;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

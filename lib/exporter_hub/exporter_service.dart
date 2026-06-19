@@ -407,4 +407,75 @@ class ExporterService {
     final payload = {...data, 'createdAt': FieldValue.serverTimestamp()};
     return qcRef.add(payload);
   }
+
+  // --------------------------------------------------------------------------
+  // Procurement Dashboard
+  // --------------------------------------------------------------------------
+
+  /// Stream analytics stats: totalFarmers, activeListings, pendingPOs, exportReady
+  Stream<Map<String, int>> streamDashboardStats() {
+    return _productsRef.snapshots().asyncMap((snap) async {
+      final products = snap.docs.map((d) {
+        final data = d.data() as Map<String, dynamic>;
+        data['id'] = d.id;
+        return data;
+      }).toList();
+
+      final farmerIds = products
+          .map((p) => p['farmerId']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
+      final exportReady = products
+          .where((p) => p['grade']?.toString() == 'A' || p['isOrganic'] == true)
+          .length;
+
+      int pendingPOs = 0;
+      try {
+        final poSnap = await poRef
+            .where('status', whereIn: [
+              'issued', 'pending', 'listed', 'under_review',
+              'price_negotiation', 'po_issued'
+            ])
+            .get();
+        pendingPOs = poSnap.docs.length;
+      } catch (_) {}
+
+      return <String, int>{
+        'totalFarmers': farmerIds.length,
+        'activeListings': products.length,
+        'pendingPOs': pendingPOs,
+        'exportReady': exportReady,
+      };
+    });
+  }
+
+  /// Recently listed produce, latest first
+  Stream<List<ExportProduct>> streamRecentListings({int limit = 10}) {
+    return _productsRef
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return ExportProduct.fromMap(data);
+            }).toList());
+  }
+
+  /// Export-ready listings: grade A or organic
+  Stream<List<ExportProduct>> streamExportReadyListings({int limit = 10}) {
+    return getExportProducts().map((all) {
+      final ready = all.where((p) => p.grade == 'A' || p.isOrganic).toList();
+      return ready.length > limit ? ready.sublist(0, limit) : ready;
+    });
+  }
+
+  /// High-quantity listings sorted descending by parsed quantity
+  Stream<List<ExportProduct>> streamHighQuantityListings({int limit = 10}) {
+    return getExportProducts().map((all) {
+      final sorted = List<ExportProduct>.from(all)
+        ..sort((a, b) => b.quantityNum.compareTo(a.quantityNum));
+      return sorted.length > limit ? sorted.sublist(0, limit) : sorted;
+    });
+  }
 }

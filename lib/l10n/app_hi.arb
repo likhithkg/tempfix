@@ -593,6 +593,21 @@
 
   "filterByLocation": "Location",
   "allLocations": "All Locations",
-  "viewOnMap": "View on Map"
+  "viewOnMap": "View on Map",
+
+  "procurementDashboard": "KM Procurement Platform",
+  "procurementAdminNote": "Only KM Admin can raise purchase orders. Farmers list produce; Admin sources and exports.",
+  "totalFarmers": "Farmers",
+  "pendingPOs": "Pending POs",
+  "exportReadyCount": "Export Ready",
+  "recentlyListedProduce": "Recently Listed Produce",
+  "highQuantityListings": "High Quantity Listings",
+  "exportReadyProduce": "Export Ready Produce",
+  "noProcurementItems": "No items available yet",
+  "varietyLabel": "Variety",
+  "moistureLevelLabel": "Moisture %",
+  "storageLocationLabel": "Storage Location",
+  "packagingTypeLabel": "Packaging",
+  "description": "Description"
 }
 

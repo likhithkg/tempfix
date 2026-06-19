@@ -1645,4 +1645,46 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get viewOnMap => 'View on Map';
+
+  @override
+  String get procurementDashboard => 'KM Procurement Platform';
+
+  @override
+  String get procurementAdminNote => 'Only KM Admin can raise purchase orders. Farmers list produce; Admin sources and exports.';
+
+  @override
+  String get totalFarmers => 'Farmers';
+
+  @override
+  String get pendingPOs => 'Pending POs';
+
+  @override
+  String get exportReadyCount => 'Export Ready';
+
+  @override
+  String get recentlyListedProduce => 'Recently Listed Produce';
+
+  @override
+  String get highQuantityListings => 'High Quantity Listings';
+
+  @override
+  String get exportReadyProduce => 'Export Ready Produce';
+
+  @override
+  String get noProcurementItems => 'No items available yet';
+
+  @override
+  String get varietyLabel => 'Variety';
+
+  @override
+  String get moistureLevelLabel => 'Moisture %';
+
+  @override
+  String get storageLocationLabel => 'Storage Location';
+
+  @override
+  String get packagingTypeLabel => 'Packaging';
+
+  @override
+  String get description => 'Description';
 }
