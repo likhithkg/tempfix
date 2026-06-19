@@ -118,96 +118,40 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.insights_outlined),
-                  tooltip: l.aiInsights,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const AiInsightsPage())),
-                ),
-                IconButton(
                   icon: const Icon(Icons.notifications_outlined),
                   tooltip: l.notificationCenter,
                   onPressed: () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const NotificationsPage())),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.account_balance_outlined),
-                  tooltip: l.financeDashboard,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const FinanceDashboard())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.people_alt_outlined),
-                  tooltip: l.internationalBuyers,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const BuyersPage())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.folder_outlined),
-                  tooltip: l.exportDocuments,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ExportDocumentsPage())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.directions_boat_outlined),
-                  tooltip: l.shipmentDashboard,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ShipmentDashboard())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.warehouse_outlined),
-                  tooltip: l.warehouseDashboard,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const WarehouseDashboard())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.analytics_outlined),
-                  tooltip: l.exportOperationsDashboard,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ExportOperationsDashboard())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.assignment_outlined),
-                  tooltip: l.demandBoard,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => DemandBoardPage(isAdmin: _isAdmin))),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.map_outlined),
-                  tooltip: l.openMap,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.people_outline),
-                  tooltip: l.nearbyFarmersList,
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const NearbyFarmersPage())),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.receipt_long_outlined),
-                  tooltip: l.sellingOrders,
-                  onPressed: () {
-                    if (user == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l.pleaseSignInToViewSeller)));
-                      return;
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'More',
+                  onSelected: (v) {
+                    switch (v) {
+                      case 'map':
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage()));
+                      case 'nearby':
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersPage()));
+                      case 'seller':
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewSeller)));
+                        } else {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
+                        }
+                      case 'buyer':
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
+                        } else {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PurchaseOrderListPage()));
+                        }
                     }
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
                   },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_bag_outlined),
-                  tooltip: l.verifiedBuyersTab,
-                  onPressed: () {
-                    if (user == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l.pleaseSignInToViewOrders)));
-                      return;
-                    }
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const PurchaseOrderListPage()));
-                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'map', child: Row(children: [const Icon(Icons.map_outlined, size: 18), const SizedBox(width: 10), Text(l.openMap)])),
+                    PopupMenuItem(value: 'nearby', child: Row(children: [const Icon(Icons.people_outline, size: 18), const SizedBox(width: 10), Text(l.nearbyFarmersList)])),
+                    PopupMenuItem(value: 'seller', child: Row(children: [const Icon(Icons.receipt_long_outlined, size: 18), const SizedBox(width: 10), Text(l.sellingOrders)])),
+                    PopupMenuItem(value: 'buyer', child: Row(children: [const Icon(Icons.shopping_bag_outlined, size: 18), const SizedBox(width: 10), Text(l.verifiedBuyersTab)])),
+                  ],
                 ),
               ],
             ),
@@ -255,6 +199,11 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                   ]),
                 ),
               ),
+            ),
+
+            // ── Operations Hub Grid ──
+            SliverToBoxAdapter(
+              child: _OperationsHub(isAdmin: _isAdmin, user: user),
             ),
 
             // ── Section 1: Recently Listed ──
@@ -359,6 +308,174 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
         service: _service,
       ),
     ));
+  }
+}
+
+// ── Operations Hub ─────────────────────────────────────────────────────────────
+
+class _OperationsHub extends StatelessWidget {
+  final bool isAdmin;
+  final User? user;
+  const _OperationsHub({required this.isAdmin, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    // All users see procurement + demand. Admin sees warehouse/shipments/finance/buyers/docs/insights.
+    final tiles = <_OpTileData>[
+      _OpTileData(
+        icon: Icons.pending_actions_outlined,
+        label: l.purchaseOrderTitle,
+        color: Colors.orange,
+        onTap: () {
+          if (user == null) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
+            return;
+          }
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const PurchaseOrderListPage()));
+        },
+      ),
+      _OpTileData(
+        icon: Icons.receipt_long_outlined,
+        label: l.sellingOrders,
+        color: Colors.teal,
+        onTap: () {
+          if (user == null) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewSeller)));
+            return;
+          }
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
+        },
+      ),
+      _OpTileData(
+        icon: Icons.assignment_outlined,
+        label: l.demandBoard,
+        color: Colors.deepPurple,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => DemandBoardPage(isAdmin: isAdmin))),
+      ),
+      _OpTileData(
+        icon: Icons.analytics_outlined,
+        label: l.exportOperationsDashboard,
+        color: Colors.indigo,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ExportOperationsDashboard())),
+      ),
+      if (isAdmin) ...[
+        _OpTileData(
+          icon: Icons.warehouse_outlined,
+          label: l.warehouseDashboard,
+          color: Colors.brown,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const WarehouseDashboard())),
+        ),
+        _OpTileData(
+          icon: Icons.directions_boat_outlined,
+          label: l.shipmentDashboard,
+          color: Colors.blue,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ShipmentDashboard())),
+        ),
+        _OpTileData(
+          icon: Icons.folder_outlined,
+          label: l.exportDocuments,
+          color: Colors.cyan,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ExportDocumentsPage())),
+        ),
+        _OpTileData(
+          icon: Icons.people_alt_outlined,
+          label: l.internationalBuyers,
+          color: Colors.green,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const BuyersPage())),
+        ),
+        _OpTileData(
+          icon: Icons.account_balance_outlined,
+          label: l.financeDashboard,
+          color: Colors.red,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const FinanceDashboard())),
+        ),
+        _OpTileData(
+          icon: Icons.insights_outlined,
+          label: l.aiInsights,
+          color: Colors.amber.shade800,
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AiInsightsPage())),
+        ),
+      ],
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            isAdmin ? 'Operations Hub' : 'Quick Access',
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+        ),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.0,
+          children: tiles.map((t) => _OpTile(data: t)).toList(),
+        ),
+      ]),
+    );
+  }
+}
+
+class _OpTileData {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _OpTileData({required this.icon, required this.label, required this.color, required this.onTap});
+}
+
+class _OpTile extends StatelessWidget {
+  final _OpTileData data;
+  const _OpTile({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: data.color.withValues(alpha: 0.08),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: data.onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: data.color.withValues(alpha: 0.15),
+                child: Icon(data.icon, color: data.color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: data.color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
