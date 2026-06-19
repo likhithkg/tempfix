@@ -2966,6 +2966,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Specifications'**
   String get specifications;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products, farmers, locations...'**
+  String get searchHint;
+
+  /// No description provided for @filterProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Products'**
+  String get filterProducts;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort By'**
+  String get sortBy;
+
+  /// No description provided for @newestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get newestFirst;
+
+  /// No description provided for @lowestPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest Price'**
+  String get lowestPrice;
+
+  /// No description provided for @highestPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest Price'**
+  String get highestPrice;
+
+  /// No description provided for @priceRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Range'**
+  String get priceRange;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get applyFilters;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @resultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String resultsFound(int count);
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found. Try adjusting filters.'**
+  String get noSearchResults;
+
+  /// No description provided for @wishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist'**
+  String get wishlist;
+
+  /// No description provided for @addedToWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to wishlist'**
+  String get addedToWishlist;
+
+  /// No description provided for @removedFromWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from wishlist'**
+  String get removedFromWishlist;
+
+  /// No description provided for @yourWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Wishlist'**
+  String get yourWishlist;
+
+  /// No description provided for @wishlistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wishlist is empty'**
+  String get wishlistEmpty;
+
+  /// No description provided for @browseProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Products'**
+  String get browseProducts;
+
+  /// No description provided for @loginToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save items to wishlist'**
+  String get loginToSave;
+
+  /// No description provided for @shareProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Product'**
+  String get shareProduct;
+
+  /// No description provided for @productInfoCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Product info copied to clipboard'**
+  String get productInfoCopied;
+
+  /// No description provided for @makeOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Offer'**
+  String get makeOffer;
+
+  /// No description provided for @offerPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Offered Price'**
+  String get offerPriceLabel;
+
+  /// No description provided for @enterValidOfferPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid price'**
+  String get enterValidOfferPrice;
+
+  /// No description provided for @currentPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Price'**
+  String get currentPrice;
+
+  /// No description provided for @submitOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Offer'**
+  String get submitOffer;
+
+  /// No description provided for @offerSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer submitted! Track it in your orders.'**
+  String get offerSubmitted;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

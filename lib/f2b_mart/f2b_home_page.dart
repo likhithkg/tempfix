@@ -14,6 +14,9 @@ import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../services/content_translation_service.dart';
 import 'f2b_product_detail_page.dart';
+import 'f2b_search_page.dart';
+import 'f2b_wishlist_page.dart';
+import 'f2b_wishlist_service.dart';
 
 // ─── Data holders ──────────────────────────────────────────────────────────
 
@@ -47,13 +50,15 @@ class F2BHomePage extends StatefulWidget {
 
 class _F2BHomePageState extends State<F2BHomePage> {
   final _service = ExporterService();
-  final _searchCtrl = TextEditingController();
   final _bannerCtrl = PageController();
 
   String _selectedCategory = 'all';
-  String _searchQuery = '';
   int _currentBanner = 0;
   Timer? _bannerTimer;
+
+  // Wishlist
+  Set<String> _wishlistIds = {};
+  StreamSubscription<Set<String>>? _wishlistSub;
 
   static const _banners = [
     _BannerData(
@@ -96,34 +101,52 @@ class _F2BHomePageState extends State<F2BHomePage> {
       _bannerCtrl.animateToPage(next,
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
     });
+    _startWishlistListener();
+  }
+
+  void _startWishlistListener() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _wishlistSub = WishlistService.stream(uid).listen((ids) {
+      if (mounted) setState(() => _wishlistIds = ids);
+    });
   }
 
   @override
   void dispose() {
     _bannerTimer?.cancel();
     _bannerCtrl.dispose();
-    _searchCtrl.dispose();
+    _wishlistSub?.cancel();
     super.dispose();
   }
 
   List<ExportProduct> _filter(List<ExportProduct> all) {
-    var r = all;
-    if (_selectedCategory != 'all') {
-      r = r.where((p) => p.category.toLowerCase() == _selectedCategory).toList();
-    }
-    if (_searchQuery.isNotEmpty) {
-      final q = _searchQuery.toLowerCase();
-      r = r.where((p) =>
-        p.productName.toLowerCase().contains(q) ||
-        p.farmerName.toLowerCase().contains(q) ||
-        p.location.toLowerCase().contains(q)).toList();
-    }
-    return r;
+    if (_selectedCategory == 'all') return all;
+    return all
+        .where((p) => p.category.toLowerCase() == _selectedCategory)
+        .toList();
   }
 
   bool _isOwner(ExportProduct p) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return uid.isNotEmpty && uid == p.ownerId;
+  }
+
+  Future<void> _toggleWishlist(
+      BuildContext context, AppLocalizations l, String productId) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.loginToSave)));
+      return;
+    }
+    final added = await WishlistService.toggle(uid, productId);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(added ? l.addedToWishlist : l.removedFromWishlist),
+        duration: const Duration(seconds: 1),
+      ));
+    }
   }
 
   @override
@@ -148,6 +171,14 @@ class _F2BHomePageState extends State<F2BHomePage> {
         ),
         actions: [
           IconButton(
+            tooltip: l.yourWishlist,
+            icon: const Icon(Icons.favorite_border_rounded),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const F2BWishlistPage()),
+            ),
+          ),
+          IconButton(
             tooltip: l.myOrders,
             icon: const Icon(Icons.shopping_bag_outlined),
             onPressed: () => Navigator.push(context,
@@ -157,7 +188,8 @@ class _F2BHomePageState extends State<F2BHomePage> {
             tooltip: l.sellingOrders,
             icon: const Icon(Icons.storefront_outlined),
             onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage())),
+                MaterialPageRoute(
+                    builder: (_) => const SellerPurchaseOrderListPage())),
           ),
           IconButton(
             tooltip: l.nearbyFarmersList,
@@ -177,20 +209,40 @@ class _F2BHomePageState extends State<F2BHomePage> {
       ),
       body: Column(
         children: [
-          // ── Pinned green zone: search + categories ──────────────────
+          // ── Pinned green zone ───────────────────────────────────────
           Container(
             color: KMColors.primary,
             child: Column(
               children: [
-                _SearchBar(
-                  controller: _searchCtrl,
-                  hint: l.searchProducts,
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  onClear: () {
-                    _searchCtrl.clear();
-                    setState(() => _searchQuery = '');
-                  },
+                // Tappable search bar → navigates to F2BSearchPage
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const F2BSearchPage()),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.search_rounded,
+                          color: Colors.white70, size: 20),
+                      const SizedBox(width: 10),
+                      Text(l.searchProducts,
+                          style: const TextStyle(
+                              color: Colors.white60, fontSize: 14)),
+                      const Spacer(),
+                      const Icon(Icons.tune_rounded,
+                          color: Colors.white70, size: 18),
+                    ]),
+                  ),
                 ),
+                // Category row
                 _CategoryRow(
                   cats: _cats,
                   selected: _selectedCategory,
@@ -207,7 +259,8 @@ class _F2BHomePageState extends State<F2BHomePage> {
                 if (snap.hasError) {
                   return Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.error_outline, size: 48, color: KMColors.error),
+                      const Icon(Icons.error_outline,
+                          size: 48, color: KMColors.error),
                       const SizedBox(height: 8),
                       const Text('Could not load products',
                           style: TextStyle(color: KMColors.textSecondary)),
@@ -261,19 +314,20 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               itemBuilder: (ctx, i) => _FeaturedCard(
                                 product: featured[i],
                                 langCode: langCode,
+                                isWishlisted: _wishlistIds.contains(featured[i].id),
                                 onTap: () => Navigator.push(
                                   ctx,
-                                  MaterialPageRoute(
-                                    builder: (_) => F2BProductDetailPage(
-                                        product: featured[i]),
-                                  ),
+                                  MaterialPageRoute(builder: (_) =>
+                                      F2BProductDetailPage(product: featured[i])),
                                 ),
+                                onWishlist: () => _toggleWishlist(
+                                    context, l, featured[i].id),
                               ),
                             ),
                           ),
                         ),
                       ],
-                      // All products header
+                      // Section header
                       SliverToBoxAdapter(
                         child: _SectionHeader(
                           title: _selectedCategory == 'all'
@@ -291,31 +345,29 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.storefront_outlined,
-                                    size: 60, color: KMColors.textSecondary),
+                                    size: 60,
+                                    color: KMColors.textSecondary),
                                 const SizedBox(height: 12),
-                                Text(
-                                  _searchQuery.isNotEmpty
-                                      ? 'No results for "$_searchQuery"'
-                                      : l.noProductsAvailable,
-                                  style: const TextStyle(
-                                      fontSize: 15,
-                                      color: KMColors.textSecondary),
-                                  textAlign: TextAlign.center,
-                                ),
+                                Text(l.noProductsAvailable,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        color: KMColors.textSecondary),
+                                    textAlign: TextAlign.center),
                               ],
                             ),
                           ),
                         )
                       else
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
+                          padding:
+                              const EdgeInsets.fromLTRB(12, 0, 12, 100),
                           sliver: SliverGrid(
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              childAspectRatio: 0.60,
+                              childAspectRatio: 0.57,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
@@ -325,13 +377,14 @@ class _F2BHomePageState extends State<F2BHomePage> {
                                   langCode: langCode,
                                   l: l,
                                   isOwner: _isOwner(p),
+                                  isWishlisted: _wishlistIds.contains(p.id),
                                   onTap: () => Navigator.push(
                                     ctx,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          F2BProductDetailPage(product: p),
-                                    ),
+                                    MaterialPageRoute(builder: (_) =>
+                                        F2BProductDetailPage(product: p)),
                                   ),
+                                  onWishlist: () =>
+                                      _toggleWishlist(context, l, p.id),
                                 );
                               },
                               childCount: filtered.length,
@@ -345,53 +398,6 @@ class _F2BHomePageState extends State<F2BHomePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Search bar ────────────────────────────────────────────────────────────
-
-class _SearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
-  const _SearchBar({
-    required this.controller, required this.hint,
-    required this.onChanged, required this.onClear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white60),
-          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
-          suffixIcon: controller.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.white70),
-                  onPressed: onClear)
-              : null,
-          filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.18),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide.none),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide.none),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(color: Colors.white54, width: 1)),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-        ),
       ),
     );
   }
@@ -426,8 +432,7 @@ class _CategoryRow extends StatelessWidget {
                 children: [
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    width: 42,
-                    height: 42,
+                    width: 42, height: 42,
                     decoration: BoxDecoration(
                       color: sel
                           ? Colors.white
@@ -484,52 +489,44 @@ class _BannerCarousel extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   gradient: LinearGradient(
-                    colors: [b.color1, b.color2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                      colors: [b.color1, b.color2],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight),
+                ),
+                child: Stack(children: [
+                  Positioned(
+                    right: -15, bottom: -15,
+                    child: Icon(b.icon, size: 110,
+                        color: Colors.white.withValues(alpha: 0.12)),
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -15, bottom: -15,
-                      child: Icon(b.icon, size: 110,
-                          color: Colors.white.withValues(alpha: 0.12)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 3),
-                            decoration: BoxDecoration(
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text('KrishiMithra F2B',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600)),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(b.title,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 4),
-                          Text(b.subtitle,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12)),
-                        ],
-                      ),
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Text('KrishiMithra F2B',
+                              style: TextStyle(color: Colors.white,
+                                  fontSize: 10, fontWeight: FontWeight.w600)),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(b.title,
+                            style: const TextStyle(color: Colors.white,
+                                fontSize: 20, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
+                        Text(b.subtitle,
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 12)),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               );
             },
           ),
@@ -537,9 +534,8 @@ class _BannerCarousel extends StatelessWidget {
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            banners.length,
-            (i) => AnimatedContainer(
+          children: List.generate(banners.length, (i) =>
+            AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               margin: const EdgeInsets.symmetric(horizontal: 3),
               width: i == currentIndex ? 18 : 6,
@@ -550,8 +546,7 @@ class _BannerCarousel extends StatelessWidget {
                     : KMColors.primary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(3),
               ),
-            ),
-          ),
+            )),
         ),
         const SizedBox(height: 4),
       ],
@@ -574,21 +569,19 @@ class _SectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
                   color: KMColors.textPrimary)),
           if (subtitle != null)
             Text(subtitle!,
-                style: const TextStyle(
-                    fontSize: 12, color: KMColors.textSecondary)),
+                style: const TextStyle(fontSize: 12,
+                    color: KMColors.textSecondary)),
         ],
       ),
     );
   }
 }
 
-// ─── Category color helper ─────────────────────────────────────────────────
+// ─── Category + image color helpers ───────────────────────────────────────
 
 Color _categoryAccent(String cat) {
   switch (cat.toLowerCase()) {
@@ -602,14 +595,25 @@ Color _categoryAccent(String cat) {
   }
 }
 
+Widget _imgPlaceholder(Color accent, double height) => Container(
+  height: height,
+  color: accent.withValues(alpha: 0.12),
+  child: Center(child: Icon(Icons.agriculture_rounded,
+      size: 44, color: accent.withValues(alpha: 0.55))),
+);
+
 // ─── Featured card (horizontal scroll) ────────────────────────────────────
 
 class _FeaturedCard extends StatelessWidget {
   final ExportProduct product;
   final String langCode;
+  final bool isWishlisted;
   final VoidCallback onTap;
-  const _FeaturedCard(
-      {required this.product, required this.langCode, required this.onTap});
+  final VoidCallback onWishlist;
+  const _FeaturedCard({
+    required this.product, required this.langCode,
+    required this.isWishlisted, required this.onTap, required this.onWishlist,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -629,21 +633,36 @@ class _FeaturedCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image + heart
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: SizedBox(
-                width: 155,
-                height: 105,
-                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                    ? Image.network(product.imageUrl!, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _imgPlaceholder(accent, 105))
-                    : _imgPlaceholder(accent, 105),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Stack(children: [
+                SizedBox(
+                  width: 155, height: 105,
+                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                      ? Image.network(product.imageUrl!, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imgPlaceholder(accent, 105))
+                      : _imgPlaceholder(accent, 105),
+                ),
+                Positioned(
+                  top: 6, right: 6,
+                  child: GestureDetector(
+                    onTap: onWishlist,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Icon(
+                        isWishlisted ? Icons.favorite : Icons.favorite_border,
+                        size: 15,
+                        color: isWishlisted ? Colors.red : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
             ),
-            // Info
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
@@ -654,30 +673,24 @@ class _FeaturedCard extends StatelessWidget {
                         product.productName, langCode),
                     style: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w700, height: 1.2),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 5),
                   Text('₹${product.pricePerUnit}',
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: KMColors.primary)),
+                      style: const TextStyle(fontSize: 15,
+                          fontWeight: FontWeight.w800, color: KMColors.primary)),
                   const SizedBox(height: 4),
                   Row(children: [
                     const Icon(Icons.location_on_outlined,
                         size: 11, color: KMColors.textSecondary),
                     const SizedBox(width: 2),
-                    Expanded(
-                      child: Text(
-                        ContentTranslationService.translateLocation(
-                            product.location, langCode),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: const TextStyle(
-                            fontSize: 10, color: KMColors.textSecondary),
-                      ),
-                    ),
+                    Expanded(child: Text(
+                      ContentTranslationService.translateLocation(
+                          product.location, langCode),
+                      overflow: TextOverflow.ellipsis, maxLines: 1,
+                      style: const TextStyle(
+                          fontSize: 10, color: KMColors.textSecondary),
+                    )),
                   ]),
                 ],
               ),
@@ -689,17 +702,20 @@ class _FeaturedCard extends StatelessWidget {
   }
 }
 
-// ─── Product card (main 2-col grid) ───────────────────────────────────────
+// ─── Product card (2-col grid) ─────────────────────────────────────────────
 
 class _ProductCard extends StatelessWidget {
   final ExportProduct product;
   final String langCode;
   final AppLocalizations l;
   final bool isOwner;
+  final bool isWishlisted;
   final VoidCallback onTap;
+  final VoidCallback onWishlist;
   const _ProductCard({
     required this.product, required this.langCode, required this.l,
-    required this.isOwner, required this.onTap,
+    required this.isOwner, required this.isWishlisted,
+    required this.onTap, required this.onWishlist,
   });
 
   @override
@@ -724,41 +740,53 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image + category badge ──────────────────────────────
+            // Image + badges
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Stack(
-                children: [
-                  SizedBox(
-                    height: 125,
-                    width: double.infinity,
-                    child: product.imageUrl != null &&
-                            product.imageUrl!.isNotEmpty
-                        ? Image.network(product.imageUrl!, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _imgPlaceholder(accent, 125))
-                        : _imgPlaceholder(accent, 125),
+              child: Stack(children: [
+                SizedBox(
+                  height: 125, width: double.infinity,
+                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                      ? Image.network(product.imageUrl!, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imgPlaceholder(accent, 125))
+                      : _imgPlaceholder(accent, 125),
+                ),
+                // Category badge (top-right)
+                Positioned(
+                  top: 8, right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Text(translatedCat,
+                        style: const TextStyle(color: Colors.white,
+                            fontSize: 9, fontWeight: FontWeight.w700)),
                   ),
-                  Positioned(
-                    top: 8, right: 8,
+                ),
+                // Wishlist heart (top-left)
+                Positioned(
+                  top: 8, left: 8,
+                  child: GestureDetector(
+                    onTap: onWishlist,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                          color: accent,
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Text(translatedCat,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700)),
+                          color: Colors.white.withValues(alpha: 0.90),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Icon(
+                        isWishlisted ? Icons.favorite : Icons.favorite_border,
+                        size: 14,
+                        color: isWishlisted ? Colors.red : Colors.grey,
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ]),
             ),
-            // ── Text info ───────────────────────────────────────────
+            // Text info
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
@@ -766,16 +794,12 @@ class _ProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(translatedName,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            height: 1.2),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
+                        style: const TextStyle(fontSize: 13,
+                            fontWeight: FontWeight.w700, height: 1.2),
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text('₹${product.pricePerUnit}',
-                        style: const TextStyle(
-                            fontSize: 16,
+                        style: const TextStyle(fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: KMColors.primary)),
                     Text(product.quantity,
@@ -786,26 +810,20 @@ class _ProductCard extends StatelessWidget {
                       const Icon(Icons.person_outline,
                           size: 11, color: KMColors.textSecondary),
                       const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(product.farmerName,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: const TextStyle(
-                                fontSize: 11, color: KMColors.textSecondary)),
-                      ),
+                      Expanded(child: Text(product.farmerName,
+                          overflow: TextOverflow.ellipsis, maxLines: 1,
+                          style: const TextStyle(
+                              fontSize: 11, color: KMColors.textSecondary))),
                     ]),
                     const SizedBox(height: 2),
                     Row(children: [
                       const Icon(Icons.location_on_outlined,
                           size: 11, color: KMColors.textSecondary),
                       const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(translatedLoc,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: const TextStyle(
-                                fontSize: 11, color: KMColors.textSecondary)),
-                      ),
+                      Expanded(child: Text(translatedLoc,
+                          overflow: TextOverflow.ellipsis, maxLines: 1,
+                          style: const TextStyle(
+                              fontSize: 11, color: KMColors.textSecondary))),
                     ]),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -836,12 +854,3 @@ class _ProductCard extends StatelessWidget {
     );
   }
 }
-
-// ─── Shared image placeholder ──────────────────────────────────────────────
-
-Widget _imgPlaceholder(Color accent, double height) => Container(
-  height: height,
-  color: accent.withValues(alpha: 0.12),
-  child: Center(child: Icon(Icons.agriculture_rounded,
-      size: 44, color: accent.withValues(alpha: 0.55))),
-);

@@ -572,5 +572,38 @@
   "grade": "Grade",
   "minOrder": "Min. Order",
   "contactFarmer": "Contact Farmer",
-  "specifications": "Specifications"
+  "specifications": "Specifications",
+
+  "searchHint": "Search products, farmers, locations...",
+  "filterProducts": "Filter Products",
+  "sortBy": "Sort By",
+  "newestFirst": "Newest First",
+  "lowestPrice": "Lowest Price",
+  "highestPrice": "Highest Price",
+  "priceRange": "Price Range",
+  "applyFilters": "Apply Filters",
+  "clearFilters": "Clear Filters",
+  "resultsFound": "{count} results",
+  "@resultsFound": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "noSearchResults": "No results found. Try adjusting filters.",
+
+  "wishlist": "Wishlist",
+  "addedToWishlist": "Added to wishlist",
+  "removedFromWishlist": "Removed from wishlist",
+  "yourWishlist": "Your Wishlist",
+  "wishlistEmpty": "Your wishlist is empty",
+  "browseProducts": "Browse Products",
+  "loginToSave": "Sign in to save items to wishlist",
+
+  "shareProduct": "Share Product",
+  "productInfoCopied": "Product info copied to clipboard",
+
+  "makeOffer": "Make Offer",
+  "offerPriceLabel": "Your Offered Price",
+  "enterValidOfferPrice": "Please enter a valid price",
+  "currentPrice": "Current Price",
+  "submitOffer": "Submit Offer",
+  "offerSubmitted": "Offer submitted! Track it in your orders."
 }

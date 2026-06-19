@@ -1,25 +1,59 @@
 // lib/f2b_mart/f2b_product_detail_page.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../exporter_hub/exporter_model.dart';
 import '../exporter_hub/exporter_service.dart';
 import '../exporter_hub/create_purchase_order_page.dart';
+import '../exporter_hub/purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../services/content_translation_service.dart';
+import 'f2b_wishlist_service.dart';
 
-class F2BProductDetailPage extends StatelessWidget {
+class F2BProductDetailPage extends StatefulWidget {
   final ExportProduct product;
   const F2BProductDetailPage({super.key, required this.product});
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  @override
+  State<F2BProductDetailPage> createState() => _F2BProductDetailPageState();
+}
+
+class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
+  bool _isWishlisted = false;
+  StreamSubscription<Set<String>>? _wishlistSub;
+
+  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_uid != null) {
+      _wishlistSub = WishlistService.stream(_uid!).listen((ids) {
+        if (mounted) {
+          setState(() => _isWishlisted = ids.contains(widget.product.id));
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _wishlistSub?.cancel();
+    super.dispose();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   String get _contact =>
-      (product.farmerMobile?.isNotEmpty == true)
-          ? product.farmerMobile!
-          : product.farmerId;
+      (widget.product.farmerMobile?.isNotEmpty == true)
+          ? widget.product.farmerMobile!
+          : widget.product.farmerId;
 
   Color _accentFor(String cat) {
     switch (cat.toLowerCase()) {
@@ -49,6 +83,216 @@ class F2BProductDetailPage extends StatelessWidget {
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _toggleWishlist(AppLocalizations l) async {
+    if (_uid == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.loginToSave)));
+      return;
+    }
+    await WishlistService.toggle(_uid!, widget.product.id);
+  }
+
+  void _share(AppLocalizations l) {
+    final p = widget.product;
+    final text =
+        '🌾 ${p.productName}\n'
+        '💰 ₹${p.pricePerUnit} per unit\n'
+        '📦 Available: ${p.quantity}\n'
+        '👨‍🌾 Farmer: ${p.farmerName}\n'
+        '📍 Location: ${p.location}\n'
+        '\nBrowse more on KrishiMithra F2B Mart';
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.productInfoCopied),
+          duration: const Duration(seconds: 2)),
+    );
+  }
+
+  void _showMakeOffer(BuildContext context, AppLocalizations l) {
+    if (_uid == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
+      return;
+    }
+
+    final priceCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController();
+    final user = FirebaseAuth.instance.currentUser!;
+    final formKey = GlobalKey<FormState>();
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(l.makeOffer,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                // Current price hint
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: KMColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.info_outline_rounded,
+                        size: 14, color: KMColors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${l.currentPrice}: ₹${widget.product.pricePerUnit}',
+                      style: const TextStyle(
+                          fontSize: 13, color: KMColors.primary,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 16),
+
+                // Offer price
+                TextFormField(
+                  controller: priceCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: InputDecoration(
+                    labelText: l.offerPriceLabel,
+                    prefixText: '₹ ',
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (v) {
+                    final n = double.tryParse(
+                        v?.replaceAll(RegExp(r'[^\d.]'), '') ?? '');
+                    if (n == null || n <= 0) return l.enterValidOfferPrice;
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Quantity
+                TextFormField(
+                  controller: qtyCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: InputDecoration(
+                    labelText: l.quantityLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (v) {
+                    final n = double.tryParse(
+                        v?.replaceAll(RegExp(r'[^\d.]'), '') ?? '');
+                    if (n == null || n <= 0) return l.enterQuantity;
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            if (!formKey.currentState!.validate()) return;
+                            setSheet(() => isSubmitting = true);
+                            try {
+                              final offeredPrice = double.parse(
+                                  priceCtrl.text.replaceAll(
+                                      RegExp(r'[^\d.]'), ''));
+                              final qty = double.parse(
+                                  qtyCtrl.text.replaceAll(
+                                      RegExp(r'[^\d.]'), ''));
+                              final total = offeredPrice * qty;
+
+                              await ExporterService().createPOForListing(
+                                listingId: widget.product.id,
+                                buyerId: _uid!,
+                                buyerName: user.displayName ?? '',
+                                buyerContact: user.phoneNumber ?? '',
+                                items: [{
+                                  'listingId': widget.product.id,
+                                  'qtyKg': qty,
+                                  'pricePerKg':
+                                      double.tryParse(widget.product.pricePerUnit
+                                          .replaceAll(RegExp(r'[^\d.]'), '')) ?? 0,
+                                  'offeredPricePerKg': offeredPrice,
+                                  'createdAt': Timestamp.now(),
+                                }],
+                                totalAmount: total,
+                                paymentTerms: {
+                                  'advancePercent': 0,
+                                  'isNegotiation': true,
+                                  'offeredPricePerUnit': offeredPrice,
+                                },
+                              );
+
+                              if (ctx.mounted) {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(l.offerSubmitted)),
+                                );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PurchaseOrderListPage(
+                                        buyerId: _uid!),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setSheet(() => isSubmitting = false);
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Failed: ${e.toString()}')),
+                                );
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            height: 20, width: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : Text(l.submitOffer,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatDate(DateTime dt) {
     const m = ['Jan','Feb','Mar','Apr','May','Jun',
                 'Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -62,13 +306,13 @@ class F2BProductDetailPage extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final langCode = Localizations.localeOf(context).languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = _accentFor(product.category);
+    final p = widget.product;
+    final accent = _accentFor(p.category);
     final name = ContentTranslationService.translateCropName(
-        product.productName, langCode);
+        p.productName, langCode);
     final cat = ContentTranslationService.translateExportCategory(
-        product.category, langCode);
-    final loc = ContentTranslationService.translateLocation(
-        product.location, langCode);
+        p.category, langCode);
+    final loc = ContentTranslationService.translateLocation(p.location, langCode);
 
     return Scaffold(
       backgroundColor: isDark ? KMColors.backgroundDark : const Color(0xFFF0F7F0),
@@ -77,24 +321,41 @@ class F2BProductDetailPage extends StatelessWidget {
           // ── Scrollable body ─────────────────────────────────────────
           CustomScrollView(
             slivers: [
-              // Hero image
+              // Hero image with wishlist + share in AppBar
               SliverAppBar(
                 expandedHeight: 300,
                 pinned: true,
                 stretch: true,
                 backgroundColor: accent,
                 foregroundColor: Colors.white,
+                actions: [
+                  // Wishlist heart
+                  IconButton(
+                    tooltip: l.wishlist,
+                    icon: Icon(
+                      _isWishlisted
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: _isWishlisted ? Colors.red.shade200 : Colors.white,
+                    ),
+                    onPressed: () => _toggleWishlist(l),
+                  ),
+                  // Share
+                  IconButton(
+                    tooltip: l.shareProduct,
+                    icon: const Icon(Icons.ios_share_rounded),
+                    onPressed: () => _share(l),
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      product.imageUrl != null && product.imageUrl!.isNotEmpty
-                          ? Image.network(product.imageUrl!, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _heroGradient(accent))
+                      p.imageUrl != null && p.imageUrl!.isNotEmpty
+                          ? Image.network(p.imageUrl!, fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _heroGradient(accent))
                           : _heroGradient(accent),
-                      // Bottom gradient overlay
                       const DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -105,7 +366,6 @@ class F2BProductDetailPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Name + category overlay
                       Positioned(
                         bottom: 20, left: 16, right: 16,
                         child: Column(
@@ -119,22 +379,15 @@ class F2BProductDetailPage extends StatelessWidget {
                                   color: accent,
                                   borderRadius: BorderRadius.circular(8)),
                               child: Text(cat,
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700)),
+                                  style: const TextStyle(color: Colors.white,
+                                      fontSize: 11, fontWeight: FontWeight.w700)),
                             ),
                             const SizedBox(height: 6),
                             Text(name,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800,
-                                    shadows: [
-                                      Shadow(
-                                          color: Colors.black45,
-                                          blurRadius: 4)
-                                    ])),
+                                style: const TextStyle(color: Colors.white,
+                                    fontSize: 24, fontWeight: FontWeight.w800,
+                                    shadows: [Shadow(
+                                        color: Colors.black45, blurRadius: 4)])),
                           ],
                         ),
                       ),
@@ -146,33 +399,49 @@ class F2BProductDetailPage extends StatelessWidget {
               // ── Content ────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 130),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Price + Quantity stat row
+                      // Price + Quantity stats
                       Row(children: [
-                        Expanded(
-                          child: _StatCard(
-                            icon: Icons.currency_rupee_rounded,
-                            iconColor: KMColors.primary,
-                            label: l.priceLabel,
-                            value: '₹${product.pricePerUnit}',
-                          ),
-                        ),
+                        Expanded(child: _StatCard(
+                          icon: Icons.currency_rupee_rounded,
+                          iconColor: KMColors.primary,
+                          label: l.priceLabel,
+                          value: '₹${p.pricePerUnit}',
+                        )),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatCard(
-                            icon: Icons.inventory_2_outlined,
-                            iconColor: KMColors.accent,
-                            label: l.quantityLabel,
-                            value: product.quantity,
+                        Expanded(child: _StatCard(
+                          icon: Icons.inventory_2_outlined,
+                          iconColor: KMColors.accent,
+                          label: l.quantityLabel,
+                          value: p.quantity,
+                        )),
+                      ]),
+                      const SizedBox(height: 12),
+
+                      // Make Offer button (inline, below stats)
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showMakeOffer(context, l),
+                          icon: const Icon(Icons.price_change_outlined,
+                              size: 18),
+                          label: Text(l.makeOffer,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700)),
+                          style: OutlinedButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
-                      ]),
+                      ),
                       const SizedBox(height: 16),
 
-                      // Farmer info card
+                      // Farmer info
                       _SectionCard(
                         title: l.farmerInfo,
                         child: Column(children: [
@@ -180,7 +449,7 @@ class F2BProductDetailPage extends StatelessWidget {
                             icon: Icons.person_rounded,
                             iconColor: KMColors.primary,
                             label: l.farmerLabel.replaceAll(':', ''),
-                            value: product.farmerName,
+                            value: p.farmerName,
                           ),
                           _InfoRow(
                             icon: Icons.location_on_rounded,
@@ -199,7 +468,7 @@ class F2BProductDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // Product details card
+                      // Product details
                       _SectionCard(
                         title: l.productDetails,
                         child: Column(children: [
@@ -209,24 +478,23 @@ class F2BProductDetailPage extends StatelessWidget {
                             label: l.categoryLabel,
                             value: cat,
                           ),
-                          if (product.createdAt != null)
+                          if (p.createdAt != null)
                             _InfoRow(
                               icon: Icons.calendar_today_rounded,
                               iconColor: KMColors.textSecondary,
                               label: l.listedOnLabel,
-                              value: _formatDate(product.createdAt!),
+                              value: _formatDate(p.createdAt!),
                             ),
                         ]),
                       ),
                       const SizedBox(height: 12),
 
-                      // Description card
-                      if (product.description.trim().isNotEmpty) ...[
+                      // Description
+                      if (p.description.trim().isNotEmpty) ...[
                         _SectionCard(
                           title: l.descriptionLabel,
-                          child: Text(product.description,
-                              style: const TextStyle(
-                                  fontSize: 14,
+                          child: Text(p.description,
+                              style: const TextStyle(fontSize: 14,
                                   height: 1.65,
                                   color: KMColors.textSecondary)),
                         ),
@@ -235,8 +503,8 @@ class F2BProductDetailPage extends StatelessWidget {
 
                       // Similar products
                       _SimilarSection(
-                        category: product.category,
-                        excludeId: product.id,
+                        category: p.category,
+                        excludeId: p.id,
                         langCode: langCode,
                         l: l,
                         accent: accent,
@@ -253,7 +521,8 @@ class F2BProductDetailPage extends StatelessWidget {
             bottom: 0, left: 0, right: 0,
             child: Container(
               padding: EdgeInsets.fromLTRB(
-                  16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
+                  16, 12, 16,
+                  MediaQuery.of(context).padding.bottom + 12),
               decoration: BoxDecoration(
                 color: isDark ? KMColors.surfaceDark : Colors.white,
                 boxShadow: [
@@ -264,10 +533,12 @@ class F2BProductDetailPage extends StatelessWidget {
                 ],
               ),
               child: Row(children: [
-                // Call button
+                // Call
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _contact.isNotEmpty ? () => _call(_contact) : null,
+                    onPressed: _contact.isNotEmpty
+                        ? () => _call(_contact)
+                        : null,
                     icon: const Icon(Icons.phone_rounded, size: 18),
                     label: Text(l.contactFarmer,
                         style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -279,12 +550,11 @@ class F2BProductDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // WhatsApp icon button
+                // WhatsApp
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF25D366),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      color: const Color(0xFF25D366),
+                      borderRadius: BorderRadius.circular(12)),
                   child: IconButton(
                     icon: const Icon(Icons.chat_rounded, color: Colors.white),
                     tooltip: l.whatsApp,
@@ -294,14 +564,14 @@ class F2BProductDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Buy Now button
+                // Buy Now
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            CreatePurchaseOrderPage(listingData: product),
+                        builder: (_) => CreatePurchaseOrderPage(
+                            listingData: widget.product),
                       ),
                     ),
                     icon: const Icon(Icons.shopping_cart_rounded, size: 18),
@@ -325,14 +595,11 @@ class F2BProductDetailPage extends StatelessWidget {
   Widget _heroGradient(Color color) => Container(
     decoration: BoxDecoration(
       gradient: LinearGradient(
-        colors: [color, color.withValues(alpha: 0.55)],
-        begin: Alignment.topLeft, end: Alignment.bottomRight,
-      ),
+          colors: [color, color.withValues(alpha: 0.55)],
+          begin: Alignment.topLeft, end: Alignment.bottomRight),
     ),
-    child: Center(
-      child: Icon(Icons.agriculture_rounded, size: 100,
-          color: Colors.white.withValues(alpha: 0.28)),
-    ),
+    child: Center(child: Icon(Icons.agriculture_rounded, size: 100,
+        color: Colors.white.withValues(alpha: 0.28))),
   );
 }
 
@@ -343,10 +610,8 @@ class _StatCard extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String value;
-  const _StatCard({
-    required this.icon, required this.iconColor,
-    required this.label, required this.value,
-  });
+  const _StatCard({required this.icon, required this.iconColor,
+      required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -358,30 +623,25 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: KMShadow.card,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8)),
-              child: Icon(icon, size: 16, color: iconColor),
-            ),
-            const SizedBox(width: 8),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: KMColors.textSecondary)),
-          ]),
-          const SizedBox(height: 8),
-          Text(value,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, size: 16, color: iconColor),
+          ),
+          const SizedBox(width: 8),
+          Text(label,
               style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: KMColors.textPrimary)),
-        ],
-      ),
+                  fontSize: 11, color: KMColors.textSecondary)),
+        ]),
+        const SizedBox(height: 8),
+        Text(value,
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800,
+                color: KMColors.textPrimary)),
+      ]),
     );
   }
 }
@@ -403,20 +663,15 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: KMShadow.card,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: KMColors.textPrimary)),
-          const SizedBox(height: 10),
-          const Divider(height: 1),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
+                color: KMColors.textPrimary)),
+        const SizedBox(height: 10),
+        const Divider(height: 1),
+        const SizedBox(height: 10),
+        child,
+      ]),
     );
   }
 }
@@ -428,10 +683,8 @@ class _InfoRow extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String value;
-  const _InfoRow({
-    required this.icon, required this.iconColor,
-    required this.label, required this.value,
-  });
+  const _InfoRow({required this.icon, required this.iconColor,
+      required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -446,21 +699,16 @@ class _InfoRow extends StatelessWidget {
           child: Icon(icon, size: 15, color: iconColor),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontSize: 10,
-                      color: KMColors.textSecondary,
-                      fontWeight: FontWeight.w600)),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: const TextStyle(fontSize: 10,
+                    color: KMColors.textSecondary, fontWeight: FontWeight.w600)),
+            Text(value,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          ],
+        )),
       ]),
     );
   }
@@ -474,10 +722,8 @@ class _SimilarSection extends StatefulWidget {
   final String langCode;
   final AppLocalizations l;
   final Color accent;
-  const _SimilarSection({
-    required this.category, required this.excludeId,
-    required this.langCode, required this.l, required this.accent,
-  });
+  const _SimilarSection({required this.category, required this.excludeId,
+      required this.langCode, required this.l, required this.accent});
 
   @override
   State<_SimilarSection> createState() => _SimilarSectionState();
@@ -494,8 +740,7 @@ class _SimilarSectionState extends State<_SimilarSection> {
         .first
         .then((all) => all
             .where((p) =>
-                p.category.toLowerCase() ==
-                    widget.category.toLowerCase() &&
+                p.category.toLowerCase() == widget.category.toLowerCase() &&
                 p.id != widget.excludeId)
             .take(8)
             .toList());
@@ -528,8 +773,7 @@ class _SimilarSectionState extends State<_SimilarSection> {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(widget.l.similarProducts,
-                  style: const TextStyle(
-                      fontSize: 17,
+                  style: const TextStyle(fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: KMColors.textPrimary)),
             ),
@@ -542,13 +786,9 @@ class _SimilarSectionState extends State<_SimilarSection> {
                   final p = items[i];
                   final color = _accent(p.category);
                   return GestureDetector(
-                    onTap: () => Navigator.pushReplacement(
-                      ctx,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            F2BProductDetailPage(product: p),
-                      ),
-                    ),
+                    onTap: () => Navigator.pushReplacement(ctx,
+                        MaterialPageRoute(builder: (_) =>
+                            F2BProductDetailPage(product: p))),
                     child: Container(
                       width: 130,
                       margin: const EdgeInsets.only(right: 12),
@@ -565,8 +805,7 @@ class _SimilarSectionState extends State<_SimilarSection> {
                                 top: Radius.circular(14)),
                             child: SizedBox(
                               height: 90,
-                              child: p.imageUrl != null &&
-                                      p.imageUrl!.isNotEmpty
+                              child: p.imageUrl != null && p.imageUrl!.isNotEmpty
                                   ? Image.network(p.imageUrl!,
                                       fit: BoxFit.cover, width: 130,
                                       errorBuilder: (_, __, ___) =>
@@ -575,8 +814,7 @@ class _SimilarSectionState extends State<_SimilarSection> {
                             ),
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(8, 7, 8, 7),
+                            padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -584,21 +822,17 @@ class _SimilarSectionState extends State<_SimilarSection> {
                                   ContentTranslationService.translateCropName(
                                       p.productName, widget.langCode),
                                   style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                      fontSize: 11, fontWeight: FontWeight.w700),
+                                  maxLines: 2, overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
                                 Text('₹${p.pricePerUnit}',
-                                    style: const TextStyle(
-                                        fontSize: 13,
+                                    style: const TextStyle(fontSize: 13,
                                         fontWeight: FontWeight.w800,
                                         color: KMColors.primary)),
                                 const SizedBox(height: 2),
                                 Text(p.farmerName,
-                                    style: const TextStyle(
-                                        fontSize: 10,
+                                    style: const TextStyle(fontSize: 10,
                                         color: KMColors.textSecondary),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis),
@@ -621,9 +855,7 @@ class _SimilarSectionState extends State<_SimilarSection> {
   Widget _placeholder(Color color) => Container(
     width: 130, height: 90,
     color: color.withValues(alpha: 0.12),
-    child: Center(
-      child: Icon(Icons.agriculture_rounded, size: 32,
-          color: color.withValues(alpha: 0.5)),
-    ),
+    child: Center(child: Icon(Icons.agriculture_rounded, size: 32,
+        color: color.withValues(alpha: 0.5))),
   );
 }

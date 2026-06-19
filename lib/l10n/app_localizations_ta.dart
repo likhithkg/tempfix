@@ -1476,4 +1476,84 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get specifications => 'Specifications';
+
+  @override
+  String get searchHint => 'Search products, farmers, locations...';
+
+  @override
+  String get filterProducts => 'Filter Products';
+
+  @override
+  String get sortBy => 'Sort By';
+
+  @override
+  String get newestFirst => 'Newest First';
+
+  @override
+  String get lowestPrice => 'Lowest Price';
+
+  @override
+  String get highestPrice => 'Highest Price';
+
+  @override
+  String get priceRange => 'Price Range';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String resultsFound(int count) {
+    return '$count results';
+  }
+
+  @override
+  String get noSearchResults => 'No results found. Try adjusting filters.';
+
+  @override
+  String get wishlist => 'Wishlist';
+
+  @override
+  String get addedToWishlist => 'Added to wishlist';
+
+  @override
+  String get removedFromWishlist => 'Removed from wishlist';
+
+  @override
+  String get yourWishlist => 'Your Wishlist';
+
+  @override
+  String get wishlistEmpty => 'Your wishlist is empty';
+
+  @override
+  String get browseProducts => 'Browse Products';
+
+  @override
+  String get loginToSave => 'Sign in to save items to wishlist';
+
+  @override
+  String get shareProduct => 'Share Product';
+
+  @override
+  String get productInfoCopied => 'Product info copied to clipboard';
+
+  @override
+  String get makeOffer => 'Make Offer';
+
+  @override
+  String get offerPriceLabel => 'Your Offered Price';
+
+  @override
+  String get enterValidOfferPrice => 'Please enter a valid price';
+
+  @override
+  String get currentPrice => 'Current Price';
+
+  @override
+  String get submitOffer => 'Submit Offer';
+
+  @override
+  String get offerSubmitted => 'Offer submitted! Track it in your orders.';
 }
