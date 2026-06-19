@@ -647,6 +647,28 @@
   "inspectorNotesLabel": "Inspector Notes",
   "approve": "Approve",
   "reject": "Reject",
-  "addQcReport": "Add QC Report"
+  "addQcReport": "Add QC Report",
+
+  "demandBoard": "Export Demand Board",
+  "postDemand": "Post Demand",
+  "demandPosted": "Demand posted successfully",
+  "noDemandPostsYet": "No demand posts yet. Admin will post export requirements here.",
+  "cropLabel": "Crop / Commodity",
+  "deliveryWindowLabel": "Delivery Deadline",
+  "additionalNotes": "Additional Notes",
+  "respondToDemand": "Respond to Demand",
+  "canSupplyQty": "Quantity you can supply",
+  "submitResponse": "Submit Response",
+  "responseSubmitted": "Response submitted",
+  "alreadyResponded": "Already responded",
+  "respond": "Respond",
+  "farmersResponded": "{count} farmer(s) responded",
+  "@farmersResponded": { "placeholders": { "count": { "type": "int" } } },
+  "farmerResponses": "Farmer Responses",
+  "postedByLabel": "Posted by",
+  "byDate": "By {date}",
+  "@byDate": { "placeholders": { "date": { "type": "String" } } },
+  "markFulfilled": "Mark Fulfilled",
+  "closeDemand": "Close"
 }
 

@@ -3578,6 +3578,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add QC Report'**
   String get addQcReport;
+
+  /// No description provided for @demandBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Demand Board'**
+  String get demandBoard;
+
+  /// No description provided for @postDemand.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Demand'**
+  String get postDemand;
+
+  /// No description provided for @demandPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Demand posted successfully'**
+  String get demandPosted;
+
+  /// No description provided for @noDemandPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No demand posts yet. Admin will post export requirements here.'**
+  String get noDemandPostsYet;
+
+  /// No description provided for @cropLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop / Commodity'**
+  String get cropLabel;
+
+  /// No description provided for @deliveryWindowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Deadline'**
+  String get deliveryWindowLabel;
+
+  /// No description provided for @additionalNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Notes'**
+  String get additionalNotes;
+
+  /// No description provided for @respondToDemand.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond to Demand'**
+  String get respondToDemand;
+
+  /// No description provided for @canSupplyQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity you can supply'**
+  String get canSupplyQty;
+
+  /// No description provided for @submitResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Response'**
+  String get submitResponse;
+
+  /// No description provided for @responseSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Response submitted'**
+  String get responseSubmitted;
+
+  /// No description provided for @alreadyResponded.
+  ///
+  /// In en, this message translates to:
+  /// **'Already responded'**
+  String get alreadyResponded;
+
+  /// No description provided for @respond.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond'**
+  String get respond;
+
+  /// No description provided for @farmersResponded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} farmer(s) responded'**
+  String farmersResponded(int count);
+
+  /// No description provided for @farmerResponses.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Responses'**
+  String get farmerResponses;
+
+  /// No description provided for @postedByLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted by'**
+  String get postedByLabel;
+
+  /// No description provided for @byDate.
+  ///
+  /// In en, this message translates to:
+  /// **'By {date}'**
+  String byDate(String date);
+
+  /// No description provided for @markFulfilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Fulfilled'**
+  String get markFulfilled;
+
+  /// No description provided for @closeDemand.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get closeDemand;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

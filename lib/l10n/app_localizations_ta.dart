@@ -1788,4 +1788,65 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get addQcReport => 'Add QC Report';
+
+  @override
+  String get demandBoard => 'Export Demand Board';
+
+  @override
+  String get postDemand => 'Post Demand';
+
+  @override
+  String get demandPosted => 'Demand posted successfully';
+
+  @override
+  String get noDemandPostsYet => 'No demand posts yet. Admin will post export requirements here.';
+
+  @override
+  String get cropLabel => 'Crop / Commodity';
+
+  @override
+  String get deliveryWindowLabel => 'Delivery Deadline';
+
+  @override
+  String get additionalNotes => 'Additional Notes';
+
+  @override
+  String get respondToDemand => 'Respond to Demand';
+
+  @override
+  String get canSupplyQty => 'Quantity you can supply';
+
+  @override
+  String get submitResponse => 'Submit Response';
+
+  @override
+  String get responseSubmitted => 'Response submitted';
+
+  @override
+  String get alreadyResponded => 'Already responded';
+
+  @override
+  String get respond => 'Respond';
+
+  @override
+  String farmersResponded(int count) {
+    return '$count farmer(s) responded';
+  }
+
+  @override
+  String get farmerResponses => 'Farmer Responses';
+
+  @override
+  String get postedByLabel => 'Posted by';
+
+  @override
+  String byDate(String date) {
+    return 'By $date';
+  }
+
+  @override
+  String get markFulfilled => 'Mark Fulfilled';
+
+  @override
+  String get closeDemand => 'Close';
 }
