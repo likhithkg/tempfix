@@ -15,6 +15,7 @@ import '../theme.dart';
 import '../services/content_translation_service.dart';
 import 'f2b_product_detail_page.dart';
 import 'f2b_search_page.dart';
+import 'f2b_shimmer.dart';
 import 'f2b_wishlist_page.dart';
 import 'f2b_wishlist_service.dart';
 
@@ -272,8 +273,9 @@ class _F2BHomePageState extends State<F2BHomePage> {
                   );
                 }
                 if (!snap.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: KMColors.primary));
+                  return const SingleChildScrollView(
+                    child: F2BShimmerGrid(count: 6),
+                  );
                 }
 
                 final all = snap.data!;

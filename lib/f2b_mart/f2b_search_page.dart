@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../services/content_translation_service.dart';
 import 'f2b_product_detail_page.dart';
 import 'f2b_wishlist_service.dart';
+import 'f2b_shimmer.dart';
 
 class F2BSearchPage extends StatefulWidget {
   final String? initialQuery;
@@ -29,6 +30,10 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
   String _sortBy = 'newest';
   static const double _sliderMax = 10000;
   double _sliderValue = 10000;
+  String _selectedLocation = 'all';
+
+  // Cache all products for deriving unique location list
+  List<ExportProduct> _allProducts = [];
 
   Set<String> _wishlistIds = {};
 
@@ -89,6 +94,12 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
           p.category.toLowerCase() == _selectedCategory).toList();
     }
 
+    if (_selectedLocation != 'all') {
+      r = r.where((p) =>
+          p.location.toLowerCase().contains(
+              _selectedLocation.toLowerCase())).toList();
+    }
+
     final priceLimit = _sliderValue >= _sliderMax ? 999999.0 : _sliderValue;
     if (priceLimit < 999999) {
       r = r.where((p) {
@@ -117,20 +128,23 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
   bool get _hasActiveFilter =>
       _selectedCategory != 'all' ||
       _sortBy != 'newest' ||
-      _sliderValue < _sliderMax;
+      _sliderValue < _sliderMax ||
+      _selectedLocation != 'all';
 
   void _clearFilters() => setState(() {
     _selectedCategory = 'all';
     _sortBy = 'newest';
     _sliderValue = _sliderMax;
+    _selectedLocation = 'all';
   });
 
   // ── Filter bottom sheet ───────────────────────────────────────────────────
 
-  void _showFilters(AppLocalizations l) {
+  void _showFilters(AppLocalizations l, List<String> locations) {
     String tempCat = _selectedCategory;
     String tempSort = _sortBy;
     double tempSlider = _sliderValue;
+    String tempLoc = _selectedLocation;
 
     showModalBottomSheet(
       context: context,
@@ -206,6 +220,44 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // ── Location ─────────────────────────────────────
+                if (locations.isNotEmpty) ...[
+                  Text(l.filterByLocation,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8, runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: Text(l.allLocations),
+                        selected: tempLoc == 'all',
+                        onSelected: (_) => setModal(() => tempLoc = 'all'),
+                        selectedColor: KMColors.primary,
+                        labelStyle: TextStyle(
+                            color: tempLoc == 'all'
+                                ? Colors.white
+                                : KMColors.textPrimary),
+                      ),
+                      ...locations.map((loc) {
+                        final sel = tempLoc == loc;
+                        return ChoiceChip(
+                          label: Text(loc,
+                              overflow: TextOverflow.ellipsis),
+                          selected: sel,
+                          onSelected: (_) => setModal(() => tempLoc = loc),
+                          selectedColor: KMColors.primary,
+                          labelStyle: TextStyle(
+                              color: sel
+                                  ? Colors.white
+                                  : KMColors.textPrimary),
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // ── Price range ───────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -241,6 +293,7 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
                           tempCat = 'all';
                           tempSort = 'newest';
                           tempSlider = _sliderMax;
+                          tempLoc = 'all';
                         });
                       },
                       child: Text(l.clearFilters),
@@ -254,6 +307,7 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
                           _selectedCategory = tempCat;
                           _sortBy = tempSort;
                           _sliderValue = tempSlider;
+                          _selectedLocation = tempLoc;
                         });
                         Navigator.pop(ctx);
                       },
@@ -330,7 +384,12 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
               isLabelVisible: _hasActiveFilter,
               child: const Icon(Icons.tune_rounded),
             ),
-            onPressed: () => _showFilters(l),
+            onPressed: () => _showFilters(l, _allProducts
+                .map((p) => p.location.trim())
+                .where((loc) => loc.isNotEmpty)
+                .toSet()
+                .toList()
+              ..sort()),
           ),
         ],
       ),
@@ -338,9 +397,11 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
         stream: _service.getExportProducts(),
         builder: (ctx, snap) {
           if (!snap.hasData) {
-            return const Center(
-                child: CircularProgressIndicator(color: KMColors.primary));
+            return const F2BShimmerList(count: 6);
           }
+
+          // Cache products so filter button can derive unique locations
+          _allProducts = snap.data!;
 
           final results = _apply(snap.data!);
 
@@ -353,6 +414,7 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
                   sortBy: _sortBy,
                   sliderValue: _sliderValue,
                   sliderMax: _sliderMax,
+                  location: _selectedLocation,
                   l: l,
                   onClear: _clearFilters,
                 ),
@@ -430,11 +492,13 @@ class _ActiveFiltersBar extends StatelessWidget {
   final String sortBy;
   final double sliderValue;
   final double sliderMax;
+  final String location;
   final AppLocalizations l;
   final VoidCallback onClear;
   const _ActiveFiltersBar({
     required this.category, required this.sortBy,
     required this.sliderValue, required this.sliderMax,
+    required this.location,
     required this.l, required this.onClear,
   });
 
@@ -456,6 +520,8 @@ class _ActiveFiltersBar extends StatelessWidget {
                 context),
           if (sliderValue < sliderMax)
             _chip('≤ ₹${sliderValue.toStringAsFixed(0)}', context),
+          if (location != 'all')
+            _chip(location, context),
           ActionChip(
             label: Text(l.clearFilters,
                 style: const TextStyle(

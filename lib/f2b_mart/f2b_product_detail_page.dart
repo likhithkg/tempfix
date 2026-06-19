@@ -14,7 +14,9 @@ import '../exporter_hub/purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../services/content_translation_service.dart';
+import '../exporter_hub/nearby_farmers_map_page.dart';
 import 'f2b_wishlist_service.dart';
+import 'f2b_rating_service.dart';
 
 class F2BProductDetailPage extends StatefulWidget {
   final ExportProduct product;
@@ -464,6 +466,30 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                               label: l.mobileLabel.replaceAll(':', ''),
                               value: _contact,
                             ),
+                          const SizedBox(height: 8),
+                          // Phase 9: View on Map
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const NearbyFarmersMapPage()),
+                              ),
+                              icon: const Icon(Icons.map_outlined, size: 16),
+                              label: Text(l.viewOnMap,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13)),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
                         ]),
                       ),
                       const SizedBox(height: 12),
@@ -500,6 +526,15 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                         ),
                         const SizedBox(height: 12),
                       ],
+
+                      // Phase 8: Ratings & Reviews
+                      _RatingsSection(
+                        farmerId: p.farmerId,
+                        productId: p.id,
+                        productName: p.productName,
+                        l: l,
+                      ),
+                      const SizedBox(height: 12),
 
                       // Similar products
                       _SimilarSection(
@@ -710,6 +745,350 @@ class _InfoRow extends StatelessWidget {
           ],
         )),
       ]),
+    );
+  }
+}
+
+// ─── Ratings & Reviews section (Phase 8) ──────────────────────────────────
+
+class _RatingsSection extends StatefulWidget {
+  final String farmerId;
+  final String productId;
+  final String productName;
+  final AppLocalizations l;
+  const _RatingsSection({
+    required this.farmerId, required this.productId,
+    required this.productName, required this.l,
+  });
+
+  @override
+  State<_RatingsSection> createState() => _RatingsSectionState();
+}
+
+class _RatingsSectionState extends State<_RatingsSection> {
+  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+
+  void _showLeaveReview(BuildContext ctx) {
+    final uid = _uid;
+    final l = widget.l;
+    if (uid == null) {
+      ScaffoldMessenger.of(ctx)
+          .showSnackBar(SnackBar(content: Text(l.signInToReview)));
+      return;
+    }
+
+    double selectedRating = 0;
+    final commentCtrl = TextEditingController();
+    bool submitting = false;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => StatefulBuilder(
+        builder: (_, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(l.leaveReview,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 16),
+
+              // Star selector
+              Text(l.ratingLabel,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600,
+                      color: KMColors.textSecondary)),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(5, (i) {
+                  final star = i + 1.0;
+                  return GestureDetector(
+                    onTap: () => setSheet(() => selectedRating = star),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Icon(
+                        selectedRating >= star
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        color: Colors.amber,
+                        size: 36,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+
+              // Comment field
+              TextField(
+                controller: commentCtrl,
+                minLines: 2,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: l.commentOptional,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: submitting || selectedRating == 0
+                      ? null
+                      : () async {
+                          setSheet(() => submitting = true);
+                          final user = FirebaseAuth.instance.currentUser!;
+                          await RatingService.submitReview(
+                            farmerId: widget.farmerId,
+                            buyerId: uid,
+                            buyerName:
+                                user.displayName ?? user.email ?? 'Buyer',
+                            rating: selectedRating,
+                            comment: commentCtrl.text.trim(),
+                            productId: widget.productId,
+                            productName: widget.productName,
+                          );
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(
+                                    content:
+                                        Text(widget.l.reviewSubmitted)));
+                            if (mounted) setState(() {});
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: submitting
+                      ? const SizedBox(
+                          height: 20, width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : Text(widget.l.submitReview,
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.l;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? KMColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: KMShadow.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(children: [
+            Text(l.ratingsAndReviews,
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w800,
+                    color: KMColors.textPrimary)),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () => _showLeaveReview(context),
+              icon: const Icon(Icons.rate_review_outlined, size: 16),
+              label: Text(l.leaveReview,
+                  style: const TextStyle(fontSize: 12)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+              ),
+            ),
+          ]),
+          const Divider(height: 16),
+
+          // Average stars + reviews stream
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: RatingService.streamReviews(widget.farmerId),
+            builder: (ctx, snap) {
+              final reviews = snap.data ?? [];
+
+              if (reviews.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(l.noReviewsYet,
+                      style: const TextStyle(
+                          color: KMColors.textSecondary, fontSize: 13)),
+                );
+              }
+
+              // Compute avg inline from stream data
+              final avg = reviews.fold(
+                      0.0,
+                      (sum, r) =>
+                          sum + ((r['rating'] as num? ?? 0).toDouble())) /
+                  reviews.length;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Avg row
+                  Row(children: [
+                    Text(avg.toStringAsFixed(1),
+                        style: const TextStyle(
+                            fontSize: 32, fontWeight: FontWeight.w800,
+                            color: KMColors.textPrimary)),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _StarRow(rating: avg, size: 18),
+                        Text(
+                          l.basedOnReviews(reviews.length),
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: KMColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ]),
+                  const SizedBox(height: 12),
+
+                  // Last 3 reviews
+                  ...reviews.take(3).map((r) => _ReviewTile(review: r)),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Star row widget ──────────────────────────────────────────────────────────
+
+class _StarRow extends StatelessWidget {
+  final double rating;
+  final double size;
+  const _StarRow({required this.rating, this.size = 14});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (i) {
+        final full = i + 1 <= rating;
+        final half = !full && i + 0.5 <= rating;
+        return Icon(
+          full
+              ? Icons.star_rounded
+              : half
+                  ? Icons.star_half_rounded
+                  : Icons.star_outline_rounded,
+          color: Colors.amber,
+          size: size,
+        );
+      }),
+    );
+  }
+}
+
+// ── Single review tile ───────────────────────────────────────────────────────
+
+class _ReviewTile extends StatelessWidget {
+  final Map<String, dynamic> review;
+  const _ReviewTile({required this.review});
+
+  String _timeAgo(dynamic ts) {
+    try {
+      final dt = (ts as dynamic).toDate() as DateTime;
+      final diff = DateTime.now().difference(dt);
+      if (diff.inDays > 30) return '${(diff.inDays / 30).floor()}mo ago';
+      if (diff.inDays > 0) return '${diff.inDays}d ago';
+      if (diff.inHours > 0) return '${diff.inHours}h ago';
+      return 'just now';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = review['buyerName'] as String? ?? 'Buyer';
+    final rating = (review['rating'] as num? ?? 0).toDouble();
+    final comment = review['comment'] as String? ?? '';
+    final time = _timeAgo(review['createdAt']);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: KMColors.primary.withValues(alpha: 0.15),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700,
+                    color: KMColors.primary),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700)),
+                  Row(children: [
+                    _StarRow(rating: rating, size: 12),
+                    const SizedBox(width: 6),
+                    Text(time,
+                        style: const TextStyle(
+                            fontSize: 10, color: KMColors.textSecondary)),
+                  ]),
+                ],
+              ),
+            ),
+          ]),
+          if (comment.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 36),
+              child: Text(comment,
+                  style: const TextStyle(
+                      fontSize: 13, color: KMColors.textSecondary,
+                      height: 1.4)),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

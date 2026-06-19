@@ -624,5 +624,22 @@
   "counterOfferSent": "Counter offer sent to buyer",
   "orderAccepted": "Order accepted",
   "orderRejected": "Order rejected",
-  "viewOrderDetails": "View Details"
+  "viewOrderDetails": "View Details",
+
+  "ratingsAndReviews": "Ratings & Reviews",
+  "leaveReview": "Leave a Review",
+  "reviewSubmitted": "Thank you for your review!",
+  "ratingLabel": "Your Rating",
+  "commentOptional": "Comment (optional)",
+  "noReviewsYet": "No reviews yet. Be the first!",
+  "signInToReview": "Sign in to leave a review",
+  "basedOnReviews": "{count} reviews",
+  "@basedOnReviews": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "submitReview": "Submit Review",
+
+  "filterByLocation": "Location",
+  "allLocations": "All Locations",
+  "viewOnMap": "View on Map"
 }

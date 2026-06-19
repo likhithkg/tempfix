@@ -3224,6 +3224,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Details'**
   String get viewOrderDetails;
+
+  /// No description provided for @ratingsAndReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings & Reviews'**
+  String get ratingsAndReviews;
+
+  /// No description provided for @leaveReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a Review'**
+  String get leaveReview;
+
+  /// No description provided for @reviewSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your review!'**
+  String get reviewSubmitted;
+
+  /// No description provided for @ratingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Rating'**
+  String get ratingLabel;
+
+  /// No description provided for @commentOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment (optional)'**
+  String get commentOptional;
+
+  /// No description provided for @noReviewsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet. Be the first!'**
+  String get noReviewsYet;
+
+  /// No description provided for @signInToReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to leave a review'**
+  String get signInToReview;
+
+  /// No description provided for @basedOnReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reviews'**
+  String basedOnReviews(int count);
+
+  /// No description provided for @submitReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Review'**
+  String get submitReview;
+
+  /// No description provided for @filterByLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get filterByLocation;
+
+  /// No description provided for @allLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'All Locations'**
+  String get allLocations;
+
+  /// No description provided for @viewOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View on Map'**
+  String get viewOnMap;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

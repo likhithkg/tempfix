@@ -1607,4 +1607,42 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get viewOrderDetails => 'View Details';
+
+  @override
+  String get ratingsAndReviews => 'Ratings & Reviews';
+
+  @override
+  String get leaveReview => 'Leave a Review';
+
+  @override
+  String get reviewSubmitted => 'Thank you for your review!';
+
+  @override
+  String get ratingLabel => 'Your Rating';
+
+  @override
+  String get commentOptional => 'Comment (optional)';
+
+  @override
+  String get noReviewsYet => 'No reviews yet. Be the first!';
+
+  @override
+  String get signInToReview => 'Sign in to leave a review';
+
+  @override
+  String basedOnReviews(int count) {
+    return '$count reviews';
+  }
+
+  @override
+  String get submitReview => 'Submit Review';
+
+  @override
+  String get filterByLocation => 'Location';
+
+  @override
+  String get allLocations => 'All Locations';
+
+  @override
+  String get viewOnMap => 'View on Map';
 }
