@@ -764,6 +764,9 @@
 
   "notificationCenter": "Notifications",
   "noNotificationsYet": "No notifications yet",
-  "markAllRead": "Mark all read"
+  "markAllRead": "Mark all read",
+
+  "aiInsights": "AI Insights",
+  "notEnoughDataForInsights": "Add more listings and purchase orders to generate insights"
 }
 

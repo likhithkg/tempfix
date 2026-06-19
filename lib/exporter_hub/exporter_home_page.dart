@@ -17,6 +17,7 @@ import 'export_documents_page.dart';
 import 'buyers_page.dart';
 import 'finance_dashboard.dart';
 import 'notifications_page.dart';
+import 'ai_insights_page.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
@@ -116,6 +117,12 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 ),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.insights_outlined),
+                  tooltip: l.aiInsights,
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const AiInsightsPage())),
+                ),
                 IconButton(
                   icon: const Icon(Icons.notifications_outlined),
                   tooltip: l.notificationCenter,

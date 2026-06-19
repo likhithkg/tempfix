@@ -2134,4 +2134,10 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get markAllRead => 'Mark all read';
+
+  @override
+  String get aiInsights => 'AI Insights';
+
+  @override
+  String get notEnoughDataForInsights => 'Add more listings and purchase orders to generate insights';
 }

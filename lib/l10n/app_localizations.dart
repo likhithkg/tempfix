@@ -4262,6 +4262,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark all read'**
   String get markAllRead;
+
+  /// No description provided for @aiInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Insights'**
+  String get aiInsights;
+
+  /// No description provided for @notEnoughDataForInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more listings and purchase orders to generate insights'**
+  String get notEnoughDataForInsights;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
