@@ -659,6 +659,12 @@
   "byDate": "By {date}",
   "@byDate": { "placeholders": { "date": { "type": "String" } } },
   "markFulfilled": "Mark Fulfilled",
-  "closeDemand": "Close"
+  "closeDemand": "Close",
+
+  "adminRoleBanner": "You are signed in as KM Admin. You can raise POs, approve QC, and manage demand.",
+  "farmerRoleBanner": "Farmers: List produce and view your procurement status here.",
+  "roleLabel": "Role",
+  "adminRole": "Admin",
+  "farmerRole": "Farmer"
 }
 

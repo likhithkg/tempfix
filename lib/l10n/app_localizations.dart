@@ -3692,6 +3692,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get closeDemand;
+
+  /// No description provided for @adminRoleBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You are signed in as KM Admin. You can raise POs, approve QC, and manage demand.'**
+  String get adminRoleBanner;
+
+  /// No description provided for @farmerRoleBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers: List produce and view your procurement status here.'**
+  String get farmerRoleBanner;
+
+  /// No description provided for @roleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get roleLabel;
+
+  /// No description provided for @adminRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get adminRole;
+
+  /// No description provided for @farmerRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer'**
+  String get farmerRole;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

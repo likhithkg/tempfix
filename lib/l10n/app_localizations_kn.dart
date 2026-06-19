@@ -1849,4 +1849,19 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get closeDemand => 'Close';
+
+  @override
+  String get adminRoleBanner => 'You are signed in as KM Admin. You can raise POs, approve QC, and manage demand.';
+
+  @override
+  String get farmerRoleBanner => 'Farmers: List produce and view your procurement status here.';
+
+  @override
+  String get roleLabel => 'Role';
+
+  @override
+  String get adminRole => 'Admin';
+
+  @override
+  String get farmerRole => 'Farmer';
 }

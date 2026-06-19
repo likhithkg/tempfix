@@ -10,6 +10,7 @@ import 'nearby_farmers_map_page.dart';
 import 'seller_purchase_order_list_page.dart';
 import 'purchase_order_list_page.dart';
 import 'demand_board_page.dart';
+import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
 
@@ -24,6 +25,8 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
   final _service = ExporterService();
 
   StreamSubscription<Map<String, int>>? _statsSub;
+  StreamSubscription<String>? _roleSub;
+
   Map<String, int> _stats = {
     'totalFarmers': 0,
     'activeListings': 0,
@@ -31,6 +34,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     'exportReady': 0,
   };
   bool _statsLoading = true;
+  String _userRole = 'farmer'; // default until resolved
 
   @override
   void initState() {
@@ -41,13 +45,19 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
       },
       onError: (_) { if (mounted) setState(() => _statsLoading = false); },
     );
+    _roleSub = RoleService.streamCurrentRole().listen((role) {
+      if (mounted) setState(() => _userRole = role);
+    });
   }
 
   @override
   void dispose() {
     _statsSub?.cancel();
+    _roleSub?.cancel();
     super.dispose();
   }
+
+  bool get _isAdmin => RoleService.isAdmin(_userRole);
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +113,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                   icon: const Icon(Icons.assignment_outlined),
                   tooltip: l.demandBoard,
                   onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DemandBoardPage())),
+                      MaterialPageRoute(builder: (_) => DemandBoardPage(isAdmin: _isAdmin))),
                 ),
                 IconButton(
                   icon: const Icon(Icons.map_outlined),
@@ -154,24 +164,37 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               ),
             ),
 
-            // ── Admin Procurement Note ──
+            // ── Role Banner ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                    color: _isAdmin
+                        ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
+                        : Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(children: [
-                    Icon(Icons.info_outline, size: 16,
-                        color: Theme.of(context).colorScheme.secondary),
+                    Icon(
+                      _isAdmin ? Icons.admin_panel_settings_outlined : Icons.info_outline,
+                      size: 16,
+                      color: _isAdmin
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.secondary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(l.procurementAdminNote,
-                          style: TextStyle(fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSecondaryContainer)),
+                      child: Text(
+                        _isAdmin ? l.adminRoleBanner : l.procurementAdminNote,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _isAdmin
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
+                      ),
                     ),
                   ]),
                 ),
