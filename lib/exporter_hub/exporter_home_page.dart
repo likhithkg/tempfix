@@ -12,6 +12,7 @@ import 'purchase_order_list_page.dart';
 import 'demand_board_page.dart';
 import 'export_operations_dashboard.dart';
 import 'warehouse_dashboard.dart';
+import 'shipment_dashboard.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
@@ -111,6 +112,12 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 ),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.directions_boat_outlined),
+                  tooltip: l.shipmentDashboard,
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ShipmentDashboard())),
+                ),
                 IconButton(
                   icon: const Icon(Icons.warehouse_outlined),
                   tooltip: l.warehouseDashboard,

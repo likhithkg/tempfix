@@ -3890,6 +3890,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lot Number'**
   String get lotNumber;
+
+  /// No description provided for @shipmentDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipments'**
+  String get shipmentDashboard;
+
+  /// No description provided for @noShipmentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No shipments yet'**
+  String get noShipmentsYet;
+
+  /// No description provided for @createShipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Shipment'**
+  String get createShipment;
+
+  /// No description provided for @shipmentCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipment created successfully'**
+  String get shipmentCreated;
+
+  /// No description provided for @shipmentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipment Details'**
+  String get shipmentDetails;
+
+  /// No description provided for @shipStatusPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed'**
+  String get shipStatusPacked;
+
+  /// No description provided for @shipStatusContainerLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Container Loaded'**
+  String get shipStatusContainerLoaded;
+
+  /// No description provided for @shipStatusCustomsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Customs Cleared'**
+  String get shipStatusCustomsCleared;
+
+  /// No description provided for @shipStatusShipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped'**
+  String get shipStatusShipped;
+
+  /// No description provided for @shipStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get shipStatusDelivered;
+
+  /// No description provided for @containerNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Container No.'**
+  String get containerNumber;
+
+  /// No description provided for @shippingLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping Line'**
+  String get shippingLine;
+
+  /// No description provided for @portOfLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Port of Loading'**
+  String get portOfLoading;
+
+  /// No description provided for @portOfDischarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Port of Discharge'**
+  String get portOfDischarge;
+
+  /// No description provided for @etdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ETD'**
+  String get etdLabel;
+
+  /// No description provided for @etaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ETA'**
+  String get etaLabel;
+
+  /// No description provided for @totalWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Weight'**
+  String get totalWeight;
+
+  /// No description provided for @totalValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Value'**
+  String get totalValue;
+
+  /// No description provided for @packingList.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing List'**
+  String get packingList;
+
+  /// No description provided for @noProductsInShipment.
+  ///
+  /// In en, this message translates to:
+  /// **'No products added yet'**
+  String get noProductsInShipment;
+
+  /// No description provided for @addProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get addProduct;
+
+  /// No description provided for @exportValueSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Value Summary'**
+  String get exportValueSummary;
+
+  /// No description provided for @valuePerKg.
+  ///
+  /// In en, this message translates to:
+  /// **'Value per kg'**
+  String get valuePerKg;
+
+  /// No description provided for @destinationCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination Country'**
+  String get destinationCountry;
+
+  /// No description provided for @products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get products;
+
+  /// No description provided for @advance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Status'**
+  String get advance;
+
+  /// No description provided for @tapToSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to select'**
+  String get tapToSelect;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

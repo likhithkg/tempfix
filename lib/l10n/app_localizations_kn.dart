@@ -1948,4 +1948,88 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get lotNumber => 'Lot Number';
+
+  @override
+  String get shipmentDashboard => 'Shipments';
+
+  @override
+  String get noShipmentsYet => 'No shipments yet';
+
+  @override
+  String get createShipment => 'Create Shipment';
+
+  @override
+  String get shipmentCreated => 'Shipment created successfully';
+
+  @override
+  String get shipmentDetails => 'Shipment Details';
+
+  @override
+  String get shipStatusPacked => 'Packed';
+
+  @override
+  String get shipStatusContainerLoaded => 'Container Loaded';
+
+  @override
+  String get shipStatusCustomsCleared => 'Customs Cleared';
+
+  @override
+  String get shipStatusShipped => 'Shipped';
+
+  @override
+  String get shipStatusDelivered => 'Delivered';
+
+  @override
+  String get containerNumber => 'Container No.';
+
+  @override
+  String get shippingLine => 'Shipping Line';
+
+  @override
+  String get portOfLoading => 'Port of Loading';
+
+  @override
+  String get portOfDischarge => 'Port of Discharge';
+
+  @override
+  String get etdLabel => 'ETD';
+
+  @override
+  String get etaLabel => 'ETA';
+
+  @override
+  String get totalWeight => 'Total Weight';
+
+  @override
+  String get totalValue => 'Total Value';
+
+  @override
+  String get packingList => 'Packing List';
+
+  @override
+  String get noProductsInShipment => 'No products added yet';
+
+  @override
+  String get addProduct => 'Add Product';
+
+  @override
+  String get exportValueSummary => 'Export Value Summary';
+
+  @override
+  String get valuePerKg => 'Value per kg';
+
+  @override
+  String get destinationCountry => 'Destination Country';
+
+  @override
+  String get products => 'Products';
+
+  @override
+  String get advance => 'Advance Status';
+
+  @override
+  String get tapToSelect => 'Tap to select';
+
+  @override
+  String get emailLabel => 'Email';
 }
