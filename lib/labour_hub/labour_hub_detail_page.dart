@@ -9,7 +9,7 @@ import 'hire_request_form_page.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
 
-class LabourHubDetailPage extends StatefulWidget {
+class LabourHubDetailPage extends StatelessWidget {
   final Labour labour;
 
   const LabourHubDetailPage({
@@ -17,538 +17,248 @@ class LabourHubDetailPage extends StatefulWidget {
     required this.labour,
   });
 
-  @override
-  State<LabourHubDetailPage> createState() =>
-      _LabourHubDetailPageState();
-}
-
-class _LabourHubDetailPageState
-    extends State<LabourHubDetailPage> {
-
-  Future<void> _callNumber(
-    String number,
-  ) async {
-
-    final Uri uri = Uri(
-      scheme: 'tel',
-      path: number,
-    );
-
+  Future<void> _callNumber(String number) async {
+    final Uri uri = Uri(scheme: 'tel', path: number);
     if (await canLaunchUrl(uri)) {
-
       await launchUrl(uri);
     }
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-
-    final labour = widget.labour;
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final langCode = Localizations.localeOf(context).languageCode;
     final translatedSkill = ContentTranslationService.translateLabourSkill(labour.skill, langCode);
     final translatedLocation = ContentTranslationService.translateLocation(labour.location, langCode);
     final translatedAvailability = labour.available ? l.available : l.notAvailable;
 
-    final String? currentUserId =
-        FirebaseAuth
-            .instance
-            .currentUser
-            ?.uid;
+    final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
-
-      backgroundColor:
-          Colors.grey.shade100,
+      backgroundColor: Colors.grey.shade100,
 
       appBar: AppBar(
-
         title: Text(l.labourDetails),
-
-        backgroundColor:
-            Colors.green.shade700,
-
+        backgroundColor: Colors.green.shade700,
         elevation: 2,
-
         actions: [
-
-          if (labour.createdBy ==
-              currentUserId)
-
+          if (labour.createdBy == currentUserId)
             PopupMenuButton<String>(
-
-              icon: const Icon(
-                Icons.more_vert,
-                color: Colors.white,
-              ),
-
+              icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) {
-
                 if (value == 'edit') {
-
                   Navigator.push(
-
                     context,
-
                     MaterialPageRoute(
-                      builder: (_) =>
-                          LabourHubFormPage(
-                        labour: labour,
-                      ),
+                      builder: (_) => LabourHubFormPage(labour: labour),
                     ),
                   );
-
-                } else if (
-                    value ==
-                        'delete') {
-
-                  ScaffoldMessenger.of(
-                          context)
-                      .showSnackBar(
-
-                    SnackBar(
-
-                      content: Text(
-                        l.deleteOptionAvailableInListingPage,
-                      ),
-                    ),
+                } else if (value == 'delete') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l.deleteOptionAvailableInListingPage)),
                   );
                 }
               },
-
-              itemBuilder:
-                  (context) => [
-
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text(
-                    l.editLabour,
-                  ),
-                ),
-
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text(
-                    l.deleteLabour,
-                  ),
-                ),
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'edit', child: Text(l.editLabour)),
+                PopupMenuItem(value: 'delete', child: Text(l.deleteLabour)),
               ],
             ),
         ],
       ),
 
       body: SingleChildScrollView(
-
-              padding:
-                  const EdgeInsets.all(
-                16,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // ── MAIN CARD ────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-
               child: Column(
-
                 children: [
-
-                  // MAIN CARD
-                  Container(
-
-                    padding:
-                        const EdgeInsets
-                            .all(20),
-
-                    decoration:
-                        BoxDecoration(
-
-                      color:
-                          Colors.white,
-
-                      borderRadius:
-                          BorderRadius.circular(
-                        18,
-                      ),
-
-                      boxShadow: [
-
-                        BoxShadow(
-
-                          color: Colors
-                              .black
-                              .withValues(alpha:
-                            0.06,
-                          ),
-
-                          blurRadius: 8,
-
-                          offset:
-                              const Offset(
-                            0,
-                            3,
-                          ),
-                        ),
-                      ],
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: labour.available
+                        ? Colors.green.shade100
+                        : Colors.red.shade100,
+                    backgroundImage: labour.imageUrl != null &&
+                            labour.imageUrl!.isNotEmpty
+                        ? NetworkImage(labour.imageUrl!) as ImageProvider
+                        : const AssetImage('assets/farmer_logo.png'),
+                    onBackgroundImageError: (_, __) {},
+                    child: null,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    labour.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
                     ),
-
-                    child: Column(
-
+                  ),
+                  const SizedBox(height: 8),
+                  if (translatedSkill.trim().isNotEmpty)
+                    Column(
                       children: [
-
-                        CircleAvatar(
-
-                          radius: 40,
-
-                          backgroundColor:
-                              labour.available
-
-                                  ? Colors
-                                      .green
-                                      .shade100
-
-                                  : Colors
-                                      .red
-                                      .shade100,
-
-                          backgroundImage:
-                              labour.imageUrl !=
-                                          null &&
-                                      labour.imageUrl!
-                                          .isNotEmpty
-
-                                  ? NetworkImage(
-                                      labour.imageUrl!,
-                                    )
-
-                                  : const AssetImage(
-                                          'assets/farmer_logo.png',
-                                        )
-                                      as ImageProvider,
-
-                          onBackgroundImageError:
-                              (_, __) {},
-
-                          child: null,
-                        ),
-
-                        const SizedBox(
-                          height: 14,
-                        ),
-
                         Text(
-
-                          labour.name,
-
-                          style:
-                              const TextStyle(
-                            fontSize: 22,
-                            fontWeight:
-                                FontWeight.w800,
-                          ),
+                          l.skillProfessionLabel,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w600),
                         ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        if (translatedSkill
-                            .trim()
-                            .isNotEmpty)
-
-                          Column(
-                            children: [
-                              Text(
-                                l.skillProfessionLabel,
-                                style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                translatedSkill,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                        const SizedBox(
-                          height: 10,
-                        ),
-
-                        Chip(
-
-                          label: Text(
-
-                            translatedAvailability,
-
-                            style:
-                                const TextStyle(
-                              color:
-                                  Colors.white,
-                            ),
-                          ),
-
-                          backgroundColor:
-                              labour.available
-
-                                  ? Colors.green
-
-                                  : Colors.red,
+                        Text(
+                          translatedSkill,
+                          style: TextStyle(
+                              fontSize: 16, color: Colors.grey.shade700),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(
-                    height: 20,
-                  ),
-
-                  // DETAILS CARD
-                  Container(
-
-                    padding:
-                        const EdgeInsets
-                            .all(20),
-
-                    decoration:
-                        BoxDecoration(
-
-                      color:
-                          Colors.white,
-
-                      borderRadius:
-                          BorderRadius.circular(
-                        16,
-                      ),
-
-                      boxShadow: [
-
-                        BoxShadow(
-
-                          color: Colors
-                              .black
-                              .withValues(alpha:
-                            0.06,
-                          ),
-
-                          blurRadius: 8,
-
-                          offset:
-                              const Offset(
-                            0,
-                            3,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 10),
+                  Chip(
+                    label: Text(
+                      translatedAvailability,
+                      style: const TextStyle(color: Colors.white),
                     ),
-
-                    child: Column(
-
-                      children: [
-
-                        // LOCATION
-                        Row(
-
-                          children: [
-
-                            const Icon(
-                              Icons.location_on,
-                              color:
-                                  Colors.green,
-                            ),
-
-                            const SizedBox(
-                              width: 12,
-                            ),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(l.locationLabel, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
-                                  Text(translatedLocation, style: const TextStyle(fontSize: 15)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const Divider(
-                          height: 28,
-                        ),
-
-                        // CONTACT
-                        Row(
-
-                          children: [
-
-                            const Icon(
-                              Icons.phone,
-                              color:
-                                  Colors.green,
-                            ),
-
-                            const SizedBox(
-                              width: 12,
-                            ),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(l.mobileLabel, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
-                                  Text(labour.contact, style: const TextStyle(fontSize: 15)),
-                                ],
-                              ),
-                            ),
-
-                            IconButton(
-
-                              icon: const Icon(
-                                Icons.call,
-                                color:
-                                    Colors.green,
-                              ),
-
-                              onPressed: () =>
-                                  _callNumber(
-                                labour.contact,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 24,
-                  ),
-
-                  // CALL BUTTON
-                  SizedBox(
-
-                    width: double.infinity,
-
-                    child:
-                        ElevatedButton.icon(
-
-                      icon: const Icon(
-                        Icons.call,
-                      ),
-
-                      label: Text(
-
-                        l.callLabour,
-
-                        style:
-                            const TextStyle(
-                          fontSize: 18,
-                        ),
-                      ),
-
-                      style:
-                          ElevatedButton.styleFrom(
-
-                        backgroundColor:
-                            Colors.green
-                                .shade700,
-
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          vertical: 14,
-                        ),
-
-                        shape:
-                            RoundedRectangleBorder(
-
-                          borderRadius:
-                              BorderRadius.circular(
-                            12,
-                          ),
-                        ),
-                      ),
-
-                      onPressed: () =>
-                          _callNumber(
-                        labour.contact,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 14,
-                  ),
-
-                  // HIRE BUTTON
-                  SizedBox(
-
-                    width: double.infinity,
-
-                    child:
-                        ElevatedButton.icon(
-
-                      icon: const Icon(
-                        Icons.work,
-                      ),
-
-                      label: Text(
-
-                        l.hireLabour,
-
-                        style:
-                            const TextStyle(
-                          fontSize: 18,
-                        ),
-                      ),
-
-                      style:
-                          ElevatedButton.styleFrom(
-
-                        backgroundColor:
-                            Colors.orange
-                                .shade700,
-
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          vertical: 14,
-                        ),
-
-                        shape:
-                            RoundedRectangleBorder(
-
-                          borderRadius:
-                              BorderRadius.circular(
-                            12,
-                          ),
-                        ),
-                      ),
-
-                      onPressed: () {
-
-                        Navigator.push(
-
-                          context,
-
-                          MaterialPageRoute(
-
-                            builder: (_) =>
-                                HireRequestFormPage(
-
-                              labourId:
-                                  labour.id,
-
-                              labourName:
-                                  labour.name,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    backgroundColor:
+                        labour.available ? Colors.green : Colors.red,
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // ── DETAILS CARD ─────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // LOCATION
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.green),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l.locationLabel,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w600)),
+                            Text(translatedLocation,
+                                style: const TextStyle(fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(height: 28),
+
+                  // CONTACT
+                  Row(
+                    children: [
+                      const Icon(Icons.phone, color: Colors.green),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l.mobileLabel,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w600)),
+                            Text(labour.contact,
+                                style: const TextStyle(fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.call, color: Colors.green),
+                        onPressed: () => _callNumber(labour.contact),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── CALL BUTTON ───────────────────────────────────────────────
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.call),
+                label: Text(l.callLabour,
+                    style: const TextStyle(fontSize: 18)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => _callNumber(labour.contact),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── HIRE BUTTON ───────────────────────────────────────────────
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.work),
+                label: Text(l.hireLabour,
+                    style: const TextStyle(fontSize: 18)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HireRequestFormPage(
+                        labourId: labour.id,
+                        labourName: labour.name,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
