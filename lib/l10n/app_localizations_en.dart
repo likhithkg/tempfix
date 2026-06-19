@@ -1687,4 +1687,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get description => 'Description';
+
+  @override
+  String get procurementTimeline => 'Procurement Timeline';
+
+  @override
+  String get statusDraft => 'Draft';
+
+  @override
+  String get statusListed => 'Listed';
+
+  @override
+  String get statusUnderReview => 'Under Review';
+
+  @override
+  String get statusPriceNegotiation => 'Price Negotiation';
+
+  @override
+  String get statusPoIssued => 'PO Issued';
+
+  @override
+  String get statusFarmerAccepted => 'Farmer Accepted';
+
+  @override
+  String get statusCollectionScheduled => 'Collection Scheduled';
+
+  @override
+  String get statusCollected => 'Collected';
+
+  @override
+  String get statusQcPending => 'QC Pending';
+
+  @override
+  String get statusQcApproved => 'QC Approved';
+
+  @override
+  String get statusQcRejected => 'QC Rejected';
+
+  @override
+  String get statusReadyForExport => 'Ready For Export';
+
+  @override
+  String get statusExported => 'Exported';
 }

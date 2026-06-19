@@ -3380,6 +3380,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Description'**
   String get description;
+
+  /// No description provided for @procurementTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Procurement Timeline'**
+  String get procurementTimeline;
+
+  /// No description provided for @statusDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get statusDraft;
+
+  /// No description provided for @statusListed.
+  ///
+  /// In en, this message translates to:
+  /// **'Listed'**
+  String get statusListed;
+
+  /// No description provided for @statusUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Under Review'**
+  String get statusUnderReview;
+
+  /// No description provided for @statusPriceNegotiation.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Negotiation'**
+  String get statusPriceNegotiation;
+
+  /// No description provided for @statusPoIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'PO Issued'**
+  String get statusPoIssued;
+
+  /// No description provided for @statusFarmerAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Accepted'**
+  String get statusFarmerAccepted;
+
+  /// No description provided for @statusCollectionScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection Scheduled'**
+  String get statusCollectionScheduled;
+
+  /// No description provided for @statusCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Collected'**
+  String get statusCollected;
+
+  /// No description provided for @statusQcPending.
+  ///
+  /// In en, this message translates to:
+  /// **'QC Pending'**
+  String get statusQcPending;
+
+  /// No description provided for @statusQcApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'QC Approved'**
+  String get statusQcApproved;
+
+  /// No description provided for @statusQcRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'QC Rejected'**
+  String get statusQcRejected;
+
+  /// No description provided for @statusReadyForExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready For Export'**
+  String get statusReadyForExport;
+
+  /// No description provided for @statusExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported'**
+  String get statusExported;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

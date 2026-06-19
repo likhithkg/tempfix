@@ -656,5 +656,20 @@
   "moistureLevelLabel": "Moisture %",
   "storageLocationLabel": "Storage Location",
   "packagingTypeLabel": "Packaging",
-  "description": "Description"
+  "description": "Description",
+
+  "procurementTimeline": "Procurement Timeline",
+  "statusDraft": "Draft",
+  "statusListed": "Listed",
+  "statusUnderReview": "Under Review",
+  "statusPriceNegotiation": "Price Negotiation",
+  "statusPoIssued": "PO Issued",
+  "statusFarmerAccepted": "Farmer Accepted",
+  "statusCollectionScheduled": "Collection Scheduled",
+  "statusCollected": "Collected",
+  "statusQcPending": "QC Pending",
+  "statusQcApproved": "QC Approved",
+  "statusQcRejected": "QC Rejected",
+  "statusReadyForExport": "Ready For Export",
+  "statusExported": "Exported"
 }
