@@ -783,5 +783,13 @@
   "products": "Products",
   "advance": "Advance Status",
   "tapToSelect": "Tap to select",
-  "emailLabel": "Email"
+  "emailLabel": "Email",
+
+  "exportDocuments": "Export Documents",
+  "noDocumentsYet": "No documents yet",
+  "addDocument": "Add Document",
+  "documentAdded": "Document added",
+  "documentType": "Document Type",
+  "submitForReview": "Submit for Review",
+  "markSubmitted": "Mark Submitted"
 }

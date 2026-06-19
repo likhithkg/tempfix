@@ -2032,4 +2032,25 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get emailLabel => 'Email';
+
+  @override
+  String get exportDocuments => 'Export Documents';
+
+  @override
+  String get noDocumentsYet => 'No documents yet';
+
+  @override
+  String get addDocument => 'Add Document';
+
+  @override
+  String get documentAdded => 'Document added';
+
+  @override
+  String get documentType => 'Document Type';
+
+  @override
+  String get submitForReview => 'Submit for Review';
+
+  @override
+  String get markSubmitted => 'Mark Submitted';
 }
