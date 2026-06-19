@@ -665,6 +665,17 @@
   "farmerRoleBanner": "Farmers: List produce and view your procurement status here.",
   "roleLabel": "Role",
   "adminRole": "Admin",
-  "farmerRole": "Farmer"
+  "farmerRole": "Farmer",
+
+  "exportOperationsDashboard": "Export Operations",
+  "procurementOverview": "Procurement Overview",
+  "pendingQC": "Pending QC",
+  "totalExported": "Total Exported",
+  "totalPOs": "Total POs",
+  "totalProcurementValue": "Total Value",
+  "cropWiseProcurement": "Crop-wise Procurement",
+  "poStatusBreakdown": "PO Status Breakdown",
+  "topDistricts": "Top Districts",
+  "noDataYet": "No data available yet"
 }
 

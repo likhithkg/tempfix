@@ -3722,6 +3722,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Farmer'**
   String get farmerRole;
+
+  /// No description provided for @exportOperationsDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Operations'**
+  String get exportOperationsDashboard;
+
+  /// No description provided for @procurementOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Procurement Overview'**
+  String get procurementOverview;
+
+  /// No description provided for @pendingQC.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending QC'**
+  String get pendingQC;
+
+  /// No description provided for @totalExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Exported'**
+  String get totalExported;
+
+  /// No description provided for @totalPOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Total POs'**
+  String get totalPOs;
+
+  /// No description provided for @totalProcurementValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Value'**
+  String get totalProcurementValue;
+
+  /// No description provided for @cropWiseProcurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop-wise Procurement'**
+  String get cropWiseProcurement;
+
+  /// No description provided for @poStatusBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'PO Status Breakdown'**
+  String get poStatusBreakdown;
+
+  /// No description provided for @topDistricts.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Districts'**
+  String get topDistricts;
+
+  /// No description provided for @noDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available yet'**
+  String get noDataYet;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

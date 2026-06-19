@@ -10,6 +10,7 @@ import 'nearby_farmers_map_page.dart';
 import 'seller_purchase_order_list_page.dart';
 import 'purchase_order_list_page.dart';
 import 'demand_board_page.dart';
+import 'export_operations_dashboard.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
@@ -109,6 +110,12 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 ),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.analytics_outlined),
+                  tooltip: l.exportOperationsDashboard,
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ExportOperationsDashboard())),
+                ),
                 IconButton(
                   icon: const Icon(Icons.assignment_outlined),
                   tooltip: l.demandBoard,

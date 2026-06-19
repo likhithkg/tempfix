@@ -1864,4 +1864,34 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get farmerRole => 'Farmer';
+
+  @override
+  String get exportOperationsDashboard => 'Export Operations';
+
+  @override
+  String get procurementOverview => 'Procurement Overview';
+
+  @override
+  String get pendingQC => 'Pending QC';
+
+  @override
+  String get totalExported => 'Total Exported';
+
+  @override
+  String get totalPOs => 'Total POs';
+
+  @override
+  String get totalProcurementValue => 'Total Value';
+
+  @override
+  String get cropWiseProcurement => 'Crop-wise Procurement';
+
+  @override
+  String get poStatusBreakdown => 'PO Status Breakdown';
+
+  @override
+  String get topDistricts => 'Top Districts';
+
+  @override
+  String get noDataYet => 'No data available yet';
 }
