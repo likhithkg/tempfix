@@ -547,6 +547,25 @@
   "enterValidOfferPrice": "Please enter a valid price",
   "currentPrice": "Current Price",
   "submitOffer": "Submit Offer",
-  "offerSubmitted": "Offer submitted! Track it in your orders."
+  "offerSubmitted": "Offer submitted! Track it in your orders.",
+
+  "farmerDashboard": "Farmer Dashboard",
+  "incomingOrders": "Incoming Orders",
+  "activeListings": "Active Listings",
+  "pendingOrders": "Pending Orders",
+  "totalEarned": "Total Earned",
+  "addListing": "Add Listing",
+  "editListing": "Edit Listing",
+  "deleteListing": "Delete Listing",
+  "deleteListingConfirm": "Permanently delete this listing?",
+  "noIncomingOrders": "No incoming orders yet",
+  "negotiationOffer": "Negotiation",
+  "buyerOfferedPrice": "Buyer Offered",
+  "makeCounterOffer": "Counter Offer",
+  "counterOfferPrice": "Your Counter Price",
+  "counterOfferSent": "Counter offer sent to buyer",
+  "orderAccepted": "Order accepted",
+  "orderRejected": "Order rejected",
+  "viewOrderDetails": "View Details"
 }
 

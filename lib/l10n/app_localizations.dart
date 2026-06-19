@@ -1182,7 +1182,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteListingConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this listing?'**
+  /// **'Permanently delete this listing?'**
   String get deleteListingConfirm;
 
   /// No description provided for @listingDeleted.
@@ -3122,6 +3122,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offer submitted! Track it in your orders.'**
   String get offerSubmitted;
+
+  /// No description provided for @farmerDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Dashboard'**
+  String get farmerDashboard;
+
+  /// No description provided for @incomingOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming Orders'**
+  String get incomingOrders;
+
+  /// No description provided for @activeListings.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Listings'**
+  String get activeListings;
+
+  /// No description provided for @pendingOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Orders'**
+  String get pendingOrders;
+
+  /// No description provided for @totalEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Earned'**
+  String get totalEarned;
+
+  /// No description provided for @addListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Listing'**
+  String get addListing;
+
+  /// No description provided for @editListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Listing'**
+  String get editListing;
+
+  /// No description provided for @deleteListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Listing'**
+  String get deleteListing;
+
+  /// No description provided for @noIncomingOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming orders yet'**
+  String get noIncomingOrders;
+
+  /// No description provided for @negotiationOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Negotiation'**
+  String get negotiationOffer;
+
+  /// No description provided for @buyerOfferedPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer Offered'**
+  String get buyerOfferedPrice;
+
+  /// No description provided for @makeCounterOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter Offer'**
+  String get makeCounterOffer;
+
+  /// No description provided for @counterOfferPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Counter Price'**
+  String get counterOfferPrice;
+
+  /// No description provided for @counterOfferSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter offer sent to buyer'**
+  String get counterOfferSent;
+
+  /// No description provided for @orderAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Order accepted'**
+  String get orderAccepted;
+
+  /// No description provided for @orderRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Order rejected'**
+  String get orderRejected;
+
+  /// No description provided for @viewOrderDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewOrderDetails;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

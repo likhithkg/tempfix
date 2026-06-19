@@ -7,8 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../exporter_hub/exporter_model.dart';
 import '../exporter_hub/exporter_service.dart';
 import '../exporter_hub/exporter_form_page.dart';
-import '../exporter_hub/seller_purchase_order_list_page.dart';
 import '../exporter_hub/nearby_farmers_map_page.dart';
+import 'f2b_farmer_dashboard.dart';
 import '../exporter_hub/purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
@@ -185,11 +185,11 @@ class _F2BHomePageState extends State<F2BHomePage> {
                 MaterialPageRoute(builder: (_) => const PurchaseOrderListPage())),
           ),
           IconButton(
-            tooltip: l.sellingOrders,
+            tooltip: l.farmerDashboard,
             icon: const Icon(Icons.storefront_outlined),
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(
-                    builder: (_) => const SellerPurchaseOrderListPage())),
+                    builder: (_) => const F2BFarmerDashboard())),
           ),
           IconButton(
             tooltip: l.nearbyFarmersList,

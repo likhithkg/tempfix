@@ -546,7 +546,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get noListingsYet => 'à°‡à°‚à°•à°¾ à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get deleteListingConfirm => 'à°ˆ à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¤à±Šà°²à°—à°¿à°‚à°šà°¾à°²à°¾?';
+  String get deleteListingConfirm => 'Permanently delete this listing?';
 
   @override
   String get listingDeleted => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
@@ -1556,4 +1556,55 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get offerSubmitted => 'Offer submitted! Track it in your orders.';
+
+  @override
+  String get farmerDashboard => 'Farmer Dashboard';
+
+  @override
+  String get incomingOrders => 'Incoming Orders';
+
+  @override
+  String get activeListings => 'Active Listings';
+
+  @override
+  String get pendingOrders => 'Pending Orders';
+
+  @override
+  String get totalEarned => 'Total Earned';
+
+  @override
+  String get addListing => 'Add Listing';
+
+  @override
+  String get editListing => 'Edit Listing';
+
+  @override
+  String get deleteListing => 'Delete Listing';
+
+  @override
+  String get noIncomingOrders => 'No incoming orders yet';
+
+  @override
+  String get negotiationOffer => 'Negotiation';
+
+  @override
+  String get buyerOfferedPrice => 'Buyer Offered';
+
+  @override
+  String get makeCounterOffer => 'Counter Offer';
+
+  @override
+  String get counterOfferPrice => 'Your Counter Price';
+
+  @override
+  String get counterOfferSent => 'Counter offer sent to buyer';
+
+  @override
+  String get orderAccepted => 'Order accepted';
+
+  @override
+  String get orderRejected => 'Order rejected';
+
+  @override
+  String get viewOrderDetails => 'View Details';
 }
