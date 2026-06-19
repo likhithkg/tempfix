@@ -4100,6 +4100,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark Submitted'**
   String get markSubmitted;
+
+  /// No description provided for @internationalBuyers.
+  ///
+  /// In en, this message translates to:
+  /// **'International Buyers'**
+  String get internationalBuyers;
+
+  /// No description provided for @searchBuyers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search buyers...'**
+  String get searchBuyers;
+
+  /// No description provided for @noBuyersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No buyers added yet'**
+  String get noBuyersYet;
+
+  /// No description provided for @addBuyer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Buyer'**
+  String get addBuyer;
+
+  /// No description provided for @buyerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Buyer added'**
+  String get buyerAdded;
+
+  /// No description provided for @companyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Name'**
+  String get companyName;
+
+  /// No description provided for @countryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get countryLabel;
+
+  /// No description provided for @contactPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Person'**
+  String get contactPerson;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @annualVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual Volume'**
+  String get annualVolume;
+
+  /// No description provided for @productsInterestedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Products Interested (comma-separated)'**
+  String get productsInterestedHint;
+
+  /// No description provided for @preferredGradesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Grades (e.g. A, B)'**
+  String get preferredGradesHint;
+
+  /// No description provided for @previousShipments.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous Shipments'**
+  String get previousShipments;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

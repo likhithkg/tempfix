@@ -791,5 +791,19 @@
   "documentAdded": "Document added",
   "documentType": "Document Type",
   "submitForReview": "Submit for Review",
-  "markSubmitted": "Mark Submitted"
+  "markSubmitted": "Mark Submitted",
+
+  "internationalBuyers": "International Buyers",
+  "searchBuyers": "Search buyers...",
+  "noBuyersYet": "No buyers added yet",
+  "addBuyer": "Add Buyer",
+  "buyerAdded": "Buyer added",
+  "companyName": "Company Name",
+  "countryLabel": "Country",
+  "contactPerson": "Contact Person",
+  "phone": "Phone",
+  "annualVolume": "Annual Volume",
+  "productsInterestedHint": "Products Interested (comma-separated)",
+  "preferredGradesHint": "Preferred Grades (e.g. A, B)",
+  "previousShipments": "Previous Shipments"
 }

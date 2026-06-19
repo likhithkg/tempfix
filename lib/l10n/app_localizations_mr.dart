@@ -2053,4 +2053,43 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get markSubmitted => 'Mark Submitted';
+
+  @override
+  String get internationalBuyers => 'International Buyers';
+
+  @override
+  String get searchBuyers => 'Search buyers...';
+
+  @override
+  String get noBuyersYet => 'No buyers added yet';
+
+  @override
+  String get addBuyer => 'Add Buyer';
+
+  @override
+  String get buyerAdded => 'Buyer added';
+
+  @override
+  String get companyName => 'Company Name';
+
+  @override
+  String get countryLabel => 'Country';
+
+  @override
+  String get contactPerson => 'Contact Person';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get annualVolume => 'Annual Volume';
+
+  @override
+  String get productsInterestedHint => 'Products Interested (comma-separated)';
+
+  @override
+  String get preferredGradesHint => 'Preferred Grades (e.g. A, B)';
+
+  @override
+  String get previousShipments => 'Previous Shipments';
 }
