@@ -13,10 +13,26 @@ import 'seller_purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 
 class ExporterHomePage extends StatefulWidget {
-  ExporterHomePage({Key? key}) : super(key: key);
+  const ExporterHomePage({super.key});
 
   @override
   State<ExporterHomePage> createState() => _ExporterHomePageState();
+}
+
+String _localizedStatus(AppLocalizations l, String status) {
+  switch (status.toLowerCase()) {
+    case 'pending':   return l.statusPending;
+    case 'approved':  return l.statusApproved;
+    case 'rejected':  return l.statusRejected;
+    case 'accepted':  return l.statusAccepted;
+    case 'confirmed': return l.statusConfirmed;
+    case 'completed': return l.statusCompleted;
+    case 'cancelled': return l.statusCancelled;
+    case 'issued':    return l.statusIssued;
+    case 'open':      return l.statusOpen;
+    case 'closed':    return l.statusClosed;
+    default:          return status;
+  }
 }
 
 class _ExporterHomePageState extends State<ExporterHomePage> {
@@ -55,9 +71,9 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
       String loc = '';
       String pcat = '';
 
-      try { pname = (p.productName ?? '').toString().toLowerCase(); } catch (_) {}
-      try { farmer = (p.farmerName ?? '').toString().toLowerCase(); } catch (_) {}
-      try { loc = (p.location ?? '').toString().toLowerCase(); } catch (_) {}
+      try { pname = p.productName.toString().toLowerCase(); } catch (_) {}
+      try { farmer = p.farmerName.toString().toLowerCase(); } catch (_) {}
+      try { loc = p.location.toString().toLowerCase(); } catch (_) {}
       try {
         dynamic maybe = (p as dynamic).category ?? (p as dynamic).productCategory ?? '';
         pcat = (maybe ?? '').toString().toLowerCase();
@@ -292,7 +308,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                             ListTile(
                                               leading: CircleAvatar(backgroundColor: statusColor.withValues(alpha: 0.12), child: Icon(Icons.shopping_bag, color: statusColor)),
                                               title: Text(po['productName'] ?? po['product_name'] ?? 'Order ${id.toString().substring(0, id.toString().length >= 6 ? 6 : id.toString().length)}'),
-                                              subtitle: Text('Total: ₹$total • Status: $status\n$timeLabel'),
+                                              subtitle: Text('${loc.totalLabel} ₹$total • ${loc.statusLabel} ${_localizedStatus(loc, status)}\n$timeLabel'),
                                               isThreeLine: true,
                                               trailing: TextButton(
                                                 onPressed: () {
@@ -336,8 +352,8 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
         final product = products[index];
         final isOwner = user != null && product.ownerId == user.uid;
         final sellerIdDisplay = (product.farmerMobile != null && product.farmerMobile!.isNotEmpty)
-            ? 'Mobile: ${product.farmerMobile}'
-            : (product.farmerId.isNotEmpty ? 'ID: ${product.farmerId}' : 'Seller: ${product.farmerName}');
+            ? '${l.mobileLabel} ${product.farmerMobile}'
+            : (product.farmerId.isNotEmpty ? 'ID: ${product.farmerId}' : '${l.sellerLabel} ${product.farmerName}');
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6.0),
@@ -356,7 +372,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 child: null,
               ),
               title: Text(product.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('${product.quantity} • ${product.location}\n$sellerIdDisplay'),
+              subtitle: Text('${l.quantityLabel}: ${product.quantity} • ${l.locationLabel}: ${product.location}\n$sellerIdDisplay'),
               trailing: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 140),
                 child: FittedBox(
@@ -389,7 +405,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                               ));
                               if (confirm == true) {
                                 await _service.deleteExportProduct(product.id);
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.productDeletedSuccessfully)));
+                                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.productDeletedSuccessfully)));
                               }
                             }),
                           ],

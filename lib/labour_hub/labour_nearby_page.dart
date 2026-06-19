@@ -327,9 +327,9 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerPr
                                               imageHeight: 130,
                                               title: labour.name,
                                               subtitle: labour.skill.trim().isNotEmpty
-                                                  ? labour.skill
+                                                  ? '${l.skillProfessionLabel}: ${labour.skill}'
                                                   : null,
-                                              caption: labour.location,
+                                              caption: '${l.locationLabel}: ${labour.location}',
                                               statusBadge: KMStatusChip(
                                                 label: labour.available ? l.available : l.busy,
                                                 color: labour.available

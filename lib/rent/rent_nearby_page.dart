@@ -270,6 +270,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final filtered = _applyFiltersAndSort();
 
     return Scaffold(
@@ -383,9 +384,9 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                                   title: Text(m.name,
                                       style: const TextStyle(fontWeight: FontWeight.w700)),
                                   subtitle: Text(
-                                    '${m.type} • ${_formatDistance(dist)}'
-                                    '\n📍 ${m.location ?? "Unknown"}'
-                                    '\n👤 ${m.ownerName}',
+                                    '${l.machineTypeLabel}: ${m.type} • ${_formatDistance(dist)}'
+                                    '\n📍 ${l.locationLabel}: ${m.location ?? l.locationNotAvailable}'
+                                    '\n👤 ${l.ownerLabel} ${m.ownerName}',
                                     style: theme.textTheme.bodySmall,
                                   ),
                                   trailing: IconButton(
@@ -419,8 +420,10 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
               ),
               title:
                   Text(m.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle:
-                  Text('📍 ${m.location ?? "Unknown"}\nOwner: ${m.ownerName}'),
+              subtitle: Builder(builder: (ctx) {
+                final lc = AppLocalizations.of(ctx)!;
+                return Text('📍 ${lc.locationLabel}: ${m.location ?? lc.locationNotAvailable}\n${lc.ownerLabel} ${m.ownerName}');
+              }),
             ),
             Row(children: [
               ElevatedButton.icon(

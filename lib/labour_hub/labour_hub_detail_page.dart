@@ -359,19 +359,20 @@ class _LabourHubDetailPageState
                             .trim()
                             .isNotEmpty)
 
-                          Text(
-
-                            translatedSkill,
-
-                            style:
-                                TextStyle(
-
-                              fontSize: 16,
-
-                              color: Colors
-                                  .grey
-                                  .shade700,
-                            ),
+                          Column(
+                            children: [
+                              Text(
+                                l.skillProfessionLabel,
+                                style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                translatedSkill,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
                           ),
 
                         const SizedBox(
@@ -465,16 +466,12 @@ class _LabourHubDetailPageState
                             ),
 
                             Expanded(
-
-                              child: Text(
-
-                                translatedLocation,
-
-                                style:
-                                    const TextStyle(
-                                  fontSize:
-                                      16,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(l.locationLabel, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+                                  Text(translatedLocation, style: const TextStyle(fontSize: 15)),
+                                ],
                               ),
                             ),
                           ],
@@ -500,16 +497,12 @@ class _LabourHubDetailPageState
                             ),
 
                             Expanded(
-
-                              child: Text(
-
-                                labour.contact,
-
-                                style:
-                                    const TextStyle(
-                                  fontSize:
-                                      16,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(l.mobileLabel, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+                                  Text(labour.contact, style: const TextStyle(fontSize: 15)),
+                                ],
                               ),
                             ),
 

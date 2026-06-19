@@ -242,8 +242,8 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
         fallbackIcon: Icons.local_florist,
         imageHeight: 150,
         title: safePlantName,
-        subtitle: '₹${v.price.toStringAsFixed(2)} • ${l.qtyLabel} ${v.quantity}',
-        caption: v.location.isNotEmpty ? v.location : null,
+        subtitle: '${l.priceLabel}: ₹${v.price.toStringAsFixed(2)} • ${l.qtyLabel} ${v.quantity}',
+        caption: v.location.isNotEmpty ? '${l.locationLabel}: ${v.location}' : null,
         statusBadge: KMStatusChip(label: category, color: categoryColor),
         menuButton: isOwner
             ? IconButton(

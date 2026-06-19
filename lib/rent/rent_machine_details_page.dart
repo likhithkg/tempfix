@@ -28,8 +28,23 @@ class RentMachineDetailsPage extends StatelessWidget {
     }
   }
 
+  Widget _row(String label, String value) {
+    final displayLabel = label.endsWith(':') ? label : '$label:';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 140, child: Text(displayLabel, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey))),
+          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: Stack(
         children: [
@@ -142,76 +157,16 @@ class RentMachineDetailsPage extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 8),
-
-                    Row(
-                      children: [
-                        Chip(
-                          label: Text(machine.type),
-                        ),
-
-                        const SizedBox(width: 8),
-
-                        Chip(
-                          backgroundColor:
-                              Colors.green.shade100,
-                          label: Text(
-                            "₹${machine.pricePerDay}/day",
-                            style: const TextStyle(
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
                     const SizedBox(height: 16),
 
-                    /// LOCATION
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          color: Colors.red,
-                        ),
+                    const Divider(),
+                    const SizedBox(height: 4),
 
-                        const SizedBox(width: 6),
-
-                        Expanded(
-                          child: Text(
-                            machine.location ??
-                                'Location not available',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// OWNER
-                    Row(
-                      children: [
-                        const Icon(Icons.person),
-
-                        const SizedBox(width: 6),
-
-                        Text(machine.ownerName),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// PHONE
-                    Row(
-                      children: [
-                        const Icon(Icons.phone),
-
-                        const SizedBox(width: 6),
-
-                        Text(machine.phone),
-                      ],
-                    ),
+                    _row(l.machineTypeLabel, machine.type),
+                    _row(l.pricePerDayLabel, '₹${machine.pricePerDay}'),
+                    _row(l.locationLabel, machine.location ?? l.locationNotAvailable),
+                    _row(l.ownerLabel, machine.ownerName),
+                    _row(l.mobileLabel, machine.phone),
 
                     const SizedBox(height: 24),
 
@@ -250,9 +205,7 @@ class RentMachineDetailsPage extends StatelessWidget {
                               Icons.message,
                             ),
 
-                            label: const Text(
-                              "WhatsApp",
-                            ),
+                            label: Text(l.whatsApp),
 
                             style:
                                 ElevatedButton.styleFrom(
