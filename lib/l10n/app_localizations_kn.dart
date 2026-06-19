@@ -788,7 +788,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get weekly => 'à²¸à²¾à²ªà³à²¤à²¾à²¹à²¿à²•';
 
   @override
-  String get monthly => 'à²®à²¾à²¸à²¿à²•';
+  String get monthly => 'Monthly';
 
   @override
   String get saveLabour => 'à²•à²¾à²°à³à²®à²¿à²• à²‰à²³à²¿à²¸à²¿';
@@ -2092,4 +2092,46 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get previousShipments => 'Previous Shipments';
+
+  @override
+  String get financeDashboard => 'Finance';
+
+  @override
+  String get quarterly => 'Quarterly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get pendingPayments => 'Pending Payments';
+
+  @override
+  String get paidPayments => 'Paid Payments';
+
+  @override
+  String get shipmentRevenue => 'Shipment Revenue';
+
+  @override
+  String get grossMargin => 'Gross Margin';
+
+  @override
+  String get grossMarginPct => 'Margin %';
+
+  @override
+  String get paymentBreakdown => 'Payment Breakdown';
+
+  @override
+  String get recentPOs => 'Recent Purchase Orders';
+
+  @override
+  String get notificationCenter => 'Notifications';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get markAllRead => 'Mark all read';
 }

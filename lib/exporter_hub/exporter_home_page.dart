@@ -15,6 +15,8 @@ import 'warehouse_dashboard.dart';
 import 'shipment_dashboard.dart';
 import 'export_documents_page.dart';
 import 'buyers_page.dart';
+import 'finance_dashboard.dart';
+import 'notifications_page.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
@@ -114,6 +116,18 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 ),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  tooltip: l.notificationCenter,
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const NotificationsPage())),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.account_balance_outlined),
+                  tooltip: l.financeDashboard,
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const FinanceDashboard())),
+                ),
                 IconButton(
                   icon: const Icon(Icons.people_alt_outlined),
                   tooltip: l.internationalBuyers,

@@ -788,7 +788,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get weekly => 'à´ªàµà´°à´¤à´¿à´µà´¾à´°';
 
   @override
-  String get monthly => 'à´ªàµà´°à´¤à´¿à´®à´¾à´¸';
+  String get monthly => 'Monthly';
 
   @override
   String get saveLabour => 'à´¤àµŠà´´à´¿à´²à´¾à´³à´¿à´¯àµ† à´¸àµ‡à´µàµ à´šàµ†à´¯àµà´¯àµà´•';
@@ -2092,4 +2092,46 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get previousShipments => 'Previous Shipments';
+
+  @override
+  String get financeDashboard => 'Finance';
+
+  @override
+  String get quarterly => 'Quarterly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get pendingPayments => 'Pending Payments';
+
+  @override
+  String get paidPayments => 'Paid Payments';
+
+  @override
+  String get shipmentRevenue => 'Shipment Revenue';
+
+  @override
+  String get grossMargin => 'Gross Margin';
+
+  @override
+  String get grossMarginPct => 'Margin %';
+
+  @override
+  String get paymentBreakdown => 'Payment Breakdown';
+
+  @override
+  String get recentPOs => 'Recent Purchase Orders';
+
+  @override
+  String get notificationCenter => 'Notifications';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get markAllRead => 'Mark all read';
 }

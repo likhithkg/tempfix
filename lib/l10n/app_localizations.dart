@@ -4178,6 +4178,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Previous Shipments'**
   String get previousShipments;
+
+  /// No description provided for @financeDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get financeDashboard;
+
+  /// No description provided for @quarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get quarterly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
+  /// No description provided for @overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// No description provided for @pendingPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Payments'**
+  String get pendingPayments;
+
+  /// No description provided for @paidPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid Payments'**
+  String get paidPayments;
+
+  /// No description provided for @shipmentRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipment Revenue'**
+  String get shipmentRevenue;
+
+  /// No description provided for @grossMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross Margin'**
+  String get grossMargin;
+
+  /// No description provided for @grossMarginPct.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin %'**
+  String get grossMarginPct;
+
+  /// No description provided for @paymentBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Breakdown'**
+  String get paymentBreakdown;
+
+  /// No description provided for @recentPOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Purchase Orders'**
+  String get recentPOs;
+
+  /// No description provided for @notificationCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationCenter;
+
+  /// No description provided for @noNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotificationsYet;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

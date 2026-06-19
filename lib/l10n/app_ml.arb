@@ -747,6 +747,23 @@
   "annualVolume": "Annual Volume",
   "productsInterestedHint": "Products Interested (comma-separated)",
   "preferredGradesHint": "Preferred Grades (e.g. A, B)",
-  "previousShipments": "Previous Shipments"
+  "previousShipments": "Previous Shipments",
+
+  "financeDashboard": "Finance",
+  "monthly": "Monthly",
+  "quarterly": "Quarterly",
+  "yearly": "Yearly",
+  "overview": "Overview",
+  "pendingPayments": "Pending Payments",
+  "paidPayments": "Paid Payments",
+  "shipmentRevenue": "Shipment Revenue",
+  "grossMargin": "Gross Margin",
+  "grossMarginPct": "Margin %",
+  "paymentBreakdown": "Payment Breakdown",
+  "recentPOs": "Recent Purchase Orders",
+
+  "notificationCenter": "Notifications",
+  "noNotificationsYet": "No notifications yet",
+  "markAllRead": "Mark all read"
 }
 
