@@ -40,6 +40,7 @@ import 'splash/splash_screen.dart';
 import 'export_hub/export_hub_page.dart';
 import 'chatbot/chatbot_page.dart';
 import 'exporter_hub/exporter_home_page.dart';
+import 'f2b_mart/f2b_home_page.dart';
 
 
 
@@ -1512,7 +1513,7 @@ switch (feature['title']) {
   } else if (key == "Rent Machine") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage()));
   } else if (key == "F2B mart") {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ExporterHomePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const F2BHomePage()));
   } else if (key == "Plant Vendors") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
   } else if (key == "Labour Hub") {
@@ -1564,7 +1565,7 @@ switch (feature['title']) {
   } else if (key == "Rent Machine") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage()));
   } else if (key == "F2B mart") {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ExporterHomePage()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const F2BHomePage()));
   } else if (key == "Plant Vendors") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
   } else if (key == "Labour Hub") {

@@ -2870,6 +2870,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location permission permanently denied'**
   String get locationPermissionPermanentlyDenied;
+
+  /// No description provided for @f2bTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Farm Fresh · Direct Trade'**
+  String get f2bTagline;
+
+  /// No description provided for @listProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'List Produce'**
+  String get listProduce;
+
+  /// No description provided for @searchProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products, farmers...'**
+  String get searchProducts;
+
+  /// No description provided for @featuredProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured Produce'**
+  String get featuredProduce;
+
+  /// No description provided for @allProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'All Products'**
+  String get allProducts;
+
+  /// No description provided for @myOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'My Orders'**
+  String get myOrders;
+
+  /// No description provided for @recentlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Added'**
+  String get recentlyAdded;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @organic.
+  ///
+  /// In en, this message translates to:
+  /// **'Organic'**
+  String get organic;
+
+  /// No description provided for @farmerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Info'**
+  String get farmerInfo;
+
+  /// No description provided for @similarProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar Products'**
+  String get similarProducts;
+
+  /// No description provided for @harvestDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvest Date'**
+  String get harvestDate;
+
+  /// No description provided for @grade.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade'**
+  String get grade;
+
+  /// No description provided for @minOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Min. Order'**
+  String get minOrder;
+
+  /// No description provided for @contactFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Farmer'**
+  String get contactFarmer;
+
+  /// No description provided for @specifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Specifications'**
+  String get specifications;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

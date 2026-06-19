@@ -555,5 +555,22 @@
   "couldNotOpenDialer": "Could not open dialer",
   "openFullMap": "Open full map",
   "locationServicesDisabled": "Location services disabled",
-  "locationPermissionPermanentlyDenied": "Location permission permanently denied"
+  "locationPermissionPermanentlyDenied": "Location permission permanently denied",
+
+  "f2bTagline": "Farm Fresh · Direct Trade",
+  "listProduce": "List Produce",
+  "searchProducts": "Search products, farmers...",
+  "featuredProduce": "Featured Produce",
+  "allProducts": "All Products",
+  "myOrders": "My Orders",
+  "recentlyAdded": "Recently Added",
+  "viewAll": "View All",
+  "organic": "Organic",
+  "farmerInfo": "Farmer Info",
+  "similarProducts": "Similar Products",
+  "harvestDate": "Harvest Date",
+  "grade": "Grade",
+  "minOrder": "Min. Order",
+  "contactFarmer": "Contact Farmer",
+  "specifications": "Specifications"
 }

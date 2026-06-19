@@ -9,1168 +9,1168 @@ class AppLocalizationsTe extends AppLocalizations {
   AppLocalizationsTe([String locale = 'te']) : super(locale);
 
   @override
-  String get appName => 'కృషిమిత్ర';
+  String get appName => 'à°•à±ƒà°·à°¿à°®à°¿à°¤à±à°°';
 
   @override
-  String get login => 'లాగిన్';
+  String get login => 'à°²à°¾à°—à°¿à°¨à±';
 
   @override
-  String get signup => 'సైన్ అప్';
+  String get signup => 'à°¸à±ˆà°¨à± à°…à°ªà±';
 
   @override
-  String get email => 'ఇమెయిల్';
+  String get email => 'à°‡à°®à±†à°¯à°¿à°²à±';
 
   @override
-  String get password => 'పాస్‌వర్డ్';
+  String get password => 'à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à±';
 
   @override
-  String get loginEmail => 'ఇమెయిల్‌తో లాగిన్';
+  String get loginEmail => 'à°‡à°®à±†à°¯à°¿à°²à±â€Œà°¤à±‹ à°²à°¾à°—à°¿à°¨à±';
 
   @override
-  String get noAccount => 'ఖాతా లేదా? సైన్ అప్ చేయండి';
+  String get noAccount => 'à°–à°¾à°¤à°¾ à°²à±‡à°¦à°¾? à°¸à±ˆà°¨à± à°…à°ªà± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get forgotPassword => 'పాస్‌వర్డ్ మర్చిపోయారా?';
+  String get forgotPassword => 'à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à± à°®à°°à±à°šà°¿à°ªà±‹à°¯à°¾à°°à°¾?';
 
   @override
-  String get phoneLogin => 'ఫోన్‌తో లాగిన్ / సైన్ అప్';
+  String get phoneLogin => 'à°«à±‹à°¨à±â€Œà°¤à±‹ à°²à°¾à°—à°¿à°¨à± / à°¸à±ˆà°¨à± à°…à°ªà±';
 
   @override
-  String get enterOtp => 'OTP నమోదు చేయండి';
+  String get enterOtp => 'OTP à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get verifyOtp => 'OTP ధృవీకరించండి';
+  String get verifyOtp => 'OTP à°§à±ƒà°µà±€à°•à°°à°¿à°‚à°šà°‚à°¡à°¿';
 
   @override
-  String get sendOtp => 'OTP పంపండి';
+  String get sendOtp => 'OTP à°ªà°‚à°ªà°‚à°¡à°¿';
 
   @override
-  String get createAccount => 'మీ ఖాతా సృష్టించండి';
+  String get createAccount => 'à°®à±€ à°–à°¾à°¤à°¾ à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°‚à°¡à°¿';
 
   @override
-  String get resetPassword => 'మీ పాస్‌వర్డ్ రీసెట్ చేయండి';
+  String get resetPassword => 'à°®à±€ à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à± à°°à±€à°¸à±†à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get sendResetLink => 'రీసెట్ లింక్ పంపండి';
+  String get sendResetLink => 'à°°à±€à°¸à±†à°Ÿà± à°²à°¿à°‚à°•à± à°ªà°‚à°ªà°‚à°¡à°¿';
 
   @override
-  String get cancel => 'రద్దు చేయి';
+  String get cancel => 'à°°à°¦à±à°¦à± à°šà±‡à°¯à°¿';
 
   @override
-  String get delete => 'తొలగించు';
+  String get delete => 'à°¤à±Šà°²à°—à°¿à°‚à°šà±';
 
   @override
-  String get edit => 'సవరించు';
+  String get edit => 'à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get close => 'మూసివేయి';
+  String get close => 'à°®à±‚à°¸à°¿à°µà±‡à°¯à°¿';
 
   @override
-  String get save => 'సేవ్ చేయి';
+  String get save => 'à°¸à±‡à°µà± à°šà±‡à°¯à°¿';
 
   @override
-  String get add => 'జోడించు';
+  String get add => 'à°œà±‹à°¡à°¿à°‚à°šà±';
 
   @override
-  String get refresh => 'రిఫ్రెష్';
+  String get refresh => 'à°°à°¿à°«à±à°°à±†à°·à±';
 
   @override
-  String get nearby => 'సమీపంలో';
+  String get nearby => 'à°¸à°®à±€à°ªà°‚à°²à±‹';
 
   @override
-  String get all => 'అన్నీ';
+  String get all => 'à°…à°¨à±à°¨à±€';
 
   @override
   String get english => 'English';
 
   @override
-  String get hindi => 'हिन्दी';
+  String get hindi => 'à¤¹à¤¿à¤¨à¥à¤¦à¥€';
 
   @override
-  String get kannada => 'ಕನ್ನಡ';
+  String get kannada => 'à²•à²¨à³à²¨à²¡';
 
   @override
-  String get selectLocation => 'స్థానాన్ని ఎంచుకోండి';
+  String get selectLocation => 'à°¸à±à°¥à°¾à°¨à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get searchLocation => 'స్థానం వెతకండి';
+  String get searchLocation => 'à°¸à±à°¥à°¾à°¨à°‚ à°µà±†à°¤à°•à°‚à°¡à°¿';
 
   @override
-  String get recentLocations => 'ఇటీవలి స్థానాలు';
+  String get recentLocations => 'à°‡à°Ÿà±€à°µà°²à°¿ à°¸à±à°¥à°¾à°¨à°¾à°²à±';
 
   @override
-  String get weather => 'వాతావరణం';
+  String get weather => 'à°µà°¾à°¤à°¾à°µà°°à°£à°‚';
 
   @override
-  String get f2bMart => 'F2B మార్ట్';
+  String get f2bMart => 'F2B à°®à°¾à°°à±à°Ÿà±';
 
   @override
-  String get rentMachine => 'యంత్రం అద్దె';
+  String get rentMachine => 'à°¯à°‚à°¤à±à°°à°‚ à°…à°¦à±à°¦à±†';
 
   @override
-  String get plantVendors => 'మొక్క విక్రేతలు';
+  String get plantVendors => 'à°®à±Šà°•à±à°• à°µà°¿à°•à±à°°à±‡à°¤à°²à±';
 
   @override
-  String get labourHub => 'కూలీ కేంద్రం';
+  String get labourHub => 'à°•à±‚à°²à±€ à°•à±‡à°‚à°¦à±à°°à°‚';
 
   @override
-  String get cropDisease => 'పంట వ్యాధి';
+  String get cropDisease => 'à°ªà°‚à°Ÿ à°µà±à°¯à°¾à°§à°¿';
 
   @override
-  String get exportHub => 'ఎగుమతి కేంద్రం';
+  String get exportHub => 'à°Žà°—à±à°®à°¤à°¿ à°•à±‡à°‚à°¦à±à°°à°‚';
 
   @override
-  String get chatbot => 'చాట్‌బాట్';
+  String get chatbot => 'à°šà°¾à°Ÿà±â€Œà°¬à°¾à°Ÿà±';
 
   @override
-  String get mostlyClear => 'చాలావరకు స్పష్టంగా';
+  String get mostlyClear => 'à°šà°¾à°²à°¾à°µà°°à°•à± à°¸à±à°ªà°·à±à°Ÿà°‚à°—à°¾';
 
   @override
-  String get wind => 'గాలి';
+  String get wind => 'à°—à°¾à°²à°¿';
 
   @override
-  String get humidity => 'తేమ';
+  String get humidity => 'à°¤à±‡à°®';
 
   @override
-  String get farmAdvisory => 'వ్యవసాయ సలహా';
+  String get farmAdvisory => 'à°µà±à°¯à°µà°¸à°¾à°¯ à°¸à°²à°¹à°¾';
 
   @override
-  String get farmingNormal => 'వాతావరణం వ్యవసాయానికి సాధారణంగా ఉంది.';
+  String get farmingNormal => 'à°µà°¾à°¤à°¾à°µà°°à°£à°‚ à°µà±à°¯à°µà°¸à°¾à°¯à°¾à°¨à°¿à°•à°¿ à°¸à°¾à°§à°¾à°°à°£à°‚à°—à°¾ à°‰à°‚à°¦à°¿.';
 
   @override
-  String get rainAdvisory => 'వర్షం సలహా';
+  String get rainAdvisory => 'à°µà°°à±à°·à°‚ à°¸à°²à°¹à°¾';
 
   @override
-  String get noRain => 'తదుపరి 3 గంటల్లో వర్షం అంచనా లేదు.';
+  String get noRain => 'à°¤à°¦à±à°ªà°°à°¿ 3 à°—à°‚à°Ÿà°²à±à°²à±‹ à°µà°°à±à°·à°‚ à°…à°‚à°šà°¨à°¾ à°²à±‡à°¦à±.';
 
   @override
-  String get safeSpray => 'పురుగుమందులు పిచికారీ చేయడానికి సురక్షిత సమయం.';
+  String get safeSpray => 'à°ªà±à°°à±à°—à±à°®à°‚à°¦à±à°²à± à°ªà°¿à°šà°¿à°•à°¾à°°à±€ à°šà±‡à°¯à°¡à°¾à°¨à°¿à°•à°¿ à°¸à±à°°à°•à±à°·à°¿à°¤ à°¸à°®à°¯à°‚.';
 
   @override
-  String get hourlyForecast => 'గంటవారీ సూచన';
+  String get hourlyForecast => 'à°—à°‚à°Ÿà°µà°¾à°°à±€ à°¸à±‚à°šà°¨';
 
   @override
-  String get sevenDayForecast => '7-రోజుల సూచన';
+  String get sevenDayForecast => '7-à°°à±‹à°œà±à°² à°¸à±‚à°šà°¨';
 
   @override
-  String get noData => 'వాతావరణ డేటా లేదు';
+  String get noData => 'à°µà°¾à°¤à°¾à°µà°°à°£ à°¡à±‡à°Ÿà°¾ à°²à±‡à°¦à±';
 
   @override
-  String get nearbyMachines => 'సమీపంలోని యంత్రాలు';
+  String get nearbyMachines => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°¯à°‚à°¤à±à°°à°¾à°²à±';
 
   @override
-  String get listMachine => 'యంత్రం జాబితా చేయండి';
+  String get listMachine => 'à°¯à°‚à°¤à±à°°à°‚ à°œà°¾à°¬à°¿à°¤à°¾ à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get searchLabour => 'కూలీని వెతకండి...';
+  String get searchLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°µà±†à°¤à°•à°‚à°¡à°¿...';
 
   @override
-  String get deleteLabour => 'కూలీని తొలగించు';
+  String get deleteLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¤à±Šà°²à°—à°¿à°‚à°šà±';
 
   @override
-  String get deleteLabourConfirm => 'ఈ కూలీని తొలగించాలని నిశ్చయంగా ఉన్నారా?';
+  String get deleteLabourConfirm => 'à°ˆ à°•à±‚à°²à±€à°¨à°¿ à°¤à±Šà°²à°—à°¿à°‚à°šà°¾à°²à°¨à°¿ à°¨à°¿à°¶à±à°šà°¯à°‚à°—à°¾ à°‰à°¨à±à°¨à°¾à°°à°¾?';
 
   @override
-  String get cannotOpenDialer => 'డయలర్ తెరవడం సాధ్యపడలేదు';
+  String get cannotOpenDialer => 'à°¡à°¯à°²à°°à± à°¤à±†à°°à°µà°¡à°‚ à°¸à°¾à°§à±à°¯à°ªà°¡à°²à±‡à°¦à±';
 
   @override
-  String get deleted => 'తొలగించబడింది';
+  String get deleted => 'à°¤à±Šà°²à°—à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get deleteFailed => 'తొలగింపు విఫలమైంది';
+  String get deleteFailed => 'à°¤à±Šà°²à°—à°¿à°‚à°ªà± à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get available => 'అందుబాటులో ఉన్నారు';
+  String get available => 'à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°‰à°¨à±à°¨à°¾à°°à±';
 
   @override
-  String get busy => 'బిజీగా ఉన్నారు';
+  String get busy => 'à°¬à°¿à°œà±€à°—à°¾ à°‰à°¨à±à°¨à°¾à°°à±';
 
   @override
-  String get noLabourFound => 'కూలీ నమోదులు కనుగొనబడలేదు.';
+  String get noLabourFound => 'à°•à±‚à°²à±€ à°¨à°®à±‹à°¦à±à°²à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±.';
 
   @override
-  String get addLabour => 'కూలీని జోడించు';
+  String get addLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°œà±‹à°¡à°¿à°‚à°šà±';
 
   @override
-  String get sortByDistanceLabel => 'దూరం ప్రకారం క్రమబద్ధీకరించు';
+  String get sortByDistanceLabel => 'à°¦à±‚à°°à°‚ à°ªà±à°°à°•à°¾à°°à°‚ à°•à±à°°à°®à°¬à°¦à±à°§à±€à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get errorLoadingLabour => 'కూలీ డేటా లోడ్ చేయడంలో లోపం';
+  String get errorLoadingLabour => 'à°•à±‚à°²à±€ à°¡à±‡à°Ÿà°¾ à°²à±‹à°¡à± à°šà±‡à°¯à°¡à°‚à°²à±‹ à°²à±‹à°ªà°‚';
 
   @override
-  String get farmLabour => 'వ్యవసాయ కూలీ';
+  String get farmLabour => 'à°µà±à°¯à°µà°¸à°¾à°¯ à°•à±‚à°²à±€';
 
   @override
-  String get tractorDriver => 'ట్రాక్టర్ డ్రైవర్';
+  String get tractorDriver => 'à°Ÿà±à°°à°¾à°•à±à°Ÿà°°à± à°¡à±à°°à±ˆà°µà°°à±';
 
   @override
-  String get plantationWorker => 'తోట కార్మికుడు';
+  String get plantationWorker => 'à°¤à±‹à°Ÿ à°•à°¾à°°à±à°®à°¿à°•à±à°¡à±';
 
   @override
-  String get sprayerOperator => 'స్ప్రేయర్ ఆపరేటర్';
+  String get sprayerOperator => 'à°¸à±à°ªà±à°°à±‡à°¯à°°à± à°†à°ªà°°à±‡à°Ÿà°°à±';
 
   @override
-  String get harvesterOperator => 'హార్వెస్టర్ ఆపరేటర్';
+  String get harvesterOperator => 'à°¹à°¾à°°à±à°µà±†à°¸à±à°Ÿà°°à± à°†à°ªà°°à±‡à°Ÿà°°à±';
 
   @override
-  String get machineTechnician => 'యంత్ర సాంకేతిక నిపుణుడు';
+  String get machineTechnician => 'à°¯à°‚à°¤à±à°° à°¸à°¾à°‚à°•à±‡à°¤à°¿à°• à°¨à°¿à°ªà±à°£à±à°¡à±';
 
   @override
-  String get dairyWorker => 'పాల పరిశ్రమ కార్మికుడు';
+  String get dairyWorker => 'à°ªà°¾à°² à°ªà°°à°¿à°¶à±à°°à°® à°•à°¾à°°à±à°®à°¿à°•à±à°¡à±';
 
   @override
-  String get seeds => 'విత్తనాలు';
+  String get seeds => 'à°µà°¿à°¤à±à°¤à°¨à°¾à°²à±';
 
   @override
-  String get plant => 'మొక్క';
+  String get plant => 'à°®à±Šà°•à±à°•';
 
   @override
-  String get allCategories => 'అన్నీ';
+  String get allCategories => 'à°…à°¨à±à°¨à±€';
 
   @override
-  String get searchPlantVendor => 'మొక్క, రకం, విక్రేత, స్థానం వెతకండి...';
+  String get searchPlantVendor => 'à°®à±Šà°•à±à°•, à°°à°•à°‚, à°µà°¿à°•à±à°°à±‡à°¤, à°¸à±à°¥à°¾à°¨à°‚ à°µà±†à°¤à°•à°‚à°¡à°¿...';
 
   @override
-  String get newest => 'కొత్తది';
+  String get newest => 'à°•à±Šà°¤à±à°¤à°¦à°¿';
 
   @override
-  String get oldest => 'పాతది';
+  String get oldest => 'à°ªà°¾à°¤à°¦à°¿';
 
   @override
-  String get priceLow => 'ధర: తక్కువ';
+  String get priceLow => 'à°§à°°: à°¤à°•à±à°•à±à°µ';
 
   @override
-  String get priceHigh => 'ధర: ఎక్కువ';
+  String get priceHigh => 'à°§à°°: à°Žà°•à±à°•à±à°µ';
 
   @override
-  String get noListingsFound => 'జాబితాలు కనుగొనబడలేదు.';
+  String get noListingsFound => 'à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±.';
 
   @override
-  String get deleteListingQ => 'జాబితాను తొలగించాలా?';
+  String get deleteListingQ => 'à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¤à±Šà°²à°—à°¿à°‚à°šà°¾à°²à°¾?';
 
   @override
-  String get permanentlyDeleteListing => 'ఇది జాబితాను శాశ్వతంగా తొలగిస్తుంది.';
+  String get permanentlyDeleteListing => 'à°‡à°¦à°¿ à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¶à°¾à°¶à±à°µà°¤à°‚à°—à°¾ à°¤à±Šà°²à°—à°¿à°¸à±à°¤à±à°‚à°¦à°¿.';
 
   @override
-  String get unknownPlant => 'తెలియని మొక్క';
+  String get unknownPlant => 'à°¤à±†à°²à°¿à°¯à°¨à°¿ à°®à±Šà°•à±à°•';
 
   @override
-  String get typeLabel => 'రకం';
+  String get typeLabel => 'à°°à°•à°‚';
 
   @override
-  String get priceLabel => 'ధర';
+  String get priceLabel => 'à°§à°°';
 
   @override
-  String get quantityLabel => 'పరిమాణం';
+  String get quantityLabel => 'à°ªà°°à°¿à°®à°¾à°£à°‚';
 
   @override
-  String get vendorLabel => 'విక్రేత';
+  String get vendorLabel => 'à°µà°¿à°•à±à°°à±‡à°¤';
 
   @override
-  String get locationLabel => 'స్థానం';
+  String get locationLabel => 'à°¸à±à°¥à°¾à°¨à°‚';
 
   @override
-  String get listedOnLabel => 'జాబితా చేసిన తేదీ';
+  String get listedOnLabel => 'à°œà°¾à°¬à°¿à°¤à°¾ à°šà±‡à°¸à°¿à°¨ à°¤à±‡à°¦à±€';
 
   @override
-  String get descriptionLabel => 'వివరణ';
+  String get descriptionLabel => 'à°µà°¿à°µà°°à°£';
 
   @override
-  String get exporterHub => 'ఎగుమతిదారు కేంద్రం';
+  String get exporterHub => 'à°Žà°—à±à°®à°¤à°¿à°¦à°¾à°°à± à°•à±‡à°‚à°¦à±à°°à°‚';
 
   @override
-  String get cropsTab => 'పంటలు';
+  String get cropsTab => 'à°ªà°‚à°Ÿà°²à±';
 
   @override
-  String get myListingsTab => 'నా జాబితాలు';
+  String get myListingsTab => 'à°¨à°¾ à°œà°¾à°¬à°¿à°¤à°¾à°²à±';
 
   @override
-  String get verifiedBuyersTab => 'ధృవీకరించిన కొనుగోలుదారులు';
+  String get verifiedBuyersTab => 'à°§à±ƒà°µà±€à°•à°°à°¿à°‚à°šà°¿à°¨ à°•à±Šà°¨à±à°—à±‹à°²à±à°¦à°¾à°°à±à°²à±';
 
   @override
-  String get searchByCropFarmer => 'పంట, రైతు పేరు లేదా స్థానం ద్వారా వెతకండి';
+  String get searchByCropFarmer => 'à°ªà°‚à°Ÿ, à°°à±ˆà°¤à± à°ªà±‡à°°à± à°²à±‡à°¦à°¾ à°¸à±à°¥à°¾à°¨à°‚ à°¦à±à°µà°¾à°°à°¾ à°µà±†à°¤à°•à°‚à°¡à°¿';
 
   @override
-  String get pleaseSignInToViewListings => 'మీ జాబితాలు చూడటానికి సైన్ ఇన్ చేయండి';
+  String get pleaseSignInToViewListings => 'à°®à±€ à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°šà±‚à°¡à°Ÿà°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¨à± à°‡à°¨à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get pleaseSignInToViewOrders => 'మీ ఆర్డర్లు చూడటానికి సైన్ ఇన్ చేయండి';
+  String get pleaseSignInToViewOrders => 'à°®à±€ à°†à°°à±à°¡à°°à±à°²à± à°šà±‚à°¡à°Ÿà°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¨à± à°‡à°¨à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get pleaseSignInToAdd => 'ఉత్పత్తులు జోడించడానికి సైన్ ఇన్ చేయండి.';
+  String get pleaseSignInToAdd => 'à°‰à°¤à±à°ªà°¤à±à°¤à±à°²à± à°œà±‹à°¡à°¿à°‚à°šà°¡à°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¨à± à°‡à°¨à± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get pleaseSignInToViewSeller => 'విక్రేత ఆర్డర్లు చూడటానికి సైన్ ఇన్ చేయండి.';
+  String get pleaseSignInToViewSeller => 'à°µà°¿à°•à±à°°à±‡à°¤ à°†à°°à±à°¡à°°à±à°²à± à°šà±‚à°¡à°Ÿà°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¨à± à°‡à°¨à± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get noExportProductsFound => 'మీ శోధనకు సరిపోలే ఎగుమతి ఉత్పత్తులు లేవు.';
+  String get noExportProductsFound => 'à°®à±€ à°¶à±‹à°§à°¨à°•à± à°¸à°°à°¿à°ªà±‹à°²à±‡ à°Žà°—à±à°®à°¤à°¿ à°‰à°¤à±à°ªà°¤à±à°¤à±à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get noListingsMatchFilter => 'ఫిల్టర్‌కు సరిపోలే జాబితాలు లేవు.';
+  String get noListingsMatchFilter => 'à°«à°¿à°²à±à°Ÿà°°à±â€Œà°•à± à°¸à°°à°¿à°ªà±‹à°²à±‡ à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get noPurchaseOrders => 'ఇంకా కొనుగోలు ఆర్డర్లు లేవు.';
+  String get noPurchaseOrders => 'à°‡à°‚à°•à°¾ à°•à±Šà°¨à±à°—à±‹à°²à± à°†à°°à±à°¡à°°à±à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get viewDetails => 'వివరాలు చూడండి';
+  String get viewDetails => 'à°µà°¿à°µà°°à°¾à°²à± à°šà±‚à°¡à°‚à°¡à°¿';
 
   @override
-  String get buy => 'కొనండి';
+  String get buy => 'à°•à±Šà°¨à°‚à°¡à°¿';
 
   @override
-  String get buyNow => 'ఇప్పుడే కొనండి';
+  String get buyNow => 'à°‡à°ªà±à°ªà±à°¡à±‡ à°•à±Šà°¨à°‚à°¡à°¿';
 
   @override
-  String get deleteListingTitle => 'జాబితాను తొలగించు';
+  String get deleteListingTitle => 'à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¤à±Šà°²à°—à°¿à°‚à°šà±';
 
   @override
-  String get areYouSureDeleteProduct => 'ఈ ఉత్పత్తిని తొలగించాలని నిశ్చయంగా ఉన్నారా?';
+  String get areYouSureDeleteProduct => 'à°ˆ à°‰à°¤à±à°ªà°¤à±à°¤à°¿à°¨à°¿ à°¤à±Šà°²à°—à°¿à°‚à°šà°¾à°²à°¨à°¿ à°¨à°¿à°¶à±à°šà°¯à°‚à°—à°¾ à°‰à°¨à±à°¨à°¾à°°à°¾?';
 
   @override
-  String get productDeletedSuccessfully => 'ఉత్పత్తి విజయవంతంగా తొలగించబడింది';
+  String get productDeletedSuccessfully => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get openMap => 'మ్యాప్ తెరవండి';
+  String get openMap => 'à°®à±à°¯à°¾à°ªà± à°¤à±†à°°à°µà°‚à°¡à°¿';
 
   @override
-  String get nearbyFarmersList => 'సమీపంలోని రైతులు (జాబితా)';
+  String get nearbyFarmersList => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°°à±ˆà°¤à±à°²à± (à°œà°¾à°¬à°¿à°¤à°¾)';
 
   @override
-  String get sellingOrders => 'అమ్మకపు ఆర్డర్లు';
+  String get sellingOrders => 'à°…à°®à±à°®à°•à°ªà± à°†à°°à±à°¡à°°à±à°²à±';
 
   @override
-  String get krishiMitraAIChatbot => 'కృషిమిత్ర చాట్‌బాట్';
+  String get krishiMitraAIChatbot => 'à°•à±ƒà°·à°¿à°®à°¿à°¤à±à°° à°šà°¾à°Ÿà±â€Œà°¬à°¾à°Ÿà±';
 
   @override
-  String get askKrishiMitraHint => 'కృషిమిత్రను అడగండి...';
+  String get askKrishiMitraHint => 'à°•à±ƒà°·à°¿à°®à°¿à°¤à±à°°à°¨à± à°…à°¡à°—à°‚à°¡à°¿...';
 
   @override
-  String get krishiMitraTyping => 'కృషిమిత్ర టైప్ చేస్తోంది...';
+  String get krishiMitraTyping => 'à°•à±ƒà°·à°¿à°®à°¿à°¤à±à°° à°Ÿà±ˆà°ªà± à°šà±‡à°¸à±à°¤à±‹à°‚à°¦à°¿...';
 
   @override
-  String get chatbotSorryError => 'క్షమించండి, సమాధానం రాలేదు. దయచేసి మళ్ళీ ప్రయత్నించండి.';
+  String get chatbotSorryError => 'à°•à±à°·à°®à°¿à°‚à°šà°‚à°¡à°¿, à°¸à°®à°¾à°§à°¾à°¨à°‚ à°°à°¾à°²à±‡à°¦à±. à°¦à°¯à°šà±‡à°¸à°¿ à°®à°³à±à°³à±€ à°ªà±à°°à°¯à°¤à±à°¨à°¿à°‚à°šà°‚à°¡à°¿.';
 
   @override
-  String get cropDiseaseDetector => 'పంట వ్యాధి గుర్తింపు';
+  String get cropDiseaseDetector => 'à°ªà°‚à°Ÿ à°µà±à°¯à°¾à°§à°¿ à°—à±à°°à±à°¤à°¿à°‚à°ªà±';
 
   @override
-  String get analyzeDisease => 'వ్యాధిని విశ్లేషించు';
+  String get analyzeDisease => 'à°µà±à°¯à°¾à°§à°¿à°¨à°¿ à°µà°¿à°¶à±à°²à±‡à°·à°¿à°‚à°šà±';
 
   @override
-  String get camera => 'కెమెరా';
+  String get camera => 'à°•à±†à°®à±†à°°à°¾';
 
   @override
-  String get gallery => 'గ్యాలరీ';
+  String get gallery => 'à°—à±à°¯à°¾à°²à°°à±€';
 
   @override
-  String get diseaseResult => 'వ్యాధి';
+  String get diseaseResult => 'à°µà±à°¯à°¾à°§à°¿';
 
   @override
-  String get categoryResult => 'వర్గం';
+  String get categoryResult => 'à°µà°°à±à°—à°‚';
 
   @override
-  String get symptomsResult => 'లక్షణాలు';
+  String get symptomsResult => 'à°²à°•à±à°·à°£à°¾à°²à±';
 
   @override
-  String get treatmentResult => 'చికిత్స';
+  String get treatmentResult => 'à°šà°¿à°•à°¿à°¤à±à°¸';
 
   @override
-  String get preventionResult => 'నివారణ';
+  String get preventionResult => 'à°¨à°¿à°µà°¾à°°à°£';
 
   @override
-  String get confidenceResult => 'విశ్వాసం';
+  String get confidenceResult => 'à°µà°¿à°¶à±à°µà°¾à°¸à°‚';
 
   @override
-  String get profile => 'ప్రొఫైల్';
+  String get profile => 'à°ªà±à°°à±Šà°«à±ˆà°²à±';
 
   @override
-  String get editProfile => 'ప్రొఫైల్ సవరించు';
+  String get editProfile => 'à°ªà±à°°à±Šà°«à±ˆà°²à± à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get languageSetting => 'భాష';
+  String get languageSetting => 'à°­à°¾à°·';
 
   @override
-  String get darkMode => 'డార్క్ మోడ్';
+  String get darkMode => 'à°¡à°¾à°°à±à°•à± à°®à±‹à°¡à±';
 
   @override
-  String get displayName => 'ప్రదర్శన పేరు';
+  String get displayName => 'à°ªà±à°°à°¦à°°à±à°¶à°¨ à°ªà±‡à°°à±';
 
   @override
-  String get saveChanges => 'మార్పులు సేవ్ చేయి';
+  String get saveChanges => 'à°®à°¾à°°à±à°ªà±à°²à± à°¸à±‡à°µà± à°šà±‡à°¯à°¿';
 
   @override
-  String get signOut => 'సైన్ అవుట్';
+  String get signOut => 'à°¸à±ˆà°¨à± à°…à°µà±à°Ÿà±';
 
   @override
-  String get listingsCount => 'జాబితాలు';
+  String get listingsCount => 'à°œà°¾à°¬à°¿à°¤à°¾à°²à±';
 
   @override
-  String get rentalsCount => 'అద్దె';
+  String get rentalsCount => 'à°…à°¦à±à°¦à±†';
 
   @override
-  String get activitySection => 'కార్యకలాపం';
+  String get activitySection => 'à°•à°¾à°°à±à°¯à°•à°²à°¾à°ªà°‚';
 
   @override
-  String get selectLanguage => 'భాషను ఎంచుకోండి';
+  String get selectLanguage => 'à°­à°¾à°·à°¨à± à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get loading => 'లోడ్ అవుతోంది...';
+  String get loading => 'à°²à±‹à°¡à± à°…à°µà±à°¤à±‹à°‚à°¦à°¿...';
 
   @override
-  String get submit => 'సమర్పించు';
+  String get submit => 'à°¸à°®à°°à±à°ªà°¿à°‚à°šà±';
 
   @override
-  String get update => 'నవీకరించు';
+  String get update => 'à°¨à°µà±€à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get confirm => 'నిర్ధారించు';
+  String get confirm => 'à°¨à°¿à°°à±à°§à°¾à°°à°¿à°‚à°šà±';
 
   @override
-  String get complete => 'పూర్తి చేయి';
+  String get complete => 'à°ªà±‚à°°à±à°¤à°¿ à°šà±‡à°¯à°¿';
 
   @override
-  String get view => 'చూడు';
+  String get view => 'à°šà±‚à°¡à±';
 
   @override
-  String get call => 'కాల్ చేయి';
+  String get call => 'à°•à°¾à°²à± à°šà±‡à°¯à°¿';
 
   @override
-  String get whatsApp => 'వాట్సాప్';
+  String get whatsApp => 'à°µà°¾à°Ÿà±à°¸à°¾à°ªà±';
 
   @override
-  String get openMaps => 'మ్యాప్ తెరవు';
+  String get openMaps => 'à°®à±à°¯à°¾à°ªà± à°¤à±†à°°à°µà±';
 
   @override
-  String get openInMaps => 'మ్యాప్‌లో తెరవు';
+  String get openInMaps => 'à°®à±à°¯à°¾à°ªà±â€Œà°²à±‹ à°¤à±†à°°à°µà±';
 
   @override
-  String get pickImage => 'చిత్రం ఎంచుకో';
+  String get pickImage => 'à°šà°¿à°¤à±à°°à°‚ à°Žà°‚à°šà±à°•à±‹';
 
   @override
-  String get uploadImage => 'చిత్రం అప్‌లోడ్ చేయి';
+  String get uploadImage => 'à°šà°¿à°¤à±à°°à°‚ à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°¿';
 
   @override
-  String get noImageSelected => 'చిత్రం ఏదీ ఎంచుకోలేదు';
+  String get noImageSelected => 'à°šà°¿à°¤à±à°°à°‚ à°à°¦à±€ à°Žà°‚à°šà±à°•à±‹à°²à±‡à°¦à±';
 
   @override
-  String get pickImageFirst => 'ముందు చిత్రం ఎంచుకోండి';
+  String get pickImageFirst => 'à°®à±à°‚à°¦à± à°šà°¿à°¤à±à°°à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get imageUploadedSuccessfully => 'చిత్రం విజయవంతంగా అప్‌లోడ్ అయింది';
+  String get imageUploadedSuccessfully => 'à°šà°¿à°¤à±à°°à°‚ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°…à°ªà±â€Œà°²à±‹à°¡à± à°…à°¯à°¿à°‚à°¦à°¿';
 
   @override
-  String get imageUploadFailed => 'చిత్రం అప్‌లోడ్ విఫలమైంది';
+  String get imageUploadFailed => 'à°šà°¿à°¤à±à°°à°‚ à°…à°ªà±â€Œà°²à±‹à°¡à± à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get imageUploaded => 'చిత్రం అప్‌లోడ్ అయింది';
+  String get imageUploaded => 'à°šà°¿à°¤à±à°°à°‚ à°…à°ªà±â€Œà°²à±‹à°¡à± à°…à°¯à°¿à°‚à°¦à°¿';
 
   @override
-  String get uploadFailed => 'అప్‌లోడ్ విఫలమైంది';
+  String get uploadFailed => 'à°…à°ªà±â€Œà°²à±‹à°¡à± à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get setLocation => 'స్థానం సెట్ చేయి';
+  String get setLocation => 'à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°¿';
 
   @override
-  String get searchPlace => 'స్థానం వెతుకు...';
+  String get searchPlace => 'à°¸à±à°¥à°¾à°¨à°‚ à°µà±†à°¤à±à°•à±...';
 
   @override
-  String get fetchingLocation => 'స్థానం తెస్తున్నాం...';
+  String get fetchingLocation => 'à°¸à±à°¥à°¾à°¨à°‚ à°¤à±†à°¸à±à°¤à±à°¨à±à°¨à°¾à°‚...';
 
   @override
-  String get locationSet => 'స్థానం సెట్ అయింది';
+  String get locationSet => 'à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°…à°¯à°¿à°‚à°¦à°¿';
 
   @override
-  String get pricePerUnitLabel => 'యూనిట్‌కు ధర (₹)';
+  String get pricePerUnitLabel => 'à°¯à±‚à°¨à°¿à°Ÿà±â€Œà°•à± à°§à°° (â‚¹)';
 
   @override
-  String get categoryLabel => 'వర్గం';
+  String get categoryLabel => 'à°µà°°à±à°—à°‚';
 
   @override
-  String get productNameLabel => 'ఉత్పత్తి పేరు';
+  String get productNameLabel => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°ªà±‡à°°à±';
 
   @override
-  String get statusLabel => 'స్థితి:';
+  String get statusLabel => 'à°¸à±à°¥à°¿à°¤à°¿:';
 
   @override
-  String get totalLabel => 'మొత్తం:';
+  String get totalLabel => 'à°®à±Šà°¤à±à°¤à°‚:';
 
   @override
-  String get farmerLabel => 'రైతు:';
+  String get farmerLabel => 'à°°à±ˆà°¤à±:';
 
   @override
-  String get mobileLabel => 'మొబైల్:';
+  String get mobileLabel => 'à°®à±Šà°¬à±ˆà°²à±:';
 
   @override
-  String get qtyLabel => 'పరిమాణం:';
+  String get qtyLabel => 'à°ªà°°à°¿à°®à°¾à°£à°‚:';
 
   @override
-  String get sellerLabel => 'విక్రేత:';
+  String get sellerLabel => 'à°µà°¿à°•à±à°°à±‡à°¤:';
 
   @override
-  String get buyerLabel => 'కొనుగోలుదారు:';
+  String get buyerLabel => 'à°•à±Šà°¨à±à°—à±‹à°²à±à°¦à°¾à°°à±:';
 
   @override
-  String get ownerLabel => 'యజమాని:';
+  String get ownerLabel => 'à°¯à°œà°®à°¾à°¨à°¿:';
 
   @override
-  String get notAvailable => 'అందుబాటులో లేదు';
+  String get notAvailable => 'à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°²à±‡à°¦à±';
 
   @override
-  String get other => 'ఇతర';
+  String get other => 'à°‡à°¤à°°';
 
   @override
-  String get allListingsTab => 'అన్ని జాబితాలు';
+  String get allListingsTab => 'à°…à°¨à±à°¨à°¿ à°œà°¾à°¬à°¿à°¤à°¾à°²à±';
 
   @override
-  String get pendingApprovalTab => 'అనుమతి పెండింగ్';
+  String get pendingApprovalTab => 'à°…à°¨à±à°®à°¤à°¿ à°ªà±†à°‚à°¡à°¿à°‚à°—à±';
 
   @override
-  String get postExportStock => 'ఎగుమతి స్టాక్ పోస్ట్ చేయి';
+  String get postExportStock => 'à°Žà°—à±à°®à°¤à°¿ à°¸à±à°Ÿà°¾à°•à± à°ªà±‹à°¸à±à°Ÿà± à°šà±‡à°¯à°¿';
 
   @override
-  String get noPendingListings => 'పెండింగ్ జాబితాలు లేవు.';
+  String get noPendingListings => 'à°ªà±†à°‚à°¡à°¿à°‚à°—à± à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get approve => 'అనుమతించు';
+  String get approve => 'à°…à°¨à±à°®à°¤à°¿à°‚à°šà±';
 
   @override
-  String get reject => 'తిరస్కరించు';
+  String get reject => 'à°¤à°¿à°°à°¸à±à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get myListings => 'నా జాబితాలు';
+  String get myListings => 'à°¨à°¾ à°œà°¾à°¬à°¿à°¤à°¾à°²à±';
 
   @override
-  String get postStock => 'స్టాక్ పోస్ట్ చేయి';
+  String get postStock => 'à°¸à±à°Ÿà°¾à°•à± à°ªà±‹à°¸à±à°Ÿà± à°šà±‡à°¯à°¿';
 
   @override
-  String get noListingsYet => 'ఇంకా జాబితాలు లేవు.';
+  String get noListingsYet => 'à°‡à°‚à°•à°¾ à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get deleteListingConfirm => 'ఈ జాబితాను తొలగించాలా?';
+  String get deleteListingConfirm => 'à°ˆ à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¤à±Šà°²à°—à°¿à°‚à°šà°¾à°²à°¾?';
 
   @override
-  String get listingDeleted => 'జాబితా తొలగించబడింది.';
+  String get listingDeleted => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get browseExportListings => 'ఎగుమతి జాబితాలు చూడండి';
+  String get browseExportListings => 'à°Žà°—à±à°®à°¤à°¿ à°œà°¾à°¬à°¿à°¤à°¾à°²à± à°šà±‚à°¡à°‚à°¡à°¿';
 
   @override
-  String get noProductsAvailable => 'ఉత్పత్తులు అందుబాటులో లేవు.';
+  String get noProductsAvailable => 'à°‰à°¤à±à°ªà°¤à±à°¤à±à°²à± à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°²à±‡à°µà±.';
 
   @override
-  String get createPurchaseOrder => 'కొనుగోలు ఆర్డర్ సృష్టించు';
+  String get createPurchaseOrder => 'à°•à±Šà°¨à±à°—à±‹à°²à± à°†à°°à±à°¡à°°à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà±';
 
   @override
-  String get listingDetailsTitle => 'జాబితా వివరాలు';
+  String get listingDetailsTitle => 'à°œà°¾à°¬à°¿à°¤à°¾ à°µà°¿à°µà°°à°¾à°²à±';
 
   @override
-  String get statusPending => 'పెండింగ్';
+  String get statusPending => 'à°ªà±†à°‚à°¡à°¿à°‚à°—à±';
 
   @override
-  String get statusApproved => 'అనుమతించబడింది';
+  String get statusApproved => 'à°…à°¨à±à°®à°¤à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get statusRejected => 'తిరస్కరించబడింది';
+  String get statusRejected => 'à°¤à°¿à°°à°¸à±à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get approveListing => 'జాబితాను అనుమతించు';
+  String get approveListing => 'à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°…à°¨à±à°®à°¤à°¿à°‚à°šà±';
 
   @override
-  String get rejectListing => 'జాబితాను తిరస్కరించు';
+  String get rejectListing => 'à°œà°¾à°¬à°¿à°¤à°¾à°¨à± à°¤à°¿à°°à°¸à±à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get listingApproved => 'జాబితా అనుమతించబడింది.';
+  String get listingApproved => 'à°œà°¾à°¬à°¿à°¤à°¾ à°…à°¨à±à°®à°¤à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get listingRejected => 'జాబితా తిరస్కరించబడింది.';
+  String get listingRejected => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¤à°¿à°°à°¸à±à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get errorUpdatingListing => 'జాబితా నవీకరణలో లోపం.';
+  String get errorUpdatingListing => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¨à°µà±€à°•à°°à°£à°²à±‹ à°²à±‹à°ªà°‚.';
 
   @override
-  String get editExportStockTitle => 'ఎగుమతి స్టాక్ సవరించు';
+  String get editExportStockTitle => 'à°Žà°—à±à°®à°¤à°¿ à°¸à±à°Ÿà°¾à°•à± à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get pleaseEnterProductName => 'దయచేసి ఉత్పత్తి పేరు నమోదు చేయండి';
+  String get pleaseEnterProductName => 'à°¦à°¯à°šà±‡à°¸à°¿ à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get pleaseEnterQuantity => 'దయచేసి పరిమాణం నమోదు చేయండి';
+  String get pleaseEnterQuantity => 'à°¦à°¯à°šà±‡à°¸à°¿ à°ªà°°à°¿à°®à°¾à°£à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get pleaseEnterPrice => 'దయచేసి ధర నమోదు చేయండి';
+  String get pleaseEnterPrice => 'à°¦à°¯à°šà±‡à°¸à°¿ à°§à°° à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get pleaseEnterLocation => 'దయచేసి స్థానం నమోదు చేయండి';
+  String get pleaseEnterLocation => 'à°¦à°¯à°šà±‡à°¸à°¿ à°¸à±à°¥à°¾à°¨à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get listingSubmittedSuccessfully => 'జాబితా విజయవంతంగా సమర్పించబడింది.';
+  String get listingSubmittedSuccessfully => 'à°œà°¾à°¬à°¿à°¤à°¾ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¸à°®à°°à±à°ªà°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get listingUpdatedSuccessfully => 'జాబితా విజయవంతంగా నవీకరించబడింది.';
+  String get listingUpdatedSuccessfully => 'à°œà°¾à°¬à°¿à°¤à°¾ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get failedToSubmitListing => 'జాబితా సమర్పించడం విఫలమైంది.';
+  String get failedToSubmitListing => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¸à°®à°°à±à°ªà°¿à°‚à°šà°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get addExportProductTitle => 'ఎగుమతి ఉత్పత్తి జోడించు';
+  String get addExportProductTitle => 'à°Žà°—à±à°®à°¤à°¿ à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°œà±‹à°¡à°¿à°‚à°šà±';
 
   @override
-  String get editExportProductTitle => 'ఎగుమతి ఉత్పత్తి సవరించు';
+  String get editExportProductTitle => 'à°Žà°—à±à°®à°¤à°¿ à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get descriptionOptionalLabel => 'వివరణ (ఐచ్ఛికం)';
+  String get descriptionOptionalLabel => 'à°µà°¿à°µà°°à°£ (à°à°šà±à°›à°¿à°•à°‚)';
 
   @override
-  String get enterProductName => 'ఉత్పత్తి పేరు నమోదు చేయండి';
+  String get enterProductName => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterQuantity => 'పరిమాణం నమోదు చేయండి';
+  String get enterQuantity => 'à°ªà°°à°¿à°®à°¾à°£à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterValidPrice => 'సరైన ధర నమోదు చేయండి';
+  String get enterValidPrice => 'à°¸à°°à±ˆà°¨ à°§à°° à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get selectCategory => 'వర్గం ఎంచుకోండి';
+  String get selectCategory => 'à°µà°°à±à°—à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get productAddedSuccessfully => 'ఉత్పత్తి విజయవంతంగా జోడించబడింది.';
+  String get productAddedSuccessfully => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°œà±‹à°¡à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get productUpdatedSuccessfully => 'ఉత్పత్తి విజయవంతంగా నవీకరించబడింది.';
+  String get productUpdatedSuccessfully => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get failedToSubmitProduct => 'ఉత్పత్తి సమర్పించడం విఫలమైంది.';
+  String get failedToSubmitProduct => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°¸à°®à°°à±à°ªà°¿à°‚à°šà°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get buyerNameLabel => 'కొనుగోలుదారు పేరు';
+  String get buyerNameLabel => 'à°•à±Šà°¨à±à°—à±‹à°²à±à°¦à°¾à°°à± à°ªà±‡à°°à±';
 
   @override
-  String get deliveryAddressLabel => 'డెలివరీ చిరునామా';
+  String get deliveryAddressLabel => 'à°¡à±†à°²à°¿à°µà°°à±€ à°šà°¿à°°à±à°¨à°¾à°®à°¾';
 
   @override
-  String get notesOptionalLabel => 'గమనికలు (ఐచ్ఛికం)';
+  String get notesOptionalLabel => 'à°—à°®à°¨à°¿à°•à°²à± (à°à°šà±à°›à°¿à°•à°‚)';
 
   @override
-  String get enterBuyerName => 'కొనుగోలుదారు పేరు నమోదు చేయండి';
+  String get enterBuyerName => 'à°•à±Šà°¨à±à°—à±‹à°²à±à°¦à°¾à°°à± à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterValidNumber => 'సరైన సంఖ్య నమోదు చేయండి';
+  String get enterValidNumber => 'à°¸à°°à±ˆà°¨ à°¸à°‚à°–à±à°¯ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterDeliveryAddress => 'డెలివరీ చిరునామా నమోదు చేయండి';
+  String get enterDeliveryAddress => 'à°¡à±†à°²à°¿à°µà°°à±€ à°šà°¿à°°à±à°¨à°¾à°®à°¾ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get placeOrder => 'ఆర్డర్ ఇవ్వు';
+  String get placeOrder => 'à°†à°°à±à°¡à°°à± à°‡à°µà±à°µà±';
 
   @override
-  String get orderPlacedSuccessfully => 'ఆర్డర్ విజయవంతంగా ఇవ్వబడింది!';
+  String get orderPlacedSuccessfully => 'à°†à°°à±à°¡à°°à± à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°‡à°µà±à°µà°¬à°¡à°¿à°‚à°¦à°¿!';
 
   @override
-  String get failedToPlaceOrder => 'ఆర్డర్ ఇవ్వడం విఫలమైంది.';
+  String get failedToPlaceOrder => 'à°†à°°à±à°¡à°°à± à°‡à°µà±à°µà°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get myPurchaseOrdersTitle => 'నా కొనుగోలు ఆర్డర్లు';
+  String get myPurchaseOrdersTitle => 'à°¨à°¾ à°•à±Šà°¨à±à°—à±‹à°²à± à°†à°°à±à°¡à°°à±à°²à±';
 
   @override
-  String get loadingProduct => 'ఉత్పత్తి లోడ్ అవుతోంది...';
+  String get loadingProduct => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°²à±‹à°¡à± à°…à°µà±à°¤à±‹à°‚à°¦à°¿...';
 
   @override
-  String get productNotFound => 'ఉత్పత్తి కనుగొనబడలేదు';
+  String get productNotFound => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get noPurchaseOrdersYet => 'ఇంకా కొనుగోలు ఆర్డర్లు లేవు.';
+  String get noPurchaseOrdersYet => 'à°‡à°‚à°•à°¾ à°•à±Šà°¨à±à°—à±‹à°²à± à°†à°°à±à°¡à°°à±à°²à± à°²à±‡à°µà±.';
 
   @override
-  String get noOrdersReceivedYet => 'ఇంకా ఆర్డర్లు అందలేదు.';
+  String get noOrdersReceivedYet => 'à°‡à°‚à°•à°¾ à°†à°°à±à°¡à°°à±à°²à± à°…à°‚à°¦à°²à±‡à°¦à±.';
 
   @override
-  String get purchaseOrderTitle => 'కొనుగోలు ఆర్డర్';
+  String get purchaseOrderTitle => 'à°•à±Šà°¨à±à°—à±‹à°²à± à°†à°°à±à°¡à°°à±';
 
   @override
-  String get orderDetails => 'ఆర్డర్ వివరాలు';
+  String get orderDetails => 'à°†à°°à±à°¡à°°à± à°µà°¿à°µà°°à°¾à°²à±';
 
   @override
-  String get notesLabel => 'గమనికలు:';
+  String get notesLabel => 'à°—à°®à°¨à°¿à°•à°²à±:';
 
   @override
-  String get confirmOrder => 'ఆర్డర్ నిర్ధారించు';
+  String get confirmOrder => 'à°†à°°à±à°¡à°°à± à°¨à°¿à°°à±à°§à°¾à°°à°¿à°‚à°šà±';
 
   @override
-  String get completeOrder => 'ఆర్డర్ పూర్తి చేయి';
+  String get completeOrder => 'à°†à°°à±à°¡à°°à± à°ªà±‚à°°à±à°¤à°¿ à°šà±‡à°¯à°¿';
 
   @override
-  String get cancelOrder => 'ఆర్డర్ రద్దు చేయి';
+  String get cancelOrder => 'à°†à°°à±à°¡à°°à± à°°à°¦à±à°¦à± à°šà±‡à°¯à°¿';
 
   @override
-  String get confirmOrderConfirm => 'ఈ ఆర్డర్ నిర్ధారించాలా?';
+  String get confirmOrderConfirm => 'à°ˆ à°†à°°à±à°¡à°°à± à°¨à°¿à°°à±à°§à°¾à°°à°¿à°‚à°šà°¾à°²à°¾?';
 
   @override
-  String get completeOrderConfirm => 'ఈ ఆర్డర్ పూర్తి చేయాలా?';
+  String get completeOrderConfirm => 'à°ˆ à°†à°°à±à°¡à°°à± à°ªà±‚à°°à±à°¤à°¿ à°šà±‡à°¯à°¾à°²à°¾?';
 
   @override
-  String get cancelOrderConfirm => 'ఈ ఆర్డర్ రద్దు చేయాలా?';
+  String get cancelOrderConfirm => 'à°ˆ à°†à°°à±à°¡à°°à± à°°à°¦à±à°¦à± à°šà±‡à°¯à°¾à°²à°¾?';
 
   @override
-  String get orderConfirmed => 'ఆర్డర్ నిర్ధారించబడింది.';
+  String get orderConfirmed => 'à°†à°°à±à°¡à°°à± à°¨à°¿à°°à±à°§à°¾à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get orderCompleted => 'ఆర్డర్ పూర్తయింది.';
+  String get orderCompleted => 'à°†à°°à±à°¡à°°à± à°ªà±‚à°°à±à°¤à°¯à°¿à°‚à°¦à°¿.';
 
   @override
-  String get orderCancelled => 'ఆర్డర్ రద్దు చేయబడింది.';
+  String get orderCancelled => 'à°†à°°à±à°¡à°°à± à°°à°¦à±à°¦à± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get errorUpdatingOrder => 'ఆర్డర్ నవీకరణలో లోపం.';
+  String get errorUpdatingOrder => 'à°†à°°à±à°¡à°°à± à°¨à°µà±€à°•à°°à°£à°²à±‹ à°²à±‹à°ªà°‚.';
 
   @override
-  String get orderNotFound => 'ఆర్డర్ కనుగొనబడలేదు.';
+  String get orderNotFound => 'à°†à°°à±à°¡à°°à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±.';
 
   @override
-  String get productDetails => 'ఉత్పత్తి వివరాలు';
+  String get productDetails => 'à°‰à°¤à±à°ªà°¤à±à°¤à°¿ à°µà°¿à°µà°°à°¾à°²à±';
 
   @override
-  String get nearbyFarmersTitle => 'సమీపంలోని రైతులు';
+  String get nearbyFarmersTitle => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°°à±ˆà°¤à±à°²à±';
 
   @override
-  String get nearbyFarmersMapTitle => 'సమీపంలోని రైతులు (మ్యాప్)';
+  String get nearbyFarmersMapTitle => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°°à±ˆà°¤à±à°²à± (à°®à±à°¯à°¾à°ªà±)';
 
   @override
   String kmAway(String distance) {
-    return '$distance కి.మీ దూరం';
+    return '$distance à°•à°¿.à°®à±€ à°¦à±‚à°°à°‚';
   }
 
   @override
-  String get labourDetails => 'కూలీ వివరాలు';
+  String get labourDetails => 'à°•à±‚à°²à±€ à°µà°¿à°µà°°à°¾à°²à±';
 
   @override
-  String get callLabour => 'కూలీకి కాల్ చేయి';
+  String get callLabour => 'à°•à±‚à°²à±€à°•à°¿ à°•à°¾à°²à± à°šà±‡à°¯à°¿';
 
   @override
-  String get hireLabour => 'కూలీని నియమించు';
+  String get hireLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¨à°¿à°¯à°®à°¿à°‚à°šà±';
 
   @override
-  String get deleteOptionAvailableInListingPage => 'జాబితా పేజీలో తొలగింపు ఎంపిక అందుబాటులో ఉంది.';
+  String get deleteOptionAvailableInListingPage => 'à°œà°¾à°¬à°¿à°¤à°¾ à°ªà±‡à°œà±€à°²à±‹ à°¤à±Šà°²à°—à°¿à°‚à°ªà± à°Žà°‚à°ªà°¿à°• à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°‰à°‚à°¦à°¿.';
 
   @override
-  String get editLabour => 'కూలీని సవరించు';
+  String get editLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get addLabourTitle => 'కూలీని జోడించు';
+  String get addLabourTitle => 'à°•à±‚à°²à±€à°¨à°¿ à°œà±‹à°¡à°¿à°‚à°šà±';
 
   @override
-  String get editLabourTitle => 'కూలీని సవరించు';
+  String get editLabourTitle => 'à°•à±‚à°²à±€à°¨à°¿ à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get fullNameLabel => 'పూర్తి పేరు';
+  String get fullNameLabel => 'à°ªà±‚à°°à±à°¤à°¿ à°ªà±‡à°°à±';
 
   @override
-  String get skillProfessionLabel => 'నైపుణ్యం / వృత్తి';
+  String get skillProfessionLabel => 'à°¨à±ˆà°ªà±à°£à±à°¯à°‚ / à°µà±ƒà°¤à±à°¤à°¿';
 
   @override
-  String get contactNumberLabel => 'సంప్రదింపు నంబర్';
+  String get contactNumberLabel => 'à°¸à°‚à°ªà±à°°à°¦à°¿à°‚à°ªà± à°¨à°‚à°¬à°°à±';
 
   @override
-  String get dailyWageLabel => 'రోజువారీ వేతనం (₹)';
+  String get dailyWageLabel => 'à°°à±‹à°œà±à°µà°¾à°°à±€ à°µà±‡à°¤à°¨à°‚ (â‚¹)';
 
   @override
-  String get enterName => 'పేరు నమోదు చేయండి';
+  String get enterName => 'à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterSkill => 'నైపుణ్యం నమోదు చేయండి';
+  String get enterSkill => 'à°¨à±ˆà°ªà±à°£à±à°¯à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterContact => 'సంప్రదింపు నమోదు చేయండి';
+  String get enterContact => 'à°¸à°‚à°ªà±à°°à°¦à°¿à°‚à°ªà± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get daily => 'రోజువారీ';
+  String get daily => 'à°°à±‹à°œà±à°µà°¾à°°à±€';
 
   @override
-  String get weekly => 'వారానికొకసారి';
+  String get weekly => 'à°µà°¾à°°à°¾à°¨à°¿à°•à±Šà°•à°¸à°¾à°°à°¿';
 
   @override
-  String get monthly => 'నెలవారీ';
+  String get monthly => 'à°¨à±†à°²à°µà°¾à°°à±€';
 
   @override
-  String get saveLabour => 'కూలీని సేవ్ చేయి';
+  String get saveLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¸à±‡à°µà± à°šà±‡à°¯à°¿';
 
   @override
-  String get updateLabour => 'కూలీని నవీకరించు';
+  String get updateLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¨à°µà±€à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get labourSavedSuccessfully => 'కూలీ విజయవంతంగా సేవ్ చేయబడ్డారు.';
+  String get labourSavedSuccessfully => 'à°•à±‚à°²à±€ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à±à°¡à°¾à°°à±.';
 
   @override
-  String get labourUpdatedSuccessfully => 'కూలీ విజయవంతంగా నవీకరించబడ్డారు.';
+  String get labourUpdatedSuccessfully => 'à°•à±‚à°²à±€ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à±à°¡à°¾à°°à±.';
 
   @override
-  String get failedToSaveLabour => 'కూలీని సేవ్ చేయడం విఫలమైంది.';
+  String get failedToSaveLabour => 'à°•à±‚à°²à±€à°¨à°¿ à°¸à±‡à°µà± à°šà±‡à°¯à°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
   String hireLabourTitle(String name) {
-    return '$name అవర్లను నియమించు';
+    return '$name à°…à°µà°°à±à°²à°¨à± à°¨à°¿à°¯à°®à°¿à°‚à°šà±';
   }
 
   @override
-  String get yourNameLabel => 'మీ పేరు';
+  String get yourNameLabel => 'à°®à±€ à°ªà±‡à°°à±';
 
   @override
-  String get yourContactLabel => 'మీ సంప్రదింపు';
+  String get yourContactLabel => 'à°®à±€ à°¸à°‚à°ªà±à°°à°¦à°¿à°‚à°ªà±';
 
   @override
-  String get startDateLabel => 'ప్రారంభ తేదీ';
+  String get startDateLabel => 'à°ªà±à°°à°¾à°°à°‚à°­ à°¤à±‡à°¦à±€';
 
   @override
-  String get endDateLabel => 'ముగింపు తేదీ';
+  String get endDateLabel => 'à°®à±à°—à°¿à°‚à°ªà± à°¤à±‡à°¦à±€';
 
   @override
-  String get numberOfDaysLabel => 'రోజుల సంఖ్య';
+  String get numberOfDaysLabel => 'à°°à±‹à°œà±à°² à°¸à°‚à°–à±à°¯';
 
   @override
-  String get workTypeLabel => 'పని రకం';
+  String get workTypeLabel => 'à°ªà°¨à°¿ à°°à°•à°‚';
 
   @override
-  String get enterYourName => 'మీ పేరు నమోదు చేయండి';
+  String get enterYourName => 'à°®à±€ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterStartDate => 'ప్రారంభ తేదీ నమోదు చేయండి';
+  String get enterStartDate => 'à°ªà±à°°à°¾à°°à°‚à°­ à°¤à±‡à°¦à±€ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterEndDate => 'ముగింపు తేదీ నమోదు చేయండి';
+  String get enterEndDate => 'à°®à±à°—à°¿à°‚à°ªà± à°¤à±‡à°¦à±€ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterNumberOfDays => 'రోజుల సంఖ్య నమోదు చేయండి';
+  String get enterNumberOfDays => 'à°°à±‹à°œà±à°² à°¸à°‚à°–à±à°¯ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get harvesting => 'పంట కోత';
+  String get harvesting => 'à°ªà°‚à°Ÿ à°•à±‹à°¤';
 
   @override
-  String get planting => 'నాటడం';
+  String get planting => 'à°¨à°¾à°Ÿà°¡à°‚';
 
   @override
-  String get spraying => 'పిచికారీ';
+  String get spraying => 'à°ªà°¿à°šà°¿à°•à°¾à°°à±€';
 
   @override
-  String get ploughing => 'దున్నడం';
+  String get ploughing => 'à°¦à±à°¨à±à°¨à°¡à°‚';
 
   @override
-  String get sendHireRequest => 'నియామక అభ్యర్థన పంపండి';
+  String get sendHireRequest => 'à°¨à°¿à°¯à°¾à°®à°• à°…à°­à±à°¯à°°à±à°¥à°¨ à°ªà°‚à°ªà°‚à°¡à°¿';
 
   @override
-  String get hireRequestSentSuccessfully => 'నియామక అభ్యర్థన విజయవంతంగా పంపబడింది!';
+  String get hireRequestSentSuccessfully => 'à°¨à°¿à°¯à°¾à°®à°• à°…à°­à±à°¯à°°à±à°¥à°¨ à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°ªà°‚à°ªà°¬à°¡à°¿à°‚à°¦à°¿!';
 
   @override
-  String get failedToSendHireRequest => 'నియామక అభ్యర్థన పంపడం విఫలమైంది.';
+  String get failedToSendHireRequest => 'à°¨à°¿à°¯à°¾à°®à°• à°…à°­à±à°¯à°°à±à°¥à°¨ à°ªà°‚à°ªà°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get mustBeSignedInToHire => 'నియామక అభ్యర్థన పంపడానికి సైన్ ఇన్ చేయండి.';
+  String get mustBeSignedInToHire => 'à°¨à°¿à°¯à°¾à°®à°• à°…à°­à±à°¯à°°à±à°¥à°¨ à°ªà°‚à°ªà°¡à°¾à°¨à°¿à°•à°¿ à°¸à±ˆà°¨à± à°‡à°¨à± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get nearbyLabourTitle => 'సమీపంలోని కూలీలు';
+  String get nearbyLabourTitle => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°•à±‚à°²à±€à°²à±';
 
   @override
-  String get searchLabourHint => 'పేరు, నైపుణ్యం లేదా స్థానం వెతకండి';
+  String get searchLabourHint => 'à°ªà±‡à°°à±, à°¨à±ˆà°ªà±à°£à±à°¯à°‚ à°²à±‡à°¦à°¾ à°¸à±à°¥à°¾à°¨à°‚ à°µà±†à°¤à°•à°‚à°¡à°¿';
 
   @override
-  String get selectRadius => 'వ్యాసార్ధం ఎంచుకోండి';
+  String get selectRadius => 'à°µà±à°¯à°¾à°¸à°¾à°°à±à°§à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get locationPermissionDenied => 'స్థాన అనుమతి నిరాకరించబడింది. సెట్టింగ్‌లో ఎనేబుల్ చేయండి.';
+  String get locationPermissionDenied => 'à°¸à±à°¥à°¾à°¨ à°…à°¨à±à°®à°¤à°¿ à°¨à°¿à°°à°¾à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿. à°¸à±†à°Ÿà±à°Ÿà°¿à°‚à°—à±â€Œà°²à±‹ à°Žà°¨à±‡à°¬à±à°²à± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get openSettings => 'సెట్టింగ్‌లు తెరవు';
+  String get openSettings => 'à°¸à±†à°Ÿà±à°Ÿà°¿à°‚à°—à±â€Œà°²à± à°¤à±†à°°à°µà±';
 
   @override
-  String get noLabourFoundNearby => 'సమీపంలో కూలీలు కనుగొనబడలేదు.';
+  String get noLabourFoundNearby => 'à°¸à°®à±€à°ªà°‚à°²à±‹ à°•à±‚à°²à±€à°²à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±.';
 
   @override
-  String get failedToLoadLabour => 'కూలీలను లోడ్ చేయడం విఫలమైంది.';
+  String get failedToLoadLabour => 'à°•à±‚à°²à±€à°²à°¨à± à°²à±‹à°¡à± à°šà±‡à°¯à°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get couldNotGetLocation => 'మీ స్థానం పొందడం సాధ్యపడలేదు.';
+  String get couldNotGetLocation => 'à°®à±€ à°¸à±à°¥à°¾à°¨à°‚ à°ªà±Šà°‚à°¦à°¡à°‚ à°¸à°¾à°§à±à°¯à°ªà°¡à°²à±‡à°¦à±.';
 
   @override
-  String get failedToLoadPlants => 'మొక్కలను లోడ్ చేయడం విఫలమైంది';
+  String get failedToLoadPlants => 'à°®à±Šà°•à±à°•à°²à°¨à± à°²à±‹à°¡à± à°šà±‡à°¯à°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get errorLoadingPlantDetails => 'మొక్క వివరాలు లోడ్ చేయడంలో లోపం';
+  String get errorLoadingPlantDetails => 'à°®à±Šà°•à±à°• à°µà°¿à°µà°°à°¾à°²à± à°²à±‹à°¡à± à°šà±‡à°¯à°¡à°‚à°²à±‹ à°²à±‹à°ªà°‚';
 
   @override
-  String get unknownVendor => 'తెలియని విక్రేత';
+  String get unknownVendor => 'à°¤à±†à°²à°¿à°¯à°¨à°¿ à°µà°¿à°•à±à°°à±‡à°¤';
 
   @override
-  String get notProvided => 'అందించబడలేదు';
+  String get notProvided => 'à°…à°‚à°¦à°¿à°‚à°šà°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get noDescriptionProvided => 'వివరణ లేదు.';
+  String get noDescriptionProvided => 'à°µà°¿à°µà°°à°£ à°²à±‡à°¦à±.';
 
   @override
-  String get couldNotOpenWhatsApp => 'వాట్సాప్ తెరవడం సాధ్యపడలేదు';
+  String get couldNotOpenWhatsApp => 'à°µà°¾à°Ÿà±à°¸à°¾à°ªà± à°¤à±†à°°à°µà°¡à°‚ à°¸à°¾à°§à±à°¯à°ªà°¡à°²à±‡à°¦à±';
 
   @override
-  String get descriptionHeader => 'వివరణ';
+  String get descriptionHeader => 'à°µà°¿à°µà°°à°£';
 
   @override
-  String get addPlantTitle => 'మొక్క జోడించు';
+  String get addPlantTitle => 'à°®à±Šà°•à±à°• à°œà±‹à°¡à°¿à°‚à°šà±';
 
   @override
-  String get editPlantTitle => 'మొక్క సవరించు';
+  String get editPlantTitle => 'à°®à±Šà°•à±à°• à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get plantNameLabel => 'మొక్క పేరు';
+  String get plantNameLabel => 'à°®à±Šà°•à±à°• à°ªà±‡à°°à±';
 
   @override
-  String get plantTypeLabel => 'మొక్క రకం';
+  String get plantTypeLabel => 'à°®à±Šà°•à±à°• à°°à°•à°‚';
 
   @override
-  String get quantityAvailableLabel => 'అందుబాటులో ఉన్న పరిమాణం';
+  String get quantityAvailableLabel => 'à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°‰à°¨à±à°¨ à°ªà°°à°¿à°®à°¾à°£à°‚';
 
   @override
-  String get vendorNurseryNameLabel => 'విక్రేత / నర్సరీ పేరు';
+  String get vendorNurseryNameLabel => 'à°µà°¿à°•à±à°°à±‡à°¤ / à°¨à°°à±à°¸à°°à±€ à°ªà±‡à°°à±';
 
   @override
-  String get floweringPlant => 'పువ్వుల మొక్క';
+  String get floweringPlant => 'à°ªà±à°µà±à°µà±à°² à°®à±Šà°•à±à°•';
 
   @override
-  String get fruitPlant => 'పండ్ల మొక్క';
+  String get fruitPlant => 'à°ªà°‚à°¡à±à°² à°®à±Šà°•à±à°•';
 
   @override
-  String get vegetablePlant => 'కూరగాయల మొక్క';
+  String get vegetablePlant => 'à°•à±‚à°°à°—à°¾à°¯à°² à°®à±Šà°•à±à°•';
 
   @override
-  String get medicinalPlant => 'ఔషధ మొక్క';
+  String get medicinalPlant => 'à°”à°·à°§ à°®à±Šà°•à±à°•';
 
   @override
-  String get ornamental => 'అలంకరణ మొక్క';
+  String get ornamental => 'à°…à°²à°‚à°•à°°à°£ à°®à±Šà°•à±à°•';
 
   @override
-  String get enterPlantName => 'మొక్క పేరు నమోదు చేయండి';
+  String get enterPlantName => 'à°®à±Šà°•à±à°• à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterType => 'రకం నమోదు చేయండి';
+  String get enterType => 'à°°à°•à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterVendorName => 'విక్రేత పేరు నమోదు చేయండి';
+  String get enterVendorName => 'à°µà°¿à°•à±à°°à±‡à°¤ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get savePlant => 'మొక్క సేవ్ చేయి';
+  String get savePlant => 'à°®à±Šà°•à±à°• à°¸à±‡à°µà± à°šà±‡à°¯à°¿';
 
   @override
-  String get updatePlant => 'మొక్క నవీకరించు';
+  String get updatePlant => 'à°®à±Šà°•à±à°• à°¨à°µà±€à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get plantSavedSuccessfully => 'మొక్క విజయవంతంగా సేవ్ చేయబడింది.';
+  String get plantSavedSuccessfully => 'à°®à±Šà°•à±à°• à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get plantUpdatedSuccessfully => 'మొక్క విజయవంతంగా నవీకరించబడింది.';
+  String get plantUpdatedSuccessfully => 'à°®à±Šà°•à±à°• à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿.';
 
   @override
-  String get failedToSavePlant => 'మొక్క సేవ్ చేయడం విఫలమైంది.';
+  String get failedToSavePlant => 'à°®à±Šà°•à±à°• à°¸à±‡à°µà± à°šà±‡à°¯à°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿.';
 
   @override
-  String get nearbyPlantVendorsTitle => 'సమీపంలోని మొక్క విక్రేతలు';
+  String get nearbyPlantVendorsTitle => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°®à±Šà°•à±à°• à°µà°¿à°•à±à°°à±‡à°¤à°²à±';
 
   @override
-  String get locationNotVerified => 'స్థానం ధృవీకరించబడలేదు';
+  String get locationNotVerified => 'à°¸à±à°¥à°¾à°¨à°‚ à°§à±ƒà°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get perDay => '/రోజు';
+  String get perDay => '/à°°à±‹à°œà±';
 
   @override
-  String get locationNotAvailable => 'స్థానం అందుబాటులో లేదు';
+  String get locationNotAvailable => 'à°¸à±à°¥à°¾à°¨à°‚ à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°²à±‡à°¦à±';
 
   @override
-  String get listNewMachineTitle => 'కొత్త యంత్రం జాబితా చేయి';
+  String get listNewMachineTitle => 'à°•à±Šà°¤à±à°¤ à°¯à°‚à°¤à±à°°à°‚ à°œà°¾à°¬à°¿à°¤à°¾ à°šà±‡à°¯à°¿';
 
   @override
-  String get editMachineTitle => 'యంత్రం సవరించు';
+  String get editMachineTitle => 'à°¯à°‚à°¤à±à°°à°‚ à°¸à°µà°°à°¿à°‚à°šà±';
 
   @override
-  String get machineNameLabel => 'యంత్రం పేరు';
+  String get machineNameLabel => 'à°¯à°‚à°¤à±à°°à°‚ à°ªà±‡à°°à±';
 
   @override
-  String get machineTypeLabel => 'యంత్రం రకం';
+  String get machineTypeLabel => 'à°¯à°‚à°¤à±à°°à°‚ à°°à°•à°‚';
 
   @override
-  String get pricePerDayLabel => 'రోజుకు ధర (₹)';
+  String get pricePerDayLabel => 'à°°à±‹à°œà±à°•à± à°§à°° (â‚¹)';
 
   @override
-  String get ownerNameLabel => 'యజమాని పేరు';
+  String get ownerNameLabel => 'à°¯à°œà°®à°¾à°¨à°¿ à°ªà±‡à°°à±';
 
   @override
-  String get phoneNumberLabel => 'ఫోన్ నంబర్';
+  String get phoneNumberLabel => 'à°«à±‹à°¨à± à°¨à°‚à°¬à°°à±';
 
   @override
-  String get machineTractor => 'ట్రాక్టర్';
+  String get machineTractor => 'à°Ÿà±à°°à°¾à°•à±à°Ÿà°°à±';
 
   @override
-  String get machineHarvester => 'హార్వెస్టర్';
+  String get machineHarvester => 'à°¹à°¾à°°à±à°µà±†à°¸à±à°Ÿà°°à±';
 
   @override
-  String get machinePlough => 'నాగలి';
+  String get machinePlough => 'à°¨à°¾à°—à°²à°¿';
 
   @override
-  String get machineSeeder => 'విత్తన యంత్రం';
+  String get machineSeeder => 'à°µà°¿à°¤à±à°¤à°¨ à°¯à°‚à°¤à±à°°à°‚';
 
   @override
-  String get machineSprayer => 'పిచికారీ యంత్రం';
+  String get machineSprayer => 'à°ªà°¿à°šà°¿à°•à°¾à°°à±€ à°¯à°‚à°¤à±à°°à°‚';
 
   @override
-  String get machineTiller => 'టిల్లర్';
+  String get machineTiller => 'à°Ÿà°¿à°²à±à°²à°°à±';
 
   @override
-  String get machineBaler => 'బేలర్';
+  String get machineBaler => 'à°¬à±‡à°²à°°à±';
 
   @override
-  String get enterMachineName => 'యంత్రం పేరు నమోదు చేయండి';
+  String get enterMachineName => 'à°¯à°‚à°¤à±à°°à°‚ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get selectAType => 'ఒక రకం ఎంచుకోండి';
+  String get selectAType => 'à°’à°• à°°à°•à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get enterOwnerName => 'యజమాని పేరు నమోదు చేయండి';
+  String get enterOwnerName => 'à°¯à°œà°®à°¾à°¨à°¿ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterPhone => 'ఫోన్ నమోదు చేయండి';
+  String get enterPhone => 'à°«à±‹à°¨à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get currentLocationSet => 'ప్రస్తుత స్థానం సెట్ చేయబడింది';
+  String get currentLocationSet => 'à°ªà±à°°à°¸à±à°¤à±à°¤ à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get locationNotSet => 'స్థానం సెట్ చేయబడలేదు';
+  String get locationNotSet => 'à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get selectMachineType => 'యంత్రం రకం ఎంచుకోండి';
+  String get selectMachineType => 'à°¯à°‚à°¤à±à°°à°‚ à°°à°•à°‚ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿';
 
   @override
-  String get setLocationFirst => 'ముందు స్థానం సెట్ చేయండి';
+  String get setLocationFirst => 'à°®à±à°‚à°¦à± à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get enterValidNumericPrice => 'సరైన సంఖ్యా ధర నమోదు చేయండి';
+  String get enterValidNumericPrice => 'à°¸à°°à±ˆà°¨ à°¸à°‚à°–à±à°¯à°¾ à°§à°° à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get submitListing => 'జాబితా సమర్పించు';
+  String get submitListing => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¸à°®à°°à±à°ªà°¿à°‚à°šà±';
 
   @override
-  String get updateListing => 'జాబితా నవీకరించు';
+  String get updateListing => 'à°œà°¾à°¬à°¿à°¤à°¾ à°¨à°µà±€à°•à°°à°¿à°‚à°šà±';
 
   @override
-  String get nearestFirst => 'దగ్గర్లో ఉన్నది ముందు';
+  String get nearestFirst => 'à°¦à°—à±à°—à°°à±à°²à±‹ à°‰à°¨à±à°¨à°¦à°¿ à°®à±à°‚à°¦à±';
 
   @override
-  String get lowestPriceFirst => 'తక్కువ ధర ముందు';
+  String get lowestPriceFirst => 'à°¤à°•à±à°•à±à°µ à°§à°° à°®à±à°‚à°¦à±';
 
   @override
-  String get searchByNameOwnerLocation => 'పేరు, యజమాని లేదా స్థానం వెతకండి';
+  String get searchByNameOwnerLocation => 'à°ªà±‡à°°à±, à°¯à°œà°®à°¾à°¨à°¿ à°²à±‡à°¦à°¾ à°¸à±à°¥à°¾à°¨à°‚ à°µà±†à°¤à°•à°‚à°¡à°¿';
 
   @override
-  String get referenceLocationNotAvailable => 'సూచన స్థానం అందుబాటులో లేదు';
+  String get referenceLocationNotAvailable => 'à°¸à±‚à°šà°¨ à°¸à±à°¥à°¾à°¨à°‚ à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°²à±‡à°¦à±';
 
   @override
-  String get noMachinesFoundNearby => 'సమీపంలో యంత్రాలు కనుగొనబడలేదు';
+  String get noMachinesFoundNearby => 'à°¸à°®à±€à°ªà°‚à°²à±‹ à°¯à°‚à°¤à±à°°à°¾à°²à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get nearbyMachinesMapTitle => 'సమీపంలోని యంత్రాలు (మ్యాప్)';
+  String get nearbyMachinesMapTitle => 'à°¸à°®à±€à°ªà°‚à°²à±‹à°¨à°¿ à°¯à°‚à°¤à±à°°à°¾à°²à± (à°®à±à°¯à°¾à°ªà±)';
 
   @override
-  String get searchAndSetLocation => 'వెతికి స్థానం సెట్ చేయండి';
+  String get searchAndSetLocation => 'à°µà±†à°¤à°¿à°•à°¿ à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
   String dayForecastTitle(String day) {
-    return '$day సూచన';
+    return '$day à°¸à±‚à°šà°¨';
   }
 
   @override
-  String get minMaxTemperature => 'కనిష్ట / గరిష్ట ఉష్ణోగ్రత';
+  String get minMaxTemperature => 'à°•à°¨à°¿à°·à±à°Ÿ / à°—à°°à°¿à°·à±à°Ÿ à°‰à°·à±à°£à±‹à°—à±à°°à°¤';
 
   @override
-  String get enterLocationHint => 'స్థానం నమోదు చేయండి...';
+  String get enterLocationHint => 'à°¸à±à°¥à°¾à°¨à°‚ à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿...';
 
   @override
-  String get noLocationsFound => 'స్థానాలు కనుగొనబడలేదు';
+  String get noLocationsFound => 'à°¸à±à°¥à°¾à°¨à°¾à°²à± à°•à°¨à±à°—à±Šà°¨à°¬à°¡à°²à±‡à°¦à±';
 
   @override
-  String get diseaseDetected => 'వ్యాధి గుర్తించబడింది';
+  String get diseaseDetected => 'à°µà±à°¯à°¾à°§à°¿ à°—à±à°°à±à°¤à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get errorContactingAI => 'AI సంప్రదింపులో లోపం';
+  String get errorContactingAI => 'AI à°¸à°‚à°ªà±à°°à°¦à°¿à°‚à°ªà±à°²à±‹ à°²à±‹à°ªà°‚';
 
   @override
-  String get chatbotWelcomeMessage => 'నమస్కారం! 👋 నేను కృషిమిత్ర AI. వ్యవసాయం గురించి నేను మీకు ఎలా సహాయం చేయగలను?';
+  String get chatbotWelcomeMessage => 'à°¨à°®à°¸à±à°•à°¾à°°à°‚! ðŸ‘‹ à°¨à±‡à°¨à± à°•à±ƒà°·à°¿à°®à°¿à°¤à±à°° AI. à°µà±à°¯à°µà°¸à°¾à°¯à°‚ à°—à±à°°à°¿à°‚à°šà°¿ à°¨à±‡à°¨à± à°®à±€à°•à± à°Žà°²à°¾ à°¸à°¹à°¾à°¯à°‚ à°šà±‡à°¯à°—à°²à°¨à±?';
 
   @override
-  String get profilePhotoUpdated => 'ప్రొఫైల్ ఫోటో నవీకరించబడింది';
+  String get profilePhotoUpdated => 'à°ªà±à°°à±Šà°«à±ˆà°²à± à°«à±‹à°Ÿà±‹ à°¨à°µà±€à°•à°°à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get updateProfilePhoto => 'ప్రొఫైల్ ఫోటో మార్చు';
+  String get updateProfilePhoto => 'à°ªà±à°°à±Šà°«à±ˆà°²à± à°«à±‹à°Ÿà±‹ à°®à°¾à°°à±à°šà±';
 
   @override
-  String get profileSaved => 'ప్రొఫైల్ సేవ్ చేయబడింది';
+  String get profileSaved => 'à°ªà±à°°à±Šà°«à±ˆà°²à± à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get themePreferenceSaved => 'థీమ్ ప్రాధాన్యత సేవ్ చేయబడింది. వెంటనే వర్తించడానికి యాప్ రీస్టార్ట్ చేయండి.';
+  String get themePreferenceSaved => 'à°¥à±€à°®à± à°ªà±à°°à°¾à°§à°¾à°¨à±à°¯à°¤ à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿. à°µà±†à°‚à°Ÿà°¨à±‡ à°µà°°à±à°¤à°¿à°‚à°šà°¡à°¾à°¨à°¿à°•à°¿ à°¯à°¾à°ªà± à°°à±€à°¸à±à°Ÿà°¾à°°à±à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get passwordChangeNotAvailable => 'పాస్‌వర్డ్ మార్పు అందుబాటులో లేదు';
+  String get passwordChangeNotAvailable => 'à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à± à°®à°¾à°°à±à°ªà± à°…à°‚à°¦à±à°¬à°¾à°Ÿà±à°²à±‹ à°²à±‡à°¦à±';
 
   @override
-  String get passwordResetEmailSent => 'పాస్‌వర్డ్ రీసెట్ ఇమెయిల్ పంపబడింది';
+  String get passwordResetEmailSent => 'à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à± à°°à±€à°¸à±†à°Ÿà± à°‡à°®à±†à°¯à°¿à°²à± à°ªà°‚à°ªà°¬à°¡à°¿à°‚à°¦à°¿';
 
   @override
-  String get failedToSendResetEmail => 'రీసెట్ ఇమెయిల్ పంపడం విఫలమైంది';
+  String get failedToSendResetEmail => 'à°°à±€à°¸à±†à°Ÿà± à°‡à°®à±†à°¯à°¿à°²à± à°ªà°‚à°ªà°¡à°‚ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get deleteAccountTitle => 'ఖాతా తొలగించు';
+  String get deleteAccountTitle => 'à°–à°¾à°¤à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà±';
 
   @override
-  String get deleteAccountConfirm => 'ఇది మీ ఖాతాను శాశ్వతంగా తొలగిస్తుంది. నిర్ధారణగా ఉన్నారా?';
+  String get deleteAccountConfirm => 'à°‡à°¦à°¿ à°®à±€ à°–à°¾à°¤à°¾à°¨à± à°¶à°¾à°¶à±à°µà°¤à°‚à°—à°¾ à°¤à±Šà°²à°—à°¿à°¸à±à°¤à±à°‚à°¦à°¿. à°¨à°¿à°°à±à°§à°¾à°°à°£à°—à°¾ à°‰à°¨à±à°¨à°¾à°°à°¾?';
 
   @override
-  String get exportStarted => 'ఎగుమతి ప్రారంభమైంది (ఇమెయిల్ లేదా డౌన్‌లోడ్ చెక్ చేయండి)';
+  String get exportStarted => 'à°Žà°—à±à°®à°¤à°¿ à°ªà±à°°à°¾à°°à°‚à°­à°®à±ˆà°‚à°¦à°¿ (à°‡à°®à±†à°¯à°¿à°²à± à°²à±‡à°¦à°¾ à°¡à±Œà°¨à±â€Œà°²à±‹à°¡à± à°šà±†à°•à± à°šà±‡à°¯à°‚à°¡à°¿)';
 
   @override
-  String get exportFailed => 'ఎగుమతి విఫలమైంది';
+  String get exportFailed => 'à°Žà°—à±à°®à°¤à°¿ à°µà°¿à°«à°²à°®à±ˆà°‚à°¦à°¿';
 
   @override
-  String get setDefaultLocation => 'డిఫాల్ట్ స్థానం సెట్ చేయి';
+  String get setDefaultLocation => 'à°¡à°¿à°«à°¾à°²à±à°Ÿà± à°¸à±à°¥à°¾à°¨à°‚ à°¸à±†à°Ÿà± à°šà±‡à°¯à°¿';
 
   @override
-  String get locationHintText => 'ఉదా., హైదరాబాద్, తెలంగాణ';
+  String get locationHintText => 'à°‰à°¦à°¾., à°¹à±ˆà°¦à°°à°¾à°¬à°¾à°¦à±, à°¤à±†à°²à°‚à°—à°¾à°£';
 
   @override
-  String get personalInfo => 'వ్యక్తిగత సమాచారం';
+  String get personalInfo => 'à°µà±à°¯à°•à±à°¤à°¿à°—à°¤ à°¸à°®à°¾à°šà°¾à°°à°‚';
 
   @override
-  String get pleaseEnterName => 'దయచేసి పేరు నమోదు చేయండి';
+  String get pleaseEnterName => 'à°¦à°¯à°šà±‡à°¸à°¿ à°ªà±‡à°°à± à°¨à°®à±‹à°¦à± à°šà±‡à°¯à°‚à°¡à°¿';
 
   @override
-  String get defaultLocationLabel => 'డిఫాల్ట్ స్థానం';
+  String get defaultLocationLabel => 'à°¡à°¿à°«à°¾à°²à±à°Ÿà± à°¸à±à°¥à°¾à°¨à°‚';
 
   @override
-  String get pleaseProvideDefaultLocation => 'దయచేసి డిఫాల్ట్ స్థానం అందించండి';
+  String get pleaseProvideDefaultLocation => 'à°¦à°¯à°šà±‡à°¸à°¿ à°¡à°¿à°«à°¾à°²à±à°Ÿà± à°¸à±à°¥à°¾à°¨à°‚ à°…à°‚à°¦à°¿à°‚à°šà°‚à°¡à°¿';
 
   @override
-  String get help => 'సహాయం';
+  String get help => 'à°¸à°¹à°¾à°¯à°‚';
 
   @override
-  String get darkModeSavedLocally => 'స్థానికంగా సేవ్ చేయబడింది. వర్తించడానికి రీస్టార్ట్ చేయండి.';
+  String get darkModeSavedLocally => 'à°¸à±à°¥à°¾à°¨à°¿à°•à°‚à°—à°¾ à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿. à°µà°°à±à°¤à°¿à°‚à°šà°¡à°¾à°¨à°¿à°•à°¿ à°°à±€à°¸à±à°Ÿà°¾à°°à±à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿.';
 
   @override
-  String get userId => 'యూజర్ ID';
+  String get userId => 'à°¯à±‚à°œà°°à± ID';
 
   @override
-  String get providerLabel => 'ప్రొవైడర్';
+  String get providerLabel => 'à°ªà±à°°à±Šà°µà±ˆà°¡à°°à±';
 
   @override
-  String get changePassword => 'పాస్‌వర్డ్ మార్చు';
+  String get changePassword => 'à°ªà°¾à°¸à±â€Œà°µà°°à±à°¡à± à°®à°¾à°°à±à°šà±';
 
   @override
-  String get exportData => 'డేటా ఎగుమతి చేయి';
+  String get exportData => 'à°¡à±‡à°Ÿà°¾ à°Žà°—à±à°®à°¤à°¿ à°šà±‡à°¯à°¿';
 
   @override
-  String get deleteAccount => 'ఖాతా తొలగించు';
+  String get deleteAccount => 'à°–à°¾à°¤à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà±';
 
   @override
-  String get errorDeletingAccount => 'ఖాతా తొలగించడంలో లోపం';
+  String get errorDeletingAccount => 'à°–à°¾à°¤à°¾ à°¤à±Šà°²à°—à°¿à°‚à°šà°¡à°‚à°²à±‹ à°²à±‹à°ªà°‚';
 
   @override
   String get nameLabel => 'Name';
@@ -1182,7 +1182,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get farmerDetailsTitle => 'Farmer Details';
 
   @override
-  String get yes => 'అవును';
+  String get yes => 'à°…à°µà±à°¨à±';
 
   @override
   String get by => 'By';
@@ -1298,7 +1298,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String buyerContactSubtitle(String contact) {
-    return 'Buyer • Contact: $contact';
+    return 'Buyer â€¢ Contact: $contact';
   }
 
   @override
@@ -1327,7 +1327,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String totalAmountLabel(Object amount) {
-    return 'Total: ₹$amount';
+    return 'Total: â‚¹$amount';
   }
 
   @override
@@ -1386,7 +1386,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String totalAmountValue(Object amount) {
-    return 'Total: ₹$amount';
+    return 'Total: â‚¹$amount';
   }
 
   @override
@@ -1411,7 +1411,7 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String welcomeUser(String name) {
-    return 'Welcome, $name 👋';
+    return 'Welcome, $name ðŸ‘‹';
   }
 
   @override
@@ -1428,4 +1428,52 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get locationPermissionPermanentlyDenied => 'Location permission permanently denied';
+
+  @override
+  String get f2bTagline => 'Farm Fresh · Direct Trade';
+
+  @override
+  String get listProduce => 'List Produce';
+
+  @override
+  String get searchProducts => 'Search products, farmers...';
+
+  @override
+  String get featuredProduce => 'Featured Produce';
+
+  @override
+  String get allProducts => 'All Products';
+
+  @override
+  String get myOrders => 'My Orders';
+
+  @override
+  String get recentlyAdded => 'Recently Added';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get organic => 'Organic';
+
+  @override
+  String get farmerInfo => 'Farmer Info';
+
+  @override
+  String get similarProducts => 'Similar Products';
+
+  @override
+  String get harvestDate => 'Harvest Date';
+
+  @override
+  String get grade => 'Grade';
+
+  @override
+  String get minOrder => 'Min. Order';
+
+  @override
+  String get contactFarmer => 'Contact Farmer';
+
+  @override
+  String get specifications => 'Specifications';
 }
