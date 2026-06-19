@@ -50,7 +50,7 @@ class PlantDetailPage extends StatelessWidget {
   }
 
   Future<void> _openMap(BuildContext context, double? lat, double? lng) async {
-    if (lat == null || lng == null) {
+    if (lat == null || lng == null || (lat == 0.0 && lng == 0.0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.locationNotAvailable)),
       );

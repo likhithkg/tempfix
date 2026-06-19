@@ -8,6 +8,7 @@ import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_service.dart';
 import 'package:krishimithra/plant_vendor/plant_list_form_page.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_nearby_page.dart';
+import 'package:krishimithra/plant_vendor/plant_detail_page.dart';
 
 import '../services/content_translation_service.dart';
 import '../theme.dart';
@@ -250,35 +251,10 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
                     .withValues(alpha: 0.6),
               ),
         ),
-        onTap: () async {
-          try {
-            if (isOwner) {
-              final changed = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PlantListFormPage(existingVendor: v),
-                ),
-              );
-              if (changed == true) _load();
-            } else {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PlantVendorDetailsPage(vendor: v),
-                ),
-              );
-            }
-          } catch (err) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Unable to open listing: $err'),
-                  backgroundColor: KMColors.error,
-                ),
-              );
-            }
-          }
-        },
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => PlantDetailPage(vendor: v)),
+        ),
       ),
     );
   }
