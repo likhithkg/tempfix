@@ -1,0 +1,210 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    // Reads the caller's role from users/{uid}/role
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(uid())).data.get('role', 'farmer');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == 'admin';
+    }
+
+    function isFarmer() {
+      return isSignedIn() && (userRole() == 'farmer' || userRole() == 'admin');
+    }
+
+    function isOwner(resource) {
+      return isSignedIn() && resource.data.get('ownerId', '') == uid();
+    }
+
+    function isFarmerOfRecord(resource) {
+      return isSignedIn() && resource.data.get('farmerId', '') == uid();
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isSignedIn() && (uid() == userId || isAdmin());
+      allow create: if isSignedIn() && uid() == userId;
+      allow update: if isSignedIn() && (uid() == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ── Export Products (Farmer Listings) ─────────────────────────────────────
+    match /export_products/{productId} {
+      allow read: if isSignedIn();
+      allow create: if isFarmer();
+      allow update: if isOwner(resource) || isAdmin();
+      allow delete: if isOwner(resource) || isAdmin();
+    }
+
+    // ── Purchase Orders ────────────────────────────────────────────────────────
+    // Only admin can CREATE a PO. Farmers can read their own and update status (accept/reject).
+    match /purchase_orders/{poId} {
+      allow read: if isSignedIn() &&
+                    (isAdmin() ||
+                     resource.data.get('farmerId', '') == uid() ||
+                     resource.data.get('ownerId', '') == uid() ||
+                     resource.data.get('buyerId', '') == uid());
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isFarmerOfRecord(resource);
+      allow delete: if isAdmin();
+    }
+
+    // ── QC Reports ────────────────────────────────────────────────────────────
+    match /qc_reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();               // any authenticated inspector
+      allow update: if isAdmin();                   // only admin can approve/reject
+      allow delete: if isAdmin();
+    }
+
+    // ── Export Demand (Demand Board) ──────────────────────────────────────────
+    match /export_demand/{demandId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isSignedIn() &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['responses']));
+      allow delete: if isAdmin();
+    }
+
+    // ── Warehouse Stock ───────────────────────────────────────────────────────
+    match /warehouse_stock/{stockId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Warehouse Transactions ────────────────────────────────────────────────
+    match /warehouse_transactions/{txId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false;    // transactions are immutable
+      allow delete: if false;
+    }
+
+    // ── Shipments ─────────────────────────────────────────────────────────────
+    match /shipments/{shipmentId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Export Documents ──────────────────────────────────────────────────────
+    match /export_documents/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || (isSignedIn() &&
+                      request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['status']));
+      allow delete: if isAdmin();
+    }
+
+    // ── International Buyers ──────────────────────────────────────────────────
+    match /international_buyers/{buyerId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    match /km_notifications/{notifId} {
+      allow read: if isSignedIn() &&
+                    (resource.data.get('userId', '') == uid() ||
+                     resource.data.get('userId', '') == '' ||
+                     isAdmin());
+      allow create: if isAdmin();
+      allow update: if isSignedIn() &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isSignedIn() &&
+                      (resource.data.get('userId', '') == uid() || isAdmin());
+    }
+
+    // ── Nearby Farmers ────────────────────────────────────────────────────────
+    match /farmers/{farmerId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && uid() == farmerId;
+    }
+
+    // ── Rent Machines ─────────────────────────────────────────────────────────
+    match /rent_machines/{machineId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+                      (resource.data.get('ownerId', '') == uid() || isAdmin());
+      allow delete: if isSignedIn() &&
+                      (resource.data.get('ownerId', '') == uid() || isAdmin());
+    }
+
+    match /rent_bookings/{bookingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ── Labour Hub ────────────────────────────────────────────────────────────
+    match /labour_profiles/{profileId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && uid() == profileId;
+    }
+
+    match /hire_requests/{reqId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ── Plant Vendor ──────────────────────────────────────────────────────────
+    match /plant_products/{productId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+                      (resource.data.get('ownerId', '') == uid() || isAdmin());
+      allow delete: if isSignedIn() &&
+                      (resource.data.get('ownerId', '') == uid() || isAdmin());
+    }
+
+    match /plant_orders/{orderId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ── Crop Disease / Chatbot / Weather ─────────────────────────────────────
+    // Logs and history are per-user
+    match /disease_logs/{logId} {
+      allow read: if isSignedIn() && resource.data.get('userId', '') == uid();
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.get('userId', '') == uid();
+    }
+
+    // ── Profile / User Data ───────────────────────────────────────────────────
+    match /user_profiles/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && uid() == userId;
+    }
+
+    // ── Default: deny all unmatched ───────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
