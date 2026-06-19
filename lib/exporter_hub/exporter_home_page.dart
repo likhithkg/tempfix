@@ -301,20 +301,15 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     final loc = ContentTranslationService.translateLocation(p.location, langCode);
     final isOwner = user != null && p.ownerId == user.uid;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _ProductDetailSheet(
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ProductDetailPage(
         product: p,
         translatedName: name,
         translatedLocation: loc,
         isOwner: isOwner,
         service: _service,
       ),
-    );
+    ));
   }
 }
 
@@ -490,13 +485,16 @@ class _ProcurementCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 90,
-                width: double.infinity,
-                child: hasImage
-                    ? Image.network(product.primaryImage, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _ImagePlaceholder(product: product))
-                    : _ImagePlaceholder(product: product),
+              Hero(
+                tag: 'product-image-${product.id}',
+                child: SizedBox(
+                  height: 90,
+                  width: double.infinity,
+                  child: hasImage
+                      ? Image.network(product.primaryImage, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _ImagePlaceholder(product: product))
+                      : _ImagePlaceholder(product: product),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -841,16 +839,17 @@ class _AllProductsSheet extends StatelessWidget {
   }
 }
 
-// ── Product Detail Bottom Sheet ────────────────────────────────────────────────
+// ── Product Detail Page (full-screen with Hero animation) ─────────────────────
 
-class _ProductDetailSheet extends StatelessWidget {
+class ProductDetailPage extends StatelessWidget {
   final ExportProduct product;
   final String translatedName;
   final String translatedLocation;
   final bool isOwner;
   final ExporterService service;
 
-  const _ProductDetailSheet({
+  const ProductDetailPage({
+    super.key,
     required this.product,
     required this.translatedName,
     required this.translatedLocation,
@@ -858,96 +857,148 @@ class _ProductDetailSheet extends StatelessWidget {
     required this.service,
   });
 
+  String _fmt(DateTime d) => '${d.day}/${d.month}/${d.year}';
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 1.0,
-      expand: false,
-      builder: (_, controller) => SingleChildScrollView(
-        controller: controller,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Center(
-              child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.grey[400], borderRadius: BorderRadius.circular(2))),
+    final hasImage = product.primaryImage.isNotEmpty;
+
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 240,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(translatedName,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold, shadows: [
+                    Shadow(color: Colors.black54, blurRadius: 4)
+                  ])),
+              background: Hero(
+                tag: 'product-image-${product.id}',
+                child: hasImage
+                    ? Image.network(product.primaryImage, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _PlaceholderBg())
+                    : _PlaceholderBg(),
+              ),
             ),
-            const SizedBox(height: 16),
-            if (product.primaryImage.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(product.primaryImage, height: 180,
-                    width: double.infinity, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink()),
-              ),
-            const SizedBox(height: 12),
-            Wrap(spacing: 6, children: [
-              if (product.isOrganic) _Badge(label: l.organic, color: Colors.green),
-              if (product.grade?.isNotEmpty ?? false)
-                _Badge(label: '${l.grade} ${product.grade}', color: Colors.indigo),
-            ]),
-            const SizedBox(height: 8),
-            Text(translatedName,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('₹${product.pricePerUnit}',
-                style: TextStyle(
-                    fontSize: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            _DetailRow(l.quantityLabel, product.quantity),
-            _DetailRow(l.locationLabel, translatedLocation),
-            _DetailRow(l.farmerLabel, product.farmerName),
-            if (product.farmerMobile?.isNotEmpty ?? false)
-              _DetailRow(l.mobileLabel, product.farmerMobile!),
-            if (product.variety?.isNotEmpty ?? false)
-              _DetailRow(l.varietyLabel, product.variety!),
-            if (product.harvestDate != null)
-              _DetailRow(l.harvestDate, _fmt(product.harvestDate!)),
-            if (product.moistureLevel?.isNotEmpty ?? false)
-              _DetailRow(l.moistureLevelLabel, product.moistureLevel!),
-            if (product.storageLocation?.isNotEmpty ?? false)
-              _DetailRow(l.storageLocationLabel, product.storageLocation!),
-            if (product.packagingType?.isNotEmpty ?? false)
-              _DetailRow(l.packagingTypeLabel, product.packagingType!),
-            if (product.minOrderQty?.isNotEmpty ?? false)
-              _DetailRow(l.minOrder, product.minOrderQty!),
-            if (product.description.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(l.description, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(product.description),
-            ],
-            const SizedBox(height: 16),
-            if (isOwner)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(context,
-                        MaterialPageRoute(
-                            builder: (_) => ExporterFormPage(existingProduct: product)));
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: Text(l.edit),
-                ),
-              ),
-            const SizedBox(height: 20),
-          ]),
-        ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Badges
+                Wrap(spacing: 6, children: [
+                  if (product.isOrganic) _Badge(label: l.organic, color: Colors.green),
+                  if (product.grade?.isNotEmpty ?? false)
+                    _Badge(label: '${l.grade} ${product.grade}', color: Colors.indigo),
+                ]),
+                if (product.isOrganic || (product.grade?.isNotEmpty ?? false))
+                  const SizedBox(height: 10),
+
+                // Price
+                Text('₹${product.pricePerUnit}',
+                    style: TextStyle(
+                        fontSize: 24,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(product.category,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                const SizedBox(height: 16),
+                const Divider(),
+
+                // Core details
+                _DetailRow(l.quantityLabel, product.quantity),
+                _DetailRow(l.locationLabel, translatedLocation),
+                _DetailRow(l.farmerLabel, product.farmerName),
+                if (product.farmerMobile?.isNotEmpty ?? false)
+                  _DetailRow(l.mobileLabel, product.farmerMobile!),
+
+                // Phase 3 details
+                if (product.variety?.isNotEmpty ?? false)
+                  _DetailRow(l.varietyLabel, product.variety!),
+                if (product.harvestDate != null)
+                  _DetailRow(l.harvestDate, _fmt(product.harvestDate!)),
+                if (product.moistureLevel?.isNotEmpty ?? false)
+                  _DetailRow(l.moistureLevelLabel, product.moistureLevel!),
+                if (product.storageLocation?.isNotEmpty ?? false)
+                  _DetailRow(l.storageLocationLabel, product.storageLocation!),
+                if (product.packagingType?.isNotEmpty ?? false)
+                  _DetailRow(l.packagingTypeLabel, product.packagingType!),
+                if (product.minOrderQty?.isNotEmpty ?? false)
+                  _DetailRow(l.minOrder, product.minOrderQty!),
+                if (product.expectedPrice?.isNotEmpty ?? false)
+                  _DetailRow(l.expectedPriceLabel, '₹${product.expectedPrice}'),
+
+                // Additional images gallery
+                if (product.imageUrls.length > 1) ...[
+                  const SizedBox(height: 16),
+                  Text(l.additionalImagesLabel,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 80,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: product.imageUrls.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) => ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(product.imageUrls[i],
+                            width: 80, height: 80, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                                width: 80, height: 80, color: Colors.grey.shade300)),
+                      ),
+                    ),
+                  ),
+                ],
+
+                if (product.description.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(l.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(product.description),
+                ],
+
+                const SizedBox(height: 24),
+
+                // Owner action
+                if (isOwner)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(
+                              builder: (_) => ExporterFormPage(existingProduct: product))),
+                      icon: const Icon(Icons.edit),
+                      label: Text(l.edit),
+                    ),
+                  ),
+
+                const SizedBox(height: 40),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  String _fmt(DateTime d) => '${d.day}/${d.month}/${d.year}';
+class _PlaceholderBg extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+      child: Center(
+        child: Icon(Icons.local_florist, size: 64,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
+      ),
+    );
+  }
 }
 
 class _DetailRow extends StatelessWidget {
