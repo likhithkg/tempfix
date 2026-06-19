@@ -686,6 +686,26 @@
   "cropWiseProcurement": "Crop-wise Procurement",
   "poStatusBreakdown": "PO Status Breakdown",
   "topDistricts": "Top Districts",
-  "noDataYet": "No data available yet"
+  "noDataYet": "No data available yet",
+
+  "warehouseDashboard": "Warehouse",
+  "incomingStock": "Incoming",
+  "availableStock": "Available",
+  "reservedStock": "Reserved",
+  "exportedStock": "Exported",
+  "allStock": "All Stock",
+  "stock": "Stock",
+  "addStock": "Add Stock",
+  "stockAdded": "Stock added successfully",
+  "stockMovementHistory": "Stock Movement History",
+  "recentTransactions": "Recent Transactions",
+  "noTransactionsYet": "No transactions yet",
+  "noStockFound": "No stock found",
+  "warehouseLocation": "Warehouse Location",
+  "statusLabel": "Status",
+  "markAvailable": "Mark Available",
+  "byLabel": "By",
+  "batchId": "Batch ID",
+  "lotNumber": "Lot Number"
 }
 

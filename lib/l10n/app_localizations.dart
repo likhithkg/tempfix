@@ -1068,7 +1068,7 @@ abstract class AppLocalizations {
   /// No description provided for @statusLabel.
   ///
   /// In en, this message translates to:
-  /// **'Status:'**
+  /// **'Status'**
   String get statusLabel;
 
   /// No description provided for @totalLabel.
@@ -3782,6 +3782,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data available yet'**
   String get noDataYet;
+
+  /// No description provided for @warehouseDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse'**
+  String get warehouseDashboard;
+
+  /// No description provided for @incomingStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get incomingStock;
+
+  /// No description provided for @availableStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get availableStock;
+
+  /// No description provided for @reservedStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved'**
+  String get reservedStock;
+
+  /// No description provided for @exportedStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported'**
+  String get exportedStock;
+
+  /// No description provided for @allStock.
+  ///
+  /// In en, this message translates to:
+  /// **'All Stock'**
+  String get allStock;
+
+  /// No description provided for @stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get stock;
+
+  /// No description provided for @addStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Stock'**
+  String get addStock;
+
+  /// No description provided for @stockAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock added successfully'**
+  String get stockAdded;
+
+  /// No description provided for @stockMovementHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Movement History'**
+  String get stockMovementHistory;
+
+  /// No description provided for @recentTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transactions'**
+  String get recentTransactions;
+
+  /// No description provided for @noTransactionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactionsYet;
+
+  /// No description provided for @noStockFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock found'**
+  String get noStockFound;
+
+  /// No description provided for @warehouseLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse Location'**
+  String get warehouseLocation;
+
+  /// No description provided for @markAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Available'**
+  String get markAvailable;
+
+  /// No description provided for @byLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'By'**
+  String get byLabel;
+
+  /// No description provided for @batchId.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch ID'**
+  String get batchId;
+
+  /// No description provided for @lotNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Lot Number'**
+  String get lotNumber;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

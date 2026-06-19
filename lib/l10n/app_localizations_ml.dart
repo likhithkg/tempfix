@@ -489,7 +489,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get productNameLabel => 'à´‰àµ½à´ªàµà´ªà´¨àµà´¨ à´¨à´¾à´®à´‚';
 
   @override
-  String get statusLabel => 'à´¸àµà´¥à´¿à´¤à´¿:';
+  String get statusLabel => 'Status';
 
   @override
   String get totalLabel => 'à´†à´•àµ†:';
@@ -1894,4 +1894,58 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get noDataYet => 'No data available yet';
+
+  @override
+  String get warehouseDashboard => 'Warehouse';
+
+  @override
+  String get incomingStock => 'Incoming';
+
+  @override
+  String get availableStock => 'Available';
+
+  @override
+  String get reservedStock => 'Reserved';
+
+  @override
+  String get exportedStock => 'Exported';
+
+  @override
+  String get allStock => 'All Stock';
+
+  @override
+  String get stock => 'Stock';
+
+  @override
+  String get addStock => 'Add Stock';
+
+  @override
+  String get stockAdded => 'Stock added successfully';
+
+  @override
+  String get stockMovementHistory => 'Stock Movement History';
+
+  @override
+  String get recentTransactions => 'Recent Transactions';
+
+  @override
+  String get noTransactionsYet => 'No transactions yet';
+
+  @override
+  String get noStockFound => 'No stock found';
+
+  @override
+  String get warehouseLocation => 'Warehouse Location';
+
+  @override
+  String get markAvailable => 'Mark Available';
+
+  @override
+  String get byLabel => 'By';
+
+  @override
+  String get batchId => 'Batch ID';
+
+  @override
+  String get lotNumber => 'Lot Number';
 }
