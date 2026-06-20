@@ -23,6 +23,12 @@ class RentMachineService {
     await addRentMachine(machine);
   }
 
+  /// Stream of all machines (realtime updates)
+  Stream<List<RentMachine>> streamRentMachines() {
+    return _db.snapshots().map((snap) =>
+        snap.docs.map((d) => RentMachine.fromDoc(d)).toList());
+  }
+
   /// ✅ Get all machines (one-time fetch)
   /// - Defensive: uses a 10s timeout to avoid infinite loading.
   /// - If top-level collection returns empty, tries collectionGroup fallback
