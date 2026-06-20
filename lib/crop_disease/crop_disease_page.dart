@@ -129,9 +129,8 @@ class _CropDiseasePageState extends State<CropDiseasePage>
   String _language = 'EN';
 
   final _picker = ImagePicker();
-  final String? _geminiKey = dotenv.env['GEMINI_API_KEY'];
-  static const _geminiUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  final String? _plantIdKey = dotenv.env['PLANTID_API_KEY'];
+  static const _plantIdUrl = 'https://plant.id/api/v3/health_assessment';
 
   late AnimationController _fadeCtrl;
   late AnimationController _scanCtrl;
@@ -190,51 +189,29 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     _fadeCtrl.reset();
   }
 
-  // ─── Gemini analysis ────────────────────────────────────────────────────────
+  // ─── Plant.id analysis ──────────────────────────────────────────────────────
 
   Future<void> _analyze() async {
-    if (_imageBytes == null || (_geminiKey?.isEmpty ?? true)) return;
+    if (_imageBytes == null || (_plantIdKey?.isEmpty ?? true)) return;
     setState(() => _loading = true);
     HapticFeedback.lightImpact();
 
     try {
-      final uri = Uri.parse('$_geminiUrl?key=$_geminiKey');
-      final body = {
-        'contents': [
-          {
-            'role': 'user',
-            'parts': [
-              {
-                'text': '''Analyze this crop disease image.
-
-Return EXACTLY in this format with no extra text:
-
-Disease: <disease name or "No disease detected">
-Category: <Fungal / Bacterial / Viral / Nutritional / Healthy>
-Severity: <Low / Medium / High>
-Symptoms: <brief description>
-Treatment: <treatment advice>
-Prevention: <prevention advice>
-Confidence: <percentage like "87%">'''
-              },
-              {
-                'inline_data': {
-                  'mime_type': 'image/jpeg',
-                  'data': base64Encode(_imageBytes!),
-                }
-              }
-            ]
-          }
-        ]
-      };
+      final b64 = 'data:image/jpeg;base64,${base64Encode(_imageBytes!)}';
 
       final res = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
+        Uri.parse('$_plantIdUrl?details=description,treatment,cause&language=en'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Key': _plantIdKey!,
+        },
+        body: jsonEncode({
+          'images': [b64],
+          'health': 'all',
+        }),
       );
 
-      if (res.statusCode != 200) {
+      if (res.statusCode != 200 && res.statusCode != 201) {
         setState(() {
           _loading = false;
           disease = 'API Error ${res.statusCode}';
@@ -242,63 +219,115 @@ Confidence: <percentage like "87%">'''
         return;
       }
 
-      final decoded = jsonDecode(res.body);
-      final text =
-          decoded['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-      _parseResponse(text);
+      _parsePlantIdResponse(jsonDecode(res.body) as Map<String, dynamic>);
 
       if (_language != 'EN') {
         final langCode = _language == 'KN' ? 'kn' : 'hi';
-        disease = await _translate(disease, langCode);
-        category = await _translate(category, langCode);
-        severity = await _translate(severity, langCode);
-        symptoms = await _translate(symptoms, langCode);
-        treatment = await _translate(treatment, langCode);
+        disease    = await _translate(disease,    langCode);
+        category   = await _translate(category,   langCode);
+        severity   = await _translate(severity,   langCode);
+        symptoms   = await _translate(symptoms,   langCode);
+        treatment  = await _translate(treatment,  langCode);
         prevention = await _translate(prevention, langCode);
       }
 
       await _saveReport();
-
       setState(() => _loading = false);
       _fadeCtrl.forward();
       HapticFeedback.lightImpact();
     } catch (e) {
       setState(() {
         _loading = false;
-        disease = 'Could not contact AI service';
+        disease = 'Detection failed — check your network';
       });
     }
+  }
+
+  void _parsePlantIdResponse(Map<String, dynamic> data) {
+    final result = data['result'] as Map<String, dynamic>?;
+    if (result == null) {
+      disease = 'Could not read API response';
+      setState(() {});
+      return;
+    }
+
+    final healthyProb =
+        ((result['is_healthy']?['probability']) as num?)?.toDouble() ?? 0.0;
+
+    if (healthyProb > 0.85) {
+      disease    = 'No disease detected';
+      category   = 'Healthy';
+      severity   = 'Low';
+      symptoms   = 'The plant appears healthy with no visible disease symptoms.';
+      treatment  = 'No treatment required. Continue regular care and monitoring.';
+      prevention = 'Maintain proper watering, fertilisation, and regular inspection.';
+      confidence = '${(healthyProb * 100).toStringAsFixed(0)}%';
+      setState(() {});
+      return;
+    }
+
+    final suggestions =
+        (result['disease']?['suggestions'] as List?) ?? [];
+    if (suggestions.isEmpty) {
+      disease   = 'Unable to identify disease';
+      symptoms  = 'Try retaking the photo with better lighting and focus.';
+      setState(() {});
+      return;
+    }
+
+    final top     = suggestions[0] as Map<String, dynamic>;
+    final prob    = ((top['probability']) as num?)?.toDouble() ?? 0.0;
+    final details = (top['details'] as Map<String, dynamic>?) ?? {};
+
+    disease    = top['name']?.toString() ?? 'Unknown Disease';
+    category   = _inferCategory(disease);
+    confidence = '${(prob * 100).toStringAsFixed(0)}%';
+    severity   = prob >= 0.75 ? 'High' : prob >= 0.45 ? 'Medium' : 'Low';
+
+    // cause → prepended to description for symptoms field
+    final cause       = details['cause']?.toString() ?? '';
+    final description = details['description']?.toString() ?? '';
+    symptoms = [if (cause.isNotEmpty) 'Cause: $cause', description]
+        .where((s) => s.isNotEmpty)
+        .join('\n\n');
+
+    final treatObj = details['treatment'] as Map<String, dynamic>?;
+    if (treatObj != null) {
+      treatment = [
+        treatObj['chemical']?.toString() ?? '',
+        treatObj['biological']?.toString() ?? '',
+      ].where((s) => s.isNotEmpty).join(' ');
+      prevention = treatObj['prevention']?.toString() ?? '';
+    }
+
+    setState(() {});
+  }
+
+  String _inferCategory(String name) {
+    final d = name.toLowerCase();
+    if (d.contains('blight') || d.contains('rot') || d.contains('spot') ||
+        d.contains('scab') || d.contains('mildew') || d.contains('rust') ||
+        d.contains('smut') || d.contains('anthracnose')) {
+      return 'Fungal Disease';
+    }
+    if (d.contains('bacterial') || d.contains('canker') ||
+        d.contains('wilt') || d.contains('fire')) {
+      return 'Bacterial Disease';
+    }
+    if (d.contains('mosaic') || d.contains('virus') ||
+        d.contains('leaf curl') || d.contains('yellowing')) {
+      return 'Viral Disease';
+    }
+    if (d.contains('deficiency') || d.contains('chlorosis')) {
+      return 'Nutritional';
+    }
+    return 'Plant Disease';
   }
 
   Future<String> _translate(String text, String langCode) async {
     if (text.trim().isEmpty) return text;
     return LibreTranslateService.translateText(
-      text: text,
-      targetLanguage: langCode,
-    );
-  }
-
-  void _parseResponse(String text) {
-    for (final line in text.split('\n')) {
-      final lower = line.toLowerCase().trim();
-      String value = '';
-      if (line.contains(':')) {
-        value = line.split(':').skip(1).join(':').trim();
-      }
-      if (lower.startsWith('disease')) disease = value;
-      if (lower.startsWith('category')) category = value;
-      if (lower.startsWith('severity')) severity = value;
-      if (lower.startsWith('symptoms')) symptoms = value;
-      if (lower.startsWith('treatment')) treatment = value;
-      if (lower.startsWith('prevention')) prevention = value;
-      if (lower.startsWith('confidence')) confidence = value;
-    }
-
-    if (disease.isEmpty) {
-      disease = 'Analysis complete';
-      symptoms = text;
-    }
-    setState(() {});
+        text: text, targetLanguage: langCode);
   }
 
   Future<void> _saveReport() async {
