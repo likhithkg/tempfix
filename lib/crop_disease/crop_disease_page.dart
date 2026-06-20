@@ -1,12 +1,109 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../l10n/app_localizations.dart';
+import '../services/libre_translate_service.dart';
+
+// ─── Scan beam painter ────────────────────────────────────────────────────────
+
+class _ScanPainter extends CustomPainter {
+  final double progress;
+  _ScanPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridP = Paint()
+      ..color = const Color(0xFF69F0AE).withValues(alpha: 0.12)
+      ..strokeWidth = 0.5;
+    for (int i = 1; i < 8; i++) {
+      canvas.drawLine(
+        Offset(size.width * i / 8, 0), Offset(size.width * i / 8, size.height), gridP);
+      canvas.drawLine(
+        Offset(0, size.height * i / 8), Offset(size.width, size.height * i / 8), gridP);
+    }
+
+    final brP = Paint()
+      ..color = const Color(0xFF69F0AE).withValues(alpha: 0.85)
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    const b = 22.0;
+    const m = 10.0;
+    _bracket(canvas, brP, const Offset(m, m), b, true, true);
+    _bracket(canvas, brP, Offset(size.width - m, m), b, false, true);
+    _bracket(canvas, brP, Offset(m, size.height - m), b, true, false);
+    _bracket(canvas, brP, Offset(size.width - m, size.height - m), b, false, false);
+
+    final y = progress * size.height;
+    final beamRect = Rect.fromLTWH(0, y - 38, size.width, 76);
+    canvas.drawRect(
+      beamRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            const Color(0xFF69F0AE).withValues(alpha: 0.55),
+            const Color(0xFF69F0AE).withValues(alpha: 0.85),
+            const Color(0xFF69F0AE).withValues(alpha: 0.55),
+            Colors.transparent,
+          ],
+          stops: const [0, 0.25, 0.5, 0.75, 1],
+        ).createShader(beamRect),
+    );
+    canvas.drawLine(
+      Offset(0, y),
+      Offset(size.width, y),
+      Paint()
+        ..color = const Color(0xFF69F0AE).withValues(alpha: 0.9)
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  void _bracket(Canvas c, Paint p, Offset corner, double len, bool left, bool top) {
+    final dx = left ? 1.0 : -1.0;
+    final dy = top ? 1.0 : -1.0;
+    c.drawLine(corner, corner + Offset(dx * len, 0), p);
+    c.drawLine(corner, corner + Offset(0, dy * len), p);
+  }
+
+  @override
+  bool shouldRepaint(_ScanPainter o) => o.progress != progress;
+}
+
+// ─── Leaf glow painter (empty state) ─────────────────────────────────────────
+
+class _LeafGlowPainter extends CustomPainter {
+  final double pulse;
+  _LeafGlowPainter(this.pulse);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width * (0.38 + pulse * 0.06);
+    canvas.drawCircle(
+      c, r,
+      Paint()
+        ..shader = RadialGradient(colors: [
+          const Color(0xFF69F0AE).withValues(alpha: 0.22 + pulse * 0.1),
+          Colors.transparent,
+        ]).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LeafGlowPainter o) => o.pulse != pulse;
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 class CropDiseasePage extends StatefulWidget {
   const CropDiseasePage({super.key});
@@ -16,435 +113,1020 @@ class CropDiseasePage extends StatefulWidget {
 }
 
 class _CropDiseasePageState extends State<CropDiseasePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
 
   Uint8List? _imageBytes;
   bool _loading = false;
 
   String disease = '';
   String category = '';
+  String severity = '';
   String symptoms = '';
   String treatment = '';
   String prevention = '';
   String confidence = '';
 
-  String language = "EN";
+  String _language = 'EN';
 
-  static const String geminiApiKey =
-      "AIzaSyAg2p7PDcea9horKAhEGRoep1NsPNL5dbk";
+  final _picker = ImagePicker();
+  final String? _geminiKey = dotenv.env['GEMINI_API_KEY'];
+  static const _geminiUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-  final picker = ImagePicker();
+  late AnimationController _fadeCtrl;
+  late AnimationController _scanCtrl;
+  late AnimationController _pulseCtrl;
 
-  late AnimationController _controller;
-  late Animation<double> fade;
+  late Animation<double> _fadeAnim;
+  late Animation<double> _scanAnim;
+  late Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _scanCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1800))
+      ..repeat();
+    _pulseCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2400))
+      ..repeat(reverse: true);
 
-    fade = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _scanAnim = _scanCtrl; // linear 0→1 repeat
+    _pulseAnim = CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _fadeCtrl.dispose();
+    _scanCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
+  // ─── Image picking ──────────────────────────────────────────────────────────
+
   Future<void> _pickImage(ImageSource source) async {
-    final picked = await picker.pickImage(source: source);
-
+    final picked = await _picker.pickImage(source: source, imageQuality: 85);
     if (picked == null) return;
-
     final bytes = await picked.readAsBytes();
-
     setState(() {
       _imageBytes = bytes;
-      disease = '';
-      category = '';
-      symptoms = '';
-      treatment = '';
-      prevention = '';
-      confidence = '';
+      _clearResults();
     });
   }
 
-  Future<String> translateText(String text) async {
-    if (language == "EN" || text.trim().isEmpty) return text;
-
-    String langName = language == "KN" ? "Kannada" : "Hindi";
-
-    final uri = Uri.parse(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiApiKey",
-    );
-
-    final body = {
-      "contents": [
-        {
-          "parts": [
-            {"text": "Translate to $langName:\n$text"}
-          ]
-        }
-      ]
-    };
-
-    final res = await http.post(
-      uri,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(body),
-    );
-
-    final decoded = jsonDecode(res.body);
-
-    return decoded["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ?? text;
+  void _clearResults() {
+    disease = '';
+    category = '';
+    severity = '';
+    symptoms = '';
+    treatment = '';
+    prevention = '';
+    confidence = '';
+    _fadeCtrl.reset();
   }
 
-  Future<void> _sendToGemini(Uint8List imageBytes) async {
+  // ─── Gemini analysis ────────────────────────────────────────────────────────
 
-    final uri = Uri.parse(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiApiKey");
-
-    final body = {
-      "contents": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "text": """
-Analyze this crop disease image.
-
-Return EXACTLY like this:
-
-Disease: <name>
-Category: <type>
-Symptoms: <symptoms>
-Treatment: <treatment>
-Prevention: <prevention>
-Confidence: <percentage>
-"""
-            },
-            {
-              "inline_data": {
-                "mime_type": "image/jpeg",
-                "data": base64Encode(imageBytes)
-              }
-            }
-          ]
-        }
-      ]
-    };
+  Future<void> _analyze() async {
+    if (_imageBytes == null || (_geminiKey?.isEmpty ?? true)) return;
+    setState(() => _loading = true);
+    HapticFeedback.lightImpact();
 
     try {
+      final uri = Uri.parse('$_geminiUrl?key=$_geminiKey');
+      final body = {
+        'contents': [
+          {
+            'role': 'user',
+            'parts': [
+              {
+                'text': '''Analyze this crop disease image.
+
+Return EXACTLY in this format with no extra text:
+
+Disease: <disease name or "No disease detected">
+Category: <Fungal / Bacterial / Viral / Nutritional / Healthy>
+Severity: <Low / Medium / High>
+Symptoms: <brief description>
+Treatment: <treatment advice>
+Prevention: <prevention advice>
+Confidence: <percentage like "87%">'''
+              },
+              {
+                'inline_data': {
+                  'mime_type': 'image/jpeg',
+                  'data': base64Encode(_imageBytes!),
+                }
+              }
+            ]
+          }
+        ]
+      };
 
       final res = await http.post(
         uri,
-        headers: {"Content-Type": "application/json"},
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
 
       if (res.statusCode != 200) {
         setState(() {
           _loading = false;
-          disease = "API Error ${res.statusCode}";
+          disease = 'API Error ${res.statusCode}';
         });
         return;
       }
 
       final decoded = jsonDecode(res.body);
-
       final text =
-          decoded["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ?? "";
-
+          decoded['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
       _parseResponse(text);
 
-      if (language != "EN") {
-        disease = await translateText(disease);
-        category = await translateText(category);
-        symptoms = await translateText(symptoms);
-        treatment = await translateText(treatment);
-        prevention = await translateText(prevention);
-        confidence = await translateText(confidence);
+      if (_language != 'EN') {
+        final langCode = _language == 'KN' ? 'kn' : 'hi';
+        disease = await _translate(disease, langCode);
+        category = await _translate(category, langCode);
+        severity = await _translate(severity, langCode);
+        symptoms = await _translate(symptoms, langCode);
+        treatment = await _translate(treatment, langCode);
+        prevention = await _translate(prevention, langCode);
       }
 
       await _saveReport();
 
-      setState(() {
-        _loading = false;
-      });
-
-      _controller.forward();
-
+      setState(() => _loading = false);
+      _fadeCtrl.forward();
+      HapticFeedback.lightImpact();
     } catch (e) {
-
       setState(() {
         _loading = false;
-        disease = "Error contacting AI";
+        disease = 'Could not contact AI service';
       });
     }
   }
 
+  Future<String> _translate(String text, String langCode) async {
+    if (text.trim().isEmpty) return text;
+    return LibreTranslateService.translateText(
+      text: text,
+      targetLanguage: langCode,
+    );
+  }
+
   void _parseResponse(String text) {
-
-    for (final line in text.split("\n")) {
-
-      final lower = line.toLowerCase();
-
-      String value = "";
-
-      if (line.contains(":")) {
-        value = line.split(":").last.trim();
-      } else if (line.contains("-")) {
-        value = line.split("-").last.trim();
+    for (final line in text.split('\n')) {
+      final lower = line.toLowerCase().trim();
+      String value = '';
+      if (line.contains(':')) {
+        value = line.split(':').skip(1).join(':').trim();
       }
-
-      if (lower.startsWith("disease")) disease = value;
-      if (lower.startsWith("category")) category = value;
-      if (lower.startsWith("symptoms")) symptoms = value;
-      if (lower.startsWith("treatment")) treatment = value;
-      if (lower.startsWith("prevention")) prevention = value;
-      if (lower.startsWith("confidence")) confidence = value;
+      if (lower.startsWith('disease')) disease = value;
+      if (lower.startsWith('category')) category = value;
+      if (lower.startsWith('severity')) severity = value;
+      if (lower.startsWith('symptoms')) symptoms = value;
+      if (lower.startsWith('treatment')) treatment = value;
+      if (lower.startsWith('prevention')) prevention = value;
+      if (lower.startsWith('confidence')) confidence = value;
     }
 
     if (disease.isEmpty) {
-      disease = "Disease detected";
+      disease = 'Analysis complete';
       symptoms = text;
     }
-
     setState(() {});
   }
 
   Future<void> _saveReport() async {
-
     final user = FirebaseAuth.instance.currentUser;
-
-    await FirebaseFirestore.instance.collection("disease_reports").add({
-      "userId": user?.uid,
-      "disease": disease,
-      "category": category,
-      "symptoms": symptoms,
-      "treatment": treatment,
-      "prevention": prevention,
-      "confidence": confidence,
-      "timestamp": Timestamp.now(),
-    });
+    try {
+      await FirebaseFirestore.instance.collection('disease_reports').add({
+        'userId': user?.uid,
+        'disease': disease,
+        'category': category,
+        'severity': severity,
+        'symptoms': symptoms,
+        'treatment': treatment,
+        'prevention': prevention,
+        'confidence': confidence,
+        'timestamp': Timestamp.now(),
+      });
+    } catch (_) {}
   }
 
-  Widget resultTile(String title, String value, IconData icon, Color color) {
+  // ─── Severity helpers ───────────────────────────────────────────────────────
 
-    if (value.trim().isEmpty) return const SizedBox();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(value)
-              ],
-            ),
-          )
-        ],
-      ),
-    );
+  Color _severityColor() {
+    final s = severity.toLowerCase();
+    if (s.contains('high')) return const Color(0xFFD32F2F);
+    if (s.contains('medium') || s.contains('moderate')) return const Color(0xFFFF8F00);
+    if (s.isEmpty) {
+      final d = disease.toLowerCase();
+      if (d.contains('blight') || d.contains('rot') || d.contains('wilt') ||
+          d.contains('rust') || d.contains('mosaic') || d.contains('canker')) {
+        return const Color(0xFFD32F2F);
+      }
+    }
+    return const Color(0xFF2E7D32);
   }
 
-  Widget languageToggle() {
-    final l = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ChoiceChip(
-          label: Text(l.english),
-          selected: language == "EN",
-          onSelected: (_) => setState(() => language = "EN"),
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          label: Text(l.kannada),
-          selected: language == "KN",
-          onSelected: (_) => setState(() => language = "KN"),
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          label: Text(l.hindi),
-          selected: language == "HI",
-          onSelected: (_) => setState(() => language = "HI"),
-        ),
-      ],
-    );
+  String _severityLabel() {
+    if (severity.isNotEmpty) return severity.toUpperCase();
+    final d = disease.toLowerCase();
+    if (d.contains('blight') || d.contains('rot') || d.contains('wilt')) return 'HIGH';
+    if (d.contains('spot') || d.contains('mildew') || d.contains('scorch')) return 'MEDIUM';
+    return 'LOW';
   }
 
-  Widget imageButtons() {
-    final l = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ElevatedButton.icon(
-          onPressed: () => _pickImage(ImageSource.camera),
-          icon: const Icon(Icons.camera_alt),
-          label: Text(l.camera),
-        ),
-        const SizedBox(width: 12),
-        ElevatedButton.icon(
-          onPressed: () => _pickImage(ImageSource.gallery),
-          icon: const Icon(Icons.image),
-          label: Text(l.gallery),
-        ),
-      ],
-    );
+  double _parseConfidence() {
+    final c = confidence.replaceAll('%', '').trim();
+    return (double.tryParse(c) ?? 75.0).clamp(0, 100) / 100;
   }
+
+  // ─── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.cropDiseaseDetector),
-        backgroundColor: Colors.green,
-      ),
-
+      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFF071B07),
       body: Stack(
+        fit: StackFit.expand,
         children: [
-
+          // Background gradient
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xff4CAF50), Color(0xffE8F5E9)],
+                colors: [Color(0xFF071B07), Color(0xFF0F2D0F), Color(0xFF163016)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
 
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-
+          // Content
+          SafeArea(
             child: Column(
               children: [
-
-                Container(
-                  height: 220,
-                  width: double.infinity,
-
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-
-                  child: _imageBytes != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Image.memory(
-                              _imageBytes!,
-                              fit: BoxFit.cover))
-                      : const Icon(Icons.image, size: 90),
-                ),
-
-                const SizedBox(height: 20),
-
-                imageButtons(),
-
-                const SizedBox(height: 20),
-
-                languageToggle(),
-
-                const SizedBox(height: 20),
-
-                ElevatedButton.icon(
-                  onPressed: _imageBytes == null
-                      ? null
-                      : () async {
-
-                          setState(() {
-                            _loading = true;
-                          });
-
-                          await _sendToGemini(_imageBytes!);
-                        },
-
-                  icon: const Icon(Icons.search),
-
-                  label: Text(l.analyzeDisease),
-
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 14),
-
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                _buildTopBar(l),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildImageZone(l),
+                        const SizedBox(height: 14),
+                        _buildLanguagePicker(l),
+                        const SizedBox(height: 14),
+                        _buildAnalyzeButton(l),
+                        if (disease.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          _buildResults(l),
+                        ],
+                      ],
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                const SizedBox(height: 20),
+  // ─── Top bar ────────────────────────────────────────────────────────────────
 
-                FadeTransition(
-                  opacity: fade,
+  Widget _buildTopBar(AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          if (Navigator.canPop(context))
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.18)),
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 18),
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(width: 12),
+          const Text('🌿', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.cropDiseaseDetector,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Powered by Gemini AI',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                  child: Column(
+  // ─── Image zone ─────────────────────────────────────────────────────────────
+
+  Widget _buildImageZone(AppLocalizations l) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: SizedBox(
+        height: 300,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Base: image or placeholder
+            if (_imageBytes != null)
+              Image.memory(_imageBytes!, fit: BoxFit.cover)
+            else
+              _buildEmptyZone(l),
+
+            // Scanning overlay
+            if (_loading && _imageBytes != null) ...[
+              // Dimming
+              Container(color: Colors.black.withValues(alpha: 0.45)),
+              // Scan beam
+              AnimatedBuilder(
+                animation: _scanAnim,
+                builder: (_, __) => RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _ScanPainter(_scanAnim.value),
+                  ),
+                ),
+              ),
+              // "Analyzing" label
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
+                child: _DotsLabel(),
+              ),
+            ],
+
+            // Corner brackets when image selected and NOT loading
+            if (_imageBytes != null && !_loading)
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _ScanPainter(2.0), // progress > 1 = only brackets shown
+                ),
+              ),
+
+            // Change button when image selected and NOT loading
+            if (_imageBytes != null && !_loading)
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: _glassChip(
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 13),
+                    const SizedBox(width: 4),
+                    Text(l.gallery,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ]),
+                  onTap: () => _pickImage(ImageSource.gallery),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyZone(AppLocalizations l) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(
+          color: const Color(0xFF69F0AE).withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Glow + leaf emoji
+          AnimatedBuilder(
+            animation: _pulseAnim,
+            builder: (_, __) => SizedBox(
+              width: 110,
+              height: 110,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: CustomPaint(
+                      size: const Size(110, 110),
+                      painter: _LeafGlowPainter(_pulseAnim.value),
+                    ),
+                  ),
+                  Text('🌿',
+                      style: TextStyle(
+                          fontSize: 48 + _pulseAnim.value * 4)),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          const Text(
+            'Scan Your Crop',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Take a clear photo of the leaf or plant',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 13,
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          // Camera / Gallery inline buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _glassButton(
+                icon: Icons.camera_alt_outlined,
+                label: l.camera,
+                onTap: () => _pickImage(ImageSource.camera),
+              ),
+              const SizedBox(width: 12),
+              _glassButton(
+                icon: Icons.photo_library_outlined,
+                label: l.gallery,
+                onTap: () => _pickImage(ImageSource.gallery),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glassButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.22), width: 1),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 7),
+              Text(label,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _glassChip({required Widget child, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3), width: 1),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Language picker ─────────────────────────────────────────────────────────
+
+  Widget _buildLanguagePicker(AppLocalizations l) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(16),
+            border:
+                Border.all(color: Colors.white.withValues(alpha: 0.13), width: 1),
+          ),
+          child: Row(
+            children: [
+              Text(
+                '🌐',
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Output Language',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500),
+              ),
+              const Spacer(),
+              _langChip('EN', l.english),
+              const SizedBox(width: 6),
+              _langChip('KN', l.kannada),
+              const SizedBox(width: 6),
+              _langChip('HI', l.hindi),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _langChip(String code, String label) {
+    final selected = _language == code;
+    return GestureDetector(
+      onTap: () => setState(() => _language = code),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF69F0AE).withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF69F0AE).withValues(alpha: 0.7)
+                : Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected
+                ? const Color(0xFF69F0AE)
+                : Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Analyze button ──────────────────────────────────────────────────────────
+
+  Widget _buildAnalyzeButton(AppLocalizations l) {
+    final enabled = _imageBytes != null && !_loading;
+    return GestureDetector(
+      onTap: enabled ? _analyze : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: enabled
+              ? const LinearGradient(
+                  colors: [Color(0xFF2E7D32), Color(0xFF43A047), Color(0xFF66BB6A)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+          color: enabled ? null : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF43A047).withValues(alpha: 0.45),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                    spreadRadius: -4,
+                  ),
+                ]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: enabled ? 0 : 6, sigmaY: enabled ? 0 : 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _loading ? Icons.hourglass_top_rounded : Icons.biotech_outlined,
+                  color: enabled
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.3),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _imageBytes == null
+                      ? 'Select an image first'
+                      : _loading
+                          ? 'Analyzing...'
+                          : l.analyzeDisease,
+                  style: TextStyle(
+                    color: enabled
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.3),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Results ─────────────────────────────────────────────────────────────────
+
+  Widget _buildResults(AppLocalizations l) {
+    final sevColor = _severityColor();
+    final sevLabel = _severityLabel();
+    final conf = _parseConfidence();
+    final isHealthy = disease.toLowerCase().contains('no disease') ||
+        disease.toLowerCase().contains('healthy');
+
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Hero result card ─────────────────────────────────────────────
+          _glassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Disease name + severity badge
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isHealthy ? '✅ Healthy' : '🦠 $disease',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                          ),
+                          if (category.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              category,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.55),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: sevColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: sevColor.withValues(alpha: 0.5), width: 1),
+                      ),
+                      child: Text(
+                        sevLabel,
+                        style: TextStyle(
+                          color: sevColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Confidence bar
+                if (confidence.isNotEmpty) ...[
+                  Row(
                     children: [
-
-                      resultTile(l.diseaseResult, disease,
-                          Icons.bug_report, Colors.red),
-
-                      resultTile(l.categoryResult, category,
-                          Icons.biotech, Colors.indigo),
-
-                      resultTile(l.symptomsResult, symptoms,
-                          Icons.warning, Colors.orange),
-
-                      resultTile(l.treatmentResult, treatment,
-                          Icons.medical_services, Colors.green),
-
-                      resultTile(l.preventionResult, prevention,
-                          Icons.shield, Colors.teal),
-
-                      resultTile(l.confidenceResult, confidence,
-                          Icons.analytics, Colors.blue),
+                      Text(
+                        'AI Confidence',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        confidence,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
-                )
+                  const SizedBox(height: 7),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: conf,
+                      minHeight: 6,
+                      backgroundColor:
+                          Colors.white.withValues(alpha: 0.12),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        conf >= 0.7
+                            ? const Color(0xFF69F0AE)
+                            : conf >= 0.45
+                                ? const Color(0xFFFFB300)
+                                : const Color(0xFFEF5350),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
 
-          if (_loading)
-            Container(
-              color: Colors.black.withValues(alpha: 0.4),
+          const SizedBox(height: 10),
 
-              child: const Center(
-                child: CircularProgressIndicator(
-                    color: Colors.white),
+          // ── Detail cards ──────────────────────────────────────────────────
+          if (symptoms.isNotEmpty)
+            _resultSection(
+              emoji: '🔬',
+              title: l.symptomsResult,
+              value: symptoms,
+              accentColor: const Color(0xFFFF8F00),
+            ),
+
+          if (treatment.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _resultSection(
+              emoji: '💊',
+              title: l.treatmentResult,
+              value: treatment,
+              accentColor: const Color(0xFF69F0AE),
+            ),
+          ],
+
+          if (prevention.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _resultSection(
+              emoji: '🛡️',
+              title: l.preventionResult,
+              value: prevention,
+              accentColor: const Color(0xFF40C4FF),
+            ),
+          ],
+
+          // Rescan button
+          const SizedBox(height: 16),
+          _glassChip(
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.camera_alt_outlined,
+                  color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Scan another crop',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600),
               ),
-            )
+            ]),
+            onTap: () => _pickImage(ImageSource.camera),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _glassCard({required Widget child}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14), width: 1),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _resultSection({
+    required String emoji,
+    required String title,
+    required String value,
+    required Color accentColor,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12), width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  border: Border(
+                    bottom: BorderSide(
+                        color: accentColor.withValues(alpha: 0.2), width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 15)),
+                    const SizedBox(width: 8),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.55,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Animated "Analyzing..." label ───────────────────────────────────────────
+
+class _DotsLabel extends StatefulWidget {
+  @override
+  State<_DotsLabel> createState() => _DotsLabelState();
+}
+
+class _DotsLabelState extends State<_DotsLabel>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, __) {
+        final dots = '.' * ((_c.value * 4).floor() % 4);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 60),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: const Color(0xFF69F0AE).withValues(alpha: 0.35),
+                    width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🤖', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'AI analyzing$dots',
+                    style: const TextStyle(
+                      color: Color(0xFF69F0AE),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
