@@ -29,6 +29,8 @@ class F2BProductDetailPage extends StatefulWidget {
 class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
   bool _isWishlisted = false;
   StreamSubscription<Set<String>>? _wishlistSub;
+  int _imgIndex = 0;
+  late final PageController _imgCtrl = PageController();
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
@@ -47,6 +49,7 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
   @override
   void dispose() {
     _wishlistSub?.cancel();
+    _imgCtrl.dispose();
     super.dispose();
   }
 
@@ -351,49 +354,15 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      p.imageUrl != null && p.imageUrl!.isNotEmpty
-                          ? Image.network(p.imageUrl!, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _heroGradient(accent))
-                          : _heroGradient(accent),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xCC000000)],
-                            stops: [0.5, 1.0],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 20, left: 16, right: 16,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                  color: accent,
-                                  borderRadius: BorderRadius.circular(8)),
-                              child: Text(cat,
-                                  style: const TextStyle(color: Colors.white,
-                                      fontSize: 11, fontWeight: FontWeight.w700)),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(name,
-                                style: const TextStyle(color: Colors.white,
-                                    fontSize: 24, fontWeight: FontWeight.w800,
-                                    shadows: [Shadow(
-                                        color: Colors.black45, blurRadius: 4)])),
-                          ],
-                        ),
-                      ),
-                    ],
+                  background: _HeroImageCarousel(
+                    product: p,
+                    accent: accent,
+                    name: name,
+                    cat: cat,
+                    imgCtrl: _imgCtrl,
+                    imgIndex: _imgIndex,
+                    onPageChanged: (i) =>
+                        setState(() => _imgIndex = i),
                   ),
                 ),
               ),
@@ -504,6 +473,42 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                             label: l.categoryLabel,
                             value: cat,
                           ),
+                          if (p.grade != null && p.grade!.isNotEmpty)
+                            _InfoRow(
+                              icon: Icons.verified_rounded,
+                              iconColor: const Color(0xFFFF8F00),
+                              label: 'Grade',
+                              value: p.grade!.toUpperCase(),
+                            ),
+                          if (p.isOrganic)
+                            _InfoRow(
+                              icon: Icons.eco_rounded,
+                              iconColor: const Color(0xFF2E7D32),
+                              label: 'Organic',
+                              value: 'Certified Organic',
+                            ),
+                          if (p.variety != null && p.variety!.isNotEmpty)
+                            _InfoRow(
+                              icon: Icons.grass_rounded,
+                              iconColor: KMColors.primary,
+                              label: 'Variety',
+                              value: p.variety!,
+                            ),
+                          if (p.minOrderQty != null &&
+                              p.minOrderQty!.isNotEmpty)
+                            _InfoRow(
+                              icon: Icons.shopping_basket_outlined,
+                              iconColor: KMColors.accent,
+                              label: 'Min Order',
+                              value: p.minOrderQty!,
+                            ),
+                          if (p.harvestDate != null)
+                            _InfoRow(
+                              icon: Icons.agriculture_rounded,
+                              iconColor: const Color(0xFF2E7D32),
+                              label: 'Harvest Date',
+                              value: _formatDate(p.harvestDate!),
+                            ),
                           if (p.createdAt != null)
                             _InfoRow(
                               icon: Icons.calendar_today_rounded,
@@ -627,16 +632,143 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
     );
   }
 
-  Widget _heroGradient(Color color) => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.55)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight),
-    ),
-    child: Center(child: Icon(Icons.agriculture_rounded, size: 100,
-        color: Colors.white.withValues(alpha: 0.28))),
-  );
 }
+
+// ─── Hero image carousel ───────────────────────────────────────────────────
+
+class _HeroImageCarousel extends StatelessWidget {
+  final ExportProduct product;
+  final Color accent;
+  final String name, cat;
+  final PageController imgCtrl;
+  final int imgIndex;
+  final ValueChanged<int> onPageChanged;
+  const _HeroImageCarousel({
+    required this.product, required this.accent,
+    required this.name, required this.cat,
+    required this.imgCtrl, required this.imgIndex,
+    required this.onPageChanged,
+  });
+
+  // Build list of image URLs to show: imageUrls list, else single imageUrl
+  List<String> get _images {
+    if (product.imageUrls.isNotEmpty) return product.imageUrls;
+    if (product.imageUrl != null && product.imageUrl!.isNotEmpty) {
+      return [product.imageUrl!];
+    }
+    return [];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imgs = _images;
+    return Stack(fit: StackFit.expand, children: [
+      // Image PageView or placeholder
+      imgs.isEmpty
+          ? _heroGradient(accent)
+          : PageView.builder(
+              controller: imgCtrl,
+              onPageChanged: onPageChanged,
+              itemCount: imgs.length,
+              itemBuilder: (_, i) => Image.network(
+                imgs[i], fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _heroGradient(accent),
+              ),
+            ),
+      // Dark gradient overlay
+      const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Color(0xCC000000)],
+            stops: [0.45, 1.0],
+          ),
+        ),
+      ),
+      // Bottom overlay: category + name + badges + dots
+      Positioned(
+        bottom: 16, left: 16, right: 16,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Badges row
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: accent,
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(cat,
+                    style: const TextStyle(color: Colors.white,
+                        fontSize: 11, fontWeight: FontWeight.w700)),
+              ),
+              if (product.isOrganic) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: const Text('🌿 Organic',
+                      style: TextStyle(color: Colors.white,
+                          fontSize: 10, fontWeight: FontWeight.w700)),
+                ),
+              ],
+              if (product.grade?.toUpperCase() == 'A') ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFFF8F00),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: const Text('⭐ Grade A',
+                      style: TextStyle(color: Colors.white,
+                          fontSize: 10, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ]),
+            const SizedBox(height: 6),
+            Text(name,
+                style: const TextStyle(color: Colors.white, fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    shadows: [Shadow(color: Colors.black45, blurRadius: 4)])),
+            // Page dots (only when >1 image)
+            if (imgs.length > 1) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(imgs.length, (i) =>
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    margin: const EdgeInsets.only(right: 4),
+                    width: i == imgIndex ? 18 : 6, height: 6,
+                    decoration: BoxDecoration(
+                      color: i == imgIndex
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  )),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ]);
+  }
+}
+
+Widget _heroGradient(Color color) => Container(
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+        colors: [color, color.withValues(alpha: 0.55)],
+        begin: Alignment.topLeft, end: Alignment.bottomRight),
+  ),
+  child: Center(child: Icon(Icons.agriculture_rounded, size: 100,
+      color: Colors.white.withValues(alpha: 0.28))),
+);
 
 // ─── Stat card ─────────────────────────────────────────────────────────────
 
@@ -947,8 +1079,8 @@ class _RatingsSectionState extends State<_RatingsSection> {
               // Compute avg inline from stream data
               final avg = reviews.fold(
                       0.0,
-                      (sum, r) =>
-                          sum + ((r['rating'] as num? ?? 0).toDouble())) /
+                      (acc, r) =>
+                          acc + ((r['rating'] as num? ?? 0).toDouble())) /
                   reviews.length;
 
               return Column(

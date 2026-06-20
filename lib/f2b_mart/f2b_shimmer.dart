@@ -154,6 +154,79 @@ class F2BShimmerGrid extends StatelessWidget {
   }
 }
 
+// ── Full home page shimmer ───────────────────────────────────────────────────
+
+class F2BShimmerHome extends StatelessWidget {
+  const F2BShimmerHome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    return _Shimmer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Banner
+          Container(
+            height: 178,
+            margin: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF252525) : const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          // Category grid
+          Container(
+            height: 185,
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: base,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          // Section label
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+            child: _ShimmerBox(width: 140, height: 16, radius: 6),
+          ),
+          // Horizontal cards
+          SizedBox(
+            height: 228,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: 4,
+              itemBuilder: (_, __) => Container(
+                width: 150,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                    color: base, borderRadius: BorderRadius.circular(16)),
+                child: Column(children: [
+                  _ShimmerBox(height: 112, radius: 16),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ShimmerBox(height: 12, radius: 6),
+                        const SizedBox(height: 6),
+                        _ShimmerBox(width: 70, height: 16, radius: 6),
+                      ],
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+          // Grid shimmer
+          const F2BShimmerGrid(count: 4),
+        ],
+      ),
+    );
+  }
+}
+
 // ── List card shimmer ────────────────────────────────────────────────────────
 
 class F2BShimmerList extends StatelessWidget {

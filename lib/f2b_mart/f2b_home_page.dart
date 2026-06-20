@@ -2,7 +2,9 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../exporter_hub/exporter_model.dart';
 import '../exporter_hub/exporter_service.dart';
@@ -19,26 +21,29 @@ import 'f2b_shimmer.dart';
 import 'f2b_wishlist_page.dart';
 import 'f2b_wishlist_service.dart';
 
-// ─── Data holders ──────────────────────────────────────────────────────────
+// ─── Data classes ──────────────────────────────────────────────────────────
 
 class _BannerData {
-  final String title;
-  final String subtitle;
-  final Color color1;
-  final Color color2;
+  final String title, subtitle, tag;
+  final Color color1, color2;
   final IconData icon;
   const _BannerData({
-    required this.title, required this.subtitle,
+    required this.title, required this.subtitle, required this.tag,
     required this.color1, required this.color2, required this.icon,
   });
 }
 
 class _CatData {
-  final String key;
-  final String label;
-  final IconData icon;
-  final Color color;
-  const _CatData(this.key, this.label, this.icon, this.color);
+  final String key, label, emoji;
+  final Color color1, color2;
+  const _CatData(this.key, this.label, this.emoji, this.color1, this.color2);
+}
+
+class _FarmerData {
+  final String id, name, location;
+  final int productCount;
+  const _FarmerData({required this.id, required this.name,
+      required this.location, required this.productCount});
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────
@@ -56,41 +61,56 @@ class _F2BHomePageState extends State<F2BHomePage> {
   String _selectedCategory = 'all';
   int _currentBanner = 0;
   Timer? _bannerTimer;
-
-  // Wishlist
   Set<String> _wishlistIds = {};
   StreamSubscription<Set<String>>? _wishlistSub;
 
   static const _banners = [
     _BannerData(
-      title: 'Fresh From the Farm',
-      subtitle: 'Buy directly from verified farmers',
-      color1: Color(0xFF1B5E20), color2: Color(0xFF43A047),
-      icon: Icons.agriculture_rounded,
+      title: 'Fresh Organic Produce',
+      subtitle: 'Farm to table • Verified farmers only',
+      tag: '🌿 Organic',
+      color1: Color(0xFF1B5E20), color2: Color(0xFF388E3C),
+      icon: Icons.eco_rounded,
     ),
     _BannerData(
-      title: 'Direct Trade, Fair Prices',
-      subtitle: 'No middlemen. Best price guaranteed',
-      color1: Color(0xFFBF360C), color2: Color(0xFFFF7043),
+      title: 'Direct from Farmers',
+      subtitle: 'No middlemen • Best prices guaranteed',
+      tag: '🤝 Fair Trade',
+      color1: Color(0xFF0D47A1), color2: Color(0xFF1565C0),
       icon: Icons.handshake_rounded,
     ),
     _BannerData(
-      title: 'Organic Certified',
-      subtitle: 'Eco-friendly certified produce',
-      color1: Color(0xFF006064), color2: Color(0xFF00ACC1),
-      icon: Icons.eco_rounded,
+      title: 'Seasonal Harvest',
+      subtitle: 'Best produce at peak freshness',
+      tag: '🌾 Seasonal',
+      color1: Color(0xFFBF360C), color2: Color(0xFFE64A19),
+      icon: Icons.wb_sunny_rounded,
+    ),
+    _BannerData(
+      title: 'Export Quality Crops',
+      subtitle: 'Grade A certified for global markets',
+      tag: '⭐ Grade A',
+      color1: Color(0xFF4A148C), color2: Color(0xFF6A1B9A),
+      icon: Icons.verified_rounded,
+    ),
+    _BannerData(
+      title: 'Nearby Farm Fresh',
+      subtitle: 'Products from farmers near you',
+      tag: '📍 Nearby',
+      color1: Color(0xFF006064), color2: Color(0xFF00838F),
+      icon: Icons.location_on_rounded,
     ),
   ];
 
   static const _cats = [
-    _CatData('all',        'All',        Icons.grid_view_rounded,    Color(0xFF388E3C)),
-    _CatData('vegetables', 'Vegetables', Icons.eco_outlined,         Color(0xFF2E7D32)),
-    _CatData('fruits',     'Fruits',     Icons.apple_rounded,        Color(0xFFD84315)),
-    _CatData('grains',     'Grains',     Icons.grass_rounded,        Color(0xFFF57F17)),
-    _CatData('spices',     'Spices',     Icons.spa_rounded,          Color(0xFFAD1457)),
-    _CatData('pulses',     'Pulses',     Icons.scatter_plot_rounded, Color(0xFF6D4C41)),
-    _CatData('crops',      'Crops',      Icons.agriculture_rounded,  Color(0xFF1565C0)),
-    _CatData('other',      'Other',      Icons.more_horiz_rounded,   Color(0xFF546E7A)),
+    _CatData('vegetables', 'Vegetables', '🥦', Color(0xFF2E7D32), Color(0xFF66BB6A)),
+    _CatData('fruits',     'Fruits',     '🍎', Color(0xFFC62828), Color(0xFFEF5350)),
+    _CatData('grains',     'Grains',     '🌾', Color(0xFFE65100), Color(0xFFFF8F00)),
+    _CatData('spices',     'Spices',     '🌶', Color(0xFF880E4F), Color(0xFFAD1457)),
+    _CatData('pulses',     'Pulses',     '🫘', Color(0xFF4E342E), Color(0xFF6D4C41)),
+    _CatData('crops',      'Crops',      '🌿', Color(0xFF1565C0), Color(0xFF1976D2)),
+    _CatData('flowers',    'Flowers',    '🌸', Color(0xFF880E4F), Color(0xFFE91E63)),
+    _CatData('other',      'Other',      '📦', Color(0xFF37474F), Color(0xFF546E7A)),
   ];
 
   @override
@@ -98,9 +118,11 @@ class _F2BHomePageState extends State<F2BHomePage> {
     super.initState();
     _bannerTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted) return;
-      final next = (_currentBanner + 1) % _banners.length;
-      _bannerCtrl.animateToPage(next,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      _bannerCtrl.animateToPage(
+        (_currentBanner + 1) % _banners.length,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     });
     _startWishlistListener();
   }
@@ -108,9 +130,8 @@ class _F2BHomePageState extends State<F2BHomePage> {
   void _startWishlistListener() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    _wishlistSub = WishlistService.stream(uid).listen((ids) {
-      if (mounted) setState(() => _wishlistIds = ids);
-    });
+    _wishlistSub = WishlistService.stream(uid)
+        .listen((ids) { if (mounted) setState(() => _wishlistIds = ids); });
   }
 
   @override
@@ -123,31 +144,184 @@ class _F2BHomePageState extends State<F2BHomePage> {
 
   List<ExportProduct> _filter(List<ExportProduct> all) {
     if (_selectedCategory == 'all') return all;
-    return all
-        .where((p) => p.category.toLowerCase() == _selectedCategory)
+    return all.where(
+        (p) => p.category.toLowerCase() == _selectedCategory).toList();
+  }
+
+  List<_FarmerData> _deriveFarmers(List<ExportProduct> all) {
+    final map = <String, _FarmerData>{};
+    for (final p in all) {
+      if (!map.containsKey(p.farmerId)) {
+        map[p.farmerId] = _FarmerData(id: p.farmerId, name: p.farmerName,
+            location: p.location, productCount: 1);
+      } else {
+        final e = map[p.farmerId]!;
+        map[p.farmerId] = _FarmerData(id: e.id, name: e.name,
+            location: e.location, productCount: e.productCount + 1);
+      }
+    }
+    return (map.values.toList()
+          ..sort((a, b) => b.productCount.compareTo(a.productCount)))
+        .take(10)
         .toList();
   }
 
-  bool _isOwner(ExportProduct p) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    return uid.isNotEmpty && uid == p.ownerId;
-  }
-
-  Future<void> _toggleWishlist(
-      BuildContext context, AppLocalizations l, String productId) async {
+  Future<void> _toggleWishlist(BuildContext ctx, String productId) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l.loginToSave)));
+      ScaffoldMessenger.of(ctx).showSnackBar(
+          const SnackBar(content: Text('Sign in to save products')));
       return;
     }
-    final added = await WishlistService.toggle(uid, productId);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(added ? l.addedToWishlist : l.removedFromWishlist),
-        duration: const Duration(seconds: 1),
-      ));
+    await WishlistService.toggle(uid, productId);
+  }
+
+  void _showRfqDialog(BuildContext ctx) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+          const SnackBar(content: Text('Sign in to post a requirement')));
+      return;
     }
+    HapticFeedback.lightImpact();
+    final productCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    bool submitting = false;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (bCtx, setSheet) => Container(
+          margin: EdgeInsets.only(
+              bottom: MediaQuery.of(bCtx).viewInsets.bottom),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2)),
+              )),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('📋', style: TextStyle(fontSize: 22)),
+                ),
+                const SizedBox(width: 12),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Post Buying Requirement',
+                        style: TextStyle(fontSize: 17,
+                            fontWeight: FontWeight.w800)),
+                    Text('Farmers will respond with offers',
+                        style: TextStyle(fontSize: 12,
+                            color: KMColors.textSecondary)),
+                  ],
+                ),
+              ]),
+              const SizedBox(height: 18),
+              TextField(
+                controller: productCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Product Name',
+                  hintText: 'e.g. Cardamom, Tomato, Rice',
+                  prefixIcon: const Icon(Icons.agriculture_rounded),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: qtyCtrl,
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Quantity Required (Kg / MT)',
+                  prefixIcon: const Icon(Icons.inventory_2_outlined),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: notesCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Additional Notes (Grade, Quality, etc.)',
+                  prefixIcon: const Icon(Icons.notes_rounded),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          if (productCtrl.text.trim().isEmpty) return;
+                          setSheet(() => submitting = true);
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('rfq_listings')
+                                .add({
+                              'buyerId': uid,
+                              'productName': productCtrl.text.trim(),
+                              'quantity': qtyCtrl.text.trim(),
+                              'notes': notesCtrl.text.trim(),
+                              'status': 'open',
+                              'createdAt': Timestamp.now(),
+                            });
+                            if (bCtx.mounted) {
+                              Navigator.pop(bCtx);
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Requirement posted! Farmers will respond.'),
+                                  backgroundColor: Color(0xFF2E7D32),
+                                ),
+                              );
+                            }
+                          } catch (_) {
+                            setSheet(() => submitting = false);
+                          }
+                        },
+                  icon: submitting
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.send_rounded),
+                  label: const Text('Post Requirement'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B5E20),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -155,104 +329,39 @@ class _F2BHomePageState extends State<F2BHomePage> {
     final l = AppLocalizations.of(context)!;
     final langCode = Localizations.localeOf(context).languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: isDark ? KMColors.backgroundDark : const Color(0xFFF0F7F0),
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l.f2bMart,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            Text(l.f2bTagline,
-                style: const TextStyle(
-                    fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w400)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: l.yourWishlist,
-            icon: const Icon(Icons.favorite_border_rounded),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const F2BWishlistPage()),
-            ),
-          ),
-          IconButton(
-            tooltip: l.myOrders,
-            icon: const Icon(Icons.shopping_bag_outlined),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const PurchaseOrderListPage())),
-          ),
-          IconButton(
-            tooltip: l.farmerDashboard,
-            icon: const Icon(Icons.storefront_outlined),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(
-                    builder: (_) => const F2BFarmerDashboard())),
-          ),
-          IconButton(
-            tooltip: l.nearbyFarmersList,
-            icon: const Icon(Icons.map_outlined),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage())),
-          ),
-        ],
-      ),
+      backgroundColor:
+          isDark ? KMColors.backgroundDark : const Color(0xFFF3F6F3),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(
-              context, MaterialPageRoute(builder: (_) => const ExporterFormPage()));
-        },
+        onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ExporterFormPage())),
         icon: const Icon(Icons.add_rounded),
         label: Text(l.listProduce),
+        backgroundColor: KMColors.primary,
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
-          // ── Pinned green zone ───────────────────────────────────────
-          Container(
-            color: KMColors.primary,
-            child: Column(
-              children: [
-                // Tappable search bar → navigates to F2BSearchPage
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const F2BSearchPage()),
-                  ),
-                  child: Container(
-                    margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(children: [
-                      const Icon(Icons.search_rounded,
-                          color: Colors.white70, size: 20),
-                      const SizedBox(width: 10),
-                      Text(l.searchProducts,
-                          style: const TextStyle(
-                              color: Colors.white60, fontSize: 14)),
-                      const Spacer(),
-                      const Icon(Icons.tune_rounded,
-                          color: Colors.white70, size: 18),
-                    ]),
-                  ),
-                ),
-                // Category row
-                _CategoryRow(
-                  cats: _cats,
-                  selected: _selectedCategory,
-                  onSelect: (k) => setState(() => _selectedCategory = k),
-                ),
-              ],
-            ),
+          _GBHeader(
+            topPad: topPad,
+            onWishlist: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const F2BWishlistPage())),
+            onOrders: () => Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (_) => const PurchaseOrderListPage())),
+            onDashboard: () => Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (_) => const F2BFarmerDashboard())),
+            onMap: () => Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (_) => const NearbyFarmersMapPage())),
           ),
-          // ── Scrollable content ──────────────────────────────────────
+          _SearchBarTap(
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const F2BSearchPage())),
+          ),
           Expanded(
             child: StreamBuilder<List<ExportProduct>>(
               stream: _service.getExportProducts(),
@@ -263,8 +372,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                       const Icon(Icons.error_outline,
                           size: 48, color: KMColors.error),
                       const SizedBox(height: 8),
-                      const Text('Could not load products',
-                          style: TextStyle(color: KMColors.textSecondary)),
+                      const Text('Could not load products'),
                       TextButton(
                         onPressed: () => setState(() {}),
                         child: const Text('Retry'),
@@ -274,24 +382,24 @@ class _F2BHomePageState extends State<F2BHomePage> {
                 }
                 if (!snap.hasData) {
                   return const SingleChildScrollView(
-                    child: F2BShimmerGrid(count: 6),
-                  );
+                      child: F2BShimmerHome());
                 }
 
                 final all = snap.data!;
+                final trending  = all.take(12).toList();
+                final organic   = all.where((p) => p.isOrganic).take(12).toList();
+                final exportRdy = all
+                    .where((p) => p.grade?.toUpperCase() == 'A')
+                    .take(12)
+                    .toList();
+                final farmers  = _deriveFarmers(all);
                 final filtered = _filter(all);
-                final featured = all.take(6).toList();
-                final catLabel = _cats
-                    .firstWhere((c) => c.key == _selectedCategory,
-                        orElse: () => _cats[0])
-                    .label;
 
                 return RefreshIndicator(
                   color: KMColors.primary,
                   onRefresh: () async => setState(() {}),
                   child: CustomScrollView(
                     slivers: [
-                      // Banner
                       SliverToBoxAdapter(
                         child: _BannerCarousel(
                           banners: _banners,
@@ -301,44 +409,113 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               setState(() => _currentBanner = i),
                         ),
                       ),
-                      // Featured
-                      if (featured.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: _CategoryGrid(
+                          cats: _cats,
+                          selected: _selectedCategory,
+                          onSelect: (k) =>
+                              setState(() => _selectedCategory = k),
+                        ),
+                      ),
+                      // Trending Now
+                      if (trending.isNotEmpty) ...[
                         SliverToBoxAdapter(
-                          child: _SectionHeader(title: l.featuredProduce),
+                          child: _SectionHeader(
+                            title: 'Trending Now',
+                            subtitle: 'Most popular listings',
+                            icon: Icons.trending_up_rounded,
+                            onSeeAll: () => Navigator.push(ctx,
+                                MaterialPageRoute(
+                                    builder: (_) => const F2BSearchPage())),
+                          ),
                         ),
                         SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 215,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              itemCount: featured.length,
-                              itemBuilder: (ctx, i) => _FeaturedCard(
-                                product: featured[i],
-                                langCode: langCode,
-                                isWishlisted: _wishlistIds.contains(featured[i].id),
-                                onTap: () => Navigator.push(
-                                  ctx,
-                                  MaterialPageRoute(builder: (_) =>
-                                      F2BProductDetailPage(product: featured[i])),
-                                ),
-                                onWishlist: () => _toggleWishlist(
-                                    context, l, featured[i].id),
-                              ),
-                            ),
+                          child: _HScrollSection(
+                            items: trending, langCode: langCode,
+                            wishlistIds: _wishlistIds,
+                            onTap: (p) => Navigator.push(ctx,
+                                MaterialPageRoute(builder: (_) =>
+                                    F2BProductDetailPage(product: p))),
+                            onWishlist: (p) => _toggleWishlist(ctx, p.id),
                           ),
                         ),
                       ],
-                      // Section header
+                      // Organic Products
+                      if (organic.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: _SectionHeader(
+                            title: 'Organic Products',
+                            subtitle: 'Certified chemical-free produce',
+                            icon: Icons.eco_rounded,
+                            iconColor: const Color(0xFF2E7D32),
+                            onSeeAll: () => Navigator.push(ctx,
+                                MaterialPageRoute(
+                                    builder: (_) => const F2BSearchPage())),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: _HScrollSection(
+                            items: organic, langCode: langCode,
+                            wishlistIds: _wishlistIds,
+                            onTap: (p) => Navigator.push(ctx,
+                                MaterialPageRoute(builder: (_) =>
+                                    F2BProductDetailPage(product: p))),
+                            onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                          ),
+                        ),
+                      ],
+                      // Export Ready
+                      if (exportRdy.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: _SectionHeader(
+                            title: 'Export Ready',
+                            subtitle: 'Grade A certified for global markets',
+                            icon: Icons.verified_rounded,
+                            iconColor: const Color(0xFF1565C0),
+                            onSeeAll: () => Navigator.push(ctx,
+                                MaterialPageRoute(
+                                    builder: (_) => const F2BSearchPage())),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: _HScrollSection(
+                            items: exportRdy, langCode: langCode,
+                            wishlistIds: _wishlistIds,
+                            onTap: (p) => Navigator.push(ctx,
+                                MaterialPageRoute(builder: (_) =>
+                                    F2BProductDetailPage(product: p))),
+                            onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                          ),
+                        ),
+                      ],
+                      // RFQ Banner
                       SliverToBoxAdapter(
-                        child: _SectionHeader(
-                          title: _selectedCategory == 'all'
-                              ? l.allProducts
-                              : catLabel,
-                          subtitle: '${filtered.length} products',
+                        child: _RfqBanner(
+                            onTap: () => _showRfqDialog(ctx)),
+                      ),
+                      // Featured Farmers
+                      if (farmers.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: _SectionHeader(
+                            title: 'Featured Farmers',
+                            subtitle: 'Top verified suppliers',
+                            icon: Icons.people_rounded,
+                            iconColor: const Color(0xFFE65100),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                            child: _FarmersList(farmers: farmers)),
+                      ],
+                      // All Products + filter
+                      SliverToBoxAdapter(
+                        child: _AllProductsHeader(
+                          cats: _cats,
+                          selected: _selectedCategory,
+                          count: filtered.length,
+                          onSelect: (k) =>
+                              setState(() => _selectedCategory = k),
                         ),
                       ),
-                      // Grid or empty
                       if (filtered.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
@@ -347,14 +524,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.storefront_outlined,
-                                    size: 60,
-                                    color: KMColors.textSecondary),
+                                    size: 60, color: KMColors.textSecondary),
                                 const SizedBox(height: 12),
-                                Text(l.noProductsAvailable,
-                                    style: const TextStyle(
-                                        fontSize: 15,
-                                        color: KMColors.textSecondary),
-                                    textAlign: TextAlign.center),
+                                Text(
+                                  _selectedCategory == 'all'
+                                      ? 'No products listed yet'
+                                      : 'No $_selectedCategory products yet',
+                                  style: const TextStyle(fontSize: 15,
+                                      color: KMColors.textSecondary),
+                                ),
                               ],
                             ),
                           ),
@@ -369,24 +547,21 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              childAspectRatio: 0.57,
+                              childAspectRatio: 0.56,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
                                 final p = filtered[i];
-                                return _ProductCard(
-                                  product: p,
-                                  langCode: langCode,
-                                  l: l,
-                                  isOwner: _isOwner(p),
-                                  isWishlisted: _wishlistIds.contains(p.id),
-                                  onTap: () => Navigator.push(
-                                    ctx,
-                                    MaterialPageRoute(builder: (_) =>
-                                        F2BProductDetailPage(product: p)),
-                                  ),
+                                return _GridCard(
+                                  product: p, langCode: langCode,
+                                  isWishlisted:
+                                      _wishlistIds.contains(p.id),
+                                  onTap: () => Navigator.push(ctx,
+                                      MaterialPageRoute(builder: (_) =>
+                                          F2BProductDetailPage(
+                                              product: p))),
                                   onWishlist: () =>
-                                      _toggleWishlist(context, l, p.id),
+                                      _toggleWishlist(ctx, p.id),
                                 );
                               },
                               childCount: filtered.length,
@@ -405,58 +580,102 @@ class _F2BHomePageState extends State<F2BHomePage> {
   }
 }
 
-// ─── Category row ──────────────────────────────────────────────────────────
+// ─── GreenBazaar header ────────────────────────────────────────────────────
 
-class _CategoryRow extends StatelessWidget {
-  final List<_CatData> cats;
-  final String selected;
-  final ValueChanged<String> onSelect;
-  const _CategoryRow(
-      {required this.cats, required this.selected, required this.onSelect});
+class _GBHeader extends StatelessWidget {
+  final double topPad;
+  final VoidCallback onWishlist, onOrders, onDashboard, onMap;
+  const _GBHeader({required this.topPad, required this.onWishlist,
+      required this.onOrders, required this.onDashboard, required this.onMap});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 76,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: cats.length,
-        itemBuilder: (_, i) {
-          final c = cats[i];
-          final sel = selected == c.key;
-          return GestureDetector(
-            onTap: () => onSelect(c.key),
-            child: Container(
-              margin: const EdgeInsets.only(right: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 42, height: 42,
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.20),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(c.icon,
-                        color: sel ? c.color : Colors.white70, size: 20),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(c.label,
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: sel ? Colors.white : Colors.white70,
-                          fontWeight: sel
-                              ? FontWeight.w700
-                              : FontWeight.w400)),
-                ],
-              ),
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, topPad + 8, 8, 10),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Row(mainAxisSize: MainAxisSize.min, children: [
+            Text('🌿', style: TextStyle(fontSize: 18)),
+            SizedBox(width: 6),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('GreenBazaar',
+                    style: TextStyle(fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white, letterSpacing: -0.3)),
+                Text('F2B Mart',
+                    style: TextStyle(fontSize: 9.5, color: Colors.white70,
+                        fontWeight: FontWeight.w500)),
+              ],
             ),
-          );
-        },
+          ]),
+        ),
+        const Spacer(),
+        IconButton(
+          icon: const Icon(Icons.favorite_border_rounded, size: 22),
+          color: Colors.white, tooltip: 'Wishlist', onPressed: onWishlist),
+        IconButton(
+          icon: const Icon(Icons.shopping_bag_outlined, size: 22),
+          color: Colors.white, tooltip: 'Orders', onPressed: onOrders),
+        IconButton(
+          icon: const Icon(Icons.storefront_outlined, size: 22),
+          color: Colors.white, tooltip: 'Dashboard', onPressed: onDashboard),
+        IconButton(
+          icon: const Icon(Icons.map_outlined, size: 22),
+          color: Colors.white, tooltip: 'Map', onPressed: onMap),
+      ]),
+    );
+  }
+}
+
+// ─── Search bar tap target ─────────────────────────────────────────────────
+
+class _SearchBarTap extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SearchBarTap({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 8, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Row(children: [
+          const Icon(Icons.search_rounded,
+              color: Color(0xFF2E7D32), size: 22),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text('Search crops, farmers, location...',
+                style: TextStyle(fontSize: 14, color: Color(0xFF9E9E9E))),
+          ),
+          Container(width: 1, height: 20,
+              color: const Color(0xFFE0E0E0),
+              margin: const EdgeInsets.symmetric(horizontal: 10)),
+          const Icon(Icons.mic_rounded, color: Color(0xFF2E7D32), size: 22),
+        ]),
       ),
     );
   }
@@ -469,89 +688,182 @@ class _BannerCarousel extends StatelessWidget {
   final PageController controller;
   final int currentIndex;
   final ValueChanged<int> onPageChanged;
-  const _BannerCarousel({
-    required this.banners, required this.controller,
-    required this.currentIndex, required this.onPageChanged,
-  });
+  const _BannerCarousel({required this.banners, required this.controller,
+      required this.currentIndex, required this.onPageChanged});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 155,
-          child: PageView.builder(
-            controller: controller,
-            onPageChanged: onPageChanged,
-            itemCount: banners.length,
-            itemBuilder: (_, i) {
-              final b = banners[i];
-              return Container(
-                margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                      colors: [b.color1, b.color2],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight),
-                ),
-                child: Stack(children: [
-                  Positioned(
-                    right: -15, bottom: -15,
-                    child: Icon(b.icon, size: 110,
-                        color: Colors.white.withValues(alpha: 0.12)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(20)),
-                          child: const Text('KrishiMithra F2B',
-                              style: TextStyle(color: Colors.white,
-                                  fontSize: 10, fontWeight: FontWeight.w600)),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(b.title,
-                            style: const TextStyle(color: Colors.white,
-                                fontSize: 20, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 4),
-                        Text(b.subtitle,
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ]),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(banners.length, (i) =>
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: i == currentIndex ? 18 : 6,
-              height: 6,
+    return Column(children: [
+      SizedBox(
+        height: 178,
+        child: PageView.builder(
+          controller: controller,
+          onPageChanged: onPageChanged,
+          itemCount: banners.length,
+          itemBuilder: (_, i) {
+            final b = banners[i];
+            return Container(
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               decoration: BoxDecoration(
-                color: i == currentIndex
-                    ? KMColors.primary
-                    : KMColors.primary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                    colors: [b.color1, b.color2],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight),
               ),
-            )),
+              child: Stack(children: [
+                Positioned(right: -20, bottom: -20,
+                    child: Icon(b.icon, size: 130,
+                        color: Colors.white.withValues(alpha: 0.09))),
+                Positioned(top: -30, right: 60,
+                    child: Container(width: 100, height: 100,
+                        decoration: BoxDecoration(shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.06)))),
+                Positioned(bottom: -10, left: 40,
+                    child: Container(width: 60, height: 60,
+                        decoration: BoxDecoration(shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.06)))),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 90, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(b.tag,
+                            style: const TextStyle(color: Colors.white,
+                                fontSize: 11, fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(height: 9),
+                      Text(b.title,
+                          style: const TextStyle(color: Colors.white,
+                              fontSize: 21, fontWeight: FontWeight.w900,
+                              height: 1.1)),
+                      const SizedBox(height: 5),
+                      Text(b.subtitle,
+                          style: const TextStyle(color: Colors.white70,
+                              fontSize: 12)),
+                      const SizedBox(height: 11),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(color: Colors.white,
+                            borderRadius: BorderRadius.circular(20)),
+                        child: const Text('Explore Now',
+                            style: TextStyle(fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1B5E20))),
+                      ),
+                    ],
+                  ),
+                ),
+              ]),
+            );
+          },
         ),
-        const SizedBox(height: 4),
-      ],
+      ),
+      const SizedBox(height: 8),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(banners.length, (i) =>
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            margin: const EdgeInsets.symmetric(horizontal: 2.5),
+            width: i == currentIndex ? 20 : 6, height: 6,
+            decoration: BoxDecoration(
+              color: i == currentIndex
+                  ? KMColors.primaryDark
+                  : KMColors.primaryDark.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          )),
+      ),
+      const SizedBox(height: 2),
+    ]);
+  }
+}
+
+// ─── Category grid ─────────────────────────────────────────────────────────
+
+class _CategoryGrid extends StatelessWidget {
+  final List<_CatData> cats;
+  final String selected;
+  final ValueChanged<String> onSelect;
+  const _CategoryGrid({required this.cats, required this.selected,
+      required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: KMShadow.card,
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text('Shop by Category',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
+                  color: KMColors.textPrimary)),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cats.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 0.88,
+          ),
+          itemBuilder: (_, i) {
+            final c = cats[i];
+            final sel = selected == c.key;
+            return GestureDetector(
+              onTap: () => onSelect(c.key),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: sel
+                        ? [c.color1, c.color2]
+                        : [c.color1.withValues(alpha: 0.09),
+                           c.color2.withValues(alpha: 0.13)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: sel
+                      ? Border.all(color: c.color1, width: 1.5)
+                      : null,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(c.emoji, style: const TextStyle(fontSize: 22)),
+                    const SizedBox(height: 4),
+                    Text(c.label,
+                        style: TextStyle(fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: sel ? Colors.white : c.color1),
+                        textAlign: TextAlign.center,
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ]),
     );
   }
 }
@@ -561,175 +873,496 @@ class _BannerCarousel extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
-  const _SectionHeader({required this.title, this.subtitle});
+  final IconData? icon;
+  final Color? iconColor;
+  final VoidCallback? onSeeAll;
+  const _SectionHeader({required this.title, this.subtitle, this.icon,
+      this.iconColor, this.onSeeAll});
 
   @override
   Widget build(BuildContext context) {
+    final color = iconColor ?? KMColors.primary;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800,
-                  color: KMColors.textPrimary)),
-          if (subtitle != null)
-            Text(subtitle!,
-                style: const TextStyle(fontSize: 12,
-                    color: KMColors.textSecondary)),
+      padding: const EdgeInsets.fromLTRB(16, 18, 12, 4),
+      child: Row(children: [
+        if (icon != null) ...[
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 8),
         ],
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: const TextStyle(fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: KMColors.textPrimary)),
+            if (subtitle != null)
+              Text(subtitle!,
+                  style: const TextStyle(fontSize: 11,
+                      color: KMColors.textSecondary)),
+          ],
+        )),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text('See All',
+                  style: TextStyle(fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: KMColors.primary)),
+              Icon(Icons.chevron_right_rounded,
+                  size: 16, color: KMColors.primary),
+            ]),
+          ),
+      ]),
+    );
+  }
+}
+
+// ─── Horizontal scroll section ─────────────────────────────────────────────
+
+class _HScrollSection extends StatelessWidget {
+  final List<ExportProduct> items;
+  final String langCode;
+  final Set<String> wishlistIds;
+  final ValueChanged<ExportProduct> onTap;
+  final ValueChanged<ExportProduct> onWishlist;
+  const _HScrollSection({required this.items, required this.langCode,
+      required this.wishlistIds, required this.onTap, required this.onWishlist});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 228,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+        itemCount: items.length,
+        itemBuilder: (_, i) => _PremiumCard(
+          product: items[i], langCode: langCode,
+          isWishlisted: wishlistIds.contains(items[i].id),
+          onTap: () => onTap(items[i]),
+          onWishlist: () => onWishlist(items[i]),
+        ),
       ),
     );
   }
 }
 
-// ─── Category + image color helpers ───────────────────────────────────────
+// ─── Shared helpers ────────────────────────────────────────────────────────
 
-Color _categoryAccent(String cat) {
+Color _catAccent(String cat) {
   switch (cat.toLowerCase()) {
     case 'fruits':     return const Color(0xFFD84315);
     case 'vegetables': return const Color(0xFF2E7D32);
-    case 'grains':     return const Color(0xFFF57F17);
-    case 'spices':     return const Color(0xFFAD1457);
-    case 'pulses':     return const Color(0xFF6D4C41);
+    case 'grains':     return const Color(0xFFE65100);
+    case 'spices':     return const Color(0xFF880E4F);
+    case 'pulses':     return const Color(0xFF4E342E);
     case 'crops':      return const Color(0xFF1565C0);
+    case 'flowers':    return const Color(0xFFE91E63);
     default:           return KMColors.primaryDark;
   }
 }
 
-Widget _imgPlaceholder(Color accent, double height) => Container(
-  height: height,
-  color: accent.withValues(alpha: 0.12),
+Widget _imgPlaceholder(Color accent) => Container(
+  color: accent.withValues(alpha: 0.10),
   child: Center(child: Icon(Icons.agriculture_rounded,
-      size: 44, color: accent.withValues(alpha: 0.55))),
+      size: 40, color: accent.withValues(alpha: 0.45))),
 );
 
-// ─── Featured card (horizontal scroll) ────────────────────────────────────
+// ─── Premium card (horizontal scroll) ─────────────────────────────────────
 
-class _FeaturedCard extends StatelessWidget {
+class _PremiumCard extends StatelessWidget {
   final ExportProduct product;
   final String langCode;
   final bool isWishlisted;
   final VoidCallback onTap;
   final VoidCallback onWishlist;
-  const _FeaturedCard({
-    required this.product, required this.langCode,
-    required this.isWishlisted, required this.onTap, required this.onWishlist,
-  });
+  const _PremiumCard({required this.product, required this.langCode,
+      required this.isWishlisted, required this.onTap, required this.onWishlist});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = _categoryAccent(product.category);
+    final accent = _catAccent(product.category);
+    final name = ContentTranslationService.translateCropName(
+        product.productName, langCode);
+    final loc = ContentTranslationService.translateLocation(
+        product.location, langCode);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 155,
-        margin: const EdgeInsets.only(right: 12, bottom: 4),
+        width: 150,
+        margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: isDark ? KMColors.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: KMShadow.card,
+          boxShadow: [BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 10, offset: const Offset(0, 3))],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image + heart
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Stack(children: [
-                SizedBox(
-                  width: 155, height: 105,
-                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                      ? Image.network(product.imageUrl!, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imgPlaceholder(accent, 105))
-                      : _imgPlaceholder(accent, 105),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+            child: SizedBox(
+              height: 112, width: 150,
+              child: Stack(fit: StackFit.expand, children: [
+                product.primaryImage.isNotEmpty
+                    ? Image.network(product.primaryImage, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _imgPlaceholder(accent))
+                    : _imgPlaceholder(accent),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Color(0x55000000)],
+                      stops: [0.55, 1.0],
+                    ),
+                  ),
                 ),
                 Positioned(
                   top: 6, right: 6,
                   child: GestureDetector(
                     onTap: onWishlist,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      width: 28, height: 28,
                       decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20)),
+                        color: Colors.white.withValues(alpha: 0.92),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(
-                        isWishlisted ? Icons.favorite : Icons.favorite_border,
-                        size: 15,
+                        isWishlisted
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 14,
                         color: isWishlisted ? Colors.red : Colors.grey,
                       ),
                     ),
                   ),
                 ),
+                if (product.isOrganic)
+                  Positioned(
+                    top: 6, left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF2E7D32),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: const Text('🌿 Organic',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                if (product.grade?.toUpperCase() == 'A')
+                  Positioned(
+                    bottom: 6, right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFF8F00),
+                          borderRadius: BorderRadius.circular(6)),
+                      child: const Text('⭐ Grade A',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
               ]),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 7, 10, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    ContentTranslationService.translateCropName(
-                        product.productName, langCode),
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w700, height: 1.2),
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 5),
+                  Text(name,
+                      style: const TextStyle(fontSize: 12.5,
+                          fontWeight: FontWeight.w700, height: 1.2),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const Spacer(),
                   Text('₹${product.pricePerUnit}',
                       style: const TextStyle(fontSize: 15,
-                          fontWeight: FontWeight.w800, color: KMColors.primary)),
-                  const SizedBox(height: 4),
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1B5E20))),
+                  const SizedBox(height: 2),
                   Row(children: [
                     const Icon(Icons.location_on_outlined,
-                        size: 11, color: KMColors.textSecondary),
+                        size: 10, color: KMColors.textSecondary),
                     const SizedBox(width: 2),
-                    Expanded(child: Text(
-                      ContentTranslationService.translateLocation(
-                          product.location, langCode),
-                      overflow: TextOverflow.ellipsis, maxLines: 1,
-                      style: const TextStyle(
-                          fontSize: 10, color: KMColors.textSecondary),
-                    )),
+                    Expanded(child: Text(loc,
+                        style: const TextStyle(fontSize: 9.5,
+                            color: KMColors.textSecondary),
+                        maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ]),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
 }
 
-// ─── Product card (2-col grid) ─────────────────────────────────────────────
+// ─── RFQ Banner ────────────────────────────────────────────────────────────
 
-class _ProductCard extends StatelessWidget {
-  final ExportProduct product;
-  final String langCode;
-  final AppLocalizations l;
-  final bool isOwner;
-  final bool isWishlisted;
+class _RfqBanner extends StatelessWidget {
   final VoidCallback onTap;
-  final VoidCallback onWishlist;
-  const _ProductCard({
-    required this.product, required this.langCode, required this.l,
-    required this.isOwner, required this.isWishlisted,
-    required this.onTap, required this.onWishlist,
-  });
+  const _RfqBanner({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [BoxShadow(
+            color: const Color(0xFF1565C0).withValues(alpha: 0.32),
+            blurRadius: 12, offset: const Offset(0, 4),
+          )],
+        ),
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Text('📋', style: TextStyle(fontSize: 26)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Looking for specific produce?',
+                  style: TextStyle(color: Colors.white,
+                      fontSize: 14, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              const Text('Post a requirement. Farmers send offers.',
+                  style: TextStyle(color: Colors.white70,
+                      fontSize: 11, height: 1.4)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: Colors.white,
+                    borderRadius: BorderRadius.circular(16)),
+                child: const Text('Post Requirement',
+                    style: TextStyle(color: Color(0xFF0D47A1),
+                        fontSize: 11, fontWeight: FontWeight.w800)),
+              ),
+            ],
+          )),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right_rounded,
+              color: Colors.white70, size: 22),
+        ]),
+      ),
+    );
+  }
+}
+
+// ─── Featured Farmers ──────────────────────────────────────────────────────
+
+class _FarmersList extends StatelessWidget {
+  final List<_FarmerData> farmers;
+  const _FarmersList({required this.farmers});
+
+  static const _colors = [
+    Color(0xFF1B5E20), Color(0xFFBF360C), Color(0xFF0D47A1),
+    Color(0xFF4A148C), Color(0xFF006064), Color(0xFF880E4F),
+    Color(0xFF4E342E), Color(0xFF37474F),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = _categoryAccent(product.category);
-    final translatedName = ContentTranslationService.translateCropName(
+    return SizedBox(
+      height: 112,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+        itemCount: farmers.length,
+        itemBuilder: (_, i) {
+          final f = farmers[i];
+          final color = _colors[i % _colors.length];
+          final initial =
+              f.name.isNotEmpty ? f.name[0].toUpperCase() : '?';
+          return Container(
+            width: 90,
+            margin: const EdgeInsets.only(right: 10),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+            decoration: BoxDecoration(
+              color: isDark ? KMColors.cardDark : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: KMShadow.card,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [color, color.withValues(alpha: 0.65)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(child: Text(initial,
+                      style: const TextStyle(fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white))),
+                ),
+                const SizedBox(height: 5),
+                Text(f.name,
+                    style: const TextStyle(fontSize: 10,
+                        fontWeight: FontWeight.w700),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center),
+                Text('${f.productCount} items',
+                    style: const TextStyle(fontSize: 9,
+                        color: KMColors.textSecondary)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── All Products header with filter chips ─────────────────────────────────
+
+class _AllProductsHeader extends StatelessWidget {
+  final List<_CatData> cats;
+  final String selected;
+  final int count;
+  final ValueChanged<String> onSelect;
+  const _AllProductsHeader({required this.cats, required this.selected,
+      required this.count, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: KMColors.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.grid_view_rounded,
+                size: 16, color: KMColors.primary),
+          ),
+          const SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('All Products',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
+                    color: KMColors.textPrimary)),
+            Text('$count products available',
+                style: const TextStyle(fontSize: 11,
+                    color: KMColors.textSecondary)),
+          ]),
+        ]),
+      ),
+      SizedBox(
+        height: 36,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: [
+            _FilterChip(label: 'All', selected: selected == 'all',
+                color: KMColors.primary, onTap: () => onSelect('all')),
+            ...cats.map((c) => _FilterChip(
+              label: c.label, selected: selected == c.key,
+              color: c.color1, onTap: () => onSelect(c.key),
+            )),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+    ]);
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  const _FilterChip({required this.label, required this.selected,
+      required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: selected ? color : const Color(0xFFE0E0E0)),
+          boxShadow: selected
+              ? [BoxShadow(color: color.withValues(alpha: 0.25),
+                  blurRadius: 6, offset: const Offset(0, 2))]
+              : null,
+        ),
+        child: Text(label,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : KMColors.textSecondary)),
+      ),
+    );
+  }
+}
+
+// ─── Grid product card ─────────────────────────────────────────────────────
+
+class _GridCard extends StatelessWidget {
+  final ExportProduct product;
+  final String langCode;
+  final bool isWishlisted;
+  final VoidCallback onTap;
+  final VoidCallback onWishlist;
+  const _GridCard({required this.product, required this.langCode,
+      required this.isWishlisted, required this.onTap, required this.onWishlist});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = _catAccent(product.category);
+    final name = ContentTranslationService.translateCropName(
         product.productName, langCode);
-    final translatedLoc = ContentTranslationService.translateLocation(
+    final loc = ContentTranslationService.translateLocation(
         product.location, langCode);
-    final translatedCat = ContentTranslationService.translateExportCategory(
-        product.category, langCode);
 
     return GestureDetector(
       onTap: onTap,
@@ -737,121 +1370,153 @@ class _ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? KMColors.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: KMShadow.card,
+          boxShadow: [BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 10, offset: const Offset(0, 3))],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image + badges
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Stack(children: [
-                SizedBox(
-                  height: 125, width: double.infinity,
-                  child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                      ? Image.network(product.imageUrl!, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imgPlaceholder(accent, 125))
-                      : _imgPlaceholder(accent, 125),
-                ),
-                // Category badge (top-right)
-                Positioned(
-                  top: 8, right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Text(translatedCat,
-                        style: const TextStyle(color: Colors.white,
-                            fontSize: 9, fontWeight: FontWeight.w700)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+            child: SizedBox(
+              height: 128, width: double.infinity,
+              child: Stack(fit: StackFit.expand, children: [
+                product.primaryImage.isNotEmpty
+                    ? Image.network(product.primaryImage, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _imgPlaceholder(accent))
+                    : _imgPlaceholder(accent),
+                if (product.imageUrls.length > 1)
+                  Positioned(
+                    bottom: 6, left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.photo_library_rounded,
+                            size: 9, color: Colors.white),
+                        const SizedBox(width: 3),
+                        Text('${product.imageUrls.length}',
+                            style: const TextStyle(color: Colors.white,
+                                fontSize: 9, fontWeight: FontWeight.w700)),
+                      ]),
+                    ),
                   ),
-                ),
-                // Wishlist heart (top-left)
                 Positioned(
-                  top: 8, left: 8,
+                  top: 7, right: 7,
                   child: GestureDetector(
                     onTap: onWishlist,
                     child: Container(
-                      padding: const EdgeInsets.all(5),
+                      width: 30, height: 30,
                       decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.90),
-                          borderRadius: BorderRadius.circular(20)),
+                          color: Colors.white.withValues(alpha: 0.92),
+                          shape: BoxShape.circle),
                       child: Icon(
-                        isWishlisted ? Icons.favorite : Icons.favorite_border,
-                        size: 14,
+                        isWishlisted
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 15,
                         color: isWishlisted ? Colors.red : Colors.grey,
                       ),
                     ),
                   ),
                 ),
+                if (product.isOrganic)
+                  Positioned(
+                    top: 7, left: 7,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF2E7D32),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: const Text('🌿 Organic',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                if (product.grade?.toUpperCase() == 'A')
+                  Positioned(
+                    bottom: 6, right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFF8F00),
+                          borderRadius: BorderRadius.circular(6)),
+                      child: const Text('⭐ A',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
               ]),
             ),
-            // Text info
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(translatedName,
-                        style: const TextStyle(fontSize: 13,
-                            fontWeight: FontWeight.w700, height: 1.2),
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 4),
-                    Text('₹${product.pricePerUnit}',
-                        style: const TextStyle(fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: KMColors.primary)),
-                    Text(product.quantity,
-                        style: const TextStyle(
-                            fontSize: 11, color: KMColors.textSecondary)),
-                    const Spacer(),
-                    Row(children: [
-                      const Icon(Icons.person_outline,
-                          size: 11, color: KMColors.textSecondary),
-                      const SizedBox(width: 3),
-                      Expanded(child: Text(product.farmerName,
-                          overflow: TextOverflow.ellipsis, maxLines: 1,
-                          style: const TextStyle(
-                              fontSize: 11, color: KMColors.textSecondary))),
-                    ]),
-                    const SizedBox(height: 2),
-                    Row(children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 11, color: KMColors.textSecondary),
-                      const SizedBox(width: 3),
-                      Expanded(child: Text(translatedLoc,
-                          overflow: TextOverflow.ellipsis, maxLines: 1,
-                          style: const TextStyle(
-                              fontSize: 11, color: KMColors.textSecondary))),
-                    ]),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 32,
-                      child: ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: KMColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
-                        child: Text(l.buyNow,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w700)),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: const TextStyle(fontSize: 13,
+                          fontWeight: FontWeight.w700, height: 1.2,
+                          color: KMColors.textPrimary),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Text('₹${product.pricePerUnit}',
+                      style: const TextStyle(fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1B5E20))),
+                  Text(product.quantity,
+                      style: const TextStyle(fontSize: 10,
+                          color: KMColors.textSecondary)),
+                  const Spacer(),
+                  Row(children: [
+                    const Icon(Icons.person_outline_rounded,
+                        size: 10, color: KMColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Expanded(child: Text(product.farmerName,
+                        style: const TextStyle(fontSize: 10,
+                            color: KMColors.textSecondary),
+                        maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ]),
+                  const SizedBox(height: 2),
+                  Row(children: [
+                    const Icon(Icons.location_on_outlined,
+                        size: 10, color: KMColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Expanded(child: Text(loc,
+                        style: const TextStyle(fontSize: 10,
+                            color: KMColors.textSecondary),
+                        maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ]),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity, height: 30,
+                    child: ElevatedButton(
+                      onPressed: onTap,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1B5E20),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.zero, elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
+                      child: const Text('Buy Now',
+                          style: TextStyle(fontSize: 11.5,
+                              fontWeight: FontWeight.w800)),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
