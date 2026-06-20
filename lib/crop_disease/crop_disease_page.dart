@@ -130,7 +130,10 @@ class _CropDiseasePageState extends State<CropDiseasePage>
 
   final _picker = ImagePicker();
   final String? _plantIdKey = dotenv.env['PLANTID_API_KEY'];
-  static const _plantIdUrl = 'https://plant.id/api/v3/health_assessment';
+  final String? _geminiKey  = dotenv.env['GEMINI_API_KEY'];
+  static const _plantIdUrl  = 'https://plant.id/api/v3/health_assessment';
+  static const _geminiUrl   =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
   late AnimationController _fadeCtrl;
   late AnimationController _scanCtrl;
@@ -189,39 +192,42 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     _fadeCtrl.reset();
   }
 
-  // ─── Plant.id analysis ──────────────────────────────────────────────────────
+  // ─── Analysis entry point ────────────────────────────────────────────────────
 
   Future<void> _analyze() async {
-    if (_imageBytes == null || (_plantIdKey?.isEmpty ?? true)) return;
+    if (_imageBytes == null) return;
+
+    final hasPlantId = !(_plantIdKey?.isEmpty ?? true);
+    final hasGemini  = !(_geminiKey?.isEmpty ?? true);
+
+    if (!hasPlantId && !hasGemini) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'No API key configured. Add PLANTID_API_KEY or GEMINI_API_KEY to .env'),
+            backgroundColor: Color(0xFFD32F2F),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _loading = true);
     HapticFeedback.lightImpact();
 
     try {
-      final b64 = 'data:image/jpeg;base64,${base64Encode(_imageBytes!)}';
-
-      final res = await http.post(
-        Uri.parse('$_plantIdUrl?details=description,treatment,cause&language=en'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Api-Key': _plantIdKey!,
-        },
-        body: jsonEncode({
-          'images': [b64],
-          'health': 'all',
-        }),
-      );
-
-      if (res.statusCode != 200 && res.statusCode != 201) {
-        setState(() {
-          _loading = false;
-          disease = 'API Error ${res.statusCode}';
-        });
-        return;
+      if (hasPlantId) {
+        await _analyzeWithPlantId();
+      } else {
+        await _analyzeWithGemini();
       }
 
-      _parsePlantIdResponse(jsonDecode(res.body) as Map<String, dynamic>);
+      if (!mounted) return;
 
-      if (_language != 'EN') {
+      if (_language != 'EN' && disease.isNotEmpty && !disease.startsWith('API') &&
+          !disease.startsWith('Detection') && !disease.startsWith('No API')) {
         final langCode = _language == 'KN' ? 'kn' : 'hi';
         disease    = await _translate(disease,    langCode);
         category   = await _translate(category,   langCode);
@@ -232,15 +238,112 @@ class _CropDiseasePageState extends State<CropDiseasePage>
       }
 
       await _saveReport();
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
       _fadeCtrl.forward();
       HapticFeedback.lightImpact();
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          disease = 'Detection failed — check your network and try again';
+        });
+      }
+    }
+  }
+
+  // ─── Plant.id provider ───────────────────────────────────────────────────────
+
+  Future<void> _analyzeWithPlantId() async {
+    final b64 = 'data:image/jpeg;base64,${base64Encode(_imageBytes!)}';
+
+    final res = await http.post(
+      Uri.parse('$_plantIdUrl?details=description,treatment,cause&language=en'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Api-Key': _plantIdKey!,
+      },
+      body: jsonEncode({'images': [b64], 'health': 'all'}),
+    );
+
+    if (res.statusCode != 200 && res.statusCode != 201) {
       setState(() {
         _loading = false;
-        disease = 'Detection failed — check your network';
+        disease = 'Plant.id error ${res.statusCode} — check your API key at plant.id';
       });
+      return;
     }
+
+    _parsePlantIdResponse(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // ─── Gemini fallback provider ─────────────────────────────────────────────────
+
+  Future<void> _analyzeWithGemini() async {
+    final res = await http.post(
+      Uri.parse('$_geminiUrl?key=$_geminiKey'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'contents': [
+          {
+            'role': 'user',
+            'parts': [
+              {
+                'text': '''Analyze this crop leaf image for diseases.
+Return ONLY this exact format, no extra text:
+
+Disease: <name or "No disease detected">
+Category: <Fungal / Bacterial / Viral / Nutritional / Healthy>
+Severity: <Low / Medium / High>
+Symptoms: <brief description>
+Treatment: <treatment steps>
+Prevention: <prevention tips>
+Confidence: <percentage>'''
+              },
+              {
+                'inline_data': {
+                  'mime_type': 'image/jpeg',
+                  'data': base64Encode(_imageBytes!),
+                }
+              }
+            ]
+          }
+        ]
+      }),
+    );
+
+    if (res.statusCode != 200) {
+      setState(() {
+        _loading = false;
+        disease = 'Gemini error ${res.statusCode}';
+      });
+      return;
+    }
+
+    final decoded = jsonDecode(res.body);
+    final text =
+        decoded['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+    _parseGeminiResponse(text);
+  }
+
+  void _parseGeminiResponse(String text) {
+    for (final line in text.split('\n')) {
+      final lower = line.toLowerCase().trim();
+      final value = line.contains(':')
+          ? line.split(':').skip(1).join(':').trim()
+          : '';
+      if (lower.startsWith('disease'))    disease    = value;
+      if (lower.startsWith('category'))   category   = value;
+      if (lower.startsWith('severity'))   severity   = value;
+      if (lower.startsWith('symptoms'))   symptoms   = value;
+      if (lower.startsWith('treatment'))  treatment  = value;
+      if (lower.startsWith('prevention')) prevention = value;
+      if (lower.startsWith('confidence')) confidence = value;
+    }
+    if (disease.isEmpty) {
+      disease  = 'Analysis complete';
+      symptoms = text;
+    }
+    setState(() {});
   }
 
   void _parsePlantIdResponse(Map<String, dynamic> data) {
