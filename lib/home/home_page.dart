@@ -23,6 +23,7 @@ import '../rent/rent_home_page.dart';
 import '../service/user_service.dart';
 import '../services/locale_service.dart';
 import '../weather/weather_page.dart';
+import 'widgets/home_weather_widget.dart';
 
 // ─── Bottom-nav host ──────────────────────────────────────────────────────────
 
@@ -319,6 +320,11 @@ class _HomeTabState extends State<HomeTab> {
             // ── 3. HERO BANNER CAROUSEL ─────────────────────────────────────
             SliverToBoxAdapter(child: _buildBannerCarousel(context, l)),
 
+            // ── 3.5 WEATHER CARD ──────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: HomeWeatherWidget(location: _location),
+            ),
+
             // ── 4. QUICK ACTIONS ────────────────────────────────────────────
             SliverToBoxAdapter(child: _buildSectionHeader(context, l.quickActions, null, cs)),
             SliverToBoxAdapter(child: _buildQuickActions(context, l)),
@@ -562,13 +568,6 @@ class _HomeTabState extends State<HomeTab> {
   // ── Smart Services ────────────────────────────────────────────────────────
   Widget _buildSmartServices(BuildContext context, AppLocalizations l) {
     final services = [
-      _SmartServiceData(
-        icon: Icons.wb_sunny_outlined,
-        color: Colors.orange,
-        title: l.weather,
-        subtitle: 'Check forecast & alerts',
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WeatherPage(location: _location))),
-      ),
       _SmartServiceData(
         icon: Icons.agriculture_outlined,
         color: Colors.brown,
