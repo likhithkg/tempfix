@@ -103,6 +103,136 @@ class _LeafGlowPainter extends CustomPainter {
   bool shouldRepaint(_LeafGlowPainter o) => o.pulse != pulse;
 }
 
+// ─── Embedded disease knowledge base (PlantVillage 38-class dataset) ──────────
+
+class _DInfo {
+  final String cat, sym, treat, prev;
+  const _DInfo(this.cat, this.sym, this.treat, this.prev);
+}
+
+// Keys match the lowercase label returned by the HuggingFace model
+const Map<String, _DInfo> _kDiseaseDb = {
+  // ── Apple ──────────────────────────────────────────────────────────────────
+  'apple___apple_scab': _DInfo('Fungal Disease',
+      'Olive-green to brown lesions on leaves and fruit. Lesions coalesce causing leaf drop and deformed fruit.',
+      'Apply fungicides (captan, mancozeb) at 10-day intervals from bud break. Remove fallen leaves.',
+      'Plant resistant varieties. Rake and destroy fallen leaves. Avoid overhead irrigation.'),
+  'apple___black_rot': _DInfo('Fungal Disease',
+      '"Frogeye" leaf spots with purple border, brown-to-black circular lesions on fruit, cankers on limbs.',
+      'Prune and destroy infected wood. Apply fungicides (captan, thiophanate-methyl). Remove mummified fruit.',
+      'Prune dead wood, improve air circulation, remove mummified fruit from trees and ground.'),
+  'apple___cedar_apple_rust': _DInfo('Fungal Disease',
+      'Bright orange-yellow spots on upper leaf surface. Tube-like structures on undersides in spring.',
+      'Apply fungicides (myclobutanil, mancozeb) starting at pink bud stage through petal fall.',
+      'Remove nearby cedar/juniper trees. Plant resistant apple varieties. Monitor in spring.'),
+
+  // ── Corn / Maize ───────────────────────────────────────────────────────────
+  'corn_(maize)___cercospora_leaf_spot gray_leaf_spot': _DInfo('Fungal Disease',
+      'Rectangular gray-to-tan lesions bounded by leaf veins. Lesions merge causing large blighted areas.',
+      'Apply foliar fungicides (strobilurin or triazole group). Remove infected crop debris after harvest.',
+      'Use resistant hybrids. Practice 2-year crop rotation. Reduce leaf wetness through row orientation.'),
+  'corn_(maize)___common_rust_': _DInfo('Fungal Disease',
+      'Small, round golden-to-dark-brown pustules on both leaf surfaces releasing rust-coloured spores.',
+      'Apply fungicides when pustules first appear. Early-season control is most effective.',
+      'Plant resistant hybrids. Early planting to avoid conditions favouring rust development.'),
+  'corn_(maize)___northern_leaf_blight': _DInfo('Fungal Disease',
+      'Long (2.5–15 cm) elliptical gray-green to tan lesions on leaves. Turn tan with irregular borders.',
+      'Apply fungicides (azoxystrobin, propiconazole) at VT growth stage. Remove crop debris.',
+      'Use resistant hybrids. Rotate with non-host crops. Bury debris by tillage to reduce inoculum.'),
+
+  // ── Grape ──────────────────────────────────────────────────────────────────
+  'grape___black_rot': _DInfo('Fungal Disease',
+      'Circular tan leaf lesions with dark borders. Infected berries shrivel and turn into black mummies.',
+      'Apply fungicides (myclobutanil, captan) from bud break through bunch closure. Remove mummified berries.',
+      'Remove mummified fruit and infected tendrils in winter. Improve air circulation by proper pruning.'),
+  'grape___esca_(black_measles)': _DInfo('Fungal Disease',
+      '"Tiger stripe" interveinal leaf discoloration, dark sunken berry lesions, bleached interior wood.',
+      'No fully effective chemical control. Remove infected wood. Apply trunk wound protectants promptly.',
+      'Avoid large pruning wounds. Make clean cuts and seal immediately. Remove infected wood promptly.'),
+  'grape___leaf_blight_(isariopsis_leaf_spot)': _DInfo('Fungal Disease',
+      'Angular dark-brown lesions bounded by leaf veins. Lesions coalesce causing premature leaf drop.',
+      'Apply copper-based fungicides or mancozeb during the growing season after infection periods.',
+      'Improve air circulation. Remove fallen leaves. Apply protective sprays before wet weather.'),
+
+  // ── Orange ─────────────────────────────────────────────────────────────────
+  'orange___haunglongbing_(citrus_greening)': _DInfo('Bacterial Disease',
+      'Asymmetric blotchy yellowing of leaves, small lopsided bitter fruit, twig dieback, corky veins.',
+      'No cure. Remove infected trees immediately. Control Asian citrus psyllid vector with insecticides.',
+      'Use certified disease-free budwood. Control psyllid vector with regular spraying. Scout frequently.'),
+
+  // ── Peach ──────────────────────────────────────────────────────────────────
+  'peach___bacterial_spot': _DInfo('Bacterial Disease',
+      'Small water-soaked spots on leaves turning purple-brown with yellow halos. Pitted, cracked fruit spots.',
+      'Apply copper-based bactericides starting at bud swell. Oxytetracycline sprays during the season.',
+      'Plant resistant varieties. Avoid overhead irrigation. Reduce leaf wetness duration.'),
+
+  // ── Pepper ─────────────────────────────────────────────────────────────────
+  'pepper,_bell___bacterial_spot': _DInfo('Bacterial Disease',
+      'Small water-soaked circular leaf and fruit spots enlarging to brown with yellow halos.',
+      'Apply copper-based bactericides preventively. Avoid working in field when foliage is wet.',
+      'Use pathogen-free seed and transplants. Avoid overhead irrigation. Practise crop rotation.'),
+
+  // ── Potato ─────────────────────────────────────────────────────────────────
+  'potato___early_blight': _DInfo('Fungal Disease',
+      'Dark brown-to-black lesions with concentric rings (bull\'s-eye pattern) on older leaves first.',
+      'Apply fungicides (chlorothalonil, mancozeb, azoxystrobin) preventively. Remove infected leaves.',
+      'Use certified seed tubers. Maintain adequate nitrogen nutrition. Rotate crops on a 3–4 year cycle.'),
+  'potato___late_blight': _DInfo('Fungal Disease',
+      'Water-soaked pale-green lesions turning dark brown-black. White mycelium on undersides in humid weather. Brown rot in tubers.',
+      'Apply metalaxyl or cymoxanil immediately. Remove and destroy infected plants and tubers without delay.',
+      'Use certified disease-free seed. Plant resistant varieties. Destroy volunteer plants. Improve soil drainage.'),
+
+  // ── Squash ─────────────────────────────────────────────────────────────────
+  'squash___powdery_mildew': _DInfo('Fungal Disease',
+      'White-to-gray powdery coating on leaf surfaces and stems. Leaves yellow and die prematurely.',
+      'Apply potassium bicarbonate, sulfur, or triazole fungicides. Remove heavily infected leaves.',
+      'Plant resistant varieties. Ensure good air circulation. Avoid excess nitrogen fertilisation.'),
+
+  // ── Strawberry ─────────────────────────────────────────────────────────────
+  'strawberry___leaf_scorch': _DInfo('Fungal Disease',
+      'Small purple-to-dark-brown spots coalescing across leaves. Severely infected leaves turn brown and die.',
+      'Apply fungicides (captan, thiram) starting at early bloom. Remove infected leaves promptly.',
+      'Plant disease-free runners. Renovate beds by mowing and thinning after harvest. Avoid overhead irrigation.'),
+
+  // ── Tomato ─────────────────────────────────────────────────────────────────
+  'tomato___bacterial_spot': _DInfo('Bacterial Disease',
+      'Small water-soaked leaf, stem, and fruit spots turning brown with yellow halos. Raised scab-like fruit spots.',
+      'Apply copper-based bactericides preventively. Remove infected parts. Avoid working in wet fields.',
+      'Use certified disease-free seed. Practise crop rotation. Avoid overhead irrigation. Stake plants.'),
+  'tomato___early_blight': _DInfo('Fungal Disease',
+      'Dark brown spots with concentric rings (bull\'s-eye) on lower leaves first. Yellow tissue surrounds lesions.',
+      'Apply fungicides (chlorothalonil, mancozeb) when disease appears. Remove lower infected leaves. Stake plants.',
+      'Rotate crops 3 years. Remove debris. Mulch to prevent soil splash. Use resistant varieties where available.'),
+  'tomato___late_blight': _DInfo('Fungal Disease',
+      'Water-soaked pale-green lesions turning dark brown-black on leaves and stems. White fuzzy growth in humidity. Greasy dark fruit patches.',
+      'Apply metalaxyl or cymoxanil immediately. Remove and destroy infected plants without delay.',
+      'Plant resistant varieties. Avoid overhead irrigation. Improve air circulation. Destroy volunteer plants.'),
+  'tomato___leaf_mold': _DInfo('Fungal Disease',
+      'Pale green-to-yellow spots on upper leaf surface. Olive-green-to-gray velvety mold on undersides.',
+      'Apply fungicides (chlorothalonil, mancozeb). Improve greenhouse ventilation. Reduce relative humidity below 85%.',
+      'Use resistant varieties. Improve air circulation. Reduce leaf wetness. Avoid overcrowding plants.'),
+  'tomato___septoria_leaf_spot': _DInfo('Fungal Disease',
+      'Small circular spots with dark border and gray-white center containing tiny black dots. Starts on lower leaves. Rapid defoliation.',
+      'Apply fungicides (chlorothalonil, copper). Remove infected lower leaves. Stake plants for airflow.',
+      'Rotate crops 2–3 years. Remove crop debris. Avoid overhead irrigation. Mulch around plant base.'),
+  'tomato___spider_mites two-spotted_spider_mite': _DInfo('Pest (Mite)',
+      'Fine stippling or bronzing on leaves. Fine webbing on leaf undersides. Leaves yellow and drop. Worse in hot, dry conditions.',
+      'Apply acaricides (abamectin, bifenazate) to leaf undersides. Introduce predatory mites for biological control.',
+      'Avoid excess nitrogen. Maintain plant moisture. Avoid broad-spectrum pesticides that kill natural enemies.'),
+  'tomato___target_spot': _DInfo('Fungal Disease',
+      'Round-to-irregular brown spots with concentric rings on leaves, stems, and fruit. Premature defoliation.',
+      'Apply fungicides (azoxystrobin, boscalid). Remove infected plant material. Improve air circulation.',
+      'Crop rotation. Avoid overhead irrigation. Remove plant debris. Use mulch to prevent soil splash.'),
+  'tomato___tomato_yellow_leaf_curl_virus': _DInfo('Viral Disease',
+      'Upward curling and yellowing of young leaves. Stunted plant growth. Dramatically reduced fruit set.',
+      'No cure — remove and destroy infected plants immediately to stop spread. Control whitefly vector.',
+      'Use resistant varieties. Control whitefly with insecticides and reflective mulch. Install insect screens.'),
+  'tomato___tomato_mosaic_virus': _DInfo('Viral Disease',
+      'Mosaic pattern of light and dark green on leaves. Leaf distortion, mottling, and fern-leaf symptoms.',
+      'No cure — remove and destroy infected plants. Sterilise tools with bleach. Control aphid vectors.',
+      'Use disease-free seeds. Wash hands before handling plants. Avoid tobacco products near plants. Control aphids.'),
+};
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 class CropDiseasePage extends StatefulWidget {
@@ -130,10 +260,10 @@ class _CropDiseasePageState extends State<CropDiseasePage>
 
   final _picker = ImagePicker();
   final String? _plantIdKey = dotenv.env['PLANTID_API_KEY'];
-  final String? _geminiKey  = dotenv.env['GEMINI_API_KEY'];
+  final String? _hfKey      = dotenv.env['HUGGINGFACE_API_KEY'];
   static const _plantIdUrl  = 'https://plant.id/api/v3/health_assessment';
-  static const _geminiUrl   =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  static const _hfModel     =
+      'linkanjarad/plant-disease-classification-mobilenet_v2_0.35_224';
 
   late AnimationController _fadeCtrl;
   late AnimationController _scanCtrl;
@@ -198,16 +328,16 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     if (_imageBytes == null) return;
 
     final hasPlantId = !(_plantIdKey?.isEmpty ?? true);
-    final hasGemini  = !(_geminiKey?.isEmpty ?? true);
+    final hasHf      = !(_hfKey?.isEmpty ?? true);
 
-    if (!hasPlantId && !hasGemini) {
+    if (!hasPlantId && !hasHf) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'No API key configured. Add PLANTID_API_KEY or GEMINI_API_KEY to .env'),
+                'Add PLANTID_API_KEY (plant.id) or HUGGINGFACE_API_KEY (huggingface.co) to .env'),
             backgroundColor: Color(0xFFD32F2F),
-            duration: Duration(seconds: 5),
+            duration: Duration(seconds: 6),
           ),
         );
       }
@@ -221,7 +351,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
       if (hasPlantId) {
         await _analyzeWithPlantId();
       } else {
-        await _analyzeWithGemini();
+        await _analyzeWithHuggingFace();
       }
 
       if (!mounted) return;
@@ -276,73 +406,109 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     _parsePlantIdResponse(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // ─── Gemini fallback provider ─────────────────────────────────────────────────
+  // ─── HuggingFace provider ─────────────────────────────────────────────────────
 
-  Future<void> _analyzeWithGemini() async {
-    final res = await http.post(
-      Uri.parse('$_geminiUrl?key=$_geminiKey'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'contents': [
-          {
-            'role': 'user',
-            'parts': [
-              {
-                'text': '''Analyze this crop leaf image for diseases.
-Return ONLY this exact format, no extra text:
+  Future<void> _analyzeWithHuggingFace() async {
+    final url = Uri.parse(
+        'https://api-inference.huggingface.co/models/$_hfModel');
 
-Disease: <name or "No disease detected">
-Category: <Fungal / Bacterial / Viral / Nutritional / Healthy>
-Severity: <Low / Medium / High>
-Symptoms: <brief description>
-Treatment: <treatment steps>
-Prevention: <prevention tips>
-Confidence: <percentage>'''
-              },
-              {
-                'inline_data': {
-                  'mime_type': 'image/jpeg',
-                  'data': base64Encode(_imageBytes!),
-                }
-              }
-            ]
-          }
-        ]
-      }),
+    var res = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $_hfKey',
+        'Content-Type': 'application/octet-stream',
+        'X-Wait-For-Model': 'true',
+      },
+      body: _imageBytes,
     );
+
+    // Model may be loading on first call — retry once
+    if (res.statusCode == 503) {
+      await Future.delayed(const Duration(seconds: 20));
+      res = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $_hfKey',
+          'Content-Type': 'application/octet-stream',
+          'X-Wait-For-Model': 'true',
+        },
+        body: _imageBytes,
+      );
+    }
 
     if (res.statusCode != 200) {
       setState(() {
         _loading = false;
-        disease = 'Gemini error ${res.statusCode}';
+        disease = 'HuggingFace error ${res.statusCode} — check your token';
       });
       return;
     }
 
-    final decoded = jsonDecode(res.body);
-    final text =
-        decoded['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-    _parseGeminiResponse(text);
+    final body = jsonDecode(res.body);
+    if (body is Map && body.containsKey('error')) {
+      setState(() {
+        _loading = false;
+        disease = 'Model error: ${body['error']}';
+      });
+      return;
+    }
+
+    _parseHfResponse(body as List);
   }
 
-  void _parseGeminiResponse(String text) {
-    for (final line in text.split('\n')) {
-      final lower = line.toLowerCase().trim();
-      final value = line.contains(':')
-          ? line.split(':').skip(1).join(':').trim()
-          : '';
-      if (lower.startsWith('disease'))    disease    = value;
-      if (lower.startsWith('category'))   category   = value;
-      if (lower.startsWith('severity'))   severity   = value;
-      if (lower.startsWith('symptoms'))   symptoms   = value;
-      if (lower.startsWith('treatment'))  treatment  = value;
-      if (lower.startsWith('prevention')) prevention = value;
-      if (lower.startsWith('confidence')) confidence = value;
+  void _parseHfResponse(List results) {
+    if (results.isEmpty) {
+      disease = 'Could not classify the image — try a clearer photo';
+      setState(() {});
+      return;
     }
-    if (disease.isEmpty) {
-      disease  = 'Analysis complete';
-      symptoms = text;
+
+    final top   = results[0] as Map<String, dynamic>;
+    final label = (top['label'] as String?) ?? '';
+    final score = ((top['score']) as num?)?.toDouble() ?? 0.0;
+
+    // Label format: "Tomato___Late_blight"
+    final parts      = label.split('___');
+    final cropPart   = parts[0].replaceAll('_', ' ');
+    final diseasePart = parts.length > 1
+        ? parts[1].replaceAll('_', ' ')
+        : label.replaceAll('_', ' ');
+    final isHealthy = diseasePart.toLowerCase().contains('healthy');
+
+    confidence = '${(score * 100).toStringAsFixed(0)}%';
+
+    if (isHealthy) {
+      disease    = 'No disease detected';
+      category   = 'Healthy';
+      severity   = 'Low';
+      symptoms   = 'The $cropPart plant appears healthy with no visible disease symptoms.';
+      treatment  = 'No treatment required. Continue regular care and monitoring.';
+      prevention = 'Maintain proper watering, fertilisation, and regular crop inspection.';
+      setState(() {});
+      return;
     }
+
+    disease  = '$cropPart — $diseasePart';
+    severity = score >= 0.75 ? 'High' : score >= 0.45 ? 'Medium' : 'Low';
+
+    final info = _kDiseaseDb[label.toLowerCase()];
+    if (info != null) {
+      category   = info.cat;
+      symptoms   = info.sym;
+      treatment  = info.treat;
+      prevention = info.prev;
+    } else {
+      // Crop not in PlantVillage dataset (e.g., rice, wheat)
+      category   = _inferCategory(diseasePart);
+      symptoms   = 'Visual signs consistent with $diseasePart detected in $cropPart. '
+          'Confidence is $confidence — consider Plant.id for higher accuracy on '
+          'crops like rice, wheat, or cotton.';
+      treatment  = 'Consult a local agronomist. Apply appropriate fungicide or '
+          'bactericide based on confirmed diagnosis.';
+      prevention = 'Use certified disease-free seeds. Maintain proper plant spacing '
+          'and crop rotation. Regular field scouting.';
+    }
+
     setState(() {});
   }
 
