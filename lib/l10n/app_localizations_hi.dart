@@ -9,526 +9,526 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appName => 'à¤•à¥ƒà¤·à¤¿à¤®à¤¿à¤¤à¥à¤°';
+  String get appName => 'कृषिमित्र';
 
   @override
-  String get login => 'à¤²à¥‰à¤—à¤¿à¤¨';
+  String get login => 'लॉगिन';
 
   @override
-  String get signup => 'à¤¸à¤¾à¤‡à¤¨ à¤…à¤ª';
+  String get signup => 'साइन अप';
 
   @override
-  String get email => 'à¤ˆà¤®à¥‡à¤²';
+  String get email => 'ईमेल';
 
   @override
-  String get password => 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡';
+  String get password => 'पासवर्ड';
 
   @override
-  String get loginEmail => 'à¤ˆà¤®à¥‡à¤² à¤¸à¥‡ à¤²à¥‰à¤—à¤¿à¤¨';
+  String get loginEmail => 'ईमेल से लॉगिन';
 
   @override
-  String get noAccount => 'à¤–à¤¾à¤¤à¤¾ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ? à¤¸à¤¾à¤‡à¤¨ à¤…à¤ª à¤•à¤°à¥‡à¤‚';
+  String get noAccount => 'खाता नहीं है? साइन अप करें';
 
   @override
-  String get forgotPassword => 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤­à¥‚à¤² à¤—à¤?';
+  String get forgotPassword => 'पासवर्ड भूल गए?';
 
   @override
-  String get phoneLogin => 'à¤«à¥‹à¤¨ à¤¸à¥‡ à¤²à¥‰à¤—à¤¿à¤¨ / à¤¸à¤¾à¤‡à¤¨ à¤…à¤ª';
+  String get phoneLogin => 'फोन से लॉगिन / साइन अप';
 
   @override
-  String get enterOtp => 'OTP à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterOtp => 'OTP दर्ज करें';
 
   @override
-  String get verifyOtp => 'OTP à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get verifyOtp => 'OTP सत्यापित करें';
 
   @override
-  String get sendOtp => 'OTP à¤­à¥‡à¤œà¥‡à¤‚';
+  String get sendOtp => 'OTP भेजें';
 
   @override
-  String get createAccount => 'à¤…à¤ªà¤¨à¤¾ à¤–à¤¾à¤¤à¤¾ à¤¬à¤¨à¤¾à¤à¤‚';
+  String get createAccount => 'अपना खाता बनाएं';
 
   @override
-  String get resetPassword => 'à¤…à¤ªà¤¨à¤¾ à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get resetPassword => 'अपना पासवर्ड रीसेट करें';
 
   @override
-  String get sendResetLink => 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤²à¤¿à¤‚à¤• à¤­à¥‡à¤œà¥‡à¤‚';
+  String get sendResetLink => 'रीसेट लिंक भेजें';
 
   @override
-  String get cancel => 'à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚';
+  String get cancel => 'रद्द करें';
 
   @override
-  String get delete => 'à¤¹à¤Ÿà¤¾à¤à¤‚';
+  String get delete => 'हटाएं';
 
   @override
-  String get edit => 'à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get edit => 'संपादित करें';
 
   @override
-  String get close => 'à¤¬à¤‚à¤¦ à¤•à¤°à¥‡à¤‚';
+  String get close => 'बंद करें';
 
   @override
-  String get save => 'à¤¸à¤¹à¥‡à¤œà¥‡à¤‚';
+  String get save => 'सहेजें';
 
   @override
-  String get add => 'à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
+  String get add => 'जोड़ें';
 
   @override
-  String get refresh => 'à¤¤à¤¾à¤œà¤¼à¤¾ à¤•à¤°à¥‡à¤‚';
+  String get refresh => 'ताज़ा करें';
 
   @override
-  String get nearby => 'à¤†à¤¸à¤ªà¤¾à¤¸';
+  String get nearby => 'आसपास';
 
   @override
-  String get all => 'à¤¸à¤­à¥€';
+  String get all => 'सभी';
 
   @override
   String get english => 'English';
 
   @override
-  String get hindi => 'à¤¹à¤¿à¤¨à¥à¤¦à¥€';
+  String get hindi => 'हिन्दी';
 
   @override
-  String get kannada => 'à²•à²¨à³à²¨à²¡';
+  String get kannada => 'ಕನ್ನಡ';
 
   @override
-  String get selectLocation => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectLocation => 'स्थान चुनें';
 
   @override
-  String get searchLocation => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤–à¥‹à¤œà¥‡à¤‚';
+  String get searchLocation => 'स्थान खोजें';
 
   @override
-  String get recentLocations => 'à¤¹à¤¾à¤² à¤•à¥‡ à¤¸à¥à¤¥à¤¾à¤¨';
+  String get recentLocations => 'हाल के स्थान';
 
   @override
-  String get weather => 'à¤®à¥Œà¤¸à¤®';
+  String get weather => 'मौसम';
 
   @override
-  String get f2bMart => 'F2B à¤®à¤¾à¤°à¥à¤Ÿ';
+  String get f2bMart => 'F2B मार्ट';
 
   @override
-  String get rentMachine => 'à¤®à¤¶à¥€à¤¨ à¤•à¤¿à¤°à¤¾à¤¯à¤¾';
+  String get rentMachine => 'मशीन किराया';
 
   @override
-  String get plantVendors => 'à¤ªà¥Œà¤§à¤¾ à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾';
+  String get plantVendors => 'पौधा विक्रेता';
 
   @override
-  String get labourHub => 'à¤¶à¥à¤°à¤® à¤•à¥‡à¤‚à¤¦à¥à¤°';
+  String get labourHub => 'श्रम केंद्र';
 
   @override
-  String get cropDisease => 'à¤«à¤¸à¤² à¤°à¥‹à¤—';
+  String get cropDisease => 'फसल रोग';
 
   @override
-  String get exportHub => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤•à¥‡à¤‚à¤¦à¥à¤°';
+  String get exportHub => 'निर्यात केंद्र';
 
   @override
-  String get chatbot => 'à¤šà¥ˆà¤Ÿà¤¬à¥‰à¤Ÿ';
+  String get chatbot => 'चैटबॉट';
 
   @override
-  String get mostlyClear => 'à¤œà¥à¤¯à¤¾à¤¦à¤¾à¤¤à¤° à¤¸à¤¾à¤«';
+  String get mostlyClear => 'ज्यादातर साफ';
 
   @override
-  String get wind => 'à¤¹à¤µà¤¾';
+  String get wind => 'हवा';
 
   @override
-  String get humidity => 'à¤†à¤°à¥à¤¦à¥à¤°à¤¤à¤¾';
+  String get humidity => 'आर्द्रता';
 
   @override
-  String get farmAdvisory => 'à¤•à¥ƒà¤·à¤¿ à¤¸à¤²à¤¾à¤¹';
+  String get farmAdvisory => 'कृषि सलाह';
 
   @override
-  String get farmingNormal => 'à¤®à¥Œà¤¸à¤® à¤•à¥ƒà¤·à¤¿ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤®à¤¾à¤¨à¥à¤¯ à¤¹à¥ˆà¥¤';
+  String get farmingNormal => 'मौसम कृषि के लिए सामान्य है।';
 
   @override
-  String get rainAdvisory => 'à¤µà¤°à¥à¤·à¤¾ à¤¸à¤²à¤¾à¤¹';
+  String get rainAdvisory => 'वर्षा सलाह';
 
   @override
-  String get noRain => 'à¤…à¤—à¤²à¥‡ 3 à¤˜à¤‚à¤Ÿà¥‹à¤‚ à¤®à¥‡à¤‚ à¤¬à¤¾à¤°à¤¿à¤¶ à¤•à¥€ à¤‰à¤®à¥à¤®à¥€à¤¦ à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noRain => 'अगले 3 घंटों में बारिश की उम्मीद नहीं।';
 
   @override
-  String get safeSpray => 'à¤•à¥€à¤Ÿà¤¨à¤¾à¤¶à¤• à¤›à¤¿à¤¡à¤¼à¤•à¤¾à¤µ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¥à¤°à¤•à¥à¤·à¤¿à¤¤ à¤¸à¤®à¤¯à¥¤';
+  String get safeSpray => 'कीटनाशक छिड़काव के लिए सुरक्षित समय।';
 
   @override
-  String get hourlyForecast => 'à¤ªà¥à¤°à¤¤à¤¿ à¤˜à¤‚à¤Ÿà¤¾ à¤ªà¥‚à¤°à¥à¤µà¤¾à¤¨à¥à¤®à¤¾à¤¨';
+  String get hourlyForecast => 'प्रति घंटा पूर्वानुमान';
 
   @override
-  String get sevenDayForecast => '7-à¤¦à¤¿à¤¨ à¤•à¤¾ à¤ªà¥‚à¤°à¥à¤µà¤¾à¤¨à¥à¤®à¤¾à¤¨';
+  String get sevenDayForecast => '7-दिन का पूर्वानुमान';
 
   @override
-  String get noData => 'à¤®à¥Œà¤¸à¤® à¤¡à¥‡à¤Ÿà¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
+  String get noData => 'मौसम डेटा उपलब्ध नहीं';
 
   @override
-  String get nearbyMachines => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥€ à¤®à¤¶à¥€à¤¨à¥‡à¤‚';
+  String get nearbyMachines => 'आसपास की मशीनें';
 
   @override
-  String get listMachine => 'à¤®à¤¶à¥€à¤¨ à¤¸à¥‚à¤šà¥€à¤¬à¤¦à¥à¤§ à¤•à¤°à¥‡à¤‚';
+  String get listMachine => 'मशीन सूचीबद्ध करें';
 
   @override
-  String get searchLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤–à¥‹à¤œà¥‡à¤‚...';
+  String get searchLabour => 'श्रमिक खोजें...';
 
   @override
-  String get deleteLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¹à¤Ÿà¤¾à¤à¤‚';
+  String get deleteLabour => 'श्रमिक हटाएं';
 
   @override
-  String get deleteLabourConfirm => 'à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤µà¤¾à¤•à¤ˆ à¤‡à¤¸ à¤¶à¥à¤°à¤®à¤¿à¤• à¤•à¥‹ à¤¹à¤Ÿà¤¾à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?';
+  String get deleteLabourConfirm => 'क्या आप वाकई इस श्रमिक को हटाना चाहते हैं?';
 
   @override
-  String get cannotOpenDialer => 'à¤¡à¤¾à¤¯à¤²à¤° à¤¨à¤¹à¥€à¤‚ à¤–à¥à¤² à¤¸à¤•à¤¤à¤¾';
+  String get cannotOpenDialer => 'डायलर नहीं खुल सकता';
 
   @override
-  String get deleted => 'à¤¹à¤Ÿà¤¾à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get deleted => 'हटाया गया';
 
   @override
-  String get deleteFailed => 'à¤¹à¤Ÿà¤¾à¤¨à¤¾ à¤µà¤¿à¤«à¤²';
+  String get deleteFailed => 'हटाना विफल';
 
   @override
-  String get available => 'à¤‰à¤ªà¤²à¤¬à¥à¤§';
+  String get available => 'उपलब्ध';
 
   @override
-  String get busy => 'à¤µà¥à¤¯à¤¸à¥à¤¤';
+  String get busy => 'व्यस्त';
 
   @override
-  String get noLabourFound => 'à¤•à¥‹à¤ˆ à¤¶à¥à¤°à¤®à¤¿à¤• à¤ªà¥à¤°à¤µà¤¿à¤·à¥à¤Ÿà¤¿ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€à¥¤';
+  String get noLabourFound => 'कोई श्रमिक प्रविष्टि नहीं मिली।';
 
   @override
-  String get addLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
+  String get addLabour => 'श्रमिक जोड़ें';
 
   @override
-  String get sortByDistanceLabel => 'à¤¦à¥‚à¤°à¥€ à¤¸à¥‡ à¤•à¥à¤°à¤®à¤¬à¤¦à¥à¤§ à¤•à¤°à¥‡à¤‚';
+  String get sortByDistanceLabel => 'दूरी से क्रमबद्ध करें';
 
   @override
-  String get errorLoadingLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¡à¥‡à¤Ÿà¤¾ à¤²à¥‹à¤¡ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿';
+  String get errorLoadingLabour => 'श्रमिक डेटा लोड करने में त्रुटि';
 
   @override
-  String get farmLabour => 'à¤–à¥‡à¤¤ à¤®à¤œà¤¦à¥‚à¤°';
+  String get farmLabour => 'खेत मजदूर';
 
   @override
-  String get tractorDriver => 'à¤Ÿà¥à¤°à¥ˆà¤•à¥à¤Ÿà¤° à¤šà¤¾à¤²à¤•';
+  String get tractorDriver => 'ट्रैक्टर चालक';
 
   @override
-  String get plantationWorker => 'à¤¬à¤¾à¤—à¤¾à¤¨ à¤•à¤°à¥à¤®à¥€';
+  String get plantationWorker => 'बागान कर्मी';
 
   @override
-  String get sprayerOperator => 'à¤¸à¥à¤ªà¥à¤°à¥‡à¤¯à¤° à¤‘à¤ªà¤°à¥‡à¤Ÿà¤°';
+  String get sprayerOperator => 'स्प्रेयर ऑपरेटर';
 
   @override
-  String get harvesterOperator => 'à¤¹à¤¾à¤°à¥à¤µà¥‡à¤¸à¥à¤Ÿà¤° à¤‘à¤ªà¤°à¥‡à¤Ÿà¤°';
+  String get harvesterOperator => 'हार्वेस्टर ऑपरेटर';
 
   @override
-  String get machineTechnician => 'à¤®à¤¶à¥€à¤¨ à¤¤à¤•à¤¨à¥€à¤¶à¤¿à¤¯à¤¨';
+  String get machineTechnician => 'मशीन तकनीशियन';
 
   @override
-  String get dairyWorker => 'à¤¡à¥‡à¤¯à¤°à¥€ à¤•à¤°à¥à¤®à¥€';
+  String get dairyWorker => 'डेयरी कर्मी';
 
   @override
-  String get seeds => 'à¤¬à¥€à¤œ';
+  String get seeds => 'बीज';
 
   @override
-  String get plant => 'à¤ªà¥Œà¤§à¤¾';
+  String get plant => 'पौधा';
 
   @override
-  String get allCategories => 'à¤¸à¤­à¥€';
+  String get allCategories => 'सभी';
 
   @override
-  String get searchPlantVendor => 'à¤ªà¥Œà¤§à¤¾, à¤ªà¥à¤°à¤•à¤¾à¤°, à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾, à¤¸à¥à¤¥à¤¾à¤¨ à¤–à¥‹à¤œà¥‡à¤‚...';
+  String get searchPlantVendor => 'पौधा, प्रकार, विक्रेता, स्थान खोजें...';
 
   @override
-  String get newest => 'à¤¨à¤µà¥€à¤¨à¤¤à¤®';
+  String get newest => 'नवीनतम';
 
   @override
-  String get oldest => 'à¤ªà¥à¤°à¤¾à¤¨à¤¾';
+  String get oldest => 'पुराना';
 
   @override
-  String get priceLow => 'à¤®à¥‚à¤²à¥à¤¯: à¤•à¤®';
+  String get priceLow => 'मूल्य: कम';
 
   @override
-  String get priceHigh => 'à¤®à¥‚à¤²à¥à¤¯: à¤…à¤§à¤¿à¤•';
+  String get priceHigh => 'मूल्य: अधिक';
 
   @override
-  String get noListingsFound => 'à¤•à¥‹à¤ˆ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€à¥¤';
+  String get noListingsFound => 'कोई लिस्टिंग नहीं मिली।';
 
   @override
-  String get deleteListingQ => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¹à¤Ÿà¤¾à¤à¤‚?';
+  String get deleteListingQ => 'लिस्टिंग हटाएं?';
 
   @override
-  String get permanentlyDeleteListing => 'à¤¯à¤¹ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¸à¥à¤¥à¤¾à¤¯à¥€ à¤°à¥‚à¤ª à¤¸à¥‡ à¤¹à¤Ÿà¤¾ à¤¦à¥‡à¤—à¤¾à¥¤';
+  String get permanentlyDeleteListing => 'यह लिस्टिंग स्थायी रूप से हटा देगा।';
 
   @override
-  String get unknownPlant => 'à¤…à¤œà¥à¤žà¤¾à¤¤ à¤ªà¥Œà¤§à¤¾';
+  String get unknownPlant => 'अज्ञात पौधा';
 
   @override
-  String get typeLabel => 'à¤ªà¥à¤°à¤•à¤¾à¤°';
+  String get typeLabel => 'प्रकार';
 
   @override
-  String get priceLabel => 'à¤®à¥‚à¤²à¥à¤¯';
+  String get priceLabel => 'मूल्य';
 
   @override
-  String get quantityLabel => 'à¤®à¤¾à¤¤à¥à¤°à¤¾';
+  String get quantityLabel => 'मात्रा';
 
   @override
-  String get vendorLabel => 'à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾';
+  String get vendorLabel => 'विक्रेता';
 
   @override
-  String get locationLabel => 'à¤¸à¥à¤¥à¤¾à¤¨';
+  String get locationLabel => 'स्थान';
 
   @override
-  String get listedOnLabel => 'à¤¸à¥‚à¤šà¥€à¤¬à¤¦à¥à¤§ à¤¤à¤¾à¤°à¥€à¤–';
+  String get listedOnLabel => 'सूचीबद्ध तारीख';
 
   @override
-  String get descriptionLabel => 'à¤µà¤¿à¤µà¤°à¤£';
+  String get descriptionLabel => 'विवरण';
 
   @override
-  String get exporterHub => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤à¤• à¤¹à¤¬';
+  String get exporterHub => 'निर्यातक हब';
 
   @override
-  String get cropsTab => 'à¤«à¤¸à¤²à¥‡à¤‚';
+  String get cropsTab => 'फसलें';
 
   @override
-  String get myListingsTab => 'à¤®à¥‡à¤°à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—';
+  String get myListingsTab => 'मेरी लिस्टिंग';
 
   @override
-  String get verifiedBuyersTab => 'à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤–à¤°à¥€à¤¦à¤¾à¤°';
+  String get verifiedBuyersTab => 'सत्यापित खरीदार';
 
   @override
-  String get searchByCropFarmer => 'à¤«à¤¸à¤², à¤•à¤¿à¤¸à¤¾à¤¨ à¤¨à¤¾à¤® à¤¯à¤¾ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡ à¤–à¥‹à¤œà¥‡à¤‚';
+  String get searchByCropFarmer => 'फसल, किसान नाम या स्थान से खोजें';
 
   @override
-  String get pleaseSignInToViewListings => 'à¤…à¤ªà¤¨à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚';
+  String get pleaseSignInToViewListings => 'अपनी लिस्टिंग देखने के लिए साइन इन करें';
 
   @override
-  String get pleaseSignInToViewOrders => 'à¤…à¤ªà¤¨à¥‡ à¤‘à¤°à¥à¤¡à¤° à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚';
+  String get pleaseSignInToViewOrders => 'अपने ऑर्डर देखने के लिए साइन इन करें';
 
   @override
-  String get pleaseSignInToAdd => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤œà¥‹à¤¡à¤¼à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get pleaseSignInToAdd => 'उत्पाद जोड़ने के लिए साइन इन करें।';
 
   @override
-  String get pleaseSignInToViewSeller => 'à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾ à¤‘à¤°à¥à¤¡à¤° à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get pleaseSignInToViewSeller => 'विक्रेता ऑर्डर देखने के लिए साइन इन करें।';
 
   @override
-  String get noExportProductsFound => 'à¤•à¥‹à¤ˆ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤†à¤ªà¤•à¥€ à¤–à¥‹à¤œ à¤¸à¥‡ à¤®à¥‡à¤² à¤¨à¤¹à¥€à¤‚ à¤–à¤¾à¤¤à¤¾à¥¤';
+  String get noExportProductsFound => 'कोई निर्यात उत्पाद आपकी खोज से मेल नहीं खाता।';
 
   @override
-  String get noListingsMatchFilter => 'à¤•à¥‹à¤ˆ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤†à¤ªà¤•à¥‡ à¤«à¤¼à¤¿à¤²à¥à¤Ÿà¤° à¤¸à¥‡ à¤®à¥‡à¤² à¤¨à¤¹à¥€à¤‚ à¤–à¤¾à¤¤à¥€à¥¤';
+  String get noListingsMatchFilter => 'कोई लिस्टिंग आपके फ़िल्टर से मेल नहीं खाती।';
 
   @override
-  String get noPurchaseOrders => 'à¤…à¤­à¥€ à¤¤à¤• à¤•à¥‹à¤ˆ à¤–à¤°à¥€à¤¦ à¤‘à¤°à¥à¤¡à¤° à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noPurchaseOrders => 'अभी तक कोई खरीद ऑर्डर नहीं।';
 
   @override
-  String get viewDetails => 'à¤µà¤¿à¤µà¤°à¤£ à¤¦à¥‡à¤–à¥‡à¤‚';
+  String get viewDetails => 'विवरण देखें';
 
   @override
-  String get buy => 'à¤–à¤°à¥€à¤¦à¥‡à¤‚';
+  String get buy => 'खरीदें';
 
   @override
-  String get buyNow => 'à¤…à¤­à¥€ à¤–à¤°à¥€à¤¦à¥‡à¤‚';
+  String get buyNow => 'अभी खरीदें';
 
   @override
-  String get deleteListingTitle => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¹à¤Ÿà¤¾à¤à¤‚';
+  String get deleteListingTitle => 'लिस्टिंग हटाएं';
 
   @override
-  String get areYouSureDeleteProduct => 'à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤µà¤¾à¤•à¤ˆ à¤‡à¤¸ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¥‹ à¤¹à¤Ÿà¤¾à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?';
+  String get areYouSureDeleteProduct => 'क्या आप वाकई इस उत्पाद को हटाना चाहते हैं?';
 
   @override
-  String get productDeletedSuccessfully => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¹à¤Ÿà¤¾à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get productDeletedSuccessfully => 'उत्पाद सफलतापूर्वक हटाया गया';
 
   @override
-  String get openMap => 'à¤®à¤¾à¤¨à¤šà¤¿à¤¤à¥à¤° à¤–à¥‹à¤²à¥‡à¤‚';
+  String get openMap => 'मानचित्र खोलें';
 
   @override
-  String get nearbyFarmersList => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‡ à¤•à¤¿à¤¸à¤¾à¤¨ (à¤¸à¥‚à¤šà¥€)';
+  String get nearbyFarmersList => 'आसपास के किसान (सूची)';
 
   @override
-  String get sellingOrders => 'à¤¬à¤¿à¤•à¥à¤°à¥€ à¤‘à¤°à¥à¤¡à¤°';
+  String get sellingOrders => 'बिक्री ऑर्डर';
 
   @override
-  String get krishiMitraAIChatbot => 'à¤•à¥ƒà¤·à¤¿à¤®à¤¿à¤¤à¥à¤° à¤šà¥ˆà¤Ÿà¤¬à¥‰à¤Ÿ';
+  String get krishiMitraAIChatbot => 'कृषिमित्र चैटबॉट';
 
   @override
-  String get askKrishiMitraHint => 'à¤•à¥ƒà¤·à¤¿à¤®à¤¿à¤¤à¥à¤° à¤¸à¥‡ à¤ªà¥‚à¤›à¥‡à¤‚...';
+  String get askKrishiMitraHint => 'कृषिमित्र से पूछें...';
 
   @override
-  String get krishiMitraTyping => 'à¤•à¥ƒà¤·à¤¿à¤®à¤¿à¤¤à¥à¤° à¤Ÿà¤¾à¤‡à¤ª à¤•à¤° à¤°à¤¹à¤¾ à¤¹à¥ˆ...';
+  String get krishiMitraTyping => 'कृषिमित्र टाइप कर रहा है...';
 
   @override
-  String get chatbotSorryError => 'à¤•à¥à¤·à¤®à¤¾ à¤•à¤°à¥‡à¤‚, à¤‰à¤¤à¥à¤¤à¤° à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤†à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¯à¤¾à¤¸ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get chatbotSorryError => 'क्षमा करें, उत्तर प्राप्त नहीं हुआ। कृपया पुनः प्रयास करें।';
 
   @override
-  String get cropDiseaseDetector => 'à¤«à¤¸à¤² à¤°à¥‹à¤— à¤¡à¤¿à¤Ÿà¥‡à¤•à¥à¤Ÿà¤°';
+  String get cropDiseaseDetector => 'फसल रोग डिटेक्टर';
 
   @override
-  String get analyzeDisease => 'à¤°à¥‹à¤— à¤µà¤¿à¤¶à¥à¤²à¥‡à¤·à¤£ à¤•à¤°à¥‡à¤‚';
+  String get analyzeDisease => 'रोग विश्लेषण करें';
 
   @override
-  String get camera => 'à¤•à¥ˆà¤®à¤°à¤¾';
+  String get camera => 'कैमरा';
 
   @override
-  String get gallery => 'à¤—à¥ˆà¤²à¤°à¥€';
+  String get gallery => 'गैलरी';
 
   @override
-  String get diseaseResult => 'à¤°à¥‹à¤—';
+  String get diseaseResult => 'रोग';
 
   @override
-  String get categoryResult => 'à¤¶à¥à¤°à¥‡à¤£à¥€';
+  String get categoryResult => 'श्रेणी';
 
   @override
-  String get symptomsResult => 'à¤²à¤•à¥à¤·à¤£';
+  String get symptomsResult => 'लक्षण';
 
   @override
-  String get treatmentResult => 'à¤‰à¤ªà¤šà¤¾à¤°';
+  String get treatmentResult => 'उपचार';
 
   @override
-  String get preventionResult => 'à¤°à¥‹à¤•à¤¥à¤¾à¤®';
+  String get preventionResult => 'रोकथाम';
 
   @override
-  String get confidenceResult => 'à¤µà¤¿à¤¶à¥à¤µà¤¾à¤¸';
+  String get confidenceResult => 'विश्वास';
 
   @override
-  String get profile => 'à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤²';
+  String get profile => 'प्रोफ़ाइल';
 
   @override
-  String get editProfile => 'à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤² à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editProfile => 'प्रोफ़ाइल संपादित करें';
 
   @override
-  String get languageSetting => 'à¤­à¤¾à¤·à¤¾';
+  String get languageSetting => 'भाषा';
 
   @override
-  String get darkMode => 'à¤¡à¤¾à¤°à¥à¤• à¤®à¥‹à¤¡';
+  String get darkMode => 'डार्क मोड';
 
   @override
-  String get displayName => 'à¤ªà¥à¤°à¤¦à¤°à¥à¤¶à¤¨ à¤¨à¤¾à¤®';
+  String get displayName => 'प्रदर्शन नाम';
 
   @override
-  String get saveChanges => 'à¤ªà¤°à¤¿à¤µà¤°à¥à¤¤à¤¨ à¤¸à¤¹à¥‡à¤œà¥‡à¤‚';
+  String get saveChanges => 'परिवर्तन सहेजें';
 
   @override
-  String get signOut => 'à¤¸à¤¾à¤‡à¤¨ à¤†à¤‰à¤Ÿ';
+  String get signOut => 'साइन आउट';
 
   @override
-  String get listingsCount => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—';
+  String get listingsCount => 'लिस्टिंग';
 
   @override
-  String get rentalsCount => 'à¤•à¤¿à¤°à¤¾à¤¯à¤¾';
+  String get rentalsCount => 'किराया';
 
   @override
-  String get activitySection => 'à¤—à¤¤à¤¿à¤µà¤¿à¤§à¤¿';
+  String get activitySection => 'गतिविधि';
 
   @override
-  String get selectLanguage => 'à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectLanguage => 'भाषा चुनें';
 
   @override
-  String get loading => 'à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...';
+  String get loading => 'लोड हो रहा है...';
 
   @override
-  String get submit => 'à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get submit => 'सबमिट करें';
 
   @override
-  String get update => 'à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get update => 'अपडेट करें';
 
   @override
-  String get confirm => 'à¤ªà¥à¤·à¥à¤Ÿà¤¿ à¤•à¤°à¥‡à¤‚';
+  String get confirm => 'पुष्टि करें';
 
   @override
-  String get complete => 'à¤ªà¥‚à¤°à¥à¤£ à¤•à¤°à¥‡à¤‚';
+  String get complete => 'पूर्ण करें';
 
   @override
-  String get view => 'à¤¦à¥‡à¤–à¥‡à¤‚';
+  String get view => 'देखें';
 
   @override
-  String get call => 'à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚';
+  String get call => 'कॉल करें';
 
   @override
-  String get whatsApp => 'à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª';
+  String get whatsApp => 'व्हाट्सएप';
 
   @override
-  String get openMaps => 'à¤¨à¤•à¥à¤¶à¤¾ à¤–à¥‹à¤²à¥‡à¤‚';
+  String get openMaps => 'नक्शा खोलें';
 
   @override
-  String get openInMaps => 'à¤¨à¤•à¥à¤¶à¥‡ à¤®à¥‡à¤‚ à¤–à¥‹à¤²à¥‡à¤‚';
+  String get openInMaps => 'नक्शे में खोलें';
 
   @override
-  String get pickImage => 'à¤›à¤µà¤¿ à¤šà¥à¤¨à¥‡à¤‚';
+  String get pickImage => 'छवि चुनें';
 
   @override
-  String get uploadImage => 'à¤›à¤µà¤¿ à¤…à¤ªà¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚';
+  String get uploadImage => 'छवि अपलोड करें';
 
   @override
-  String get noImageSelected => 'à¤•à¥‹à¤ˆ à¤›à¤µà¤¿ à¤¨à¤¹à¥€à¤‚ à¤šà¥à¤¨à¥€';
+  String get noImageSelected => 'कोई छवि नहीं चुनी';
 
   @override
-  String get pickImageFirst => 'à¤ªà¤¹à¤²à¥‡ à¤à¤• à¤›à¤µà¤¿ à¤šà¥à¤¨à¥‡à¤‚';
+  String get pickImageFirst => 'पहले एक छवि चुनें';
 
   @override
-  String get imageUploadedSuccessfully => 'à¤›à¤µà¤¿ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤…à¤ªà¤²à¥‹à¤¡ à¤¹à¥à¤ˆ';
+  String get imageUploadedSuccessfully => 'छवि सफलतापूर्वक अपलोड हुई';
 
   @override
-  String get imageUploadFailed => 'à¤›à¤µà¤¿ à¤…à¤ªà¤²à¥‹à¤¡ à¤µà¤¿à¤«à¤²';
+  String get imageUploadFailed => 'छवि अपलोड विफल';
 
   @override
-  String get imageUploaded => 'à¤›à¤µà¤¿ à¤…à¤ªà¤²à¥‹à¤¡ à¤¹à¥à¤ˆ';
+  String get imageUploaded => 'छवि अपलोड हुई';
 
   @override
-  String get uploadFailed => 'à¤…à¤ªà¤²à¥‹à¤¡ à¤µà¤¿à¤«à¤²';
+  String get uploadFailed => 'अपलोड विफल';
 
   @override
-  String get setLocation => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get setLocation => 'स्थान सेट करें';
 
   @override
-  String get searchPlace => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤–à¥‹à¤œà¥‡à¤‚...';
+  String get searchPlace => 'स्थान खोजें...';
 
   @override
-  String get fetchingLocation => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...';
+  String get fetchingLocation => 'स्थान प्राप्त हो रहा है...';
 
   @override
-  String get locationSet => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get locationSet => 'स्थान सेट किया गया';
 
   @override
-  String get pricePerUnitLabel => 'à¤ªà¥à¤°à¤¤à¤¿ à¤‡à¤•à¤¾à¤ˆ à¤®à¥‚à¤²à¥à¤¯ (â‚¹)';
+  String get pricePerUnitLabel => 'प्रति इकाई मूल्य (₹)';
 
   @override
-  String get categoryLabel => 'à¤¶à¥à¤°à¥‡à¤£à¥€';
+  String get categoryLabel => 'श्रेणी';
 
   @override
-  String get productNameLabel => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get productNameLabel => 'उत्पाद का नाम';
 
   @override
   String get statusLabel => 'Status';
 
   @override
-  String get totalLabel => 'à¤•à¥à¤²:';
+  String get totalLabel => 'कुल:';
 
   @override
-  String get farmerLabel => 'à¤•à¤¿à¤¸à¤¾à¤¨:';
+  String get farmerLabel => 'किसान:';
 
   @override
-  String get mobileLabel => 'à¤®à¥‹à¤¬à¤¾à¤‡à¤²:';
+  String get mobileLabel => 'मोबाइल:';
 
   @override
-  String get qtyLabel => 'à¤®à¤¾à¤¤à¥à¤°à¤¾:';
+  String get qtyLabel => 'मात्रा:';
 
   @override
-  String get sellerLabel => 'à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾:';
+  String get sellerLabel => 'विक्रेता:';
 
   @override
-  String get buyerLabel => 'à¤–à¤°à¥€à¤¦à¤¾à¤°:';
+  String get buyerLabel => 'खरीदार:';
 
   @override
-  String get ownerLabel => 'à¤®à¤¾à¤²à¤¿à¤•:';
+  String get ownerLabel => 'मालिक:';
 
   @override
-  String get notAvailable => 'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
+  String get notAvailable => 'उपलब्ध नहीं';
 
   @override
-  String get other => 'à¤…à¤¨à¥à¤¯';
+  String get other => 'अन्य';
 
   @override
-  String get allListingsTab => 'à¤¸à¤­à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—';
+  String get allListingsTab => 'सभी लिस्टिंग';
 
   @override
-  String get pendingApprovalTab => 'à¤…à¤¨à¥à¤®à¥‹à¤¦à¤¨ à¤²à¤‚à¤¬à¤¿à¤¤';
+  String get pendingApprovalTab => 'अनुमोदन लंबित';
 
   @override
-  String get postExportStock => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¥à¤Ÿà¥‰à¤• à¤ªà¥‹à¤¸à¥à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get postExportStock => 'निर्यात स्टॉक पोस्ट करें';
 
   @override
-  String get noPendingListings => 'à¤•à¥‹à¤ˆ à¤²à¤‚à¤¬à¤¿à¤¤ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noPendingListings => 'कोई लंबित लिस्टिंग नहीं।';
 
   @override
   String get approve => 'Approve';
@@ -537,640 +537,640 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reject => 'Reject';
 
   @override
-  String get myListings => 'à¤®à¥‡à¤°à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—';
+  String get myListings => 'मेरी लिस्टिंग';
 
   @override
-  String get postStock => 'à¤¸à¥à¤Ÿà¥‰à¤• à¤ªà¥‹à¤¸à¥à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get postStock => 'स्टॉक पोस्ट करें';
 
   @override
-  String get noListingsYet => 'à¤…à¤­à¥€ à¤¤à¤• à¤•à¥‹à¤ˆ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noListingsYet => 'अभी तक कोई लिस्टिंग नहीं।';
 
   @override
   String get deleteListingConfirm => 'Permanently delete this listing?';
 
   @override
-  String get listingDeleted => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¹à¤Ÿà¤¾à¤ˆ à¤—à¤ˆà¥¤';
+  String get listingDeleted => 'लिस्टिंग हटाई गई।';
 
   @override
-  String get browseExportListings => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¦à¥‡à¤–à¥‡à¤‚';
+  String get browseExportListings => 'निर्यात लिस्टिंग देखें';
 
   @override
-  String get noProductsAvailable => 'à¤•à¥‹à¤ˆ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noProductsAvailable => 'कोई उत्पाद उपलब्ध नहीं।';
 
   @override
-  String get createPurchaseOrder => 'à¤–à¤°à¥€à¤¦ à¤‘à¤°à¥à¤¡à¤° à¤¬à¤¨à¤¾à¤à¤‚';
+  String get createPurchaseOrder => 'खरीद ऑर्डर बनाएं';
 
   @override
-  String get listingDetailsTitle => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤µà¤¿à¤µà¤°à¤£';
+  String get listingDetailsTitle => 'लिस्टिंग विवरण';
 
   @override
-  String get statusPending => 'à¤²à¤‚à¤¬à¤¿à¤¤';
+  String get statusPending => 'लंबित';
 
   @override
-  String get statusApproved => 'à¤…à¤¨à¥à¤®à¥‹à¤¦à¤¿à¤¤';
+  String get statusApproved => 'अनुमोदित';
 
   @override
-  String get statusRejected => 'à¤…à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤';
+  String get statusRejected => 'अस्वीकृत';
 
   @override
-  String get approveListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤¨à¥à¤®à¥‹à¤¦à¤¨ à¤•à¤°à¥‡à¤‚';
+  String get approveListing => 'लिस्टिंग अनुमोदन करें';
 
   @override
-  String get rejectListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤¸à¥à¤µà¥€à¤•à¤¾à¤° à¤•à¤°à¥‡à¤‚';
+  String get rejectListing => 'लिस्टिंग अस्वीकार करें';
 
   @override
-  String get listingApproved => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤¨à¥à¤®à¥‹à¤¦à¤¿à¤¤à¥¤';
+  String get listingApproved => 'लिस्टिंग अनुमोदित।';
 
   @override
-  String get listingRejected => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤à¥¤';
+  String get listingRejected => 'लिस्टिंग अस्वीकृत।';
 
   @override
-  String get errorUpdatingListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿à¥¤';
+  String get errorUpdatingListing => 'लिस्टिंग अपडेट करने में त्रुटि।';
 
   @override
-  String get editExportStockTitle => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¥à¤Ÿà¥‰à¤• à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editExportStockTitle => 'निर्यात स्टॉक संपादित करें';
 
   @override
-  String get pleaseEnterProductName => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get pleaseEnterProductName => 'कृपया उत्पाद का नाम दर्ज करें';
 
   @override
-  String get pleaseEnterQuantity => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get pleaseEnterQuantity => 'कृपया मात्रा दर्ज करें';
 
   @override
-  String get pleaseEnterPrice => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤®à¥‚à¤²à¥à¤¯ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get pleaseEnterPrice => 'कृपया मूल्य दर्ज करें';
 
   @override
-  String get pleaseEnterLocation => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¥à¤¥à¤¾à¤¨ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get pleaseEnterLocation => 'कृपया स्थान दर्ज करें';
 
   @override
-  String get listingSubmittedSuccessfully => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤¹à¥à¤ˆà¥¤';
+  String get listingSubmittedSuccessfully => 'लिस्टिंग सफलतापूर्वक सबमिट हुई।';
 
   @override
-  String get listingUpdatedSuccessfully => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤ˆà¥¤';
+  String get listingUpdatedSuccessfully => 'लिस्टिंग सफलतापूर्वक अपडेट हुई।';
 
   @override
-  String get failedToSubmitListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToSubmitListing => 'लिस्टिंग सबमिट करने में विफल।';
 
   @override
-  String get addExportProductTitle => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
+  String get addExportProductTitle => 'निर्यात उत्पाद जोड़ें';
 
   @override
-  String get editExportProductTitle => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editExportProductTitle => 'निर्यात उत्पाद संपादित करें';
 
   @override
-  String get descriptionOptionalLabel => 'à¤µà¤¿à¤µà¤°à¤£ (à¤µà¥ˆà¤•à¤²à¥à¤ªà¤¿à¤•)';
+  String get descriptionOptionalLabel => 'विवरण (वैकल्पिक)';
 
   @override
-  String get enterProductName => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterProductName => 'उत्पाद का नाम दर्ज करें';
 
   @override
-  String get enterQuantity => 'à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterQuantity => 'मात्रा दर्ज करें';
 
   @override
-  String get enterValidPrice => 'à¤®à¤¾à¤¨à¥à¤¯ à¤®à¥‚à¤²à¥à¤¯ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterValidPrice => 'मान्य मूल्य दर्ज करें';
 
   @override
-  String get selectCategory => 'à¤¶à¥à¤°à¥‡à¤£à¥€ à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectCategory => 'श्रेणी चुनें';
 
   @override
-  String get productAddedSuccessfully => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤œà¥‹à¤¡à¤¼à¤¾ à¤—à¤¯à¤¾à¥¤';
+  String get productAddedSuccessfully => 'उत्पाद सफलतापूर्वक जोड़ा गया।';
 
   @override
-  String get productUpdatedSuccessfully => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤†à¥¤';
+  String get productUpdatedSuccessfully => 'उत्पाद सफलतापूर्वक अपडेट हुआ।';
 
   @override
-  String get failedToSubmitProduct => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToSubmitProduct => 'उत्पाद सबमिट करने में विफल।';
 
   @override
-  String get buyerNameLabel => 'à¤–à¤°à¥€à¤¦à¤¾à¤° à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get buyerNameLabel => 'खरीदार का नाम';
 
   @override
-  String get deliveryAddressLabel => 'à¤¡à¤¿à¤²à¥€à¤µà¤°à¥€ à¤ªà¤¤à¤¾';
+  String get deliveryAddressLabel => 'डिलीवरी पता';
 
   @override
-  String get notesOptionalLabel => 'à¤¨à¥‹à¤Ÿà¥à¤¸ (à¤µà¥ˆà¤•à¤²à¥à¤ªà¤¿à¤•)';
+  String get notesOptionalLabel => 'नोट्स (वैकल्पिक)';
 
   @override
-  String get enterBuyerName => 'à¤–à¤°à¥€à¤¦à¤¾à¤° à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterBuyerName => 'खरीदार का नाम दर्ज करें';
 
   @override
-  String get enterValidNumber => 'à¤®à¤¾à¤¨à¥à¤¯ à¤¸à¤‚à¤–à¥à¤¯à¤¾ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterValidNumber => 'मान्य संख्या दर्ज करें';
 
   @override
-  String get enterDeliveryAddress => 'à¤¡à¤¿à¤²à¥€à¤µà¤°à¥€ à¤ªà¤¤à¤¾ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterDeliveryAddress => 'डिलीवरी पता दर्ज करें';
 
   @override
-  String get placeOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤¦à¥‡à¤‚';
+  String get placeOrder => 'ऑर्डर दें';
 
   @override
-  String get orderPlacedSuccessfully => 'à¤‘à¤°à¥à¤¡à¤° à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¦à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾!';
+  String get orderPlacedSuccessfully => 'ऑर्डर सफलतापूर्वक दिया गया!';
 
   @override
-  String get failedToPlaceOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤¦à¥‡à¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToPlaceOrder => 'ऑर्डर देने में विफल।';
 
   @override
-  String get myPurchaseOrdersTitle => 'à¤®à¥‡à¤°à¥‡ à¤–à¤°à¥€à¤¦ à¤‘à¤°à¥à¤¡à¤°';
+  String get myPurchaseOrdersTitle => 'मेरे खरीद ऑर्डर';
 
   @override
-  String get loadingProduct => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤²à¥‹à¤¡ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...';
+  String get loadingProduct => 'उत्पाद लोड हो रहा है...';
 
   @override
-  String get productNotFound => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾';
+  String get productNotFound => 'उत्पाद नहीं मिला';
 
   @override
-  String get noPurchaseOrdersYet => 'à¤…à¤­à¥€ à¤¤à¤• à¤•à¥‹à¤ˆ à¤–à¤°à¥€à¤¦ à¤‘à¤°à¥à¤¡à¤° à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noPurchaseOrdersYet => 'अभी तक कोई खरीद ऑर्डर नहीं।';
 
   @override
-  String get noOrdersReceivedYet => 'à¤…à¤­à¥€ à¤¤à¤• à¤•à¥‹à¤ˆ à¤‘à¤°à¥à¤¡à¤° à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤';
+  String get noOrdersReceivedYet => 'अभी तक कोई ऑर्डर नहीं मिला।';
 
   @override
-  String get purchaseOrderTitle => 'à¤–à¤°à¥€à¤¦ à¤‘à¤°à¥à¤¡à¤°';
+  String get purchaseOrderTitle => 'खरीद ऑर्डर';
 
   @override
-  String get orderDetails => 'à¤‘à¤°à¥à¤¡à¤° à¤µà¤¿à¤µà¤°à¤£';
+  String get orderDetails => 'ऑर्डर विवरण';
 
   @override
-  String get notesLabel => 'à¤¨à¥‹à¤Ÿà¥à¤¸:';
+  String get notesLabel => 'नोट्स:';
 
   @override
-  String get confirmOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤•à¥€ à¤ªà¥à¤·à¥à¤Ÿà¤¿ à¤•à¤°à¥‡à¤‚';
+  String get confirmOrder => 'ऑर्डर की पुष्टि करें';
 
   @override
-  String get completeOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤ªà¥‚à¤°à¥à¤£ à¤•à¤°à¥‡à¤‚';
+  String get completeOrder => 'ऑर्डर पूर्ण करें';
 
   @override
-  String get cancelOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤°à¤¦à¥à¤¦ à¤•à¤°à¥‡à¤‚';
+  String get cancelOrder => 'ऑर्डर रद्द करें';
 
   @override
-  String get confirmOrderConfirm => 'à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤‡à¤¸ à¤‘à¤°à¥à¤¡à¤° à¤•à¥€ à¤ªà¥à¤·à¥à¤Ÿà¤¿ à¤•à¤°à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?';
+  String get confirmOrderConfirm => 'क्या आप इस ऑर्डर की पुष्टि करना चाहते हैं?';
 
   @override
-  String get completeOrderConfirm => 'à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤‡à¤¸ à¤‘à¤°à¥à¤¡à¤° à¤•à¥‹ à¤ªà¥‚à¤°à¥à¤£ à¤•à¤°à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?';
+  String get completeOrderConfirm => 'क्या आप इस ऑर्डर को पूर्ण करना चाहते हैं?';
 
   @override
-  String get cancelOrderConfirm => 'à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤‡à¤¸ à¤‘à¤°à¥à¤¡à¤° à¤•à¥‹ à¤°à¤¦à¥à¤¦ à¤•à¤°à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?';
+  String get cancelOrderConfirm => 'क्या आप इस ऑर्डर को रद्द करना चाहते हैं?';
 
   @override
-  String get orderConfirmed => 'à¤‘à¤°à¥à¤¡à¤° à¤•à¥€ à¤ªà¥à¤·à¥à¤Ÿà¤¿ à¤¹à¥à¤ˆà¥¤';
+  String get orderConfirmed => 'ऑर्डर की पुष्टि हुई।';
 
   @override
-  String get orderCompleted => 'à¤‘à¤°à¥à¤¡à¤° à¤ªà¥‚à¤°à¥à¤£ à¤¹à¥à¤†à¥¤';
+  String get orderCompleted => 'ऑर्डर पूर्ण हुआ।';
 
   @override
-  String get orderCancelled => 'à¤‘à¤°à¥à¤¡à¤° à¤°à¤¦à¥à¤¦ à¤¹à¥à¤†à¥¤';
+  String get orderCancelled => 'ऑर्डर रद्द हुआ।';
 
   @override
-  String get errorUpdatingOrder => 'à¤‘à¤°à¥à¤¡à¤° à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿à¥¤';
+  String get errorUpdatingOrder => 'ऑर्डर अपडेट करने में त्रुटि।';
 
   @override
-  String get orderNotFound => 'à¤‘à¤°à¥à¤¡à¤° à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤';
+  String get orderNotFound => 'ऑर्डर नहीं मिला।';
 
   @override
-  String get productDetails => 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤µà¤¿à¤µà¤°à¤£';
+  String get productDetails => 'उत्पाद विवरण';
 
   @override
-  String get nearbyFarmersTitle => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‡ à¤•à¤¿à¤¸à¤¾à¤¨';
+  String get nearbyFarmersTitle => 'आसपास के किसान';
 
   @override
-  String get nearbyFarmersMapTitle => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‡ à¤•à¤¿à¤¸à¤¾à¤¨ (à¤¨à¤•à¥à¤¶à¤¾)';
+  String get nearbyFarmersMapTitle => 'आसपास के किसान (नक्शा)';
 
   @override
   String kmAway(String distance) {
-    return '$distance à¤•à¤¿à¤®à¥€ à¤¦à¥‚à¤°';
+    return '$distance किमी दूर';
   }
 
   @override
-  String get labourDetails => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤µà¤¿à¤µà¤°à¤£';
+  String get labourDetails => 'श्रमिक विवरण';
 
   @override
-  String get callLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤•à¥‹ à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚';
+  String get callLabour => 'श्रमिक को कॉल करें';
 
   @override
-  String get hireLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤•à¥‹ à¤•à¤¾à¤® à¤ªà¤° à¤°à¤–à¥‡à¤‚';
+  String get hireLabour => 'श्रमिक को काम पर रखें';
 
   @override
-  String get deleteOptionAvailableInListingPage => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤ªà¥‡à¤œ à¤®à¥‡à¤‚ à¤¹à¤Ÿà¤¾à¤¨à¥‡ à¤•à¤¾ à¤µà¤¿à¤•à¤²à¥à¤ª à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¹à¥ˆà¥¤';
+  String get deleteOptionAvailableInListingPage => 'लिस्टिंग पेज में हटाने का विकल्प उपलब्ध है।';
 
   @override
-  String get editLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editLabour => 'श्रमिक संपादित करें';
 
   @override
-  String get addLabourTitle => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
+  String get addLabourTitle => 'श्रमिक जोड़ें';
 
   @override
-  String get editLabourTitle => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editLabourTitle => 'श्रमिक संपादित करें';
 
   @override
-  String get fullNameLabel => 'à¤ªà¥‚à¤°à¤¾ à¤¨à¤¾à¤®';
+  String get fullNameLabel => 'पूरा नाम';
 
   @override
-  String get skillProfessionLabel => 'à¤•à¥Œà¤¶à¤² / à¤ªà¥‡à¤¶à¤¾';
+  String get skillProfessionLabel => 'कौशल / पेशा';
 
   @override
-  String get contactNumberLabel => 'à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¨à¤‚à¤¬à¤°';
+  String get contactNumberLabel => 'संपर्क नंबर';
 
   @override
-  String get dailyWageLabel => 'à¤¦à¥ˆà¤¨à¤¿à¤• à¤®à¤œà¤¦à¥‚à¤°à¥€ (â‚¹)';
+  String get dailyWageLabel => 'दैनिक मजदूरी (₹)';
 
   @override
-  String get enterName => 'à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterName => 'नाम दर्ज करें';
 
   @override
-  String get enterSkill => 'à¤•à¥Œà¤¶à¤² à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterSkill => 'कौशल दर्ज करें';
 
   @override
-  String get enterContact => 'à¤¸à¤‚à¤ªà¤°à¥à¤• à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterContact => 'संपर्क दर्ज करें';
 
   @override
-  String get daily => 'à¤¦à¥ˆà¤¨à¤¿à¤•';
+  String get daily => 'दैनिक';
 
   @override
-  String get weekly => 'à¤¸à¤¾à¤ªà¥à¤¤à¤¾à¤¹à¤¿à¤•';
+  String get weekly => 'साप्ताहिक';
 
   @override
   String get monthly => 'Monthly';
 
   @override
-  String get saveLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤¹à¥‡à¤œà¥‡à¤‚';
+  String get saveLabour => 'श्रमिक सहेजें';
 
   @override
-  String get updateLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get updateLabour => 'श्रमिक अपडेट करें';
 
   @override
-  String get labourSavedSuccessfully => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¸à¤¹à¥‡à¤œà¤¾ à¤—à¤¯à¤¾à¥¤';
+  String get labourSavedSuccessfully => 'श्रमिक सफलतापूर्वक सहेजा गया।';
 
   @override
-  String get labourUpdatedSuccessfully => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤†à¥¤';
+  String get labourUpdatedSuccessfully => 'श्रमिक सफलतापूर्वक अपडेट हुआ।';
 
   @override
-  String get failedToSaveLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤¸à¤¹à¥‡à¤œà¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToSaveLabour => 'श्रमिक सहेजने में विफल।';
 
   @override
   String hireLabourTitle(String name) {
-    return '$name à¤•à¥‹ à¤•à¤¾à¤® à¤ªà¤° à¤°à¤–à¥‡à¤‚';
+    return '$name को काम पर रखें';
   }
 
   @override
-  String get yourNameLabel => 'à¤†à¤ªà¤•à¤¾ à¤¨à¤¾à¤®';
+  String get yourNameLabel => 'आपका नाम';
 
   @override
-  String get yourContactLabel => 'à¤†à¤ªà¤•à¤¾ à¤¸à¤‚à¤ªà¤°à¥à¤•';
+  String get yourContactLabel => 'आपका संपर्क';
 
   @override
-  String get startDateLabel => 'à¤¶à¥à¤°à¥‚ à¤¹à¥‹à¤¨à¥‡ à¤•à¥€ à¤¤à¤¾à¤°à¥€à¤–';
+  String get startDateLabel => 'शुरू होने की तारीख';
 
   @override
-  String get endDateLabel => 'à¤¸à¤®à¤¾à¤ªà¥à¤¤à¤¿ à¤¤à¤¾à¤°à¥€à¤–';
+  String get endDateLabel => 'समाप्ति तारीख';
 
   @override
-  String get numberOfDaysLabel => 'à¤¦à¤¿à¤¨à¥‹à¤‚ à¤•à¥€ à¤¸à¤‚à¤–à¥à¤¯à¤¾';
+  String get numberOfDaysLabel => 'दिनों की संख्या';
 
   @override
-  String get workTypeLabel => 'à¤•à¤¾à¤® à¤•à¤¾ à¤ªà¥à¤°à¤•à¤¾à¤°';
+  String get workTypeLabel => 'काम का प्रकार';
 
   @override
-  String get enterYourName => 'à¤…à¤ªà¤¨à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterYourName => 'अपना नाम दर्ज करें';
 
   @override
-  String get enterStartDate => 'à¤¶à¥à¤°à¥‚ à¤¹à¥‹à¤¨à¥‡ à¤•à¥€ à¤¤à¤¾à¤°à¥€à¤– à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterStartDate => 'शुरू होने की तारीख दर्ज करें';
 
   @override
-  String get enterEndDate => 'à¤¸à¤®à¤¾à¤ªà¥à¤¤à¤¿ à¤¤à¤¾à¤°à¥€à¤– à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterEndDate => 'समाप्ति तारीख दर्ज करें';
 
   @override
-  String get enterNumberOfDays => 'à¤¦à¤¿à¤¨à¥‹à¤‚ à¤•à¥€ à¤¸à¤‚à¤–à¥à¤¯à¤¾ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterNumberOfDays => 'दिनों की संख्या दर्ज करें';
 
   @override
-  String get harvesting => 'à¤•à¤Ÿà¤¾à¤ˆ';
+  String get harvesting => 'कटाई';
 
   @override
-  String get planting => 'à¤°à¥‹à¤ªà¤¾à¤ˆ';
+  String get planting => 'रोपाई';
 
   @override
-  String get spraying => 'à¤›à¤¿à¤¡à¤¼à¤•à¤¾à¤µ';
+  String get spraying => 'छिड़काव';
 
   @override
-  String get ploughing => 'à¤œà¥à¤¤à¤¾à¤ˆ';
+  String get ploughing => 'जुताई';
 
   @override
-  String get sendHireRequest => 'à¤•à¤¾à¤® à¤ªà¤° à¤°à¤–à¤¨à¥‡ à¤•à¤¾ à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¥‡à¤‚';
+  String get sendHireRequest => 'काम पर रखने का अनुरोध भेजें';
 
   @override
-  String get hireRequestSentSuccessfully => 'à¤…à¤¨à¥à¤°à¥‹à¤§ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤­à¥‡à¤œà¤¾ à¤—à¤¯à¤¾!';
+  String get hireRequestSentSuccessfully => 'अनुरोध सफलतापूर्वक भेजा गया!';
 
   @override
-  String get failedToSendHireRequest => 'à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToSendHireRequest => 'अनुरोध भेजने में विफल।';
 
   @override
-  String get mustBeSignedInToHire => 'à¤…à¤¨à¥à¤°à¥‹à¤§ à¤­à¥‡à¤œà¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤¾à¤‡à¤¨ à¤‡à¤¨ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get mustBeSignedInToHire => 'अनुरोध भेजने के लिए साइन इन करें।';
 
   @override
-  String get nearbyLabourTitle => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‡ à¤¶à¥à¤°à¤®à¤¿à¤•';
+  String get nearbyLabourTitle => 'आसपास के श्रमिक';
 
   @override
-  String get searchLabourHint => 'à¤¨à¤¾à¤®, à¤•à¥Œà¤¶à¤² à¤¯à¤¾ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡ à¤–à¥‹à¤œà¥‡à¤‚';
+  String get searchLabourHint => 'नाम, कौशल या स्थान से खोजें';
 
   @override
-  String get selectRadius => 'à¤¤à¥à¤°à¤¿à¤œà¥à¤¯à¤¾ à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectRadius => 'त्रिज्या चुनें';
 
   @override
-  String get locationPermissionDenied => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤…à¤¨à¥à¤®à¤¤à¤¿ à¤…à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤à¥¤ à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸ à¤®à¥‡à¤‚ à¤¸à¤•à¥à¤·à¤® à¤•à¤°à¥‡à¤‚à¥¤';
+  String get locationPermissionDenied => 'स्थान अनुमति अस्वीकृत। कृपया सेटिंग्स में सक्षम करें।';
 
   @override
-  String get openSettings => 'à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸ à¤–à¥‹à¤²à¥‡à¤‚';
+  String get openSettings => 'सेटिंग्स खोलें';
 
   @override
-  String get noLabourFoundNearby => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‹à¤ˆ à¤¶à¥à¤°à¤®à¤¿à¤• à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾à¥¤';
+  String get noLabourFoundNearby => 'आसपास कोई श्रमिक नहीं मिला।';
 
   @override
-  String get failedToLoadLabour => 'à¤¶à¥à¤°à¤®à¤¿à¤• à¤²à¥‹à¤¡ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToLoadLabour => 'श्रमिक लोड करने में विफल।';
 
   @override
-  String get couldNotGetLocation => 'à¤†à¤ªà¤•à¤¾ à¤¸à¥à¤¥à¤¾à¤¨ à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤ à¤¨à¤¹à¥€à¤‚ à¤•à¤¿à¤¯à¤¾ à¤œà¤¾ à¤¸à¤•à¤¾à¥¤';
+  String get couldNotGetLocation => 'आपका स्थान प्राप्त नहीं किया जा सका।';
 
   @override
-  String get failedToLoadPlants => 'à¤ªà¥Œà¤§à¥‡ à¤²à¥‹à¤¡ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²';
+  String get failedToLoadPlants => 'पौधे लोड करने में विफल';
 
   @override
-  String get errorLoadingPlantDetails => 'à¤ªà¥Œà¤§à¥‡ à¤•à¤¾ à¤µà¤¿à¤µà¤°à¤£ à¤²à¥‹à¤¡ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿';
+  String get errorLoadingPlantDetails => 'पौधे का विवरण लोड करने में त्रुटि';
 
   @override
-  String get unknownVendor => 'à¤…à¤œà¥à¤žà¤¾à¤¤ à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾';
+  String get unknownVendor => 'अज्ञात विक्रेता';
 
   @override
-  String get notProvided => 'à¤ªà¥à¤°à¤¦à¤¾à¤¨ à¤¨à¤¹à¥€à¤‚ à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get notProvided => 'प्रदान नहीं किया गया';
 
   @override
-  String get noDescriptionProvided => 'à¤•à¥‹à¤ˆ à¤µà¤¿à¤µà¤°à¤£ à¤¨à¤¹à¥€à¤‚à¥¤';
+  String get noDescriptionProvided => 'कोई विवरण नहीं।';
 
   @override
-  String get couldNotOpenWhatsApp => 'à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª à¤¨à¤¹à¥€à¤‚ à¤–à¥à¤² à¤¸à¤•à¤¾';
+  String get couldNotOpenWhatsApp => 'व्हाट्सएप नहीं खुल सका';
 
   @override
-  String get descriptionHeader => 'à¤µà¤¿à¤µà¤°à¤£';
+  String get descriptionHeader => 'विवरण';
 
   @override
-  String get addPlantTitle => 'à¤ªà¥Œà¤§à¤¾ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚';
+  String get addPlantTitle => 'पौधा जोड़ें';
 
   @override
-  String get editPlantTitle => 'à¤ªà¥Œà¤§à¤¾ à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editPlantTitle => 'पौधा संपादित करें';
 
   @override
-  String get plantNameLabel => 'à¤ªà¥Œà¤§à¥‡ à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get plantNameLabel => 'पौधे का नाम';
 
   @override
-  String get plantTypeLabel => 'à¤ªà¥Œà¤§à¥‡ à¤•à¤¾ à¤ªà¥à¤°à¤•à¤¾à¤°';
+  String get plantTypeLabel => 'पौधे का प्रकार';
 
   @override
-  String get quantityAvailableLabel => 'à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤®à¤¾à¤¤à¥à¤°à¤¾';
+  String get quantityAvailableLabel => 'उपलब्ध मात्रा';
 
   @override
-  String get vendorNurseryNameLabel => 'à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾ / à¤¨à¤°à¥à¤¸à¤°à¥€ à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get vendorNurseryNameLabel => 'विक्रेता / नर्सरी का नाम';
 
   @override
-  String get floweringPlant => 'à¤«à¥‚à¤² à¤µà¤¾à¤²à¤¾ à¤ªà¥Œà¤§à¤¾';
+  String get floweringPlant => 'फूल वाला पौधा';
 
   @override
-  String get fruitPlant => 'à¤«à¤² à¤µà¤¾à¤²à¤¾ à¤ªà¥Œà¤§à¤¾';
+  String get fruitPlant => 'फल वाला पौधा';
 
   @override
-  String get vegetablePlant => 'à¤¸à¤¬à¥à¤œà¥€ à¤µà¤¾à¤²à¤¾ à¤ªà¥Œà¤§à¤¾';
+  String get vegetablePlant => 'सब्जी वाला पौधा';
 
   @override
-  String get medicinalPlant => 'à¤”à¤·à¤§à¥€à¤¯ à¤ªà¥Œà¤§à¤¾';
+  String get medicinalPlant => 'औषधीय पौधा';
 
   @override
-  String get ornamental => 'à¤¸à¤œà¤¾à¤µà¤Ÿà¥€';
+  String get ornamental => 'सजावटी';
 
   @override
-  String get enterPlantName => 'à¤ªà¥Œà¤§à¥‡ à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterPlantName => 'पौधे का नाम दर्ज करें';
 
   @override
-  String get enterType => 'à¤ªà¥à¤°à¤•à¤¾à¤° à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterType => 'प्रकार दर्ज करें';
 
   @override
-  String get enterVendorName => 'à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾ à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterVendorName => 'विक्रेता का नाम दर्ज करें';
 
   @override
-  String get savePlant => 'à¤ªà¥Œà¤§à¤¾ à¤¸à¤¹à¥‡à¤œà¥‡à¤‚';
+  String get savePlant => 'पौधा सहेजें';
 
   @override
-  String get updatePlant => 'à¤ªà¥Œà¤§à¤¾ à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get updatePlant => 'पौधा अपडेट करें';
 
   @override
-  String get plantSavedSuccessfully => 'à¤ªà¥Œà¤§à¤¾ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤¸à¤¹à¥‡à¤œà¤¾ à¤—à¤¯à¤¾à¥¤';
+  String get plantSavedSuccessfully => 'पौधा सफलतापूर्वक सहेजा गया।';
 
   @override
-  String get plantUpdatedSuccessfully => 'à¤ªà¥Œà¤§à¤¾ à¤¸à¤«à¤²à¤¤à¤¾à¤ªà¥‚à¤°à¥à¤µà¤• à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤†à¥¤';
+  String get plantUpdatedSuccessfully => 'पौधा सफलतापूर्वक अपडेट हुआ।';
 
   @override
-  String get failedToSavePlant => 'à¤ªà¥Œà¤§à¤¾ à¤¸à¤¹à¥‡à¤œà¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²à¥¤';
+  String get failedToSavePlant => 'पौधा सहेजने में विफल।';
 
   @override
-  String get nearbyPlantVendorsTitle => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‡ à¤ªà¥Œà¤§à¤¾ à¤µà¤¿à¤•à¥à¤°à¥‡à¤¤à¤¾';
+  String get nearbyPlantVendorsTitle => 'आसपास के पौधा विक्रेता';
 
   @override
-  String get locationNotVerified => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤¨à¤¹à¥€à¤‚';
+  String get locationNotVerified => 'स्थान सत्यापित नहीं';
 
   @override
-  String get perDay => '/à¤¦à¤¿à¤¨';
+  String get perDay => '/दिन';
 
   @override
-  String get locationNotAvailable => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
+  String get locationNotAvailable => 'स्थान उपलब्ध नहीं';
 
   @override
-  String get listNewMachineTitle => 'à¤¨à¤ˆ à¤®à¤¶à¥€à¤¨ à¤¸à¥‚à¤šà¥€à¤¬à¤¦à¥à¤§ à¤•à¤°à¥‡à¤‚';
+  String get listNewMachineTitle => 'नई मशीन सूचीबद्ध करें';
 
   @override
-  String get editMachineTitle => 'à¤®à¤¶à¥€à¤¨ à¤¸à¤‚à¤ªà¤¾à¤¦à¤¿à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get editMachineTitle => 'मशीन संपादित करें';
 
   @override
-  String get machineNameLabel => 'à¤®à¤¶à¥€à¤¨ à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get machineNameLabel => 'मशीन का नाम';
 
   @override
-  String get machineTypeLabel => 'à¤®à¤¶à¥€à¤¨ à¤•à¤¾ à¤ªà¥à¤°à¤•à¤¾à¤°';
+  String get machineTypeLabel => 'मशीन का प्रकार';
 
   @override
-  String get pricePerDayLabel => 'à¤ªà¥à¤°à¤¤à¤¿ à¤¦à¤¿à¤¨ à¤®à¥‚à¤²à¥à¤¯ (â‚¹)';
+  String get pricePerDayLabel => 'प्रति दिन मूल्य (₹)';
 
   @override
-  String get ownerNameLabel => 'à¤®à¤¾à¤²à¤¿à¤• à¤•à¤¾ à¤¨à¤¾à¤®';
+  String get ownerNameLabel => 'मालिक का नाम';
 
   @override
-  String get phoneNumberLabel => 'à¤«à¥‹à¤¨ à¤¨à¤‚à¤¬à¤°';
+  String get phoneNumberLabel => 'फोन नंबर';
 
   @override
-  String get machineTractor => 'à¤Ÿà¥à¤°à¥ˆà¤•à¥à¤Ÿà¤°';
+  String get machineTractor => 'ट्रैक्टर';
 
   @override
-  String get machineHarvester => 'à¤¹à¤¾à¤°à¥à¤µà¥‡à¤¸à¥à¤Ÿà¤°';
+  String get machineHarvester => 'हार्वेस्टर';
 
   @override
-  String get machinePlough => 'à¤¹à¤²';
+  String get machinePlough => 'हल';
 
   @override
-  String get machineSeeder => 'à¤¬à¥à¤µà¤¾à¤ˆ à¤¯à¤‚à¤¤à¥à¤°';
+  String get machineSeeder => 'बुवाई यंत्र';
 
   @override
-  String get machineSprayer => 'à¤¸à¥à¤ªà¥à¤°à¥‡à¤¯à¤°';
+  String get machineSprayer => 'स्प्रेयर';
 
   @override
-  String get machineTiller => 'à¤Ÿà¤¿à¤²à¤°';
+  String get machineTiller => 'टिलर';
 
   @override
-  String get machineBaler => 'à¤¬à¥‡à¤²à¤°';
+  String get machineBaler => 'बेलर';
 
   @override
-  String get enterMachineName => 'à¤®à¤¶à¥€à¤¨ à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterMachineName => 'मशीन का नाम दर्ज करें';
 
   @override
-  String get selectAType => 'à¤à¤• à¤ªà¥à¤°à¤•à¤¾à¤° à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectAType => 'एक प्रकार चुनें';
 
   @override
-  String get enterOwnerName => 'à¤®à¤¾à¤²à¤¿à¤• à¤•à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterOwnerName => 'मालिक का नाम दर्ज करें';
 
   @override
-  String get enterPhone => 'à¤«à¥‹à¤¨ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterPhone => 'फोन दर्ज करें';
 
   @override
-  String get currentLocationSet => 'à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get currentLocationSet => 'वर्तमान स्थान सेट किया गया';
 
   @override
-  String get locationNotSet => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤¨à¤¹à¥€à¤‚ à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get locationNotSet => 'स्थान सेट नहीं किया गया';
 
   @override
-  String get selectMachineType => 'à¤®à¤¶à¥€à¤¨ à¤ªà¥à¤°à¤•à¤¾à¤° à¤šà¥à¤¨à¥‡à¤‚';
+  String get selectMachineType => 'मशीन प्रकार चुनें';
 
   @override
-  String get setLocationFirst => 'à¤ªà¤¹à¤²à¥‡ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get setLocationFirst => 'पहले स्थान सेट करें';
 
   @override
-  String get enterValidNumericPrice => 'à¤®à¤¾à¤¨à¥à¤¯ à¤¸à¤‚à¤–à¥à¤¯à¤¾à¤¤à¥à¤®à¤• à¤®à¥‚à¤²à¥à¤¯ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get enterValidNumericPrice => 'मान्य संख्यात्मक मूल्य दर्ज करें';
 
   @override
-  String get submitListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get submitListing => 'लिस्टिंग सबमिट करें';
 
   @override
-  String get updateListing => 'à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get updateListing => 'लिस्टिंग अपडेट करें';
 
   @override
-  String get nearestFirst => 'à¤¨à¤¿à¤•à¤Ÿà¤¤à¤® à¤ªà¤¹à¤²à¥‡';
+  String get nearestFirst => 'निकटतम पहले';
 
   @override
-  String get lowestPriceFirst => 'à¤¸à¤¬à¤¸à¥‡ à¤•à¤® à¤•à¥€à¤®à¤¤ à¤ªà¤¹à¤²à¥‡';
+  String get lowestPriceFirst => 'सबसे कम कीमत पहले';
 
   @override
-  String get searchByNameOwnerLocation => 'à¤¨à¤¾à¤®, à¤®à¤¾à¤²à¤¿à¤• à¤¯à¤¾ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡ à¤–à¥‹à¤œà¥‡à¤‚';
+  String get searchByNameOwnerLocation => 'नाम, मालिक या स्थान से खोजें';
 
   @override
-  String get referenceLocationNotAvailable => 'à¤¸à¤‚à¤¦à¤°à¥à¤­ à¤¸à¥à¤¥à¤¾à¤¨ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
+  String get referenceLocationNotAvailable => 'संदर्भ स्थान उपलब्ध नहीं';
 
   @override
-  String get noMachinesFoundNearby => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥‹à¤ˆ à¤®à¤¶à¥€à¤¨ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¥€';
+  String get noMachinesFoundNearby => 'आसपास कोई मशीन नहीं मिली';
 
   @override
-  String get nearbyMachinesMapTitle => 'à¤†à¤¸à¤ªà¤¾à¤¸ à¤•à¥€ à¤®à¤¶à¥€à¤¨à¥‡à¤‚ (à¤¨à¤•à¥à¤¶à¤¾)';
+  String get nearbyMachinesMapTitle => 'आसपास की मशीनें (नक्शा)';
 
   @override
-  String get searchAndSetLocation => 'à¤–à¥‹à¤œà¥‡à¤‚ à¤”à¤° à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get searchAndSetLocation => 'खोजें और स्थान सेट करें';
 
   @override
   String dayForecastTitle(String day) {
-    return '$day à¤•à¤¾ à¤ªà¥‚à¤°à¥à¤µà¤¾à¤¨à¥à¤®à¤¾à¤¨';
+    return '$day का पूर्वानुमान';
   }
 
   @override
-  String get minMaxTemperature => 'à¤¨à¥à¤¯à¥‚à¤¨à¤¤à¤® / à¤…à¤§à¤¿à¤•à¤¤à¤® à¤¤à¤¾à¤ªà¤®à¤¾à¤¨';
+  String get minMaxTemperature => 'न्यूनतम / अधिकतम तापमान';
 
   @override
-  String get enterLocationHint => 'à¤¸à¥à¤¥à¤¾à¤¨ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚...';
+  String get enterLocationHint => 'स्थान दर्ज करें...';
 
   @override
-  String get noLocationsFound => 'à¤•à¥‹à¤ˆ à¤¸à¥à¤¥à¤¾à¤¨ à¤¨à¤¹à¥€à¤‚ à¤®à¤¿à¤²à¤¾';
+  String get noLocationsFound => 'कोई स्थान नहीं मिला';
 
   @override
-  String get diseaseDetected => 'à¤°à¥‹à¤— à¤ªà¤¾à¤¯à¤¾ à¤—à¤¯à¤¾';
+  String get diseaseDetected => 'रोग पाया गया';
 
   @override
-  String get errorContactingAI => 'AI à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿';
+  String get errorContactingAI => 'AI से संपर्क में त्रुटि';
 
   @override
-  String get chatbotWelcomeMessage => 'à¤¨à¤®à¤¸à¥à¤¤à¥‡! ðŸ‘‹ à¤®à¥ˆà¤‚ à¤•à¥ƒà¤·à¤¿à¤®à¤¿à¤¤à¥à¤° AI à¤¹à¥‚à¤‚à¥¤ à¤–à¥‡à¤¤à¥€ à¤•à¥‡ à¤¬à¤¾à¤°à¥‡ à¤®à¥‡à¤‚ à¤®à¥ˆà¤‚ à¤†à¤ªà¤•à¥€ à¤•à¥ˆà¤¸à¥‡ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾ à¤•à¤° à¤¸à¤•à¤¤à¤¾ à¤¹à¥‚à¤‚?';
+  String get chatbotWelcomeMessage => 'नमस्ते! 👋 मैं कृषिमित्र AI हूं। खेती के बारे में मैं आपकी कैसे सहायता कर सकता हूं?';
 
   @override
-  String get profilePhotoUpdated => 'à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤² à¤«à¥‹à¤Ÿà¥‹ à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤¹à¥à¤ˆ';
+  String get profilePhotoUpdated => 'प्रोफ़ाइल फोटो अपडेट हुई';
 
   @override
-  String get updateProfilePhoto => 'à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤² à¤«à¥‹à¤Ÿà¥‹ à¤¬à¤¦à¤²à¥‡à¤‚';
+  String get updateProfilePhoto => 'प्रोफ़ाइल फोटो बदलें';
 
   @override
-  String get profileSaved => 'à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤² à¤¸à¤¹à¥‡à¤œà¥€ à¤—à¤ˆ';
+  String get profileSaved => 'प्रोफ़ाइल सहेजी गई';
 
   @override
-  String get themePreferenceSaved => 'à¤¥à¥€à¤® à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤— à¤¸à¤¹à¥‡à¤œà¥€ à¤—à¤ˆà¥¤ à¤²à¤¾à¤—à¥‚ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤à¤ª à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¾à¤°à¤‚à¤­ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get themePreferenceSaved => 'थीम सेटिंग सहेजी गई। लागू करने के लिए ऐप पुनः प्रारंभ करें।';
 
   @override
-  String get passwordChangeNotAvailable => 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¬à¤¦à¤²à¤¨à¤¾ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¨à¤¹à¥€à¤‚';
+  String get passwordChangeNotAvailable => 'पासवर्ड बदलना उपलब्ध नहीं';
 
   @override
-  String get passwordResetEmailSent => 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤ˆà¤®à¥‡à¤² à¤­à¥‡à¤œà¤¾ à¤—à¤¯à¤¾';
+  String get passwordResetEmailSent => 'पासवर्ड रीसेट ईमेल भेजा गया';
 
   @override
-  String get failedToSendResetEmail => 'à¤°à¥€à¤¸à¥‡à¤Ÿ à¤ˆà¤®à¥‡à¤² à¤­à¥‡à¤œà¤¨à¥‡ à¤®à¥‡à¤‚ à¤µà¤¿à¤«à¤²';
+  String get failedToSendResetEmail => 'रीसेट ईमेल भेजने में विफल';
 
   @override
-  String get deleteAccountTitle => 'à¤–à¤¾à¤¤à¤¾ à¤¹à¤Ÿà¤¾à¤à¤‚';
+  String get deleteAccountTitle => 'खाता हटाएं';
 
   @override
-  String get deleteAccountConfirm => 'à¤¯à¤¹ à¤†à¤ªà¤•à¤¾ à¤–à¤¾à¤¤à¤¾ à¤¸à¥à¤¥à¤¾à¤¯à¥€ à¤°à¥‚à¤ª à¤¸à¥‡ à¤¹à¤Ÿà¤¾ à¤¦à¥‡à¤—à¤¾à¥¤ à¤•à¥à¤¯à¤¾ à¤†à¤ª à¤¸à¥à¤¨à¤¿à¤¶à¥à¤šà¤¿à¤¤ à¤¹à¥ˆà¤‚?';
+  String get deleteAccountConfirm => 'यह आपका खाता स्थायी रूप से हटा देगा। क्या आप सुनिश्चित हैं?';
 
   @override
-  String get exportStarted => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¶à¥à¤°à¥‚ (à¤ˆà¤®à¥‡à¤² à¤¯à¤¾ à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤œà¤¾à¤‚à¤šà¥‡à¤‚)';
+  String get exportStarted => 'निर्यात शुरू (ईमेल या डाउनलोड जांचें)';
 
   @override
-  String get exportFailed => 'à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤µà¤¿à¤«à¤²';
+  String get exportFailed => 'निर्यात विफल';
 
   @override
-  String get setDefaultLocation => 'à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤¸à¥à¤¥à¤¾à¤¨ à¤¸à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚';
+  String get setDefaultLocation => 'डिफ़ॉल्ट स्थान सेट करें';
 
   @override
-  String get locationHintText => 'à¤‰à¤¦à¤¾., à¤¬à¥‡à¤‚à¤—à¤²à¥à¤°à¥, à¤•à¤°à¥à¤¨à¤¾à¤Ÿà¤•';
+  String get locationHintText => 'उदा., बेंगलुरु, कर्नाटक';
 
   @override
-  String get personalInfo => 'à¤µà¥à¤¯à¤•à¥à¤¤à¤¿à¤—à¤¤ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€';
+  String get personalInfo => 'व्यक्तिगत जानकारी';
 
   @override
-  String get pleaseEnterName => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¨à¤¾à¤® à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚';
+  String get pleaseEnterName => 'कृपया नाम दर्ज करें';
 
   @override
-  String get defaultLocationLabel => 'à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤¸à¥à¤¥à¤¾à¤¨';
+  String get defaultLocationLabel => 'डिफ़ॉल्ट स्थान';
 
   @override
-  String get pleaseProvideDefaultLocation => 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤¸à¥à¤¥à¤¾à¤¨ à¤ªà¥à¤°à¤¦à¤¾à¤¨ à¤•à¤°à¥‡à¤‚';
+  String get pleaseProvideDefaultLocation => 'कृपया डिफ़ॉल्ट स्थान प्रदान करें';
 
   @override
-  String get help => 'à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾';
+  String get help => 'सहायता';
 
   @override
-  String get darkModeSavedLocally => 'à¤¸à¥à¤¥à¤¾à¤¨à¥€à¤¯ à¤°à¥‚à¤ª à¤¸à¥‡ à¤¸à¤¹à¥‡à¤œà¤¾ à¤—à¤¯à¤¾à¥¤ à¤²à¤¾à¤—à¥‚ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤ªà¥à¤¨à¤ƒ à¤ªà¥à¤°à¤¾à¤°à¤‚à¤­ à¤•à¤°à¥‡à¤‚à¥¤';
+  String get darkModeSavedLocally => 'स्थानीय रूप से सहेजा गया। लागू करने के लिए पुनः प्रारंभ करें।';
 
   @override
-  String get userId => 'à¤‰à¤ªà¤¯à¥‹à¤—à¤•à¤°à¥à¤¤à¤¾ ID';
+  String get userId => 'उपयोगकर्ता ID';
 
   @override
-  String get providerLabel => 'à¤ªà¥à¤°à¤¦à¤¾à¤¤à¤¾';
+  String get providerLabel => 'प्रदाता';
 
   @override
-  String get changePassword => 'à¤ªà¤¾à¤¸à¤µà¤°à¥à¤¡ à¤¬à¤¦à¤²à¥‡à¤‚';
+  String get changePassword => 'पासवर्ड बदलें';
 
   @override
-  String get exportData => 'à¤¡à¥‡à¤Ÿà¤¾ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤•à¤°à¥‡à¤‚';
+  String get exportData => 'डेटा निर्यात करें';
 
   @override
-  String get deleteAccount => 'à¤–à¤¾à¤¤à¤¾ à¤¹à¤Ÿà¤¾à¤à¤‚';
+  String get deleteAccount => 'खाता हटाएं';
 
   @override
-  String get errorDeletingAccount => 'à¤–à¤¾à¤¤à¤¾ à¤¹à¤Ÿà¤¾à¤¨à¥‡ à¤®à¥‡à¤‚ à¤¤à¥à¤°à¥à¤Ÿà¤¿';
+  String get errorDeletingAccount => 'खाता हटाने में त्रुटि';
 
   @override
   String get nameLabel => 'Name';
@@ -1182,7 +1182,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get farmerDetailsTitle => 'Farmer Details';
 
   @override
-  String get yes => 'à¤¹à¤¾à¤';
+  String get yes => 'हाँ';
 
   @override
   String get by => 'By';
@@ -1298,7 +1298,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String buyerContactSubtitle(String contact) {
-    return 'Buyer â€¢ Contact: $contact';
+    return 'Buyer • Contact: $contact';
   }
 
   @override
@@ -1327,7 +1327,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String totalAmountLabel(Object amount) {
-    return 'Total: â‚¹$amount';
+    return 'Total: ₹$amount';
   }
 
   @override
@@ -1386,7 +1386,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String totalAmountValue(Object amount) {
-    return 'Total: â‚¹$amount';
+    return 'Total: ₹$amount';
   }
 
   @override
@@ -1411,7 +1411,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String welcomeUser(String name) {
-    return 'Welcome, $name ðŸ‘‹';
+    return 'Welcome, $name 👋';
   }
 
   @override
@@ -1430,7 +1430,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get locationPermissionPermanentlyDenied => 'Location permission permanently denied';
 
   @override
-  String get f2bTagline => 'Farm Fresh · Direct Trade';
+  String get f2bTagline => 'Farm Fresh � Direct Trade';
 
   @override
   String get listProduce => 'List Produce';

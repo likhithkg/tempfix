@@ -245,12 +245,32 @@ class KrishiMithraApp extends StatelessWidget {
               Locale('mr'),
             ],
             localizationsDelegates: const [
-              AppLocalizations.delegate,  
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
-              // Add your AppLocalizations.delegate here if you use intl/ARB
             ],
+            // Swap Nunito out for the platform default font on Indic locales.
+            // Nunito has no Kannada/Telugu/Devanagari/Tamil glyphs; without
+            // this the localized strings render as garbled à²... sequences.
+            builder: (context, child) {
+              const indicLocales = {'hi', 'kn', 'ta', 'te', 'mr'};
+              final lang = Localizations.localeOf(context).languageCode;
+              if (indicLocales.contains(lang)) {
+                final theme = Theme.of(context);
+                return Theme(
+                  data: theme.copyWith(
+                    textTheme: kmStripFontFamily(theme.textTheme),
+                    appBarTheme: theme.appBarTheme.copyWith(
+                      titleTextStyle:
+                          kmStripFont(theme.appBarTheme.titleTextStyle),
+                    ),
+                  ),
+                  child: child!,
+                );
+              }
+              return child!;
+            },
             debugShowCheckedModeBanner: false,
             home: const SplashScreen(),
             routes: {

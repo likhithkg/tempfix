@@ -83,6 +83,56 @@ TextTheme _nunitoTextTheme(TextTheme base) =>
     GoogleFonts.nunitoTextTheme(base);
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Indic-locale font helpers
+// Nunito has no Indic glyphs (Kannada, Telugu, Devanagari, Tamil).
+// When the app locale is an Indic language, the MaterialApp builder calls
+// these helpers to replace every Nunito-bound TextStyle with a system-font
+// equivalent so Flutter's OS fallback chain (NotoSansKannada etc.) can render.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Returns a [TextStyle] with identical visual properties but no [fontFamily].
+/// Flutter falls back to the platform default font, which supports Indic scripts.
+TextStyle kmStripFont(TextStyle? s) {
+  if (s == null) return const TextStyle();
+  return TextStyle(
+    fontSize: s.fontSize,
+    fontWeight: s.fontWeight,
+    fontStyle: s.fontStyle,
+    letterSpacing: s.letterSpacing,
+    wordSpacing: s.wordSpacing,
+    textBaseline: s.textBaseline,
+    height: s.height,
+    leadingDistribution: s.leadingDistribution,
+    color: s.color,
+    backgroundColor: s.backgroundColor,
+    decoration: s.decoration,
+    decorationColor: s.decorationColor,
+    decorationStyle: s.decorationStyle,
+    decorationThickness: s.decorationThickness,
+    overflow: s.overflow,
+  );
+}
+
+/// Returns a copy of [t] where every style has its [fontFamily] removed.
+TextTheme kmStripFontFamily(TextTheme t) => TextTheme(
+      displayLarge: kmStripFont(t.displayLarge),
+      displayMedium: kmStripFont(t.displayMedium),
+      displaySmall: kmStripFont(t.displaySmall),
+      headlineLarge: kmStripFont(t.headlineLarge),
+      headlineMedium: kmStripFont(t.headlineMedium),
+      headlineSmall: kmStripFont(t.headlineSmall),
+      titleLarge: kmStripFont(t.titleLarge),
+      titleMedium: kmStripFont(t.titleMedium),
+      titleSmall: kmStripFont(t.titleSmall),
+      bodyLarge: kmStripFont(t.bodyLarge),
+      bodyMedium: kmStripFont(t.bodyMedium),
+      bodySmall: kmStripFont(t.bodySmall),
+      labelLarge: kmStripFont(t.labelLarge),
+      labelMedium: kmStripFont(t.labelMedium),
+      labelSmall: kmStripFont(t.labelSmall),
+    );
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Shared component styles
 // ─────────────────────────────────────────────────────────────────────────────
 
