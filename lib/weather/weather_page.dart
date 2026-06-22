@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -361,7 +362,7 @@ class _WeatherPageState extends State<WeatherPage>
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
           child: Column(
             children: [
-              _glassSection('🕒', '24-HOUR FORECAST', HourlyForecast(hourly: w.hourly)),
+              _glassSection('🕒', AppLocalizations.of(context)!.twentyFourHourForecast, HourlyForecast(hourly: w.hourly)),
               const SizedBox(height: 12),
               FarmerAdvisoryCard(advisories: w.advisories),
               const SizedBox(height: 12),
@@ -382,7 +383,7 @@ class _WeatherPageState extends State<WeatherPage>
               const SizedBox(height: 12),
               _glassSection(
                 '📅',
-                '7-DAY FORECAST',
+                AppLocalizations.of(context)!.sevenDayForecastSection,
                 DailyForecast(
                   daily: w.daily,
                   onSelected: (day) => Navigator.push(
@@ -459,7 +460,7 @@ class _WeatherPageState extends State<WeatherPage>
 
           // Feels like
           Text(
-            'Feels like ${w.feelsLike.toStringAsFixed(0)}°',
+            '${AppLocalizations.of(context)!.feelsLike} ${w.feelsLike.toStringAsFixed(0)}°',
             style: const TextStyle(fontSize: 14, color: Colors.white60),
           ),
 
@@ -517,24 +518,24 @@ class _WeatherPageState extends State<WeatherPage>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _HeroStat(icon: '💧', value: '${w.humidity}%', label: 'Humidity'),
+              _HeroStat(icon: '💧', value: '${w.humidity}%', label: AppLocalizations.of(context)!.humidity),
               _vDivider(),
               _HeroStat(
                 icon: '🌬️',
                 value: '${w.windSpeed.toStringAsFixed(0)} m/s',
-                label: 'Wind',
+                label: AppLocalizations.of(context)!.wind,
               ),
               _vDivider(),
               _HeroStat(
                 icon: '🌧️',
                 value: '${w.precipitationProbability}%',
-                label: 'Rain',
+                label: AppLocalizations.of(context)!.rain,
               ),
               _vDivider(),
               _HeroStat(
                 icon: '🔆',
                 value: WeatherService.uvLabel(w.uvIndex),
-                label: 'UV',
+                label: AppLocalizations.of(context)!.uv,
               ),
             ],
           ),
@@ -569,7 +570,7 @@ class _WeatherPageState extends State<WeatherPage>
               const Text('🌧️', style: TextStyle(fontSize: 15)),
               const SizedBox(width: 6),
               Text(
-                '$prob% chance of rain today',
+                AppLocalizations.of(context)!.rainChanceToday(prob),
                 style: const TextStyle(
                   fontSize: 13,
                   color: Colors.lightBlueAccent,
@@ -712,7 +713,7 @@ class _WeatherPageState extends State<WeatherPage>
                       foregroundColor: Colors.white,
                       elevation: 0,
                     ),
-                    child: const Text('Try Again'),
+                    child: Text(AppLocalizations.of(context)!.tryAgain),
                   ),
                 ],
               ),

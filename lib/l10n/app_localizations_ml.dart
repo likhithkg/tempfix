@@ -1478,7 +1478,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get specifications => 'Specifications';
 
   @override
-  String get searchHint => 'Search crops, machines, labour, products...';
+  String get searchHint => 'വിള, യന്ത്രം, തൊഴിലാളി, ഉൽ‌പ്പന്നങ്ങൾ തിരയുക...';
 
   @override
   String get filterProducts => 'Filter Products';
@@ -2142,53 +2142,244 @@ class AppLocalizationsMl extends AppLocalizations {
   String get notEnoughDataForInsights => 'Add more listings and purchase orders to generate insights';
 
   @override
-  String get home => 'Home';
+  String get home => 'ഹോം';
 
   @override
   String get greenBazaar => 'GreenBazaar';
 
   @override
-  String get quickActions => 'Quick Actions';
+  String get quickActions => 'ദ്രുത പ്രവർത്തനങ്ങൾ';
 
   @override
-  String get smartServices => 'Smart Services';
+  String get smartServices => 'സ്മാർട്ട് സേവനങ്ങൾ';
 
   @override
-  String get exportOpportunities => 'Export Opportunities';
+  String get exportOpportunities => 'കയറ്റുമതി അവസരങ്ങൾ';
 
   @override
-  String get nearbyFarmersSection => 'Farmers Near You';
+  String get nearbyFarmersSection => 'നിങ്ങളുടെ സമീപത്തെ കർഷകർ';
 
   @override
-  String get personalizedInsights => 'For You';
+  String get personalizedInsights => 'നിങ്ങൾക്കായി';
 
   @override
-  String get recentActivity => 'Recent Activity';
+  String get recentActivity => 'സമീപകാല പ്രവർത്തനങ്ങൾ';
 
   @override
-  String get goodMorning => 'Good Morning';
+  String get goodMorning => 'ശുഭ പ്രഭാതം';
 
   @override
-  String get goodAfternoon => 'Good Afternoon';
+  String get goodAfternoon => 'ശുഭ ഉച്ചദർ';
 
   @override
-  String get goodEvening => 'Good Evening';
+  String get goodEvening => 'ശുഭ സന്ധ്യ';
 
   @override
-  String get sellDirectlyBanner => 'Sell Your Produce Directly';
+  String get sellDirectlyBanner => 'നിങ്ങളുടെ വിള നേരിട്ട് വിൽക്കുക';
 
   @override
-  String get checkWeatherBanner => 'Check Today\'s Weather';
+  String get checkWeatherBanner => 'ഇന്നത്തെ കാലാവസ്ഥ നോക്കൂ';
 
   @override
-  String get rentEquipmentBanner => 'Rent Farm Equipment Nearby';
+  String get rentEquipmentBanner => 'സമീപത്തെ കൃഷി ഉപകരണങ്ങൾ വാടകയ്ക്ക്';
 
   @override
-  String get exportBanner => 'Export Through KrishiMithra';
+  String get exportBanner => 'KrishiMithra വഴി കയറ്റുമതി ചെയ്യൂ';
 
   @override
-  String get hireLabourBanner => 'Hire Agricultural Labour';
+  String get hireLabourBanner => 'കൃഷി തൊഴിലാളികളെ നിയമിക്കുക';
 
   @override
-  String get greenBazaarHighlights => 'GreenBazaar Highlights';
+  String get greenBazaarHighlights => 'GreenBazaar ഹൈലൈറ്റുകൾ';
+
+  @override
+  String get machinesAvailableNearby => 'സമീപത്ത് യന്ത്രങ്ങൾ ലഭ്യം';
+
+  @override
+  String get hireFarmWorkers => 'കൃഷി തൊഴിലാളികളെ നിയമിക്കുക';
+
+  @override
+  String get detectTreatDiseases => 'രോഗങ്ങൾ കണ്ടെത്തി ചികിത്സിക്കുക';
+
+  @override
+  String get connectExportBuyers => 'കയറ്റുമതി വാങ്ങുന്നവരുമായി നേരിട്ട് ബന്ധപ്പെടുക';
+
+  @override
+  String get realTimeFarmForecast => 'നിങ്ങളുടെ ഫാമിനായി തൽസമയ കാലാവസ്ഥ പ്രവചനം';
+
+  @override
+  String get tractorsHarvestersLowCost => 'ട്രാക്ടറുകൾ, ഹാർവസ്റ്ററുകൾ കുറഞ്ഞ വിലയ്ക്ക്';
+
+  @override
+  String get reachInternationalBuyers => 'അന്താരാഷ്‌ട്ര വാങ്ങുന്നവരിൽ എത്തിക്കുക';
+
+  @override
+  String get findSkilledFarmWorkers => 'നിങ്ങളുടെ സമീപം കഴിവുള്ള തൊഴിലാളികളെ കണ്ടെത്തുക';
+
+  @override
+  String get noRecentActivity => 'ഇതുവരെ പ്രവർത്തനങ്ങളൊന്നുമില്ല';
+
+  @override
+  String noItemsAvailable(String label) {
+    return '$label ലഭ്യമല്ല';
+  }
+
+  @override
+  String get insightMonitorSoilTitle => 'മണ്ണിന്റെ ഈർപ്പം നിരീക്ഷിക്കുക';
+
+  @override
+  String get insightMonitorSoilSubtitle => 'റബി സീസൺ — പരിശോധിക്കാൻ അനുയോജ്യ സമയം';
+
+  @override
+  String get insightExportPricesTitle => 'കയറ്റുമതി വിലകൾ ഉയർന്നു';
+
+  @override
+  String get insightExportPricesSubtitle => 'ഈ ആഴ്ച തക്കാളി & തേങ്ങ ഡിമാൻഡ് കൂടുതൽ';
+
+  @override
+  String get insightRentMachineTitle => 'നേരത്തെ യന്ത്രം വാടകയ്ക്ക് എടുക്കുക';
+
+  @override
+  String get insightRentMachineSubtitle => '2 ആഴ്ചയ്ക്കുള്ളിൽ വിളവെടുപ്പ് സീസൺ ആരംഭം';
+
+  @override
+  String get insightAskAiTitle => 'KrishiMithra AI യോട് ചോദിക്കുക';
+
+  @override
+  String get insightAskAiSubtitle => 'വിള ഉപദേശവും വിപണി ഉൾക്കാഴ്ചകളും';
+
+  @override
+  String get twentyFourHourForecast => '24-മണിക്കൂർ പ്രവചനം';
+
+  @override
+  String get sevenDayForecastSection => '7-ദിവസ പ്രവചനം';
+
+  @override
+  String get feelsLike => 'അനുഭവം';
+
+  @override
+  String get feelsLabel => 'അനുഭവ';
+
+  @override
+  String rainChanceToday(int prob) {
+    return 'ഇന്ന് $prob% മഴ സാധ്യത';
+  }
+
+  @override
+  String get rain => 'മഴ';
+
+  @override
+  String get uv => 'UV';
+
+  @override
+  String get fullForecast => 'പൂർണ്ണ പ്രവചനം';
+
+  @override
+  String dayForecastAvailable(int days) {
+    return '$days-ദിവസ പ്രവചനം ലഭ്യം';
+  }
+
+  @override
+  String get farmerAdvisoryTitle => 'കൃഷിക്കാർ ഉപദേശം';
+
+  @override
+  String get agriculturalIndexes => 'കൃഷി സൂചികകൾ';
+
+  @override
+  String get rainfallIntelligence => 'മഴ വിവരം';
+
+  @override
+  String get cropDiseaseRiskTitle => 'വിള രോഗ അപകടം';
+
+  @override
+  String get irrigationTitle => 'ജലസേചനം';
+
+  @override
+  String get sunAndUv => 'സൂര്യൻ & UV';
+
+  @override
+  String get harvest => 'വിളവെടുപ്പ്';
+
+  @override
+  String get irrigationLabel => 'ജലസേചനം';
+
+  @override
+  String get fieldWork => 'നിലം പ്രവൃത്തി';
+
+  @override
+  String get excellent => 'മികച്ചത്';
+
+  @override
+  String get good => 'നല്ലത്';
+
+  @override
+  String get poor => 'മോശം';
+
+  @override
+  String get statusRequired => 'ആവശ്യം';
+
+  @override
+  String get statusOptional => 'ഐഛ്ഛിക';
+
+  @override
+  String get notNeeded => 'ആവശ്യമില്ല';
+
+  @override
+  String get moderate => 'മിതമായ';
+
+  @override
+  String get windCalm => 'ശാന്തം';
+
+  @override
+  String get windLightBreeze => 'ലഘു കാറ്റ്';
+
+  @override
+  String get windStrong => 'ശക്തമായ';
+
+  @override
+  String get windVeryStrong => 'വളരെ ശക്തമായ';
+
+  @override
+  String get noRainNext24Hours => 'അടുത്ത 24 മണിക്കൂറിൽ മഴ പ്രതീക്ഷിക്കുന്നില്ല.';
+
+  @override
+  String get rainFallingNow => 'ഇപ്പോൾ മഴ പെയ്യുന്നു';
+
+  @override
+  String rainExpectedSoon(int hours) {
+    return '$hours മണിക്കൂറിൽ മഴ പ്രതീക്ഷിക്കുന്നു';
+  }
+
+  @override
+  String get startTime => 'ആരംഭ സമയം';
+
+  @override
+  String get rainDuration => 'ദൈർഘ്യം';
+
+  @override
+  String get expectedLabel => 'പ്രതീക്ഷിക്കുന്ന';
+
+  @override
+  String get riskLow => 'കുറഞ്ഞ';
+
+  @override
+  String get riskMedium => 'മധ്യമ';
+
+  @override
+  String get riskHigh => 'ഉയർന്ന';
+
+  @override
+  String get sunrise => 'സൂര്യോദയം';
+
+  @override
+  String get sunset => 'സൂര്യാസ്തമയം';
+
+  @override
+  String get dayLength => 'ദിവസ ദൈർഘ്യം';
+
+  @override
+  String get uvIndex => 'UV സൂചിക';
+
+  @override
+  String get tryAgain => 'വീണ്ടും ശ്രമിക്കൂ';
 }

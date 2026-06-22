@@ -4376,6 +4376,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'GreenBazaar Highlights'**
   String get greenBazaarHighlights;
+
+  /// No description provided for @machinesAvailableNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Machines available nearby'**
+  String get machinesAvailableNearby;
+
+  /// No description provided for @hireFarmWorkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hire farm workers'**
+  String get hireFarmWorkers;
+
+  /// No description provided for @detectTreatDiseases.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect & treat diseases'**
+  String get detectTreatDiseases;
+
+  /// No description provided for @connectExportBuyers.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with export buyers directly'**
+  String get connectExportBuyers;
+
+  /// No description provided for @realTimeFarmForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time forecast for your farm'**
+  String get realTimeFarmForecast;
+
+  /// No description provided for @tractorsHarvestersLowCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Tractors, harvesters & more at low cost'**
+  String get tractorsHarvestersLowCost;
+
+  /// No description provided for @reachInternationalBuyers.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach international buyers with quality produce'**
+  String get reachInternationalBuyers;
+
+  /// No description provided for @findSkilledFarmWorkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Find skilled farm workers near you'**
+  String get findSkilledFarmWorkers;
+
+  /// No description provided for @noRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity yet'**
+  String get noRecentActivity;
+
+  /// No description provided for @noItemsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No {label} available'**
+  String noItemsAvailable(String label);
+
+  /// No description provided for @insightMonitorSoilTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor Soil Moisture'**
+  String get insightMonitorSoilTitle;
+
+  /// No description provided for @insightMonitorSoilSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rabi season — ideal time to check'**
+  String get insightMonitorSoilSubtitle;
+
+  /// No description provided for @insightExportPricesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Prices Up'**
+  String get insightExportPricesTitle;
+
+  /// No description provided for @insightExportPricesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomato & Coconut demand high this week'**
+  String get insightExportPricesSubtitle;
+
+  /// No description provided for @insightRentMachineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent Machine Early'**
+  String get insightRentMachineTitle;
+
+  /// No description provided for @insightRentMachineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvesting season starts in 2 weeks'**
+  String get insightRentMachineSubtitle;
+
+  /// No description provided for @insightAskAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask KrishiMithra AI'**
+  String get insightAskAiTitle;
+
+  /// No description provided for @insightAskAiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get crop advice & market insights'**
+  String get insightAskAiSubtitle;
+
+  /// No description provided for @twentyFourHourForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'24-HOUR FORECAST'**
+  String get twentyFourHourForecast;
+
+  /// No description provided for @sevenDayForecastSection.
+  ///
+  /// In en, this message translates to:
+  /// **'7-DAY FORECAST'**
+  String get sevenDayForecastSection;
+
+  /// No description provided for @feelsLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels like'**
+  String get feelsLike;
+
+  /// No description provided for @feelsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels'**
+  String get feelsLabel;
+
+  /// No description provided for @rainChanceToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{prob}% chance of rain today'**
+  String rainChanceToday(int prob);
+
+  /// No description provided for @rain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get rain;
+
+  /// No description provided for @uv.
+  ///
+  /// In en, this message translates to:
+  /// **'UV'**
+  String get uv;
+
+  /// No description provided for @fullForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Forecast'**
+  String get fullForecast;
+
+  /// No description provided for @dayForecastAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day forecast available'**
+  String dayForecastAvailable(int days);
+
+  /// No description provided for @farmerAdvisoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FARMER ADVISORY'**
+  String get farmerAdvisoryTitle;
+
+  /// No description provided for @agriculturalIndexes.
+  ///
+  /// In en, this message translates to:
+  /// **'AGRICULTURAL INDEXES'**
+  String get agriculturalIndexes;
+
+  /// No description provided for @rainfallIntelligence.
+  ///
+  /// In en, this message translates to:
+  /// **'RAINFALL INTELLIGENCE'**
+  String get rainfallIntelligence;
+
+  /// No description provided for @cropDiseaseRiskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CROP DISEASE RISK'**
+  String get cropDiseaseRiskTitle;
+
+  /// No description provided for @irrigationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'IRRIGATION'**
+  String get irrigationTitle;
+
+  /// No description provided for @sunAndUv.
+  ///
+  /// In en, this message translates to:
+  /// **'SUN & UV'**
+  String get sunAndUv;
+
+  /// No description provided for @harvest.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvest'**
+  String get harvest;
+
+  /// No description provided for @irrigationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Irrigation'**
+  String get irrigationLabel;
+
+  /// No description provided for @fieldWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Field Work'**
+  String get fieldWork;
+
+  /// No description provided for @excellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get excellent;
+
+  /// No description provided for @good.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get good;
+
+  /// No description provided for @poor.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor'**
+  String get poor;
+
+  /// No description provided for @statusRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get statusRequired;
+
+  /// No description provided for @statusOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get statusOptional;
+
+  /// No description provided for @notNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Needed'**
+  String get notNeeded;
+
+  /// No description provided for @moderate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get moderate;
+
+  /// No description provided for @windCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get windCalm;
+
+  /// No description provided for @windLightBreeze.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Breeze'**
+  String get windLightBreeze;
+
+  /// No description provided for @windStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get windStrong;
+
+  /// No description provided for @windVeryStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Strong'**
+  String get windVeryStrong;
+
+  /// No description provided for @noRainNext24Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'No rain expected in the next 24 hours.'**
+  String get noRainNext24Hours;
+
+  /// No description provided for @rainFallingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain is falling now'**
+  String get rainFallingNow;
+
+  /// No description provided for @rainExpectedSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain expected in {hours} hour(s)'**
+  String rainExpectedSoon(int hours);
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get startTime;
+
+  /// No description provided for @rainDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get rainDuration;
+
+  /// No description provided for @expectedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get expectedLabel;
+
+  /// No description provided for @riskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get riskLow;
+
+  /// No description provided for @riskMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get riskMedium;
+
+  /// No description provided for @riskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get riskHigh;
+
+  /// No description provided for @sunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get sunrise;
+
+  /// No description provided for @sunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get sunset;
+
+  /// No description provided for @dayLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Length'**
+  String get dayLength;
+
+  /// No description provided for @uvIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'UV Index'**
+  String get uvIndex;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../weather_model.dart';
 import 'glass_card.dart';
 
@@ -13,7 +14,7 @@ class FarmerAdvisoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'FARMER ADVISORY', emoji: '🌾'),
+          GlassSectionHeader(title: AppLocalizations.of(context)!.farmerAdvisoryTitle, emoji: '🌾'),
           ...advisories.map((a) => _AdvisoryRow(advisory: a)),
         ],
       ),

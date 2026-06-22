@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../weather_model.dart';
 import 'glass_card.dart';
 
@@ -9,11 +10,12 @@ class DiseaseRiskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'CROP DISEASE RISK', emoji: '🔬'),
+          GlassSectionHeader(title: l.cropDiseaseRiskTitle, emoji: '🔬'),
           ...risks.map((r) => _RiskRow(risk: r)),
         ],
       ),
@@ -25,11 +27,11 @@ class _RiskRow extends StatelessWidget {
   final DiseaseRisk risk;
   const _RiskRow({required this.risk});
 
-  String get _label {
+  String _label(AppLocalizations l) {
     switch (risk.level) {
-      case AlertLevel.low: return 'Low';
-      case AlertLevel.medium: return 'Medium';
-      case AlertLevel.high: return 'High';
+      case AlertLevel.low: return l.riskLow;
+      case AlertLevel.medium: return l.riskMedium;
+      case AlertLevel.high: return l.riskHigh;
     }
   }
 
@@ -43,6 +45,7 @@ class _RiskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -55,7 +58,7 @@ class _RiskRow extends StatelessWidget {
               style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
           ),
-          _RiskBadge(label: _label, color: _color),
+          _RiskBadge(label: _label(l), color: _color),
           const SizedBox(width: 8),
           _RiskBar(level: risk.level, color: _color),
         ],

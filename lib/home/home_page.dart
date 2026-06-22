@@ -572,21 +572,21 @@ class _HomeTabState extends State<HomeTab> {
         icon: Icons.agriculture_outlined,
         color: Colors.brown,
         title: l.rentMachine,
-        subtitle: 'Machines available nearby',
+        subtitle: l.machinesAvailableNearby,
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage())),
       ),
       _SmartServiceData(
         icon: Icons.groups_outlined,
         color: Colors.purple,
         title: l.labourHub,
-        subtitle: 'Hire farm workers',
+        subtitle: l.hireFarmWorkers,
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage())),
       ),
       _SmartServiceData(
         icon: Icons.bug_report_outlined,
         color: Colors.red,
         title: l.cropDisease,
-        subtitle: 'Detect & treat diseases',
+        subtitle: l.detectTreatDiseases,
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage())),
       ),
     ];
@@ -744,13 +744,13 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildInsights(BuildContext context, AppLocalizations l, fb.User? user) {
     final insights = [
       _InsightData(icon: Icons.water_drop_outlined, color: Colors.blue,
-          title: 'Monitor Soil Moisture', subtitle: 'Rabi season — ideal time to check'),
+          title: l.insightMonitorSoilTitle, subtitle: l.insightMonitorSoilSubtitle),
       _InsightData(icon: Icons.trending_up_outlined, color: Colors.green,
-          title: 'Export Prices Up', subtitle: 'Tomato & Coconut demand high this week'),
+          title: l.insightExportPricesTitle, subtitle: l.insightExportPricesSubtitle),
       _InsightData(icon: Icons.agriculture_outlined, color: Colors.brown,
-          title: 'Rent Machine Early', subtitle: 'Harvesting season starts in 2 weeks'),
+          title: l.insightRentMachineTitle, subtitle: l.insightRentMachineSubtitle),
       _InsightData(icon: Icons.chat_bubble_outlined, color: Colors.indigo,
-          title: 'Ask KrishiMithra AI', subtitle: 'Get crop advice & market insights'),
+          title: l.insightAskAiTitle, subtitle: l.insightAskAiSubtitle),
     ];
     return SizedBox(
       height: 116,
@@ -792,7 +792,7 @@ class _HomeTabState extends State<HomeTab> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6)],
               ),
-              child: Center(child: Text('No recent activity yet',
+              child: Center(child: Text(l.noRecentActivity,
                   style: TextStyle(color: cs.onSurfaceVariant))),
             ),
           );
@@ -862,12 +862,13 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _emptyHorizontalSection(String label, IconData icon) {
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       height: 100,
       child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 32, color: Colors.grey.shade300),
         const SizedBox(height: 6),
-        Text('No $label available', style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+        Text(l.noItemsAvailable(label), style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
       ])),
     );
   }
@@ -915,7 +916,7 @@ class _BannerData {
   final List<Color> gradient;
   final IconData icon;
   final String Function(AppLocalizations) title;
-  final String subtitle;
+  final String Function(AppLocalizations) subtitle;
   final void Function(BuildContext ctx, String location, LatLng? coords) onTap;
   const _BannerData({
     required this.gradient,
@@ -931,35 +932,35 @@ final _kBanners = [
     gradient: [const Color(0xFF1B5E20), const Color(0xFF43A047)],
     icon: Icons.agriculture_rounded,
     title: (l) => l.sellDirectlyBanner,
-    subtitle: 'Connect with export buyers directly',
+    subtitle: (l) => l.connectExportBuyers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
   ),
   _BannerData(
     gradient: [const Color(0xFF0277BD), const Color(0xFF29B6F6)],
     icon: Icons.cloud_outlined,
     title: (l) => l.checkWeatherBanner,
-    subtitle: 'Real-time forecast for your farm',
+    subtitle: (l) => l.realTimeFarmForecast,
     onTap: (ctx, loc, _) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => WeatherPage(location: loc))),
   ),
   _BannerData(
     gradient: [const Color(0xFFE65100), const Color(0xFFFF9800)],
     icon: Icons.precision_manufacturing_outlined,
     title: (l) => l.rentEquipmentBanner,
-    subtitle: 'Tractors, harvesters & more at low cost',
+    subtitle: (l) => l.tractorsHarvestersLowCost,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const RentHomePage())),
   ),
   _BannerData(
     gradient: [const Color(0xFF00695C), const Color(0xFF26A69A)],
     icon: Icons.local_shipping_outlined,
     title: (l) => l.exportBanner,
-    subtitle: 'Reach international buyers with quality produce',
+    subtitle: (l) => l.reachInternationalBuyers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
   ),
   _BannerData(
     gradient: [const Color(0xFF4A148C), const Color(0xFF9C27B0)],
     icon: Icons.groups_outlined,
     title: (l) => l.hireLabourBanner,
-    subtitle: 'Find skilled farm workers near you',
+    subtitle: (l) => l.findSkilledFarmWorkers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => LabourHubListingPage())),
   ),
 ];
@@ -1077,7 +1078,7 @@ class _BannerSlide extends StatelessWidget {
             Text(data.title(l),
                 style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold, height: 1.2)),
             const SizedBox(height: 5),
-            Text(data.subtitle,
+            Text(data.subtitle(l),
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
             const SizedBox(height: 12),
             Container(

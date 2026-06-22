@@ -2191,4 +2191,195 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get greenBazaarHighlights => 'GreenBazaar Highlights';
+
+  @override
+  String get machinesAvailableNearby => 'Machines available nearby';
+
+  @override
+  String get hireFarmWorkers => 'Hire farm workers';
+
+  @override
+  String get detectTreatDiseases => 'Detect & treat diseases';
+
+  @override
+  String get connectExportBuyers => 'Connect with export buyers directly';
+
+  @override
+  String get realTimeFarmForecast => 'Real-time forecast for your farm';
+
+  @override
+  String get tractorsHarvestersLowCost => 'Tractors, harvesters & more at low cost';
+
+  @override
+  String get reachInternationalBuyers => 'Reach international buyers with quality produce';
+
+  @override
+  String get findSkilledFarmWorkers => 'Find skilled farm workers near you';
+
+  @override
+  String get noRecentActivity => 'No recent activity yet';
+
+  @override
+  String noItemsAvailable(String label) {
+    return 'No $label available';
+  }
+
+  @override
+  String get insightMonitorSoilTitle => 'Monitor Soil Moisture';
+
+  @override
+  String get insightMonitorSoilSubtitle => 'Rabi season — ideal time to check';
+
+  @override
+  String get insightExportPricesTitle => 'Export Prices Up';
+
+  @override
+  String get insightExportPricesSubtitle => 'Tomato & Coconut demand high this week';
+
+  @override
+  String get insightRentMachineTitle => 'Rent Machine Early';
+
+  @override
+  String get insightRentMachineSubtitle => 'Harvesting season starts in 2 weeks';
+
+  @override
+  String get insightAskAiTitle => 'Ask KrishiMithra AI';
+
+  @override
+  String get insightAskAiSubtitle => 'Get crop advice & market insights';
+
+  @override
+  String get twentyFourHourForecast => '24-HOUR FORECAST';
+
+  @override
+  String get sevenDayForecastSection => '7-DAY FORECAST';
+
+  @override
+  String get feelsLike => 'Feels like';
+
+  @override
+  String get feelsLabel => 'Feels';
+
+  @override
+  String rainChanceToday(int prob) {
+    return '$prob% chance of rain today';
+  }
+
+  @override
+  String get rain => 'Rain';
+
+  @override
+  String get uv => 'UV';
+
+  @override
+  String get fullForecast => 'Full Forecast';
+
+  @override
+  String dayForecastAvailable(int days) {
+    return '$days-day forecast available';
+  }
+
+  @override
+  String get farmerAdvisoryTitle => 'FARMER ADVISORY';
+
+  @override
+  String get agriculturalIndexes => 'AGRICULTURAL INDEXES';
+
+  @override
+  String get rainfallIntelligence => 'RAINFALL INTELLIGENCE';
+
+  @override
+  String get cropDiseaseRiskTitle => 'CROP DISEASE RISK';
+
+  @override
+  String get irrigationTitle => 'IRRIGATION';
+
+  @override
+  String get sunAndUv => 'SUN & UV';
+
+  @override
+  String get harvest => 'Harvest';
+
+  @override
+  String get irrigationLabel => 'Irrigation';
+
+  @override
+  String get fieldWork => 'Field Work';
+
+  @override
+  String get excellent => 'Excellent';
+
+  @override
+  String get good => 'Good';
+
+  @override
+  String get poor => 'Poor';
+
+  @override
+  String get statusRequired => 'Required';
+
+  @override
+  String get statusOptional => 'Optional';
+
+  @override
+  String get notNeeded => 'Not Needed';
+
+  @override
+  String get moderate => 'Moderate';
+
+  @override
+  String get windCalm => 'Calm';
+
+  @override
+  String get windLightBreeze => 'Light Breeze';
+
+  @override
+  String get windStrong => 'Strong';
+
+  @override
+  String get windVeryStrong => 'Very Strong';
+
+  @override
+  String get noRainNext24Hours => 'No rain expected in the next 24 hours.';
+
+  @override
+  String get rainFallingNow => 'Rain is falling now';
+
+  @override
+  String rainExpectedSoon(int hours) {
+    return 'Rain expected in $hours hour(s)';
+  }
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get rainDuration => 'Duration';
+
+  @override
+  String get expectedLabel => 'Expected';
+
+  @override
+  String get riskLow => 'Low';
+
+  @override
+  String get riskMedium => 'Medium';
+
+  @override
+  String get riskHigh => 'High';
+
+  @override
+  String get sunrise => 'Sunrise';
+
+  @override
+  String get sunset => 'Sunset';
+
+  @override
+  String get dayLength => 'Day Length';
+
+  @override
+  String get uvIndex => 'UV Index';
+
+  @override
+  String get tryAgain => 'Try Again';
 }

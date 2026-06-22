@@ -1478,7 +1478,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get specifications => 'Specifications';
 
   @override
-  String get searchHint => 'Search crops, machines, labour, products...';
+  String get searchHint => 'पीक, यंत्र, मजूर, उत्पादने शोधा...';
 
   @override
   String get filterProducts => 'Filter Products';
@@ -2142,53 +2142,244 @@ class AppLocalizationsMr extends AppLocalizations {
   String get notEnoughDataForInsights => 'Add more listings and purchase orders to generate insights';
 
   @override
-  String get home => 'Home';
+  String get home => 'मुख्यपृष्ठ';
 
   @override
   String get greenBazaar => 'GreenBazaar';
 
   @override
-  String get quickActions => 'Quick Actions';
+  String get quickActions => 'जलद कृती';
 
   @override
-  String get smartServices => 'Smart Services';
+  String get smartServices => 'स्मार्ट सेवा';
 
   @override
-  String get exportOpportunities => 'Export Opportunities';
+  String get exportOpportunities => 'निर्यात संधी';
 
   @override
-  String get nearbyFarmersSection => 'Farmers Near You';
+  String get nearbyFarmersSection => 'तुमच्या जवळचे शेतकरी';
 
   @override
-  String get personalizedInsights => 'For You';
+  String get personalizedInsights => 'तुमच्यासाठी';
 
   @override
-  String get recentActivity => 'Recent Activity';
+  String get recentActivity => 'अलीकडील क्रियाकलाप';
 
   @override
-  String get goodMorning => 'Good Morning';
+  String get goodMorning => 'शुभ सकाळ';
 
   @override
-  String get goodAfternoon => 'Good Afternoon';
+  String get goodAfternoon => 'शुभ दुपार';
 
   @override
-  String get goodEvening => 'Good Evening';
+  String get goodEvening => 'शुभ संध्याकाळ';
 
   @override
-  String get sellDirectlyBanner => 'Sell Your Produce Directly';
+  String get sellDirectlyBanner => 'तुमचे पीक थेट विका';
 
   @override
-  String get checkWeatherBanner => 'Check Today\'s Weather';
+  String get checkWeatherBanner => 'आजचे हवामान पहा';
 
   @override
-  String get rentEquipmentBanner => 'Rent Farm Equipment Nearby';
+  String get rentEquipmentBanner => 'जवळपासची कृषी उपकरणे भाड्याने घ्या';
 
   @override
-  String get exportBanner => 'Export Through KrishiMithra';
+  String get exportBanner => 'KrishiMithra द्वारे निर्यात करा';
 
   @override
-  String get hireLabourBanner => 'Hire Agricultural Labour';
+  String get hireLabourBanner => 'कृषी मजूर नेमा';
 
   @override
-  String get greenBazaarHighlights => 'GreenBazaar Highlights';
+  String get greenBazaarHighlights => 'GreenBazaar ठळक मुद्दे';
+
+  @override
+  String get machinesAvailableNearby => 'जवळपास यंत्रे उपलब्ध';
+
+  @override
+  String get hireFarmWorkers => 'शेतमजूर भाड्याने घ्या';
+
+  @override
+  String get detectTreatDiseases => 'रोग ओळखा आणि उपचार करा';
+
+  @override
+  String get connectExportBuyers => 'निर्यात खरेदीदारांशी थेट संपर्क साधा';
+
+  @override
+  String get realTimeFarmForecast => 'तुमच्या शेतासाठी रिअल-टाइम हवामान अंदाज';
+
+  @override
+  String get tractorsHarvestersLowCost => 'ट्रॅक्टर, हार्वेस्टर कमी किमतीत';
+
+  @override
+  String get reachInternationalBuyers => 'आंतरराष्ट्रीय खरेदीदारांपर्यंत पोहोचा';
+
+  @override
+  String get findSkilledFarmWorkers => 'तुमच्या जवळचे कुशल शेतमजूर शोधा';
+
+  @override
+  String get noRecentActivity => 'अद्याप कोणतीही क्रियाकलाप नाही';
+
+  @override
+  String noItemsAvailable(String label) {
+    return '$label उपलब्ध नाही';
+  }
+
+  @override
+  String get insightMonitorSoilTitle => 'मातीचा ओलावा तपासा';
+
+  @override
+  String get insightMonitorSoilSubtitle => 'रब्बी हंगाम — तपासण्याची योग्य वेळ';
+
+  @override
+  String get insightExportPricesTitle => 'निर्यात किमती वाढल्या';
+
+  @override
+  String get insightExportPricesSubtitle => 'या आठवड्यात टोमॅटो व नारळाची मागणी जास्त';
+
+  @override
+  String get insightRentMachineTitle => 'लवकर यंत्र भाड्याने घ्या';
+
+  @override
+  String get insightRentMachineSubtitle => '2 आठवड्यांत कापणीचा हंगाम सुरू होईल';
+
+  @override
+  String get insightAskAiTitle => 'KrishiMithra AI ला विचारा';
+
+  @override
+  String get insightAskAiSubtitle => 'पीक सल्ला आणि बाजार माहिती मिळवा';
+
+  @override
+  String get twentyFourHourForecast => '24-तास अंदाज';
+
+  @override
+  String get sevenDayForecastSection => '7-दिवसाचा अंदाज';
+
+  @override
+  String get feelsLike => 'असे वाटते';
+
+  @override
+  String get feelsLabel => 'वाटते';
+
+  @override
+  String rainChanceToday(int prob) {
+    return 'आज $prob% पाऊस शक्यता';
+  }
+
+  @override
+  String get rain => 'पाऊस';
+
+  @override
+  String get uv => 'UV';
+
+  @override
+  String get fullForecast => 'पूर्ण अंदाज';
+
+  @override
+  String dayForecastAvailable(int days) {
+    return '$days-दिवसाचा अंदाज उपलब्ध';
+  }
+
+  @override
+  String get farmerAdvisoryTitle => 'शेतकरी सल्ला';
+
+  @override
+  String get agriculturalIndexes => 'कृषी निर्देशांक';
+
+  @override
+  String get rainfallIntelligence => 'पावसाची माहिती';
+
+  @override
+  String get cropDiseaseRiskTitle => 'पीक रोग धोका';
+
+  @override
+  String get irrigationTitle => 'सिंचन';
+
+  @override
+  String get sunAndUv => 'सूर्य & UV';
+
+  @override
+  String get harvest => 'कापणी';
+
+  @override
+  String get irrigationLabel => 'सिंचन';
+
+  @override
+  String get fieldWork => 'शेताचे काम';
+
+  @override
+  String get excellent => 'उत्कृष्ट';
+
+  @override
+  String get good => 'चांगले';
+
+  @override
+  String get poor => 'वाईट';
+
+  @override
+  String get statusRequired => 'आवश्यक';
+
+  @override
+  String get statusOptional => 'पर्यायी';
+
+  @override
+  String get notNeeded => 'गरज नाही';
+
+  @override
+  String get moderate => 'मध्यम';
+
+  @override
+  String get windCalm => 'शांत';
+
+  @override
+  String get windLightBreeze => 'हलकी वारा';
+
+  @override
+  String get windStrong => 'तीव्र';
+
+  @override
+  String get windVeryStrong => 'अतिशय तीव्र';
+
+  @override
+  String get noRainNext24Hours => 'पुढील 24 तासांत पाऊस अपेक्षित नाही.';
+
+  @override
+  String get rainFallingNow => 'आत्ता पाऊस पडत आहे';
+
+  @override
+  String rainExpectedSoon(int hours) {
+    return '$hours तासात पाऊस अपेक्षित';
+  }
+
+  @override
+  String get startTime => 'सुरुवातीची वेळ';
+
+  @override
+  String get rainDuration => 'कालावधी';
+
+  @override
+  String get expectedLabel => 'अपेक्षित';
+
+  @override
+  String get riskLow => 'कमी';
+
+  @override
+  String get riskMedium => 'मध्यम';
+
+  @override
+  String get riskHigh => 'जास्त';
+
+  @override
+  String get sunrise => 'सूर्योदय';
+
+  @override
+  String get sunset => 'सूर्यास्त';
+
+  @override
+  String get dayLength => 'दिवसाचा कालावधी';
+
+  @override
+  String get uvIndex => 'UV निर्देशांक';
+
+  @override
+  String get tryAgain => 'पुन्हा प्रयत्न करा';
 }

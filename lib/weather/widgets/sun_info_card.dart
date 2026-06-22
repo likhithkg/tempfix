@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../weather_model.dart';
 import '../weather_service.dart';
@@ -11,6 +12,7 @@ class SunInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final sunrise = weather.sunrise;
     final sunset = weather.sunset;
     Duration? dayLength;
@@ -22,31 +24,31 @@ class SunInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'SUN & UV', emoji: '☀️'),
+          GlassSectionHeader(title: l.sunAndUv, emoji: '☀️'),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               if (sunrise != null)
                 _SunStat(
                   icon: '🌅',
-                  label: 'Sunrise',
+                  label: l.sunrise,
                   value: DateFormat('h:mm a').format(sunrise),
                 ),
               if (sunset != null)
                 _SunStat(
                   icon: '🌇',
-                  label: 'Sunset',
+                  label: l.sunset,
                   value: DateFormat('h:mm a').format(sunset),
                 ),
               if (dayLength != null)
                 _SunStat(
                   icon: '⏳',
-                  label: 'Day Length',
+                  label: l.dayLength,
                   value: '${dayLength.inHours}h ${dayLength.inMinutes % 60}m',
                 ),
               _SunStat(
                 icon: '🔆',
-                label: 'UV Index',
+                label: l.uvIndex,
                 value: '${weather.uvIndex.toStringAsFixed(1)}\n${WeatherService.uvLabel(weather.uvIndex)}',
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../weather_model.dart';
 import 'glass_card.dart';
 
@@ -7,74 +8,11 @@ class AgIndexesCard extends StatelessWidget {
 
   const AgIndexesCard({super.key, required this.indexes});
 
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const GlassSectionHeader(title: 'AGRICULTURAL INDEXES', emoji: '📊'),
-          Row(
-            children: [
-              Expanded(child: _IndexTile(
-                icon: '🌿',
-                label: 'Spraying',
-                value: _sprayLabel(indexes.spraying),
-                color: _sprayColor(indexes.spraying),
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: _IndexTile(
-                icon: '🌾',
-                label: 'Harvest',
-                value: _harvestLabel(indexes.harvest),
-                color: _harvestColor(indexes.harvest),
-              )),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _IndexTile(
-                icon: '💧',
-                label: 'Irrigation',
-                value: _irrigLabel(indexes.irrigation),
-                color: _irrigColor(indexes.irrigation),
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: _IndexTile(
-                icon: '🚜',
-                label: 'Field Work',
-                value: _fieldLabel(indexes.fieldWork),
-                color: _fieldColor(indexes.fieldWork),
-              )),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _sprayLabel(SprayingIndex s) {
-    switch (s) {
-      case SprayingIndex.excellent: return 'Excellent';
-      case SprayingIndex.good: return 'Good';
-      case SprayingIndex.poor: return 'Poor';
-    }
-  }
-
   Color _sprayColor(SprayingIndex s) {
     switch (s) {
       case SprayingIndex.excellent: return Colors.greenAccent;
       case SprayingIndex.good: return Colors.yellowAccent;
       case SprayingIndex.poor: return Colors.redAccent;
-    }
-  }
-
-  String _harvestLabel(HarvestIndex h) {
-    switch (h) {
-      case HarvestIndex.excellent: return 'Excellent';
-      case HarvestIndex.good: return 'Good';
-      case HarvestIndex.poor: return 'Poor';
     }
   }
 
@@ -86,27 +24,11 @@ class AgIndexesCard extends StatelessWidget {
     }
   }
 
-  String _irrigLabel(IrrigationNeed n) {
-    switch (n) {
-      case IrrigationNeed.required_: return 'Required';
-      case IrrigationNeed.optional_: return 'Optional';
-      case IrrigationNeed.notRequired: return 'Not Needed';
-    }
-  }
-
   Color _irrigColor(IrrigationNeed n) {
     switch (n) {
       case IrrigationNeed.required_: return Colors.orangeAccent;
       case IrrigationNeed.optional_: return Colors.yellowAccent;
       case IrrigationNeed.notRequired: return Colors.greenAccent;
-    }
-  }
-
-  String _fieldLabel(FieldWorkIndex f) {
-    switch (f) {
-      case FieldWorkIndex.excellent: return 'Excellent';
-      case FieldWorkIndex.moderate: return 'Moderate';
-      case FieldWorkIndex.poor: return 'Poor';
     }
   }
 
@@ -116,6 +38,86 @@ class AgIndexesCard extends StatelessWidget {
       case FieldWorkIndex.moderate: return Colors.yellowAccent;
       case FieldWorkIndex.poor: return Colors.redAccent;
     }
+  }
+
+  String _sprayValue(SprayingIndex s, AppLocalizations l) {
+    switch (s) {
+      case SprayingIndex.excellent: return l.excellent;
+      case SprayingIndex.good: return l.good;
+      case SprayingIndex.poor: return l.poor;
+    }
+  }
+
+  String _harvestValue(HarvestIndex h, AppLocalizations l) {
+    switch (h) {
+      case HarvestIndex.excellent: return l.excellent;
+      case HarvestIndex.good: return l.good;
+      case HarvestIndex.poor: return l.poor;
+    }
+  }
+
+  String _irrigValue(IrrigationNeed n, AppLocalizations l) {
+    switch (n) {
+      case IrrigationNeed.required_: return l.statusRequired;
+      case IrrigationNeed.optional_: return l.statusOptional;
+      case IrrigationNeed.notRequired: return l.notNeeded;
+    }
+  }
+
+  String _fieldValue(FieldWorkIndex f, AppLocalizations l) {
+    switch (f) {
+      case FieldWorkIndex.excellent: return l.excellent;
+      case FieldWorkIndex.moderate: return l.moderate;
+      case FieldWorkIndex.poor: return l.poor;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GlassSectionHeader(title: l.agriculturalIndexes, emoji: '📊'),
+          Row(
+            children: [
+              Expanded(child: _IndexTile(
+                icon: '🌿',
+                label: l.spraying,
+                value: _sprayValue(indexes.spraying, l),
+                color: _sprayColor(indexes.spraying),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _IndexTile(
+                icon: '🌾',
+                label: l.harvest,
+                value: _harvestValue(indexes.harvest, l),
+                color: _harvestColor(indexes.harvest),
+              )),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _IndexTile(
+                icon: '💧',
+                label: l.irrigationLabel,
+                value: _irrigValue(indexes.irrigation, l),
+                color: _irrigColor(indexes.irrigation),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _IndexTile(
+                icon: '🚜',
+                label: l.fieldWork,
+                value: _fieldValue(indexes.fieldWork, l),
+                color: _fieldColor(indexes.fieldWork),
+              )),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../weather_model.dart';
 import 'glass_card.dart';
@@ -10,34 +11,35 @@ class RainIntelligenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'RAINFALL INTELLIGENCE', emoji: '🌧️'),
+          GlassSectionHeader(title: l.rainfallIntelligence, emoji: '🌧️'),
           if (!rain.rainExpected)
-            const _StatusRow(
+            _StatusRow(
               icon: '☀️',
-              label: 'No rain expected in the next 24 hours.',
+              label: l.noRainNext24Hours,
               color: Colors.greenAccent,
             )
           else ...[
             _StatusRow(
               icon: '🌧️',
               label: rain.hoursUntilRain == 0
-                  ? 'Rain is falling now'
-                  : 'Rain expected in ${rain.hoursUntilRain} hour${rain.hoursUntilRain == 1 ? '' : 's'}',
+                  ? l.rainFallingNow
+                  : l.rainExpectedSoon(rain.hoursUntilRain),
               color: Colors.lightBlueAccent,
             ),
             if (rain.rainStartTime != null) ...[
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _StatBox(label: 'Start Time', value: DateFormat('h:mm a').format(rain.rainStartTime!), icon: '⏰')),
+                  Expanded(child: _StatBox(label: l.startTime, value: DateFormat('h:mm a').format(rain.rainStartTime!), icon: '⏰')),
                   const SizedBox(width: 8),
-                  Expanded(child: _StatBox(label: 'Duration', value: '${rain.durationHours}h', icon: '⏱️')),
+                  Expanded(child: _StatBox(label: l.rainDuration, value: '${rain.durationHours}h', icon: '⏱️')),
                   const SizedBox(width: 8),
-                  Expanded(child: _StatBox(label: 'Expected', value: '${rain.expectedRainfallMm.toStringAsFixed(0)} mm', icon: '💧')),
+                  Expanded(child: _StatBox(label: l.expectedLabel, value: '${rain.expectedRainfallMm.toStringAsFixed(0)} mm', icon: '💧')),
                 ],
               ),
             ],

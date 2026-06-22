@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../weather_service.dart';
 import 'glass_card.dart';
 
@@ -8,12 +9,12 @@ class WindCard extends StatelessWidget {
 
   const WindCard({super.key, required this.windSpeed, required this.windDirection});
 
-  String get _windLabel {
-    if (windSpeed < 3) return 'Calm';
-    if (windSpeed < 6) return 'Light Breeze';
-    if (windSpeed < 10) return 'Moderate';
-    if (windSpeed < 15) return 'Strong';
-    return 'Very Strong';
+  String _windLabel(AppLocalizations l) {
+    if (windSpeed < 3) return l.windCalm;
+    if (windSpeed < 6) return l.windLightBreeze;
+    if (windSpeed < 10) return l.moderate;
+    if (windSpeed < 15) return l.windStrong;
+    return l.windVeryStrong;
   }
 
   Color get _windColor {
@@ -24,13 +25,14 @@ class WindCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final dir = WeatherService.windDirection(windDirection);
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'WIND', emoji: '🌬️'),
+          GlassSectionHeader(title: l.wind.toUpperCase(), emoji: '🌬️'),
           Row(
             children: [
               _CompassWidget(direction: windDirection),
@@ -48,7 +50,7 @@ class WindCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '$_windLabel · $dir',
+                      '${_windLabel(l)} · $dir',
                       style: const TextStyle(fontSize: 14, color: Colors.white70),
                     ),
                     if (windSpeed > 8) ...[

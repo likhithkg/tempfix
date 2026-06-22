@@ -333,7 +333,7 @@ class LoginPage extends StatelessWidget {
                     indicatorColor: indicatorColor,
                     tabs: [
                       Tab(icon: const Icon(Icons.email), text: AppLocalizations.of(context)!.email),
-                      const Tab(icon: Icon(Icons.phone), text: "Phone"),
+                      Tab(icon: const Icon(Icons.phone), text: AppLocalizations.of(context)!.phone),
                     ],
                   ),
                   // Expanded content area for forms

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../weather_model.dart';
 import 'glass_card.dart';
 
@@ -28,21 +29,22 @@ class IrrigationCard extends StatelessWidget {
     }
   }
 
-  String get _statusLabel {
+  String _statusLabel(AppLocalizations l) {
     switch (need) {
-      case IrrigationNeed.required_: return 'REQUIRED';
-      case IrrigationNeed.optional_: return 'OPTIONAL';
-      case IrrigationNeed.notRequired: return 'NOT NEEDED';
+      case IrrigationNeed.required_: return l.statusRequired.toUpperCase();
+      case IrrigationNeed.optional_: return l.statusOptional.toUpperCase();
+      case IrrigationNeed.notRequired: return l.notNeeded.toUpperCase();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GlassSectionHeader(title: 'IRRIGATION', emoji: '💧'),
+          GlassSectionHeader(title: l.irrigationTitle, emoji: '💧'),
           Row(
             children: [
               Text(_icon, style: const TextStyle(fontSize: 32)),
@@ -52,7 +54,7 @@ class IrrigationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _statusLabel,
+                      _statusLabel(l),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

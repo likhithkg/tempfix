@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 import '../../weather/weather_model.dart';
@@ -461,7 +462,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                'Feels ${w.feelsLike.toStringAsFixed(0)}°  ·  H:${w.tempHigh.toStringAsFixed(0)}°  L:${w.tempLow.toStringAsFixed(0)}°',
+                                '${AppLocalizations.of(context)!.feelsLabel} ${w.feelsLike.toStringAsFixed(0)}°  ·  H:${w.tempHigh.toStringAsFixed(0)}°  L:${w.tempLow.toStringAsFixed(0)}°',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.55),
                                   fontSize: 11,
@@ -494,16 +495,16 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _StatPill('💧', '${w.humidity}%', 'Humidity'),
+                              _StatPill('💧', '${w.humidity}%', AppLocalizations.of(context)!.humidity),
                               _vDivider(),
                               _StatPill('🌬️',
-                                  '${w.windSpeed.toStringAsFixed(0)}m/s', 'Wind'),
+                                  '${w.windSpeed.toStringAsFixed(0)}m/s', AppLocalizations.of(context)!.wind),
                               _vDivider(),
                               _StatPill('🌧️',
-                                  '${w.precipitationProbability}%', 'Rain'),
+                                  '${w.precipitationProbability}%', AppLocalizations.of(context)!.rain),
                               _vDivider(),
                               _StatPill(
-                                  '🔆', WeatherService.uvLabel(w.uvIndex), 'UV'),
+                                  '🔆', WeatherService.uvLabel(w.uvIndex), AppLocalizations.of(context)!.uv),
                             ],
                           ),
                         ),
@@ -559,7 +560,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${w.daily.isNotEmpty ? w.daily.length : 7}-day forecast available',
+                          AppLocalizations.of(context)!.dayForecastAvailable(w.daily.isNotEmpty ? w.daily.length : 7),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45),
                             fontSize: 10,
@@ -569,7 +570,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Full Forecast',
+                              AppLocalizations.of(context)!.fullForecast,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 11,
