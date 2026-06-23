@@ -315,7 +315,7 @@ class _RentHomePageState extends State<RentHomePage>
 
               // ── Content ──────────────────────────────────────────
               if (!snap.hasData)
-                SliverToBoxAdapter(child: _RentShimmer(isDark: isDark))
+                _RentShimmer(isDark: isDark)
               else if (filtered.isEmpty)
                 SliverToBoxAdapter(child: _buildEmpty())
               else ...[
