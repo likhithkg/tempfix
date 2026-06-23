@@ -14,6 +14,8 @@ import 'rent_machine_details_page.dart';
 import 'rent_booking_flow_page.dart';
 import 'rent_map_page.dart';
 import 'rent_list_form_page.dart';
+import 'rent_owner_dashboard_page.dart';
+import 'rent_booking_model.dart';
 // ─── Palette ────────────────────────────────────────────────────────────────
 
 const _kPrimary = Color(0xFFE65100);
@@ -371,44 +373,17 @@ class _RentHomePageState extends State<RentHomePage>
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'emergency',
-            onPressed: _showEmergencySheet,
-            backgroundColor: const Color(0xFFD32F2F),
-            foregroundColor: Colors.white,
-            mini: true,
-            tooltip: 'Emergency Booking',
-            child: const Text('🚨', style: TextStyle(fontSize: 18)),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: 'calc',
-            onPressed: _showAcreageCalculator,
-            backgroundColor: const Color(0xFF2E7D32),
-            foregroundColor: Colors.white,
-            mini: true,
-            tooltip: 'Acreage Calculator',
-            child: const Icon(Icons.calculate_rounded, size: 20),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'list',
-            onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const RentListFormPage()))
-                .then((_) => setState(() {})),
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('List Machine',
-                style: TextStyle(fontWeight: FontWeight.w800)),
-            backgroundColor: _kPrimary,
-            foregroundColor: Colors.white,
-          ),
-        ],
+      floatingActionButton: _OwnerFabGroup(
+        onEmergency: _showEmergencySheet,
+        onCalc: _showAcreageCalculator,
+        onList: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RentListFormPage()))
+            .then((_) => setState(() {})),
+        onOwnerDash: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const RentOwnerDashboardPage())),
       ),
     );
   }
@@ -1581,6 +1556,104 @@ class _RentShimmerState extends State<_RentShimmer>
         ),
         childCount: 5,
       ),
+    );
+  }
+}
+
+// ─── Owner FAB group with live pending-requests badge ────────────────────────
+
+class _OwnerFabGroup extends StatelessWidget {
+  final VoidCallback onEmergency, onCalc, onList, onOwnerDash;
+  const _OwnerFabGroup({
+    required this.onEmergency,
+    required this.onCalc,
+    required this.onList,
+    required this.onOwnerDash,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return StreamBuilder<List<RentBooking>>(
+      stream: uid.isEmpty
+          ? Stream.value([])
+          : RentMachineService.instance.streamBookingsByOwner(uid),
+      builder: (ctx, snap) {
+        final pending = (snap.data ?? [])
+            .where((b) => b.status == BookingStatus.requested)
+            .length;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: 'emergency',
+              onPressed: onEmergency,
+              backgroundColor: const Color(0xFFD32F2F),
+              foregroundColor: Colors.white,
+              mini: true,
+              tooltip: 'Emergency Booking',
+              child: const Text('🚨', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton(
+              heroTag: 'calc',
+              onPressed: onCalc,
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              mini: true,
+              tooltip: 'Acreage Calculator',
+              child: const Icon(Icons.calculate_rounded, size: 20),
+            ),
+            const SizedBox(height: 10),
+            // Owner dashboard with live badge
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'owner',
+                  onPressed: onOwnerDash,
+                  backgroundColor: const Color(0xFF1565C0),
+                  foregroundColor: Colors.white,
+                  mini: true,
+                  tooltip: 'Owner Dashboard',
+                  child: const Icon(Icons.dashboard_rounded, size: 20),
+                ),
+                if (pending > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD32F2F),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text('$pending',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton.extended(
+              heroTag: 'list',
+              onPressed: onList,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('List Machine',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
+              backgroundColor: const Color(0xFFE65100),
+              foregroundColor: Colors.white,
+            ),
+          ],
+        );
+      },
     );
   }
 }
