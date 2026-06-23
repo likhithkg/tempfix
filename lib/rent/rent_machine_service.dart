@@ -156,17 +156,23 @@ class RentMachineService {
   Stream<List<RentBooking>> streamBookingsByFarmer(String farmerId) {
     return _bookings
         .where('farmerId', isEqualTo: farmerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => RentBooking.fromDoc(d)).toList());
+        .map((snap) {
+      final list = snap.docs.map((d) => RentBooking.fromDoc(d)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 
   Stream<List<RentBooking>> streamBookingsByOwner(String ownerId) {
     return _bookings
         .where('ownerId', isEqualTo: ownerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => RentBooking.fromDoc(d)).toList());
+        .map((snap) {
+      final list = snap.docs.map((d) => RentBooking.fromDoc(d)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 
   Stream<RentBooking?> streamBookingById(String id) {
@@ -185,10 +191,10 @@ class RentMachineService {
     try {
       final snap = await _bookings
           .where('farmerId', isEqualTo: farmerId)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
           .get();
-      return snap.docs.map((d) => RentBooking.fromDoc(d)).toList();
+      final list = snap.docs.map((d) => RentBooking.fromDoc(d)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list.take(limit).toList();
     } catch (_) {
       return [];
     }

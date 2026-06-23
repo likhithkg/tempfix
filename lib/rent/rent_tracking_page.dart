@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'rent_booking_model.dart';
 import 'rent_machine_service.dart';
+import 'rent_farmer_bookings_page.dart';
 
 Color _statusColor(BookingStatus s) {
   switch (s) {
@@ -55,6 +56,14 @@ class RentTrackingPage extends StatefulWidget {
 
 class _RentTrackingPageState extends State<RentTrackingPage> {
   final _mapCtrl = MapController();
+
+  void _goToMyBookings(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const RentFarmerBookingsPage()),
+      (route) => route.isFirst,
+    );
+  }
 
   Future<void> _call(String phone) async {
     final uri = Uri(scheme: 'tel', path: phone);
@@ -142,19 +151,40 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
                 ? LatLng(booking.fieldLatitude!, booking.fieldLongitude!)
                 : const LatLng(13.3379, 76.5616);
 
-        return Scaffold(
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _goToMyBookings(context);
+          },
+          child: Scaffold(
           backgroundColor:
               isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F5),
           appBar: AppBar(
             backgroundColor: color,
             foregroundColor: Colors.white,
             elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => _goToMyBookings(context),
+            ),
             title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Live Tracking',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
               Text('Booking #${widget.bookingId.substring(0, 8)}...',
                   style: const TextStyle(fontSize: 11, color: Colors.white70)),
             ]),
+            actions: [
+              TextButton.icon(
+                onPressed: () => _goToMyBookings(context),
+                icon: const Icon(Icons.list_alt_rounded,
+                    color: Colors.white, size: 18),
+                label: const Text('My Bookings',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ],
           ),
           body: Column(children: [
             // ── Status banner ──────────────────────────────────
@@ -350,7 +380,8 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
 
             SizedBox(height: MediaQuery.of(context).padding.bottom),
           ]),
-        );
+        ),   // closes Scaffold
+        );   // closes PopScope
       },
     );
   }

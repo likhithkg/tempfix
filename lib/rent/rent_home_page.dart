@@ -16,6 +16,7 @@ import 'rent_map_page.dart';
 import 'rent_list_form_page.dart';
 import 'rent_owner_dashboard_page.dart';
 import 'rent_booking_model.dart';
+import 'rent_farmer_bookings_page.dart';
 // ─── Palette ────────────────────────────────────────────────────────────────
 
 const _kPrimary = Color(0xFFE65100);
@@ -419,6 +420,14 @@ class _RentHomePageState extends State<RentHomePage>
                   style: TextStyle(
                       fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w500)),
             ]),
+          ),
+          IconButton(
+            icon: const Icon(Icons.list_alt_rounded, color: Colors.white),
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const RentFarmerBookingsPage())),
+            tooltip: 'My Bookings',
           ),
           IconButton(
             icon: const Icon(Icons.sort_rounded, color: Colors.white),
