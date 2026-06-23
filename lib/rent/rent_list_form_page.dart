@@ -55,11 +55,12 @@ class _RentListFormPageState
   final _types = const [
     'Tractor',
     'Harvester',
-    'Plough',
+    'Rotavator',
+    'Cultivator',
     'Seeder',
-    'Sprayer',
-    'Tiller',
-    'Baler',
+    'Hitachi',
+    'JCB',
+    'Lorry',
     'Other'
   ];
 

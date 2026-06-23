@@ -1,578 +1,835 @@
-// lib/rent/rent_machine_details_page.dart
-
+// lib/rent/rent_machine_details_page.dart — RentHub 3.0 Premium Details
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'rent_model.dart';
+import 'rent_machine_service.dart';
+import 'rent_booking_flow_page.dart';
 import 'rent_list_form_page.dart';
-import '../l10n/app_localizations.dart';
-import '../services/content_translation_service.dart';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 Color _typeColor(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor': return const Color(0xFFBF360C);
-    case 'harvester': return const Color(0xFF4A148C);
-    case 'sprayer': return const Color(0xFF1565C0);
-    case 'rotavator': return const Color(0xFF1B5E20);
-    case 'transplanter': return const Color(0xFF006064);
-    case 'thresher': return const Color(0xFFE65100);
-    case 'pump set': return const Color(0xFF0277BD);
-    default: return const Color(0xFF455A64);
+    case 'tractor':    return const Color(0xFFE65100);
+    case 'harvester':  return const Color(0xFF1B5E20);
+    case 'rotavator':  return const Color(0xFF4CAF50);
+    case 'cultivator': return const Color(0xFF2E7D32);
+    case 'seeder':     return const Color(0xFF00695C);
+    case 'hitachi':    return const Color(0xFFFF8F00);
+    case 'jcb':        return const Color(0xFFF9A825);
+    case 'lorry':      return const Color(0xFF1565C0);
+    default:           return const Color(0xFF455A64);
   }
 }
 
-class RentMachineDetailsPage extends StatelessWidget {
+String _typeEmoji(String type) {
+  switch (type.toLowerCase()) {
+    case 'tractor':    return '🚜';
+    case 'harvester':  return '🌾';
+    case 'rotavator':  return '⚙️';
+    case 'cultivator': return '🌿';
+    case 'seeder':     return '🌱';
+    case 'hitachi':    return '⛏️';
+    case 'jcb':        return '🏗️';
+    case 'lorry':      return '🚚';
+    default:           return '🔧';
+  }
+}
+
+Color _availColor(MachineAvailability a) {
+  switch (a) {
+    case MachineAvailability.available:        return const Color(0xFF4CAF50);
+    case MachineAvailability.busy:             return const Color(0xFFFF9800);
+    case MachineAvailability.underMaintenance: return const Color(0xFFFF5722);
+    case MachineAvailability.offline:          return const Color(0xFF9E9E9E);
+  }
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
+class RentMachineDetailsPage extends StatefulWidget {
   final RentMachine machine;
   const RentMachineDetailsPage({super.key, required this.machine});
 
-  Future<void> _call(BuildContext context, String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open dialer')));
+  @override
+  State<RentMachineDetailsPage> createState() => _RentMachineDetailsPageState();
+}
+
+class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
+  late RentMachine _machine;
+  bool _updatingAvailability = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _machine = widget.machine;
+  }
+
+  bool get _isOwner {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return uid.isNotEmpty && uid == _machine.ownerId;
+  }
+
+  Future<void> _call() async {
+    final uri = Uri(scheme: 'tel', path: _machine.phone);
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  Future<void> _whatsApp() async {
+    final phone = _machine.phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final url = Uri.parse('https://wa.me/$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
-  Future<void> _whatsapp(BuildContext context, String phone) async {
-    final uri = Uri.parse('https://wa.me/$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open WhatsApp')));
+  Future<void> _openMaps() async {
+    final url = Uri.parse(
+        'https://www.google.com/maps?q=${_machine.latitude},${_machine.longitude}');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
+  }
+
+  Future<void> _updateAvailability(MachineAvailability avail) async {
+    setState(() => _updatingAvailability = true);
+    try {
+      await RentMachineService.instance.updateAvailability(_machine.id, avail);
+      setState(() => _machine = _machine.copyWith(availability: avail));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _updatingAvailability = false);
+    }
+  }
+
+  void _showAvailabilitySheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 16),
+          const Text('Set Availability',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 16),
+          ...MachineAvailability.values.map((a) {
+            final sel = _machine.availability == a;
+            final color = _availColor(a);
+            return ListTile(
+              leading: Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              title: Text(a.label),
+              trailing: sel ? Icon(Icons.check_rounded, color: color) : null,
+              onTap: () {
+                Navigator.pop(context);
+                _updateAvailability(a);
+              },
+            );
+          }),
+        ]),
+      ),
+    );
+  }
+
+  void _showBookingNotesSheet() {
+    final ctrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        padding: EdgeInsets.fromLTRB(
+            20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 16),
+          const Text('Add Booking Notes',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          const Text('Let the owner know your requirements',
+              style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 13)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: ctrl,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText: 'e.g. Need machine for 3 acres, prefer before 8 AM...',
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => RentBookingFlowPage(
+                              machine: _machine,
+                              initialNotes: ctrl.text,
+                            )));
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: _typeColor(_machine.type),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14))),
+              child: const Text('Proceed to Booking',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final langCode = Localizations.localeOf(context).languageCode;
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    final isOwner = uid != null && uid == machine.ownerId;
+    final color = _typeColor(_machine.type);
+    final emoji = _typeEmoji(_machine.type);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final topPad = MediaQuery.of(context).padding.top;
-    final botPad = MediaQuery.of(context).padding.bottom;
-    final typeColor = _typeColor(machine.type);
-    final hasImage = machine.imageUrl.isNotEmpty;
-    final translatedType = ContentTranslationService.translateMachineType(
-        machine.type, langCode);
-    final translatedLocation = machine.location != null
-        ? ContentTranslationService.translateLocation(
-            machine.location!, langCode)
-        : null;
+    final bg = isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F5);
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF5F3F0),
+      backgroundColor: bg,
       body: CustomScrollView(slivers: [
-        // ── Hero image ──────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _HeroImage(
-            machine: machine,
-            topPad: topPad,
-            typeColor: typeColor,
-            hasImage: hasImage,
-            isOwner: isOwner,
-            translatedType: translatedType,
-            onBack: () => Navigator.maybePop(context),
-            onEdit: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) =>
-                    RentListFormPage(existingMachine: machine))),
+        // ── Hero header ──────────────────────────────────────────
+        SliverAppBar(
+          expandedHeight: 300,
+          pinned: true,
+          backgroundColor: color,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                  color: Colors.black38,
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.arrow_back_rounded,
+                  color: Colors.white, size: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-
-        // ── Price + title banner ────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _TitleBanner(
-              machine: machine, isDark: isDark, typeColor: typeColor,
-              translatedType: translatedType),
-        ),
-
-        // ── Stats row ───────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _StatsRow(machine: machine, isDark: isDark),
-        ),
-
-        // ── Owner card ──────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _InfoCard(
-            title: 'Owner Details',
-            isDark: isDark,
-            child: Column(children: [
-              _DetailRow(
-                icon: Icons.person_rounded,
-                color: const Color(0xFFBF360C),
-                label: l.ownerLabel,
-                value: machine.ownerName,
-              ),
-              const Divider(height: 20, color: Color(0xFFF0F0F0)),
-              _DetailRow(
-                icon: Icons.phone_rounded,
-                color: const Color(0xFF1565C0),
-                label: l.mobileLabel,
-                value: machine.phone,
-                trailing: IconButton(
-                  icon: const Icon(Icons.call_rounded,
-                      color: Color(0xFF1B5E20)),
-                  onPressed: () => _call(context, machine.phone),
+          actions: [
+            if (_isOwner) ...[
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                      color: Colors.black38,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.edit_rounded,
+                      color: Colors.white, size: 18),
                 ),
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            RentListFormPage(existingMachine: _machine))),
+              ),
+              if (_updatingAvailability)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white)),
+                )
+              else
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                        color: Colors.black38,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.toggle_on_rounded,
+                        color: Colors.white, size: 18),
+                  ),
+                  onPressed: _showAvailabilitySheet,
+                ),
+            ],
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            background: Stack(fit: StackFit.expand, children: [
+              _machine.imageUrl.isNotEmpty
+                  ? Image.network(_machine.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                            color: color.withValues(alpha: 0.15),
+                            child: Center(
+                                child: Text(emoji,
+                                    style: const TextStyle(fontSize: 80))),
+                          ))
+                  : Container(
+                      color: color.withValues(alpha: 0.15),
+                      child: Center(
+                          child:
+                              Text(emoji, style: const TextStyle(fontSize: 80))),
+                    ),
+              const DecoratedBox(
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black54]))),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Row(children: [
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_machine.name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 4),
+                          Row(children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Text('$emoji ${_machine.type}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                                width: 8, height: 8,
+                                decoration: BoxDecoration(
+                                    color: _availColor(_machine.availability),
+                                    shape: BoxShape.circle)),
+                            const SizedBox(width: 4),
+                            Text(_machine.availability.label,
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 11)),
+                          ]),
+                        ]),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14)),
+                    child: Column(children: [
+                      Text(
+                          '₹${_machine.effectiveHourlyRate.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: color)),
+                      const Text('/hour',
+                          style: TextStyle(
+                              fontSize: 9, color: Color(0xFF9E9E9E),
+                              fontWeight: FontWeight.w600)),
+                    ]),
+                  ),
+                ]),
               ),
             ]),
           ),
         ),
 
-        // ── Machine details ─────────────────────────────────────────────
+        // ── Content ──────────────────────────────────────────────
         SliverToBoxAdapter(
-          child: _InfoCard(
-            title: 'Machine Details',
-            isDark: isDark,
-            child: Column(children: [
-              _DetailRow(
-                icon: Icons.agriculture_rounded,
-                color: typeColor,
-                label: l.machineTypeLabel,
-                value: translatedType,
-              ),
-              const Divider(height: 20, color: Color(0xFFF0F0F0)),
-              _DetailRow(
-                icon: Icons.currency_rupee_rounded,
-                color: const Color(0xFF388E3C),
-                label: l.pricePerDayLabel,
-                value:
-                    '₹${machine.pricePerDay.toStringAsFixed(0)} per day',
-              ),
-              if (translatedLocation != null) ...[
-                const Divider(height: 20, color: Color(0xFFF0F0F0)),
-                _DetailRow(
-                  icon: Icons.location_on_rounded,
-                  color: const Color(0xFFBF360C),
-                  label: l.locationLabel,
-                  value: translatedLocation,
-                ),
-              ],
-              const Divider(height: 20, color: Color(0xFFF0F0F0)),
-              _DetailRow(
-                icon: Icons.calendar_today_rounded,
-                color: const Color(0xFF7B1FA2),
-                label: 'Listed On',
-                value: _formatDate(machine.createdAt),
-              ),
-            ]),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatsRow(),
+                  const SizedBox(height: 16),
+                  if (_machine.badges.isNotEmpty) ...[
+                    _buildBadges(),
+                    const SizedBox(height: 16),
+                  ],
+                  _buildReliabilityCard(color),
+                  const SizedBox(height: 16),
+                  _buildOwnerCard(isDark),
+                  const SizedBox(height: 16),
+                  _buildDetailsCard(isDark),
+                  const SizedBox(height: 16),
+                  _buildPricingCard(color, isDark),
+                  const SizedBox(height: 16),
+                  _buildBookingNotesButton(color),
+                ]),
           ),
         ),
-
-        // ── Bottom padding ──────────────────────────────────────────────
-        SliverToBoxAdapter(child: SizedBox(height: botPad + 88)),
       ]),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+            16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, -3))
+          ],
+        ),
+        child: Row(children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _call,
+              icon: const Icon(Icons.phone_rounded, size: 18),
+              label: const Text('Call',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: color, width: 1.5),
+                  foregroundColor: color,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14))),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: _whatsApp,
+              icon: const Text('📱', style: TextStyle(fontSize: 16)),
+              label: const Text('WhatsApp',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14))),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed:
+                  _machine.availability == MachineAvailability.available
+                      ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  RentBookingFlowPage(machine: _machine)))
+                      : null,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFE0E0E0),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14))),
+              child: const Text('Book Now →',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
 
-      // ── Bottom action bar ────────────────────────────────────────────
-      bottomNavigationBar: _BottomBar(
-        isDark: isDark,
-        botPad: botPad,
-        onCall: () => _call(context, machine.phone),
-        onWhatsApp: () => _whatsapp(context, machine.phone),
+  Widget _buildStatsRow() {
+    return Row(children: [
+      _StatChip('⭐', _machine.rating.toStringAsFixed(1), 'Rating'),
+      const SizedBox(width: 12),
+      _StatChip('📦', '${_machine.completedJobs}', 'Jobs Done'),
+      const SizedBox(width: 12),
+      _StatChip('🔧', '${_machine.yearsInService}yr', 'In Service'),
+      const SizedBox(width: 12),
+      _StatChip('✅',
+          '${(_machine.acceptanceRate * 100).toStringAsFixed(0)}%', 'Accept Rate'),
+    ]);
+  }
+
+  Widget _buildBadges() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _machine.badges.map((b) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF9C4),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFBC02D)),
+          ),
+          child: Text('${b.emoji}  ${b.label}',
+              style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF795548))),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildReliabilityCard(Color color) {
+    final score = _machine.reliabilityScore.clamp(0.0, 100.0);
+    final scoreColor = score >= 80
+        ? const Color(0xFF4CAF50)
+        : score >= 60
+            ? const Color(0xFFFF9800)
+            : const Color(0xFFD32F2F);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
+        ],
+      ),
+      child: Row(children: [
+        SizedBox(
+          width: 68,
+          height: 68,
+          child: CustomPaint(
+            painter: _ScoreArcPainter(score: score / 100, color: scoreColor),
+            child: Center(
+              child: Text('${score.toInt()}',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: scoreColor)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Machine Reliability Score',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            const Text(
+                'Based on acceptance rate, on-time arrival & farmer feedback',
+                style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: score / 100,
+                minHeight: 6,
+                backgroundColor: const Color(0xFFE0E0E0),
+                valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+              ),
+            ),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildOwnerCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Owner Details',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        Row(children: [
+          Container(
+            width: 52, height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _typeColor(_machine.type).withValues(alpha: 0.15),
+            ),
+            child: _machine.ownerPhotoUrl != null
+                ? ClipOval(
+                    child: Image.network(_machine.ownerPhotoUrl!,
+                        fit: BoxFit.cover))
+                : Center(
+                    child: Text(
+                        _machine.ownerName.isNotEmpty
+                            ? _machine.ownerName[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: _typeColor(_machine.type)))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(_machine.ownerName,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text(_machine.phone,
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF9E9E9E))),
+            ]),
+          ),
+          IconButton(
+            onPressed: _openMaps,
+            icon: const Icon(Icons.directions_rounded, color: Color(0xFF1565C0)),
+          ),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _buildDetailsCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Machine Details',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        _DetailRow(Icons.category_rounded, 'Type', _machine.type),
+        if (_machine.location != null && _machine.location!.isNotEmpty)
+          _DetailRow(Icons.location_on_outlined, 'Location', _machine.location!),
+        _DetailRow(Icons.calendar_today_rounded, 'Listed',
+            _formatDate(_machine.createdAt)),
+        _DetailRow(Icons.build_rounded, 'Years In Service',
+            '${_machine.yearsInService} years'),
+      ]),
+    );
+  }
+
+  Widget _buildPricingCard(Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Pricing', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(children: [
+                Text('₹${_machine.effectiveHourlyRate.toStringAsFixed(0)}',
+                    style: TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+                const Text('/hour',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+              ]),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(children: [
+                Text('₹${_machine.pricePerDay.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.w900,
+                        color: Color(0xFF424242))),
+                const Text('/day',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+              ]),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8E1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFFFCC02)),
+          ),
+          child: const Row(children: [
+            Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFF57F17)),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                  'Travel charges (₹200 base + ₹25/km) will be added at booking',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF795548))),
+            ),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildBookingNotesButton(Color color) {
+    return GestureDetector(
+      onTap: _showBookingNotesSheet,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        ),
+        child: Row(children: [
+          Icon(Icons.note_add_rounded, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Add Booking Notes',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+              const Text('e.g. Need machine before 8 AM, 3 acres paddy field',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+            ]),
+          ),
+          Icon(Icons.chevron_right_rounded, color: color.withValues(alpha: 0.6)),
+        ]),
       ),
     );
   }
 
   String _formatDate(DateTime dt) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }
 
-// ─── Hero image ────────────────────────────────────────────────────────────
+// ─── Supporting widgets ───────────────────────────────────────────────────────
 
-class _HeroImage extends StatelessWidget {
-  final RentMachine machine;
-  final double topPad;
-  final Color typeColor;
-  final bool hasImage, isOwner;
-  final String translatedType;
-  final VoidCallback onBack, onEdit;
-  const _HeroImage({
-    required this.machine, required this.topPad, required this.typeColor,
-    required this.hasImage, required this.isOwner,
-    required this.translatedType, required this.onBack, required this.onEdit,
-  });
+class _StatChip extends StatelessWidget {
+  final String icon, label, sub;
+  const _StatChip(this.icon, this.label, this.sub);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 280,
-      child: Stack(fit: StackFit.expand, children: [
-        // Image or gradient
-        hasImage
-            ? Image.network(
-                machine.imageUrl, fit: BoxFit.cover,
-                loadingBuilder: (_, child, progress) =>
-                    progress == null ? child
-                        : Container(color: typeColor.withValues(alpha: 0.15),
-                            child: const Center(
-                                child: CircularProgressIndicator())),
-                errorBuilder: (_, __, ___) =>
-                    _GradientBg(color: typeColor),
-              )
-            : _GradientBg(color: typeColor),
-        // Gradient overlay (bottom)
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent,
-                    Colors.black.withValues(alpha: 0.55)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.5, 1.0],
-              ),
-            ),
-          ),
-        ),
-        // Back button
-        Positioned(
-          top: topPad + 8, left: 12,
-          child: _CircleBtn(icon: Icons.arrow_back_rounded,
-              onTap: onBack),
-        ),
-        // Edit button (owner only)
-        if (isOwner)
-          Positioned(
-            top: topPad + 8, right: 12,
-            child: _CircleBtn(icon: Icons.edit_rounded, onTap: onEdit),
-          ),
-        // Type badge bottom-left
-        Positioned(
-          bottom: 14, left: 14,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: typeColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(translatedType,
-                style: const TextStyle(color: Colors.white,
-                    fontSize: 11, fontWeight: FontWeight.w800)),
-          ),
-        ),
-      ]),
-    );
-  }
-}
-
-class _GradientBg extends StatelessWidget {
-  final Color color;
-  const _GradientBg({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.60)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: Icon(Icons.agriculture_rounded,
-            size: 90, color: Colors.white.withValues(alpha: 0.28)),
-      ),
-    );
-  }
-}
-
-class _CircleBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _CircleBtn({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return Expanded(
       child: Container(
-        width: 40, height: 40,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.45),
-          shape: BoxShape.circle,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)
+          ],
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
-}
-
-// ─── Title banner ──────────────────────────────────────────────────────────
-
-class _TitleBanner extends StatelessWidget {
-  final RentMachine machine;
-  final bool isDark;
-  final Color typeColor;
-  final String translatedType;
-  const _TitleBanner({required this.machine, required this.isDark,
-      required this.typeColor, required this.translatedType});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F3F0),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            Text(machine.name,
-                style: const TextStyle(fontSize: 20,
-                    fontWeight: FontWeight.w900)),
-            if (machine.location != null) ...[
-              const SizedBox(height: 4),
-              Row(children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 13, color: Color(0xFF9E9E9E)),
-                const SizedBox(width: 3),
-                Expanded(
-                  child: Text(machine.location!,
-                      style: const TextStyle(fontSize: 12,
-                          color: Color(0xFF9E9E9E)),
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              ]),
-            ],
-          ]),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: typeColor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: typeColor.withValues(alpha: 0.25)),
-          ),
-          child: Column(children: [
-            Text('₹${machine.pricePerDay.toStringAsFixed(0)}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900,
-                    color: typeColor)),
-            Text('per day',
-                style: const TextStyle(fontSize: 9.5,
-                    color: Color(0xFF9E9E9E),
-                    fontWeight: FontWeight.w600)),
-          ]),
-        ),
-      ]),
-    );
-  }
-}
-
-// ─── Stats row ─────────────────────────────────────────────────────────────
-
-class _StatsRow extends StatelessWidget {
-  final RentMachine machine;
-  final bool isDark;
-  const _StatsRow({required this.machine, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final langCode = Localizations.localeOf(context).languageCode;
-    return Container(
-      color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F3F0),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: Row(children: [
-          Expanded(child: _StatCell(
-            value: '₹${machine.pricePerDay.toStringAsFixed(0)}',
-            unit: '/day',
-            label: 'Price',
-            icon: Icons.currency_rupee_rounded,
-            color: const Color(0xFF388E3C),
-          )),
-          Container(width: 1, height: 44, color: const Color(0xFFF0F0F0)),
-          Expanded(child: _StatCell(
-            value: ContentTranslationService.translateMachineType(
-                machine.type, langCode),
-            unit: '',
-            label: 'Type',
-            icon: Icons.agriculture_rounded,
-            color: _typeColor(machine.type),
-          )),
-          Container(width: 1, height: 44, color: const Color(0xFFF0F0F0)),
-          Expanded(child: _StatCell(
-            value: machine.ownerName.split(' ').first,
-            unit: '',
-            label: 'Owner',
-            icon: Icons.person_rounded,
-            color: const Color(0xFFBF360C),
-          )),
+        child: Column(children: [
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+          Text(sub,
+              style: const TextStyle(fontSize: 9, color: Color(0xFF9E9E9E)),
+              textAlign: TextAlign.center),
         ]),
       ),
     );
   }
 }
 
-class _StatCell extends StatelessWidget {
-  final String value, unit, label;
-  final IconData icon;
-  final Color color;
-  const _StatCell({required this.value, required this.unit,
-      required this.label, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, color: color, size: 20),
-      const SizedBox(height: 4),
-      RichText(text: TextSpan(children: [
-        TextSpan(text: value,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900,
-                color: color)),
-        if (unit.isNotEmpty)
-          TextSpan(text: unit,
-              style: const TextStyle(fontSize: 10,
-                  color: Color(0xFF9E9E9E),
-                  fontWeight: FontWeight.w600)),
-      ])),
-      const SizedBox(height: 2),
-      Text(label, style: const TextStyle(fontSize: 10.5,
-          color: Color(0xFF9E9E9E), fontWeight: FontWeight.w600)),
-    ]);
-  }
-}
-
-// ─── Info card ─────────────────────────────────────────────────────────────
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-  final bool isDark;
-  const _InfoCard(
-      {required this.title, required this.child, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 13,
-              fontWeight: FontWeight.w800, color: Color(0xFFBF360C),
-              letterSpacing: 0.3)),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Detail row ────────────────────────────────────────────────────────────
-
 class _DetailRow extends StatelessWidget {
   final IconData icon;
-  final Color color;
   final String label, value;
-  final Widget? trailing;
-  const _DetailRow({required this.icon, required this.color,
-      required this.label, required this.value, this.trailing});
+  const _DetailRow(this.icon, this.label, this.value);
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: color, size: 18),
-      ),
-      const SizedBox(width: 12),
-      Expanded(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 10,
-              color: Color(0xFF9E9E9E), fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text(value, style: const TextStyle(fontSize: 14,
-              fontWeight: FontWeight.w600)),
-        ],
-      )),
-      if (trailing != null) trailing!,
-    ]);
-  }
-}
-
-// ─── Bottom action bar ─────────────────────────────────────────────────────
-
-class _BottomBar extends StatelessWidget {
-  final bool isDark;
-  final double botPad;
-  final VoidCallback onCall, onWhatsApp;
-  const _BottomBar({required this.isDark, required this.botPad,
-      required this.onCall, required this.onWhatsApp});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, botPad + 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 12, offset: const Offset(0, -3))],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(children: [
+        Icon(icon, size: 16, color: const Color(0xFF9E9E9E)),
+        const SizedBox(width: 8),
+        Text('$label: ',
+            style: const TextStyle(fontSize: 12.5, color: Color(0xFF9E9E9E))),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onCall,
-            icon: const Icon(Icons.phone_rounded, size: 18),
-            label: const Text('Call',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFBF360C),
-              side: const BorderSide(color: Color(0xFFBF360C), width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
-            onPressed: onWhatsApp,
-            icon: const Icon(Icons.chat_rounded, size: 18),
-            label: const Text('WhatsApp',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF25D366),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-          ),
+          child: Text(value,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis),
         ),
       ]),
     );
   }
+}
+
+// ─── Score arc painter ────────────────────────────────────────────────────────
+
+class _ScoreArcPainter extends CustomPainter {
+  final double score;
+  final Color color;
+  const _ScoreArcPainter({required this.score, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 5;
+
+    canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi * 0.8, math.pi * 1.6, false,
+        Paint()
+          ..color = const Color(0xFFE0E0E0)
+          ..strokeWidth = 6
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round);
+
+    canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi * 0.8, math.pi * 1.6 * score, false,
+        Paint()
+          ..color = color
+          ..strokeWidth = 6
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round);
+  }
+
+  @override
+  bool shouldRepaint(_ScoreArcPainter old) =>
+      old.score != score || old.color != color;
 }

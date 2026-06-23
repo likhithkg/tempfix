@@ -1,40 +1,118 @@
-// lib/rent/rent_home_page.dart
-
-import 'dart:math';
+// lib/rent/rent_home_page.dart — RentHub 3.0 (Rapido + Uber for Farm Equipment)
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'rent_model.dart';
 import 'rent_machine_service.dart';
-import 'rent_list_form_page.dart';
-import 'rent_nearby_page.dart';
 import 'rent_machine_details_page.dart';
-import '../l10n/app_localizations.dart';
-import '../services/content_translation_service.dart';
+import 'rent_booking_flow_page.dart';
+import 'rent_map_page.dart';
+import 'rent_list_form_page.dart';
+// ─── Palette ────────────────────────────────────────────────────────────────
 
-// ─── Category data ─────────────────────────────────────────────────────────
+const _kPrimary = Color(0xFFE65100);
+const _kDark = Color(0xFF4E1F00);
+const _kGrad = LinearGradient(
+  colors: [_kDark, _kPrimary],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
 
-class _TypeData {
-  final String key, label, emoji;
-  final Color color;
-  const _TypeData(this.key, this.label, this.emoji, this.color);
+Color _typeColor(String type) {
+  switch (type.toLowerCase()) {
+    case 'tractor':    return const Color(0xFFE65100);
+    case 'harvester':  return const Color(0xFF1B5E20);
+    case 'rotavator':  return const Color(0xFF4CAF50);
+    case 'cultivator': return const Color(0xFF2E7D32);
+    case 'seeder':     return const Color(0xFF00695C);
+    case 'hitachi':    return const Color(0xFFFF8F00);
+    case 'jcb':        return const Color(0xFFF9A825);
+    case 'lorry':      return const Color(0xFF1565C0);
+    default:           return const Color(0xFF455A64);
+  }
 }
 
-const _kTypes = [
-  _TypeData('All',          'All',          '🔑', Color(0xFF37474F)),
-  _TypeData('Tractor',      'Tractor',      '🚜', Color(0xFFBF360C)),
-  _TypeData('Harvester',    'Harvester',    '⚙️', Color(0xFF4A148C)),
-  _TypeData('Sprayer',      'Sprayer',      '💧', Color(0xFF1565C0)),
-  _TypeData('Rotavator',    'Rotavator',    '🔄', Color(0xFF1B5E20)),
-  _TypeData('Transplanter', 'Transplanter', '🌱', Color(0xFF006064)),
-  _TypeData('Thresher',     'Thresher',     '🌾', Color(0xFFE65100)),
-  _TypeData('Pump Set',     'Pump Set',     '💦', Color(0xFF0277BD)),
-  _TypeData('Other',        'Other',        '📦', Color(0xFF455A64)),
+String _typeEmoji(String type) {
+  switch (type.toLowerCase()) {
+    case 'tractor':    return '🚜';
+    case 'harvester':  return '🌾';
+    case 'rotavator':  return '⚙️';
+    case 'cultivator': return '🌿';
+    case 'seeder':     return '🌱';
+    case 'hitachi':    return '⛏️';
+    case 'jcb':        return '🏗️';
+    case 'lorry':      return '🚚';
+    default:           return '🔧';
+  }
+}
+
+String _availLabel(MachineAvailability a) => a.label;
+
+Color _availColor(MachineAvailability a) {
+  switch (a) {
+    case MachineAvailability.available:       return const Color(0xFF4CAF50);
+    case MachineAvailability.busy:            return const Color(0xFFFF9800);
+    case MachineAvailability.underMaintenance: return const Color(0xFFFF5722);
+    case MachineAvailability.offline:         return const Color(0xFF9E9E9E);
+  }
+}
+
+// ─── Category data ──────────────────────────────────────────────────────────
+
+class _Cat {
+  final String key, label, emoji;
+  const _Cat(this.key, this.label, this.emoji);
+}
+
+const _kCats = [
+  _Cat('All',        'All',        '🔑'),
+  _Cat('Tractor',    'Tractor',    '🚜'),
+  _Cat('Harvester',  'Harvester',  '🌾'),
+  _Cat('Rotavator',  'Rotavator',  '⚙️'),
+  _Cat('Cultivator', 'Cultivator', '🌿'),
+  _Cat('Seeder',     'Seeder',     '🌱'),
+  _Cat('Hitachi',    'Hitachi',    '⛏️'),
+  _Cat('JCB',        'JCB',        '🏗️'),
+  _Cat('Lorry',      'Lorry',      '🚚'),
 ];
 
-// ─── Page ──────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+double _haversine(double lat1, double lon1, double lat2, double lon2) {
+  const r = 6371.0;
+  final dLat = (lat2 - lat1) * math.pi / 180;
+  final dLon = (lon2 - lon1) * math.pi / 180;
+  final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(lat1 * math.pi / 180) *
+          math.cos(lat2 * math.pi / 180) *
+          math.sin(dLon / 2) *
+          math.sin(dLon / 2);
+  return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+}
+
+int _etaMinutes(double distKm) => (distKm / 30.0 * 60).round().clamp(1, 999);
+
+List<String> _seasonalTypes() {
+  final m = DateTime.now().month;
+  if (m >= 6 && m <= 9) return ['Rotavator', 'Cultivator'];
+  if (m >= 10 && m <= 2) return ['Seeder', 'Tractor'];
+  return ['Harvester', 'Lorry'];
+}
+
+String _seasonName() {
+  final m = DateTime.now().month;
+  if (m >= 6 && m <= 9) return 'Monsoon';
+  if (m >= 10 && m <= 2) return 'Rabi (Winter)';
+  return 'Summer';
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 class RentHomePage extends StatefulWidget {
   const RentHomePage({super.key});
@@ -42,24 +120,33 @@ class RentHomePage extends StatefulWidget {
   State<RentHomePage> createState() => _RentHomePageState();
 }
 
-class _RentHomePageState extends State<RentHomePage> {
+class _RentHomePageState extends State<RentHomePage>
+    with TickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
-  final _searchFocus = FocusNode();
-  String _searchQuery = '';
-  String _selectedType = 'All';
-  String _sortBy = 'newest'; // 'newest' | 'price_asc' | 'price_desc' | 'distance'
+  String _query = '';
+  String _category = 'All';
+  String _sortBy = 'distance';
   Position? _position;
+  String _locationLabel = 'Getting location...';
+  final _mapCtrl = MapController();
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
+    _pulseCtrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 2))
+      ..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
+        CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
     _fetchLocation();
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
-    _searchFocus.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
@@ -74,45 +161,64 @@ class _RentHomePageState extends State<RentHomePage> {
       final pos = await Geolocator.getCurrentPosition(
           locationSettings:
               const LocationSettings(accuracy: LocationAccuracy.high));
-      if (mounted) setState(() => _position = pos);
-    } catch (_) {}
+      String label = 'Your Location';
+      try {
+        final places =
+            await placemarkFromCoordinates(pos.latitude, pos.longitude);
+        if (places.isNotEmpty) {
+          final p = places.first;
+          label = p.subLocality?.isNotEmpty == true
+              ? p.subLocality!
+              : (p.locality?.isNotEmpty == true ? p.locality! : label);
+        }
+      } catch (_) {}
+      if (mounted) {
+        setState(() {
+          _position = pos;
+          _locationLabel = label;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _locationLabel = 'Location unavailable');
+    }
   }
 
   double _distanceTo(RentMachine m) {
-    if (_position == null) return double.infinity;
-    const r = 6371.0;
-    final dLat = (m.latitude - _position!.latitude) * pi / 180;
-    final dLon = (m.longitude - _position!.longitude) * pi / 180;
-    final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_position!.latitude * pi / 180) *
-            cos(m.latitude * pi / 180) *
-            sin(dLon / 2) * sin(dLon / 2);
-    return r * 2 * atan2(sqrt(a), sqrt(1 - a));
+    if (_position == null || m.latitude == 0) return double.infinity;
+    return _haversine(
+        _position!.latitude, _position!.longitude, m.latitude, m.longitude);
   }
 
   List<RentMachine> _applyFilters(List<RentMachine> all) {
-    var r = all;
-    if (_selectedType != 'All') {
-      r = r.where((m) =>
-          m.type.toLowerCase() == _selectedType.toLowerCase()).toList();
-    }
-    if (_searchQuery.isNotEmpty) {
-      final q = _searchQuery;
-      r = r.where((m) =>
-          m.name.toLowerCase().contains(q) ||
-          m.type.toLowerCase().contains(q) ||
-          m.ownerName.toLowerCase().contains(q) ||
-          (m.location?.toLowerCase().contains(q) ?? false)).toList();
-    }
+    var r = all.where((m) {
+      if (m.availability == MachineAvailability.offline) return false;
+      if (_category != 'All' &&
+          m.type.toLowerCase() != _category.toLowerCase()) return false;
+      if (_query.isNotEmpty) {
+        final q = _query;
+        return m.name.toLowerCase().contains(q) ||
+            m.ownerName.toLowerCase().contains(q) ||
+            (m.location?.toLowerCase().contains(q) ?? false) ||
+            m.type.toLowerCase().contains(q);
+      }
+      return true;
+    }).toList();
+
     switch (_sortBy) {
+      case 'distance':
+        r.sort((a, b) => _distanceTo(a).compareTo(_distanceTo(b)));
       case 'price_asc':
         r.sort((a, b) => a.pricePerDay.compareTo(b.pricePerDay));
       case 'price_desc':
         r.sort((a, b) => b.pricePerDay.compareTo(a.pricePerDay));
-      case 'distance':
-        r.sort((a, b) => _distanceTo(a).compareTo(_distanceTo(b)));
-      default:
-        r.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case 'rating':
+        r.sort((a, b) => b.rating.compareTo(a.rating));
+      case 'availability':
+        r.sort((a, b) {
+          final ao = a.availability == MachineAvailability.available ? 0 : 1;
+          final bo = b.availability == MachineAvailability.available ? 0 : 1;
+          return ao.compareTo(bo);
+        });
     }
     return r;
   }
@@ -127,343 +233,497 @@ class _RentHomePageState extends State<RentHomePage> {
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
+  void _showEmergencySheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EmergencyBookingSheet(
+        position: _position,
+        onSubmit: (type, hours, location) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                '🚨 Emergency request for $type sent! Nearby owners notified.'),
+            backgroundColor: const Color(0xFFD32F2F),
+            duration: const Duration(seconds: 3),
+          ));
+        },
+      ),
+    );
+  }
+
+  void _showAcreageCalculator() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _AcreageCalculatorSheet(),
+    );
+  }
+
   void _showSortSheet() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 16),
-          const Text('Sort Machines',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 16),
-          ...[
-            ('newest', Icons.new_releases_rounded, 'Newest First'),
-            ('price_asc', Icons.arrow_upward_rounded, 'Price: Low to High'),
-            ('price_desc', Icons.arrow_downward_rounded, 'Price: High to Low'),
-            ('distance', Icons.near_me_rounded, 'Nearest First'),
-          ].map((opt) {
-            final sel = _sortBy == opt.$1;
-            return ListTile(
-              leading: Icon(opt.$2,
-                  color: sel ? const Color(0xFFBF360C) : Colors.grey),
-              title: Text(opt.$3,
-                  style: TextStyle(
-                      fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
-              trailing: sel
-                  ? const Icon(Icons.check_rounded,
-                      color: Color(0xFFBF360C))
-                  : null,
-              onTap: () {
-                setState(() => _sortBy = opt.$1);
-                Navigator.pop(context);
-              },
-            );
-          }),
-        ]),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _SortSheet(
+        current: _sortBy,
+        onSelect: (v) {
+          setState(() => _sortBy = v);
+          Navigator.pop(context);
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final topPad = MediaQuery.of(context).padding.top;
+    final bg = isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF2F2F2);
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF5F3F0),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(
-                builder: (_) => const RentListFormPage()))
-            .then((_) => setState(() {})),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.listMachine),
-        backgroundColor: const Color(0xFFBF360C),
-        foregroundColor: Colors.white,
+      backgroundColor: bg,
+      body: StreamBuilder<List<RentMachine>>(
+        stream: RentMachineService.instance.streamRentMachines(),
+        builder: (ctx, snap) {
+          final all = snap.data ?? [];
+          final filtered = _applyFilters(all);
+          final available =
+              all.where((m) => m.availability == MachineAvailability.available).toList();
+
+          return CustomScrollView(
+            slivers: [
+              // ── App bar / header ─────────────────────────────────
+              SliverToBoxAdapter(child: _buildHeader(available.length)),
+
+              // ── Map preview ──────────────────────────────────────
+              SliverToBoxAdapter(
+                  child: _buildMapPreview(available, isDark)),
+
+              // ── Category chips ───────────────────────────────────
+              SliverToBoxAdapter(child: _buildCategoryChips()),
+
+              // ── Sort bar ─────────────────────────────────────────
+              SliverToBoxAdapter(child: _buildSortBar(filtered.length)),
+
+              // ── Seasonal banner ──────────────────────────────────
+              SliverToBoxAdapter(child: _buildSeasonalBanner()),
+
+              // ── Content ──────────────────────────────────────────
+              if (!snap.hasData)
+                SliverToBoxAdapter(child: _RentShimmer(isDark: isDark))
+              else if (filtered.isEmpty)
+                SliverToBoxAdapter(child: _buildEmpty())
+              else ...[
+                // Nearby available (horizontal)
+                SliverToBoxAdapter(
+                    child: _buildHorizontalSection(
+                        'Nearby Available', '📍',
+                        filtered
+                            .where((m) =>
+                                m.availability == MachineAvailability.available)
+                            .take(10)
+                            .toList())),
+
+                // Main list
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) {
+                        final m = filtered[i];
+                        final dist = _distanceTo(m);
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _MachineCard(
+                            machine: m,
+                            distance: dist,
+                            isOwner: _isOwner(m),
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        RentMachineDetailsPage(machine: m))),
+                            onBook: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => RentBookingFlowPage(
+                                          machine: m,
+                                          distanceKm: dist,
+                                        ))),
+                            onCall: () => _call(m.phone),
+                            onEdit: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => RentListFormPage(
+                                            existingMachine: m)))
+                                .then((_) => setState(() {})),
+                          ),
+                        );
+                      },
+                      childCount: filtered.length,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
-      body: Column(children: [
-        // ── Fixed header ────────────────────────────────────────
-        _RentHeader(
-          topPad: topPad,
-          onNearby: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const RentNearbyPage())),
-          onSort: _showSortSheet,
-        ),
-        // ── Search bar ──────────────────────────────────────────
-        _RentSearchBar(
-          controller: _searchCtrl,
-          focusNode: _searchFocus,
-          onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-          onClear: () {
-            _searchCtrl.clear();
-            setState(() => _searchQuery = '');
-            _searchFocus.unfocus();
-          },
-        ),
-        // ── Type filter chips ───────────────────────────────────
-        _TypeFilterRow(
-          selected: _selectedType,
-          onSelect: (k) => setState(() => _selectedType = k),
-        ),
-        // ── Machine grid ────────────────────────────────────────
-        Expanded(
-          child: StreamBuilder<List<RentMachine>>(
-            stream: RentMachineService.instance.streamRentMachines(),
-            builder: (ctx, snap) {
-              if (snap.hasError) {
-                return Center(child: Column(mainAxisSize: MainAxisSize.min,
-                    children: [
-                  const Icon(Icons.error_outline, size: 48,
-                      color: Color(0xFFBF360C)),
-                  const SizedBox(height: 8),
-                  Text('Error: ${snap.error}'),
-                ]));
-              }
-              if (!snap.hasData) {
-                return _RentShimmer(isDark: isDark);
-              }
-
-              final filtered = _applyFilters(snap.data!);
-
-              if (filtered.isEmpty) {
-                return Center(child: Column(mainAxisSize: MainAxisSize.min,
-                    children: [
-                  const Text('🚜', style: TextStyle(fontSize: 52)),
-                  const SizedBox(height: 12),
-                  Text(l.noMachinesFoundNearby,
-                      style: const TextStyle(fontSize: 15,
-                          color: Color(0xFF9E9E9E))),
-                  if (_searchQuery.isNotEmpty || _selectedType != 'All')
-                    TextButton(
-                      onPressed: () => setState(() {
-                        _searchQuery = '';
-                        _searchCtrl.clear();
-                        _selectedType = 'All';
-                      }),
-                      child: const Text('Clear Filters'),
-                    ),
-                ]));
-              }
-
-              return RefreshIndicator(
-                color: const Color(0xFFBF360C),
-                onRefresh: () async => setState(() {}),
-                child: CustomScrollView(slivers: [
-                  // Stats
-                  SliverToBoxAdapter(
-                    child: _RentStatsBar(
-                        total: snap.data!.length,
-                        filtered: filtered.length),
-                  ),
-                  // Grid
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        (_, i) => _MachineCard(
-                          machine: filtered[i],
-                          isOwner: _isOwner(filtered[i]),
-                          distance: _distanceTo(filtered[i]),
-                          onTap: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) =>
-                                  RentMachineDetailsPage(
-                                      machine: filtered[i]))),
-                          onCall: () => _call(filtered[i].phone),
-                          onEdit: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) =>
-                                  RentListFormPage(
-                                      existingMachine: filtered[i])))
-                              .then((_) => setState(() {})),
-                        ),
-                        childCount: filtered.length,
-                      ),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.66,
-                      ),
-                    ),
-                  ),
-                ]),
-              );
-            },
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'emergency',
+            onPressed: _showEmergencySheet,
+            backgroundColor: const Color(0xFFD32F2F),
+            foregroundColor: Colors.white,
+            mini: true,
+            tooltip: 'Emergency Booking',
+            child: const Text('🚨', style: TextStyle(fontSize: 18)),
           ),
-        ),
-      ]),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'calc',
+            onPressed: _showAcreageCalculator,
+            backgroundColor: const Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
+            mini: true,
+            tooltip: 'Acreage Calculator',
+            child: const Icon(Icons.calculate_rounded, size: 20),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            heroTag: 'list',
+            onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const RentListFormPage()))
+                .then((_) => setState(() {})),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('List Machine',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            backgroundColor: _kPrimary,
+            foregroundColor: Colors.white,
+          ),
+        ],
+      ),
     );
   }
-}
 
-// ─── Header ────────────────────────────────────────────────────────────────
-
-class _RentHeader extends StatelessWidget {
-  final double topPad;
-  final VoidCallback onNearby, onSort;
-  const _RentHeader(
-      {required this.topPad, required this.onNearby, required this.onSort});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeader(int nearbyCount) {
+    final topPad = MediaQuery.of(context).padding.top;
     return Container(
-      padding: EdgeInsets.fromLTRB(4, topPad + 8, 8, 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF4E1F00), Color(0xFFBF360C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(children: [
-        IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(mainAxisSize: MainAxisSize.min, children: [
-              Text('🚜', style: TextStyle(fontSize: 18)),
-              SizedBox(width: 6),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('RentHub',
-                      style: TextStyle(fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: -0.3)),
-                  Text('Farm Equipment Rental',
-                      style: TextStyle(fontSize: 9.5,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500)),
-                ],
-              ),
+      padding: EdgeInsets.fromLTRB(16, topPad + 12, 16, 16),
+      decoration: const BoxDecoration(gradient: _kGrad),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Top row
+        Row(children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            onPressed: () => Navigator.maybePop(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Text('🚜', style: TextStyle(fontSize: 20)),
+                SizedBox(width: 6),
+                Text('RentHub',
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.5)),
+              ]),
+              Text('Rapido for Farm Equipment',
+                  style: TextStyle(
+                      fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w500)),
             ]),
           ),
+          IconButton(
+            icon: const Icon(Icons.sort_rounded, color: Colors.white),
+            onPressed: _showSortSheet,
+            tooltip: 'Sort',
+          ),
+        ]),
+        const SizedBox(height: 12),
+        // Location row
+        GestureDetector(
+          onTap: _fetchLocation,
+          child: Row(children: [
+            AnimatedBuilder(
+              animation: _pulseAnim,
+              builder: (_, child) => Transform.scale(
+                  scale: _pulseAnim.value, child: child),
+              child: Container(
+                width: 8, height: 8,
+                decoration: const BoxDecoration(
+                    color: Color(0xFF69F0AE), shape: BoxShape.circle),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.location_on_rounded,
+                color: Colors.white70, size: 16),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(_locationLabel,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text('$nearbyCount machines',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ]),
         ),
-        IconButton(
-          icon: const Icon(Icons.near_me_rounded,
-              color: Colors.white, size: 22),
-          tooltip: 'Nearby Machines',
-          onPressed: onNearby,
-        ),
-        IconButton(
-          icon: const Icon(Icons.sort_rounded, color: Colors.white, size: 22),
-          tooltip: 'Sort',
-          onPressed: onSort,
+        const SizedBox(height: 10),
+        // Search
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(children: [
+            const Icon(Icons.search_rounded, color: _kPrimary, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchCtrl,
+                onChanged: (v) =>
+                    setState(() => _query = v.trim().toLowerCase()),
+                decoration: const InputDecoration(
+                  hintText: 'Where do you need the machine?',
+                  hintStyle: TextStyle(fontSize: 13.5, color: Color(0xFF9E9E9E)),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            if (_searchCtrl.text.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  _searchCtrl.clear();
+                  setState(() => _query = '');
+                },
+                child: const Icon(Icons.close_rounded,
+                    size: 18, color: Color(0xFF9E9E9E)),
+              ),
+          ]),
         ),
       ]),
     );
   }
-}
 
-// ─── Search bar ────────────────────────────────────────────────────────────
+  Widget _buildMapPreview(List<RentMachine> machines, bool isDark) {
+    final markers = machines.where((m) => m.latitude != 0).map((m) {
+      return Marker(
+        point: LatLng(m.latitude, m.longitude),
+        width: 36,
+        height: 36,
+        child: Container(
+          decoration: BoxDecoration(
+            color: _typeColor(m.type).withValues(alpha: 0.9),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                  color: _typeColor(m.type).withValues(alpha: 0.5),
+                  blurRadius: 6)
+            ],
+          ),
+          child: Center(
+              child: Text(_typeEmoji(m.type),
+                  style: const TextStyle(fontSize: 15))),
+        ),
+      );
+    }).toList();
 
-class _RentSearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
-  const _RentSearchBar({required this.controller, required this.focusNode,
-      required this.onChanged, required this.onClear});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Row(children: [
-        const Icon(Icons.search_rounded,
-            color: Color(0xFFBF360C), size: 22),
-        const SizedBox(width: 10),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            onChanged: onChanged,
-            decoration: const InputDecoration(
-              hintText: 'Search machines, owner, location...',
-              hintStyle: TextStyle(fontSize: 14, color: Color(0xFF9E9E9E)),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 12),
+    if (_position != null) {
+      markers.add(Marker(
+        point: LatLng(_position!.latitude, _position!.longitude),
+        width: 40,
+        height: 40,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1565C0).withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1565C0),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+              ),
             ),
           ),
         ),
-        if (controller.text.isNotEmpty)
-          GestureDetector(
-            onTap: onClear,
-            child: const Icon(Icons.close_rounded,
-                size: 20, color: Color(0xFF9E9E9E)),
-          ),
-      ]),
+      ));
+    }
+
+    final center = _position != null
+        ? LatLng(_position!.latitude, _position!.longitude)
+        : const LatLng(13.3379, 76.5616); // Karnataka, India
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => RentMapPage(
+                    machines: machines,
+                    userLat: _position?.latitude,
+                    userLon: _position?.longitude,
+                  ))),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        height: 190,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 4))
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(children: [
+            FlutterMap(
+              mapController: _mapCtrl,
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 12.0,
+                interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.krishimithra.app',
+                ),
+                if (markers.isNotEmpty) MarkerLayer(markers: markers),
+              ],
+            ),
+            // Overlay: tap to open full map
+            Positioned.fill(
+              child: Container(color: Colors.transparent),
+            ),
+            // Badge
+            Positioned(
+              top: 12,
+              left: 12,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.location_on_rounded,
+                      color: Colors.white, size: 14),
+                  const SizedBox(width: 4),
+                  Text('${machines.length} Machines Nearby',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ),
+            // Open map button
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: _kPrimary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.map_rounded, color: Colors.white, size: 14),
+                  SizedBox(width: 4),
+                  Text('Full Map',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ),
+          ]),
+        ),
+      ),
     );
   }
-}
 
-// ─── Type filter ───────────────────────────────────────────────────────────
-
-class _TypeFilterRow extends StatelessWidget {
-  final String selected;
-  final ValueChanged<String> onSelect;
-  const _TypeFilterRow({required this.selected, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCategoryChips() {
     return SizedBox(
-      height: 52,
+      height: 56,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-        itemCount: _kTypes.length,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        itemCount: _kCats.length,
         itemBuilder: (_, i) {
-          final t = _kTypes[i];
-          final sel = selected == t.key;
+          final c = _kCats[i];
+          final sel = _category == c.key;
+          final color = sel ? _typeColor(c.key == 'All' ? 'Other' : c.key) : null;
           return GestureDetector(
-            onTap: () => onSelect(t.key),
+            onTap: () => setState(() => _category = c.key),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: const Duration(milliseconds: 160),
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: sel ? t.color : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: sel ? (color ?? _kPrimary) : Colors.white,
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                    color: sel ? t.color : const Color(0xFFE0E0E0)),
+                    color: sel
+                        ? (color ?? _kPrimary)
+                        : const Color(0xFFE0E0E0)),
                 boxShadow: sel
-                    ? [BoxShadow(color: t.color.withValues(alpha: 0.28),
-                        blurRadius: 6, offset: const Offset(0, 2))]
-                    : null,
+                    ? [
+                        BoxShadow(
+                            color: (color ?? _kPrimary).withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2))
+                      ]
+                    : [],
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(t.emoji, style: const TextStyle(fontSize: 14)),
+                Text(c.emoji, style: const TextStyle(fontSize: 15)),
                 const SizedBox(width: 5),
-                Text(t.label,
-                    style: TextStyle(fontSize: 12,
+                Text(c.label,
+                    style: TextStyle(
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: sel ? Colors.white : const Color(0xFF757575))),
+                        color: sel ? Colors.white : const Color(0xFF616161))),
               ]),
             ),
           );
@@ -471,280 +731,796 @@ class _TypeFilterRow extends StatelessWidget {
       ),
     );
   }
-}
 
-// ─── Stats bar ─────────────────────────────────────────────────────────────
-
-class _RentStatsBar extends StatelessWidget {
-  final int total, filtered;
-  const _RentStatsBar({required this.total, required this.filtered});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSortBar(int count) {
+    final labels = {
+      'distance': 'Nearest First',
+      'price_asc': 'Cheapest',
+      'price_desc': 'Premium First',
+      'rating': 'Top Rated',
+      'availability': 'Available First',
+    };
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: Row(children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFFBF360C).withValues(alpha: 0.10),
+            color: _kPrimary.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.agriculture_rounded,
-                size: 13, color: Color(0xFFBF360C)),
-            const SizedBox(width: 4),
-            Text('$total machines',
-                style: const TextStyle(fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFFBF360C))),
-          ]),
+          child: Text('$count machines',
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _kPrimary)),
         ),
         const Spacer(),
-        Text('$filtered shown',
-            style: const TextStyle(fontSize: 11,
-                color: Color(0xFF9E9E9E), fontWeight: FontWeight.w600)),
+        GestureDetector(
+          onTap: _showSortSheet,
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.sort_rounded, size: 14, color: Color(0xFF616161)),
+              const SizedBox(width: 4),
+              Text(labels[_sortBy] ?? 'Sort',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF424242))),
+              const SizedBox(width: 2),
+              const Icon(Icons.keyboard_arrow_down_rounded,
+                  size: 16, color: Color(0xFF9E9E9E)),
+            ]),
+          ),
+        ),
       ]),
+    );
+  }
+
+  Widget _buildSeasonalBanner() {
+    final types = _seasonalTypes();
+    final season = _seasonName();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(children: [
+        const Text('🌤️', style: TextStyle(fontSize: 26)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$season Season Recommendations',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Text('Book ${types.join(' or ')} for best results this season',
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 11)),
+              ]),
+        ),
+        TextButton(
+          onPressed: () =>
+              setState(() => _category = types.first),
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.white.withValues(alpha: 0.15),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Text(types.first,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildHorizontalSection(
+      String title, String icon, List<RentMachine> machines) {
+    if (machines.isEmpty) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Row(children: [
+          Text(icon, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 6),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w800)),
+        ]),
+      ),
+      SizedBox(
+        height: 170,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          itemCount: machines.length,
+          itemBuilder: (_, i) {
+            final m = machines[i];
+            final dist = _distanceTo(m);
+            return _MiniCard(
+              machine: m,
+              distance: dist,
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => RentMachineDetailsPage(machine: m))),
+            );
+          },
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildEmpty() {
+    return SizedBox(
+      height: 300,
+      child: Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('🚜', style: TextStyle(fontSize: 56)),
+          const SizedBox(height: 12),
+          const Text('No machines found',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          const Text('Try clearing filters or search differently',
+              style: TextStyle(fontSize: 13, color: Color(0xFF9E9E9E))),
+          const SizedBox(height: 16),
+          if (_query.isNotEmpty || _category != 'All')
+            ElevatedButton(
+              onPressed: () => setState(() {
+                _query = '';
+                _searchCtrl.clear();
+                _category = 'All';
+              }),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: _kPrimary, foregroundColor: Colors.white),
+              child: const Text('Clear Filters'),
+            ),
+        ]),
+      ),
     );
   }
 }
 
-// ─── Machine card ──────────────────────────────────────────────────────────
-
-Color _typeColor(String type) {
-  switch (type.toLowerCase()) {
-    case 'tractor': return const Color(0xFFBF360C);
-    case 'harvester': return const Color(0xFF4A148C);
-    case 'sprayer': return const Color(0xFF1565C0);
-    case 'rotavator': return const Color(0xFF1B5E20);
-    case 'transplanter': return const Color(0xFF006064);
-    case 'thresher': return const Color(0xFFE65100);
-    case 'pump set': return const Color(0xFF0277BD);
-    default: return const Color(0xFF455A64);
-  }
-}
+// ─── Machine card (Rapido-style, horizontal) ────────────────────────────────
 
 class _MachineCard extends StatelessWidget {
   final RentMachine machine;
-  final bool isOwner;
   final double distance;
-  final VoidCallback onTap, onCall, onEdit;
-  const _MachineCard({required this.machine, required this.isOwner,
-      required this.distance, required this.onTap,
-      required this.onCall, required this.onEdit});
+  final bool isOwner;
+  final VoidCallback onTap, onBook, onCall, onEdit;
+
+  const _MachineCard({
+    required this.machine,
+    required this.distance,
+    required this.isOwner,
+    required this.onTap,
+    required this.onBook,
+    required this.onCall,
+    required this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langCode = Localizations.localeOf(context).languageCode;
-    final typeColor = _typeColor(machine.type);
+    final color = _typeColor(machine.type);
+    final emoji = _typeEmoji(machine.type);
     final hasImage = machine.imageUrl.isNotEmpty;
-    final hasDistance = distance.isFinite && distance < 999;
+    final hasDist = distance.isFinite && distance < 500;
+    final eta = hasDist ? _etaMinutes(distance) : null;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10, offset: const Offset(0, 3))],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.07),
+                blurRadius: 12,
+                offset: const Offset(0, 3))
+          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Image / gradient header ────────────────────────
-            Stack(children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(18)),
-                child: hasImage
-                    ? Image.network(
-                        machine.imageUrl,
-                        height: 130, width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _GradientPlaceholder(
-                                color: typeColor,
-                                type: machine.type),
-                      )
-                    : _GradientPlaceholder(
-                        color: typeColor, type: machine.type),
-              ),
-              // Price badge
-              Positioned(
-                bottom: 8, left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '₹${machine.pricePerDay.toStringAsFixed(0)}/day',
-                    style: const TextStyle(color: Colors.white,
-                        fontSize: 11, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-              // Owner edit menu
-              if (isOwner)
-                Positioned(
-                  top: 6, right: 6,
-                  child: GestureDetector(
-                    onTap: onEdit,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: BorderRadius.circular(8),
+        child: Row(children: [
+          // ── Left: image ─────────────────────────────
+          ClipRRect(
+            borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(20)),
+            child: SizedBox(
+              width: 110,
+              height: 140,
+              child: hasImage
+                  ? Image.network(machine.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _Placeholder(color: color, emoji: emoji))
+                  : _Placeholder(color: color, emoji: emoji),
+            ),
+          ),
+          // ── Right: info ──────────────────────────────
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name + availability
+                  Row(children: [
+                    Expanded(
+                      child: Text(machine.name,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    if (isOwner)
+                      GestureDetector(
+                        onTap: onEdit,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6)),
+                          child: Icon(Icons.edit_rounded,
+                              size: 13, color: color),
+                        ),
                       ),
-                      child: const Icon(Icons.edit_rounded,
-                          color: Colors.white, size: 14),
-                    ),
-                  ),
-                ),
-              // Distance badge
-              if (hasDistance)
-                Positioned(
-                  top: 8, left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0).withValues(
-                          alpha: 0.88),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${distance.toStringAsFixed(1)} km',
-                      style: const TextStyle(color: Colors.white,
-                          fontSize: 9.5, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
-            ]),
-            // ── Body ──────────────────────────────────────────
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Machine name
-                    Text(machine.name,
-                        style: const TextStyle(fontSize: 13,
-                            fontWeight: FontWeight.w800),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 4),
-                    // Type chip
+                  ]),
+                  const SizedBox(height: 4),
+                  // Type + status
+                  Row(children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: typeColor.withValues(alpha: 0.10),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(
-                        ContentTranslationService.translateMachineType(
-                            machine.type, langCode),
-                        style: TextStyle(fontSize: 10,
-                            fontWeight: FontWeight.w700, color: typeColor),
+                      child: Text('$emoji ${machine.type}',
+                          style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: color)),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                          color: _availColor(machine.availability),
+                          shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(_availLabel(machine.availability),
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: _availColor(machine.availability))),
+                  ]),
+                  const SizedBox(height: 6),
+                  // Rating + jobs
+                  Row(children: [
+                    const Icon(Icons.star_rounded,
+                        size: 13, color: Color(0xFFFFC107)),
+                    const SizedBox(width: 2),
+                    Text(machine.rating.toStringAsFixed(1),
+                        style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(width: 6),
+                    Text('• ${machine.completedJobs} jobs',
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF9E9E9E))),
+                  ]),
+                  const SizedBox(height: 4),
+                  // Distance + ETA
+                  if (hasDist)
+                    Row(children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 12, color: Color(0xFF9E9E9E)),
+                      const SizedBox(width: 2),
+                      Text('${distance.toStringAsFixed(1)} km',
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.access_time_rounded,
+                          size: 12, color: Color(0xFF9E9E9E)),
+                      const SizedBox(width: 2),
+                      Text('$eta min ETA',
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600,
+                              color: Color(0xFF1565C0))),
+                    ]),
+                  const SizedBox(height: 5),
+                  // Price
+                  Text(
+                    '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr  '
+                    '₹${machine.pricePerDay.toStringAsFixed(0)}/day',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: color),
+                  ),
+                  const SizedBox(height: 8),
+                  // Action buttons
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onCall,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: color, width: 1.2),
+                          foregroundColor: color,
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.phone_rounded, size: 13),
+                              SizedBox(width: 3),
+                              Text('Call',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700)),
+                            ]),
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    // Location
-                    if (machine.location != null) ...[
-                      Row(children: [
-                        const Icon(Icons.location_on_outlined,
-                            size: 11, color: Color(0xFF9E9E9E)),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: Text(
-                            ContentTranslationService.translateLocation(
-                                machine.location!, langCode),
-                            style: const TextStyle(fontSize: 10.5,
-                                color: Color(0xFF9E9E9E)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ]),
-                      const SizedBox(height: 3),
-                    ],
-                    // Owner
-                    Row(children: [
-                      const Icon(Icons.person_outline_rounded,
-                          size: 11, color: Color(0xFF9E9E9E)),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(machine.ownerName,
-                            style: const TextStyle(fontSize: 10.5,
-                                color: Color(0xFF9E9E9E)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                    ]),
-                    const Spacer(),
-                    // Call button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: onCall,
-                        icon: const Icon(Icons.phone_rounded, size: 14),
-                        label: const Text('Call Owner',
-                            style: TextStyle(fontSize: 11,
-                                fontWeight: FontWeight.w800)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: machine.availability ==
+                                MachineAvailability.available
+                            ? onBook
+                            : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFBF360C),
+                          backgroundColor: color,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8),
+                          disabledBackgroundColor:
+                              const Color(0xFFE0E0E0),
+                          padding: const EdgeInsets.symmetric(vertical: 7),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
+                        child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Book Now',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800)),
+                              SizedBox(width: 3),
+                              Icon(Icons.arrow_forward_rounded, size: 13),
+                            ]),
                       ),
                     ),
-                  ],
-                ),
+                  ]),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
 }
 
-class _GradientPlaceholder extends StatelessWidget {
+// ─── Mini horizontal card ────────────────────────────────────────────────────
+
+class _MiniCard extends StatelessWidget {
+  final RentMachine machine;
+  final double distance;
+  final VoidCallback onTap;
+  const _MiniCard(
+      {required this.machine, required this.distance, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _typeColor(machine.type);
+    final hasDist = distance.isFinite && distance < 500;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.07),
+                blurRadius: 8)
+          ],
+        ),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: SizedBox(
+                  height: 80,
+                  width: double.infinity,
+                  child: machine.imageUrl.isNotEmpty
+                      ? Image.network(machine.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              _Placeholder(
+                                  color: color,
+                                  emoji: _typeEmoji(machine.type)))
+                      : _Placeholder(
+                          color: color,
+                          emoji: _typeEmoji(machine.type)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(machine.name,
+                          style: const TextStyle(
+                              fontSize: 11.5, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text('${_typeEmoji(machine.type)} ${machine.type}',
+                          style: TextStyle(fontSize: 10, color: color,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
+                      if (hasDist)
+                        Text(
+                            '${distance.toStringAsFixed(1)} km • '
+                            '${_etaMinutes(distance)} min',
+                            style: const TextStyle(
+                                fontSize: 9.5,
+                                color: Color(0xFF1565C0),
+                                fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(
+                          '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: color)),
+                    ]),
+              ),
+            ]),
+      ),
+    );
+  }
+}
+
+// ─── Placeholder image ───────────────────────────────────────────────────────
+
+class _Placeholder extends StatelessWidget {
   final Color color;
-  final String type;
-  const _GradientPlaceholder(
-      {required this.color, required this.type});
+  final String emoji;
+  const _Placeholder({required this.color, required this.emoji});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 130, width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.65)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      color: color.withValues(alpha: 0.12),
       child: Center(
-        child: Icon(Icons.agriculture_rounded,
-            size: 48, color: Colors.white.withValues(alpha: 0.35)),
+          child: Text(emoji, style: const TextStyle(fontSize: 36))),
+    );
+  }
+}
+
+// ─── Sort bottom sheet ───────────────────────────────────────────────────────
+
+class _SortSheet extends StatelessWidget {
+  final String current;
+  final ValueChanged<String> onSelect;
+  const _SortSheet({required this.current, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ('distance', Icons.near_me_rounded, 'Nearest First'),
+      ('price_asc', Icons.arrow_upward_rounded, 'Cheapest First'),
+      ('price_desc', Icons.arrow_downward_rounded, 'Premium First'),
+      ('rating', Icons.star_rounded, 'Top Rated'),
+      ('availability', Icons.check_circle_rounded, 'Available First'),
+    ];
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2))),
+        const SizedBox(height: 16),
+        const Text('Sort Machines',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 16),
+        ...options.map((o) {
+          final sel = current == o.$1;
+          return ListTile(
+            leading: Icon(o.$2, color: sel ? _kPrimary : Colors.grey),
+            title: Text(o.$3,
+                style: TextStyle(
+                    fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
+            trailing: sel
+                ? const Icon(Icons.check_rounded, color: _kPrimary)
+                : null,
+            onTap: () => onSelect(o.$1),
+          );
+        }),
+      ]),
+    );
+  }
+}
+
+// ─── Emergency booking sheet ─────────────────────────────────────────────────
+
+class _EmergencyBookingSheet extends StatefulWidget {
+  final Position? position;
+  final void Function(String type, int hours, String location) onSubmit;
+  const _EmergencyBookingSheet({this.position, required this.onSubmit});
+
+  @override
+  State<_EmergencyBookingSheet> createState() =>
+      _EmergencyBookingSheetState();
+}
+
+class _EmergencyBookingSheetState extends State<_EmergencyBookingSheet> {
+  String _type = 'Tractor';
+  int _hours = 4;
+  final _locCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _locCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20,
+          MediaQuery.of(context).viewInsets.bottom + 32),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2))),
+        const SizedBox(height: 16),
+        const Row(children: [
+          Text('🚨', style: TextStyle(fontSize: 24)),
+          SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Emergency Booking',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text('Nearest owners will be notified instantly',
+                style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E))),
+          ]),
+        ]),
+        const SizedBox(height: 20),
+        DropdownButtonFormField<String>(
+          value: _type,
+          decoration: const InputDecoration(labelText: 'Machine Needed'),
+          items: ['Tractor', 'Harvester', 'Rotavator', 'Cultivator',
+                  'Seeder', 'Hitachi', 'JCB', 'Lorry']
+              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+              .toList(),
+          onChanged: (v) => setState(() => _type = v!),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          const Text('Hours needed:', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Spacer(),
+          IconButton(
+            onPressed: _hours > 1 ? () => setState(() => _hours--) : null,
+            icon: const Icon(Icons.remove_circle_outline_rounded),
+          ),
+          Text('$_hours',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          IconButton(
+            onPressed: _hours < 24 ? () => setState(() => _hours++) : null,
+            icon: const Icon(Icons.add_circle_outline_rounded),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _locCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Field Location',
+            prefixIcon: Icon(Icons.location_on_rounded),
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => widget.onSubmit(_type, _hours, _locCtrl.text),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD32F2F),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+            child: const Text('🚨  Send Emergency Request',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ─── Acreage calculator sheet ────────────────────────────────────────────────
+
+class _AcreageCalculatorSheet extends StatefulWidget {
+  const _AcreageCalculatorSheet();
+
+  @override
+  State<_AcreageCalculatorSheet> createState() =>
+      _AcreageCalculatorSheetState();
+}
+
+class _AcreageCalculatorSheetState extends State<_AcreageCalculatorSheet> {
+  double _acres = 5;
+  String _type = 'Tractor';
+
+  // Hours per acre per machine type
+  double _hoursPerAcre(String type) {
+    switch (type.toLowerCase()) {
+      case 'rotavator':  return 1.5;
+      case 'cultivator': return 1.0;
+      case 'seeder':     return 0.8;
+      case 'harvester':  return 0.5;
+      case 'tractor':    return 1.2;
+      default:           return 2.0;
+    }
+  }
+
+  // Approx rates
+  double _ratePerHour(String type) {
+    switch (type.toLowerCase()) {
+      case 'jcb':       return 1500;
+      case 'hitachi':   return 1800;
+      case 'harvester': return 1200;
+      case 'lorry':     return 800;
+      default:          return 600;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = (_acres * _hoursPerAcre(_type)).ceil();
+    final cost = hours * _ratePerHour(_type);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20,
+          MediaQuery.of(context).viewInsets.bottom + 32),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2))),
+        const SizedBox(height: 16),
+        const Row(children: [
+          Icon(Icons.calculate_rounded, color: Color(0xFF2E7D32)),
+          SizedBox(width: 8),
+          Text('Acreage Calculator',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        ]),
+        const SizedBox(height: 20),
+        Row(children: [
+          const Text('Acres:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          const Spacer(),
+          Slider(
+            value: _acres,
+            min: 0.5,
+            max: 50,
+            divisions: 99,
+            activeColor: const Color(0xFF2E7D32),
+            onChanged: (v) => setState(() => _acres = v),
+          ),
+          Text('${_acres.toStringAsFixed(1)}',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+        ]),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: _type,
+          decoration: const InputDecoration(labelText: 'Machine Type'),
+          items: ['Tractor', 'Harvester', 'Rotavator', 'Cultivator',
+                  'Seeder', 'JCB', 'Hitachi', 'Lorry']
+              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+              .toList(),
+          onChanged: (v) => setState(() => _type = v!),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F8E9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF81C784)),
+          ),
+          child: Column(children: [
+            _CalcRow('Field Size', '${_acres.toStringAsFixed(1)} acres'),
+            _CalcRow('Recommended Machine', _type),
+            _CalcRow('Estimated Hours', '$hours hours'),
+            const Divider(height: 16),
+            _CalcRow('Estimated Cost',
+                '₹${cost.toStringAsFixed(0)}',
+                valueStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF2E7D32))),
+          ]),
+        ),
+      ]),
+    );
+  }
+}
+
+class _CalcRow extends StatelessWidget {
+  final String label, value;
+  final TextStyle? valueStyle;
+  const _CalcRow(this.label, this.value, {this.valueStyle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF616161))),
+          Text(value,
+              style: valueStyle ??
+                  const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700)),
+        ],
       ),
     );
   }
 }
 
-// ─── Shimmer ───────────────────────────────────────────────────────────────
+// ─── Shimmer ─────────────────────────────────────────────────────────────────
 
 class _RentShimmer extends StatefulWidget {
   final bool isDark;
@@ -775,73 +1551,35 @@ class _RentShimmerState extends State<_RentShimmer>
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 12,
-        mainAxisSpacing: 12, childAspectRatio: 0.66,
-      ),
-      itemCount: 6,
-      itemBuilder: (_, __) => AnimatedBuilder(
-        animation: _anim,
-        builder: (_, __) {
-          final t = _anim.value;
-          final shine = LinearGradient(
-            begin: Alignment(-1.0 + t * 2, 0),
-            end: Alignment(t * 2, 0),
-            colors: widget.isDark
-                ? [const Color(0xFF2A2A2A), const Color(0xFF3D3D3D),
-                   const Color(0xFF2A2A2A)]
-                : [const Color(0xFFE8E8E8), const Color(0xFFF5F5F5),
-                   const Color(0xFFE8E8E8)],
-            stops: const [0, 0.5, 1],
-          );
-          return Container(
-            decoration: BoxDecoration(
-              color: widget.isDark
-                  ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(height: 130,
-                    decoration: BoxDecoration(
-                      gradient: shine,
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(18)),
-                    )),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(height: 13,
-                          decoration: BoxDecoration(gradient: shine,
-                              borderRadius: BorderRadius.circular(6))),
-                      const SizedBox(height: 7),
-                      Container(height: 18, width: 70,
-                          decoration: BoxDecoration(gradient: shine,
-                              borderRadius: BorderRadius.circular(6))),
-                      const SizedBox(height: 7),
-                      Container(height: 10,
-                          decoration: BoxDecoration(gradient: shine,
-                              borderRadius: BorderRadius.circular(6))),
-                      const SizedBox(height: 5),
-                      Container(height: 10,
-                          decoration: BoxDecoration(gradient: shine,
-                              borderRadius: BorderRadius.circular(6))),
-                      const SizedBox(height: 10),
-                      Container(height: 32,
-                          decoration: BoxDecoration(gradient: shine,
-                              borderRadius: BorderRadius.circular(10))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (_, __) => AnimatedBuilder(
+          animation: _anim,
+          builder: (_, __) {
+            final t = _anim.value;
+            final shine = LinearGradient(
+              begin: Alignment(-1.0 + t * 2, 0),
+              end: Alignment(t * 2, 0),
+              colors: widget.isDark
+                  ? [const Color(0xFF2A2A2A), const Color(0xFF3A3A3A),
+                     const Color(0xFF2A2A2A)]
+                  : [const Color(0xFFE8E8E8), const Color(0xFFF5F5F5),
+                     const Color(0xFFE8E8E8)],
+              stops: const [0, 0.5, 1],
+            );
+            return Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              height: 130,
+              decoration: BoxDecoration(
+                  color: widget.isDark
+                      ? const Color(0xFF1E1E1E)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: shine),
+            );
+          },
+        ),
+        childCount: 5,
       ),
     );
   }
