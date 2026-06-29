@@ -389,6 +389,32 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // ── GreenBazaar Cart ─────────────────────────────────────────────────────
+
+    match /gb_cart/{userId}/items/{itemId} {
+      allow read:   if isSignedIn() && uid() == userId;
+      allow write:  if isSignedIn() && uid() == userId;
+    }
+
+    // ── GreenBazaar Wishlist ──────────────────────────────────────────────────
+
+    match /gb_wishlist/{userId}/items/{itemId} {
+      allow read:   if isSignedIn() && uid() == userId;
+      allow write:  if isSignedIn() && uid() == userId;
+    }
+
+    // ── GreenBazaar Orders ────────────────────────────────────────────────────
+
+    match /gb_orders/{orderId} {
+      allow read:   if isSignedIn() && (
+                      resource.data.get('userId', '') == uid() || isAdmin()
+                    );
+      allow create: if isSignedIn() &&
+                      request.resource.data.userId == uid();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
     // ── Default: deny all unmatched ───────────────────────────────────────────
 
     match /{document=**} {

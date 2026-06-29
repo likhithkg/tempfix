@@ -112,6 +112,7 @@ class PlantVendorListPage extends StatefulWidget {
 
 class _PlantVendorListPageState extends State<PlantVendorListPage> {
   final _service = PlantVendorService();
+  late final Stream<List<PlantVendor>> _stream;
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
 
@@ -123,6 +124,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
   @override
   void initState() {
     super.initState();
+    _stream = _service.streamVendors();
     final cat = widget.category.toLowerCase();
     if (cat == 'seeds') _tabKey = 'seeds';
     else if (cat == 'plant') _tabKey = 'plant';
@@ -357,7 +359,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
         // ── Grid ───────────────────────────────────────────────
         Expanded(
           child: StreamBuilder<List<PlantVendor>>(
-            stream: _service.streamVendors(),
+            stream: _stream,
             builder: (ctx, snap) {
               if (snap.hasError) {
                 return Center(child: Column(mainAxisSize: MainAxisSize.min,

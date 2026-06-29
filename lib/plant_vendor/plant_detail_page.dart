@@ -1,16 +1,151 @@
 // lib/plant_vendor/plant_detail_page.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:krishimithra/plant_vendor/plant_vendor_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
+import 'green_bazaar_service.dart';
+import 'green_bazaar_models.dart';
+import 'cart_page.dart';
+import 'nursery_profile_page.dart';
 
-class PlantDetailPage extends StatelessWidget {
+class PlantDetailPage extends StatefulWidget {
   final PlantVendor vendor;
   const PlantDetailPage({super.key, required this.vendor});
+  @override
+  State<PlantDetailPage> createState() => _PlantDetailPageState();
+}
+
+class _PlantDetailPageState extends State<PlantDetailPage> {
+  final _gbSvc = GreenBazaarService();
+  bool _wishlisted = false;
+  bool _inCart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final w = await _gbSvc.isWishlisted(widget.vendor.id);
+    final c = await _gbSvc.isInCart(widget.vendor.id);
+    if (mounted) setState(() { _wishlisted = w; _inCart = c; });
+  }
+
+  Future<void> _toggleWish() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final wi = WishlistItem(
+      id: widget.vendor.id,
+      vendorId: widget.vendor.id,
+      plantName: widget.vendor.plantName,
+      vendorName: widget.vendor.vendorName,
+      price: widget.vendor.price,
+      imageUrl: widget.vendor.imageUrl,
+      type: widget.vendor.type,
+      userId: uid,
+      savedAt: DateTime.now(),
+    );
+    await _gbSvc.toggleWishlist(wi);
+    if (mounted) setState(() => _wishlisted = !_wishlisted);
+  }
+
+  Future<void> _addToCart() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please sign in to add to cart')));
+      }
+      return;
+    }
+    final ci = CartItem(
+      id: widget.vendor.id,
+      vendorId: widget.vendor.id,
+      plantName: widget.vendor.plantName,
+      vendorName: widget.vendor.vendorName,
+      price: widget.vendor.price,
+      imageUrl: widget.vendor.imageUrl,
+      type: widget.vendor.type,
+      orderQty: 1,
+      userId: uid,
+      addedAt: DateTime.now(),
+    );
+    await _gbSvc.addToCart(ci);
+    if (mounted) {
+      setState(() => _inCart = true);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${widget.vendor.plantName} added to cart'),
+        backgroundColor: const Color(0xFF2E7D32),
+        action: SnackBarAction(
+          label: 'View Cart',
+          textColor: Colors.white,
+          onPressed: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const CartPage())),
+        ),
+      ));
+    }
+  }
+
+  // Keeps original static helpers but now delegated
+  PlantVendor get vendor => widget.vendor;
 
   String _formatDate(DateTime date) => DateFormat.yMMMEd().add_jm().format(date);
+
+  // Plant care data derived from type
+  Map<String, String> _careInfo() {
+    final lower = vendor.type.toLowerCase();
+    if (lower.contains('fruit')) {
+      return {
+        'Sunlight': 'Full Sun (6-8 hrs)',
+        'Watering': 'Deep water weekly',
+        'Soil': 'Well-drained, loamy',
+        'Fertilizer': 'NPK monthly in growing season',
+        'Growth': '2-5 years to fruit',
+        'Temperature': '18-35°C',
+      };
+    }
+    if (lower.contains('vegetable')) {
+      return {
+        'Sunlight': 'Full Sun (5-6 hrs)',
+        'Watering': '2-3 times per week',
+        'Soil': 'Rich compost mix',
+        'Fertilizer': 'Organic compost biweekly',
+        'Growth': '30-90 days to harvest',
+        'Temperature': '15-30°C',
+      };
+    }
+    if (lower.contains('medicinal') || lower.contains('aromatic')) {
+      return {
+        'Sunlight': 'Partial to Full Sun',
+        'Watering': 'Moderate, avoid waterlogging',
+        'Soil': 'Sandy loam, well-drained',
+        'Fertilizer': 'Light compost quarterly',
+        'Growth': 'Perennial, harvest leaves anytime',
+        'Temperature': '20-38°C',
+      };
+    }
+    if (lower.contains('ornamental') || lower.contains('flower')) {
+      return {
+        'Sunlight': 'Bright indirect light',
+        'Watering': 'Keep soil moist, not soggy',
+        'Soil': 'Peat-rich potting mix',
+        'Fertilizer': 'Liquid fertilizer monthly',
+        'Growth': 'Blooms seasonally',
+        'Temperature': '16-28°C',
+      };
+    }
+    return {
+      'Sunlight': 'Full to Partial Sun',
+      'Watering': 'Moderate watering',
+      'Soil': 'Well-drained garden soil',
+      'Fertilizer': 'Balanced NPK quarterly',
+      'Growth': 'Varies by variety',
+      'Temperature': '15-35°C',
+    };
+  }
 
   Future<void> _call(BuildContext context, String? phone) async {
     final p = (phone ?? '').trim();
@@ -125,6 +260,9 @@ class PlantDetailPage extends StatelessWidget {
 
     final accent = _categoryColor(category);
     final catIcon = _categoryIcon(category);
+    final care = _careInfo();
+    final discountPct = (vendor.id.hashCode.abs() % 3 + 1) * 5;
+    final mrp = (vendor.price * (1 + discountPct / 100)).roundToDouble();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
@@ -149,6 +287,24 @@ class PlantDetailPage extends StatelessWidget {
                   ),
                 ),
                 actions: [
+                  // Wishlist button
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black38,
+                      child: IconButton(
+                        icon: Icon(
+                          _wishlisted
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_outline_rounded,
+                          color: _wishlisted
+                              ? const Color(0xFFFF5252)
+                              : Colors.white,
+                        ),
+                        onPressed: _toggleWish,
+                      ),
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: CircleAvatar(
@@ -165,7 +321,6 @@ class PlantDetailPage extends StatelessWidget {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Image / placeholder
                       hasImage
                           ? Image.network(
                               imageUrl,
@@ -174,8 +329,6 @@ class PlantDetailPage extends StatelessWidget {
                                   _placeholder(accent, catIcon),
                             )
                           : _placeholder(accent, catIcon),
-
-                      // Gradient overlay
                       DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -189,8 +342,6 @@ class PlantDetailPage extends StatelessWidget {
                           ),
                         ),
                       ),
-
-                      // Plant name + category badge over image
                       Positioned(
                         left: 16,
                         right: 16,
@@ -209,8 +360,7 @@ class PlantDetailPage extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(catIcon,
-                                      size: 13, color: Colors.white),
+                                  Icon(catIcon, size: 13, color: Colors.white),
                                   const SizedBox(width: 4),
                                   Text(
                                     translatedCategory.toUpperCase(),
@@ -231,14 +381,42 @@ class PlantDetailPage extends StatelessWidget {
                                 color: Colors.white,
                                 fontSize: 28,
                                 fontWeight: FontWeight.w800,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black54,
-                                    blurRadius: 6,
-                                  ),
-                                ],
+                                shadows: [Shadow(color: Colors.black54, blurRadius: 6)],
                               ),
                             ),
+                            // Nursery name chip
+                            if (vendorName.isNotEmpty)
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => NurseryProfilePage(
+                                      nurseryName: vendorName,
+                                      allPlants: [],
+                                    ),
+                                  ),
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                    const Icon(Icons.store_rounded,
+                                        size: 10, color: Colors.white70),
+                                    const SizedBox(width: 4),
+                                    Text(vendorName,
+                                        style: const TextStyle(
+                                            color: Colors.white70, fontSize: 10)),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.verified_rounded,
+                                        size: 10, color: Color(0xFF90CAF9)),
+                                  ]),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -250,36 +428,41 @@ class PlantDetailPage extends StatelessWidget {
               // ── Body content ──────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 130),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Price + Quantity cards ──────────────────────
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _statCard(
-                              icon: Icons.currency_rupee,
-                              iconColor: accent,
-                              label: l.priceLabel,
-                              value: '₹${vendor.price.toStringAsFixed(2)}',
-                              valueBig: true,
-                              accent: accent,
-                            ),
+                      // ── Price card ──────────────────────────────────
+                      Row(children: [
+                        Expanded(
+                          child: _statCard(
+                            icon: Icons.currency_rupee,
+                            iconColor: accent,
+                            label: l.priceLabel,
+                            value: '₹${vendor.price.toStringAsFixed(0)}',
+                            valueBig: true,
+                            accent: accent,
+                            subtitle: 'MRP ₹${mrp.toStringAsFixed(0)} ($discountPct% off)',
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _statCard(
-                              icon: Icons.inventory_2_outlined,
-                              iconColor: Colors.blueGrey,
-                              label: l.quantityLabel,
-                              value: vendor.quantity.toString(),
-                              valueBig: true,
-                              accent: Colors.blueGrey,
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _statCard(
+                            icon: Icons.inventory_2_outlined,
+                            iconColor: vendor.quantity <= 5
+                                ? const Color(0xFFE53935)
+                                : Colors.blueGrey,
+                            label: l.quantityLabel,
+                            value: vendor.quantity > 0
+                                ? '${vendor.quantity} left'
+                                : 'Out of stock',
+                            valueBig: true,
+                            accent: vendor.quantity <= 5
+                                ? const Color(0xFFE53935)
+                                : Colors.blueGrey,
                           ),
-                        ],
-                      ),
+                        ),
+                      ]),
 
                       const SizedBox(height: 20),
 
@@ -293,11 +476,22 @@ class PlantDetailPage extends StatelessWidget {
                             value: translatedType,
                           ),
                           _divider(),
-                          _infoTile(
-                            icon: Icons.person_outline,
-                            iconColor: const Color(0xFF1565C0),
-                            label: l.vendorLabel,
-                            value: vendorName,
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => NurseryProfilePage(
+                                    nurseryName: vendorName, allPlants: []),
+                              ),
+                            ),
+                            child: _infoTile(
+                              icon: Icons.store_rounded,
+                              iconColor: const Color(0xFF1565C0),
+                              label: l.vendorLabel,
+                              value: vendorName,
+                              trailing: const Icon(Icons.chevron_right,
+                                  size: 16, color: Color(0xFF9E9E9E)),
+                            ),
                           ),
                           _divider(),
                           _infoTile(
@@ -318,24 +512,69 @@ class PlantDetailPage extends StatelessWidget {
 
                       const SizedBox(height: 20),
 
+                      // ── Plant care guide ────────────────────────────
+                      _sectionCard(
+                        children: [
+                          Row(children: [
+                            Icon(Icons.eco_rounded, color: accent, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Plant Care Guide',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: accent)),
+                          ]),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: care.entries.map((e) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: accent.withValues(alpha: 0.07),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(e.key,
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            color: accent,
+                                            fontWeight: FontWeight.w700)),
+                                    const SizedBox(height: 2),
+                                    Text(e.value,
+                                        style: const TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
                       // ── Description card ────────────────────────────
                       _sectionCard(
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.description_outlined,
-                                  color: accent, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                l.descriptionHeader,
-                                style: TextStyle(
+                          Row(children: [
+                            Icon(Icons.description_outlined,
+                                color: accent, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              l.descriptionHeader,
+                              style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
-                                  color: accent,
-                                ),
-                              ),
-                            ],
-                          ),
+                                  color: accent),
+                            ),
+                          ]),
                           const SizedBox(height: 10),
                           Text(
                             description,
@@ -372,48 +611,65 @@ class PlantDetailPage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _call(context, phone),
-                      icon: const Icon(Icons.call_rounded),
-                      label: Text(l.call,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 15)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
-                      ),
+              child: Row(children: [
+                // Cart button
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton.icon(
+                    onPressed: vendor.quantity == 0 ? null : _addToCart,
+                    icon: Icon(_inCart
+                        ? Icons.shopping_cart_rounded
+                        : Icons.add_shopping_cart_rounded),
+                    label: Text(
+                      _inCart ? 'In Cart' : 'Add to Cart',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          _inCart ? const Color(0xFF1565C0) : accent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _whatsapp(context, phone),
-                      icon: const Icon(Icons.chat_rounded),
-                      label: Text(l.whatsApp,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 15)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                // Call button
+                _iconBtn(
+                  Icons.call_rounded,
+                  accent,
+                  () => _call(context, phone),
+                ),
+                const SizedBox(width: 8),
+                // WhatsApp button
+                _iconBtn(
+                  Icons.chat_rounded,
+                  const Color(0xFF25D366),
+                  () => _whatsapp(context, phone),
+                ),
+              ]),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Icon(icon, color: color, size: 22),
       ),
     );
   }
@@ -443,6 +699,7 @@ class PlantDetailPage extends StatelessWidget {
     required String value,
     bool valueBig = false,
     required Color accent,
+    String? subtitle,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -478,11 +735,18 @@ class PlantDetailPage extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: valueBig ? 22 : 15,
+              fontSize: valueBig ? 20 : 15,
               fontWeight: FontWeight.w800,
               color: iconColor,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 9.5,
+                    color: Color(0xFF9E9E9E))),
+          ],
         ],
       ),
     );
@@ -515,6 +779,7 @@ class PlantDetailPage extends StatelessWidget {
     required Color iconColor,
     required String label,
     required String value,
+    Widget? trailing,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -546,6 +811,7 @@ class PlantDetailPage extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) trailing,
         ],
       ),
     );
