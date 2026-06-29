@@ -1,4 +1,5 @@
 // lib/rent/rent_home_page.dart — RentHub 3.0 (Rapido + Uber for Farm Equipment)
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -132,6 +133,9 @@ class _RentHomePageState extends State<RentHomePage>
   Position? _position;
   String _locationLabel = 'Getting location...';
   final _mapCtrl = MapController();
+  bool _loadTimedOut = false;
+  Timer? _loadTimer;
+  int _streamKey = 0;
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
 
@@ -144,12 +148,29 @@ class _RentHomePageState extends State<RentHomePage>
     _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
         CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
     _fetchLocation();
+    _startLoadTimer();
+  }
+
+  void _startLoadTimer() {
+    _loadTimer?.cancel();
+    _loadTimer = Timer(const Duration(seconds: 15), () {
+      if (mounted) setState(() => _loadTimedOut = true);
+    });
+  }
+
+  void _retryStream() {
+    setState(() {
+      _loadTimedOut = false;
+      _streamKey++;
+    });
+    _startLoadTimer();
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     _pulseCtrl.dispose();
+    _loadTimer?.cancel();
     super.dispose();
   }
 
@@ -288,8 +309,10 @@ class _RentHomePageState extends State<RentHomePage>
     return Scaffold(
       backgroundColor: bg,
       body: StreamBuilder<List<RentMachine>>(
+        key: ValueKey(_streamKey),
         stream: RentMachineService.instance.streamRentMachines(),
         builder: (ctx, snap) {
+          if (snap.hasData) _loadTimer?.cancel();
           final all = snap.data ?? [];
           final filtered = _applyFilters(all);
           final available =
@@ -314,7 +337,9 @@ class _RentHomePageState extends State<RentHomePage>
               SliverToBoxAdapter(child: _buildSeasonalBanner()),
 
               // ── Content ──────────────────────────────────────────
-              if (!snap.hasData)
+              if (snap.hasError || (_loadTimedOut && !snap.hasData))
+                SliverToBoxAdapter(child: _buildError())
+              else if (!snap.hasData)
                 _RentShimmer(isDark: isDark)
               else if (filtered.isEmpty)
                 SliverToBoxAdapter(child: _buildEmpty())
@@ -854,6 +879,31 @@ class _RentHomePageState extends State<RentHomePage>
         ),
       ),
     ]);
+  }
+
+  Widget _buildError() {
+    return SizedBox(
+      height: 300,
+      child: Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('⚠️', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 12),
+          const Text('Could not load machines',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          const Text('Check your internet connection and try again',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Color(0xFF9E9E9E))),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _retryStream,
+            style: ElevatedButton.styleFrom(
+                backgroundColor: _kPrimary, foregroundColor: Colors.white),
+            child: const Text('Retry'),
+          ),
+        ]),
+      ),
+    );
   }
 
   Widget _buildEmpty() {

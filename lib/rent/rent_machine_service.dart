@@ -23,8 +23,15 @@ class RentMachineService {
   Future<void> addMachine(RentMachine machine) async => addRentMachine(machine);
 
   Stream<List<RentMachine>> streamRentMachines() {
-    return _db.snapshots().map(
-        (snap) => snap.docs.map((d) => RentMachine.fromDoc(d)).toList());
+    return _db.snapshots().map((snap) {
+      return snap.docs.map((d) {
+        try {
+          return RentMachine.fromDoc(d);
+        } catch (_) {
+          return null;
+        }
+      }).whereType<RentMachine>().toList();
+    });
   }
 
   Future<List<RentMachine>> getRentMachines() async {

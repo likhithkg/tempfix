@@ -1,142 +1,455 @@
-// lib/labour_hub/labour_hub_service.dart
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'labour_model.dart';
+import 'package:flutter/foundation.dart';
+import 'labour_profile_model.dart';
+import 'job_post_model.dart';
+import 'job_application_model.dart';
+import 'labour_review_model.dart';
 
 class LabourHubService {
-  static const String collectionName = 'labours';
-  final _collection = FirebaseFirestore.instance.collection(collectionName);
+  final _db = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
-  /// Add new labour entry. Returns the created document id.
-  Future<String> addLabour(Labour labour) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception("User not logged in");
+  String? get _uid => _auth.currentUser?.uid;
 
-    final doc = _collection.doc();
-    final toSave = labour.copyWith(
+  // Cached merged stream — created once, reused across all callers.
+  // Prevents duplicate Firestore listeners each time streamAllProfiles() is called.
+  StreamController<List<LabourProfile>>? _allProfilesCtrl;
+  StreamSubscription? _sub1;
+  StreamSubscription? _sub2;
+  List<LabourProfile> _newProfiles = [];
+  List<LabourProfile> _legacyProfiles = [];
+
+  /// Cancel all Firestore listeners. Call from the owning State.dispose().
+  void dispose() {
+    _sub1?.cancel();
+    _sub2?.cancel();
+    _allProfilesCtrl?.close();
+    _allProfilesCtrl = null;
+    _sub1 = null;
+    _sub2 = null;
+  }
+
+  // ── Convert legacy `labours` doc → LabourProfile ──────────────────────────
+
+  LabourProfile _legacyToProfile(DocumentSnapshot doc) {
+    final d = doc.data() as Map<String, dynamic>;
+    final now = DateTime.now();
+    double _d(dynamic v) => v == null ? 0.0 : (v as num).toDouble();
+    int _i(dynamic v) => v == null ? 0 : (v as num).toInt();
+    DateTime _ts(dynamic v) {
+      if (v is Timestamp) return v.toDate();
+      return now;
+    }
+
+    final skill = (d['skill'] as String? ?? d['category'] as String? ?? '').trim();
+    final available = d['available'] as bool? ?? true;
+
+    return LabourProfile(
       id: doc.id,
-      createdBy: user.uid,
+      uid: d['createdBy'] as String? ?? doc.id,
+      name: d['name'] as String? ?? '',
+      phone: d['contact'] as String? ?? d['phone'] as String? ?? '',
+      village: d['location'] as String? ?? '',
+      district: '',
+      latitude: _d(d['latitude'] ?? d['lat']),
+      longitude: _d(d['longitude'] ?? d['lon']),
+      experienceYears: _i(d['experience'] ?? d['experienceYears']),
+      dailyWage: _d(d['wage'] ?? d['dailyWage']),
+      availabilityStatus: available ? 'available' : 'unavailable',
+      skills: skill.isNotEmpty ? [skill] : [],
+      photoUrl: d['imageUrl'] as String? ?? d['photoUrl'] as String? ?? '',
+      rating: _d(d['rating']),
+      reviewCount: _i(d['reviewCount']),
+      completedJobs: _i(d['completedJobs']),
+      createdAt: _ts(d['postedAt'] ?? d['createdAt']),
+      updatedAt: _ts(d['updatedAt'] ?? d['postedAt']),
+    );
+  }
+
+  // ── Labour Profiles (merges new `labour_profiles` + legacy `labours`) ──────
+
+  Future<LabourProfile?> getMyProfile() async {
+    final uid = _uid;
+    if (uid == null) return null;
+    try {
+      final doc = await _db.collection('labour_profiles').doc(uid).get();
+      return doc.exists ? LabourProfile.fromDoc(doc) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<LabourProfile?> getProfile(String uid) async {
+    try {
+      final doc = await _db.collection('labour_profiles').doc(uid).get();
+      return doc.exists ? LabourProfile.fromDoc(doc) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Single cached broadcast stream merging `labour_profiles` + legacy `labours`.
+  /// Returns the same stream on every call — no duplicate Firestore listeners.
+  Stream<List<LabourProfile>> streamAllProfiles() {
+    if (_allProfilesCtrl != null) return _allProfilesCtrl!.stream;
+
+    // No onCancel — avoids premature disposal if a listener briefly unsubscribes
+    // during a navigation pop animation. The service lives for the page's lifetime;
+    // call dispose() explicitly from the owning State.dispose() if needed.
+    _allProfilesCtrl = StreamController<List<LabourProfile>>.broadcast();
+
+    void emit() {
+      if (_allProfilesCtrl == null || _allProfilesCtrl!.isClosed) return;
+      final newUids = _newProfiles.map((p) => p.uid).toSet();
+      final merged = [
+        ..._newProfiles,
+        ..._legacyProfiles.where((p) => !newUids.contains(p.uid)),
+      ];
+      _allProfilesCtrl!.add(merged);
+    }
+
+    // No orderBy — avoids composite index requirement; sort done in Dart
+    _sub1 = _db.collection('labour_profiles').limit(100).snapshots().listen(
+      (snap) {
+        _newProfiles = snap.docs
+            .map((d) { try { return LabourProfile.fromDoc(d); } catch (_) { return null; } })
+            .whereType<LabourProfile>()
+            .toList();
+        emit();
+      },
+      onError: (_) => emit(),
     );
 
-    final map = _stripNulls(toSave.toMap());
-    // Set server timestamp so rules that require server time pass.
-    map['postedAt'] = FieldValue.serverTimestamp();
+    _sub2 = _db.collection('labours').limit(100).snapshots().listen(
+      (snap) {
+        _legacyProfiles = snap.docs
+            .map((d) { try { return _legacyToProfile(d); } catch (_) { return null; } })
+            .whereType<LabourProfile>()
+            .toList();
+        emit();
+      },
+      onError: (_) => emit(),
+    );
 
-    await doc.set(map);
-    return doc.id;
+    return _allProfilesCtrl!.stream;
   }
 
-  Future<void> updateLabour(String id, Labour labour) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception("User not logged in");
+  Stream<List<LabourProfile>> streamAvailableProfiles() {
+    return streamAllProfiles()
+        .map((list) => list.where((p) => p.availabilityStatus == 'available').toList());
+  }
 
-    final snap = await _collection.doc(id).get();
-    if (!snap.exists) throw Exception("Labour not found");
+  Stream<List<LabourProfile>> streamTopRatedProfiles() {
+    return streamAllProfiles().map((list) {
+      final sorted = [...list]..sort((a, b) => b.rating.compareTo(a.rating));
+      return sorted.take(20).toList();
+    });
+  }
 
-    final owner = snap.data()?['createdBy'] as String?;
-    if (owner == user.uid) {
-      final updatedData = Map<String, dynamic>.from(labour.toMap());
-      updatedData.remove('id');
-      updatedData.remove('createdBy');
-      final map = _stripNulls(updatedData);
-      await _collection.doc(id).update(map);
-    } else {
-      throw Exception("Not allowed to update this labour");
+  Future<void> saveProfile(LabourProfile profile) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in');
+    final map = profile.toMap();
+    final doc = await _db.collection('labour_profiles').doc(uid).get();
+    if (!doc.exists) {
+      map['createdAt'] = FieldValue.serverTimestamp();
     }
+    await _db
+        .collection('labour_profiles')
+        .doc(uid)
+        .set(map, SetOptions(merge: true));
   }
 
-  Future<void> deleteLabour(String id) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception("User not logged in");
-
-    final snap = await _collection.doc(id).get();
-    if (!snap.exists) throw Exception("Labour not found");
-
-    final owner = snap.data()?['createdBy'] as String?;
-    if (owner == user.uid) {
-      await _collection.doc(id).delete();
-    } else {
-      throw Exception("Not allowed to delete this labour");
-    }
+  Future<void> updateAvailability(String status) async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _db.collection('labour_profiles').doc(uid).update({
+      'availabilityStatus': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  /// Defensive getAll (keeps existing behavior)
-  Future<List<Labour>> getAllLabours() async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> snapshot;
-      try {
-        snapshot =
-            await _collection.orderBy('postedAt', descending: true).get();
-      } catch (_) {
-        snapshot = await _collection.get();
-      }
+  // ── Job Posts ──────────────────────────────────────────────────────────────
 
-      final List<Labour> result = [];
-      for (final doc in snapshot.docs) {
-        try {
-          result.add(Labour.fromMap(doc.data(), doc.id));
-        } catch (e) {
-          // ignore malformed docs but print in debug
-          // ignore: avoid_print
-          print('LabourHubService: failed to parse doc ${doc.id}: $e');
-        }
-      }
-      return result;
-    } catch (e) {
-      throw Exception('Failed to load labours: $e');
-    }
-  }
-
-  /// Stream for realtime updates (recommended)
-  Stream<List<Labour>> streamLabours() {
-    return _collection
-        .orderBy('postedAt', descending: true)
+  Stream<List<JobPost>> streamOpenJobs() {
+    // No orderBy — eliminates composite index requirement; sorted in Dart
+    return _db
+        .collection('job_posts')
+        .where('status', isEqualTo: 'open')
+        .limit(50)
         .snapshots()
         .map((snap) {
-      final List<Labour> out = [];
-      for (final doc in snap.docs) {
-        try {
-          out.add(Labour.fromMap(doc.data(), doc.id));
-        } catch (e) {
-          // ignore malformed docs but log
-          // ignore: avoid_print
-          print('streamLabours parse error ${doc.id}: $e');
-        }
-      }
-      return out;
-    });
+          final list = snap.docs
+              .map((d) { try { return JobPost.fromDoc(d); } catch (_) { return null; } })
+              .whereType<JobPost>()
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
-  Future<List<Labour>> getMyLabours() async {
+  Stream<List<JobPost>> streamMyPostedJobs() {
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    // No orderBy — eliminates composite index requirement; sorted in Dart
+    return _db
+        .collection('job_posts')
+        .where('farmerId', isEqualTo: uid)
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs
+              .map((d) { try { return JobPost.fromDoc(d); } catch (_) { return null; } })
+              .whereType<JobPost>()
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
+  }
+
+  Future<String> postJob(JobPost job) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception("User not logged in");
+    if (user == null) throw Exception('Not signed in — cannot post job');
+    if (user.uid != job.farmerId) {
+      throw Exception(
+          'UID mismatch: auth=${user.uid} vs farmerId=${job.farmerId}');
+    }
+
+    final ref = _db.collection('job_posts').doc();
+    final payload = job.toMap();
+
+    debugPrint('[LabourHub] postJob ▶ '
+        'collection=job_posts '
+        'docId=${ref.id} '
+        'uid=${user.uid} '
+        'farmerId=${job.farmerId} '
+        'title="${job.title}" '
+        'status=${job.status} '
+        'timestamp=${DateTime.now().toIso8601String()}');
+    debugPrint('[LabourHub] postJob payload=$payload');
 
     try {
-      final snapshot =
-          await _collection.where('createdBy', isEqualTo: user.uid).get();
-
-      final List<Labour> result = [];
-      for (final doc in snapshot.docs) {
-        try {
-          result.add(Labour.fromMap(doc.data(), doc.id));
-        } catch (e) {
-          // ignore malformed docs
-          // ignore: avoid_print
-          print('LabourHubService: failed to parse my doc ${doc.id}: $e');
-        }
-      }
-      return result;
-    } catch (e) {
-      throw Exception('Failed to load my labours: $e');
+      await ref.set(payload);
+      debugPrint('[LabourHub] postJob ✓ success docId=${ref.id}');
+      return ref.id;
+    } on FirebaseException catch (e, st) {
+      debugPrint('[LabourHub] postJob ✗ FirebaseException '
+          'code=${e.code} message=${e.message}');
+      debugPrint('[LabourHub] postJob stack: $st');
+      rethrow;
+    } catch (e, st) {
+      debugPrint('[LabourHub] postJob ✗ unexpected error: $e');
+      debugPrint('[LabourHub] postJob stack: $st');
+      rethrow;
     }
   }
 
-  Map<String, dynamic> _stripNulls(Map<String, dynamic> map) {
-    final clean = <String, dynamic>{};
-    map.forEach((k, v) {
-      if (v != null) clean[k] = v;
-    });
-    return clean;
+  Future<void> updateJobStatus(String jobId, String status) async {
+    debugPrint('[LabourHub] updateJobStatus ▶ jobId=$jobId status=$status');
+    try {
+      await _db.collection('job_posts').doc(jobId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      debugPrint('[LabourHub] updateJobStatus ✓');
+    } on FirebaseException catch (e, st) {
+      debugPrint('[LabourHub] updateJobStatus ✗ code=${e.code} message=${e.message}\n$st');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteJob(String jobId) async {
+    await _db.collection('job_posts').doc(jobId).delete();
+  }
+
+  // ── Job Applications ───────────────────────────────────────────────────────
+
+  Future<void> applyForJob(JobApplication app) async {
+    final ref = _db.collection('job_applications').doc();
+    debugPrint('[LabourHub] applyForJob ▶ '
+        'collection=job_applications docId=${ref.id} '
+        'jobId=${app.jobId} labourId=${app.labourId}');
+    try {
+      await ref.set(app.toMap());
+      debugPrint('[LabourHub] applyForJob ✓ docId=${ref.id}');
+    } on FirebaseException catch (e, st) {
+      debugPrint('[LabourHub] applyForJob ✗ code=${e.code} message=${e.message}\n$st');
+      rethrow;
+    }
+    try {
+      await _db.collection('job_posts').doc(app.jobId).update({
+        'applicantCount': FieldValue.increment(1),
+      });
+      debugPrint('[LabourHub] applyForJob ✓ incremented applicantCount for ${app.jobId}');
+    } on FirebaseException catch (e) {
+      debugPrint('[LabourHub] applyForJob applicantCount increment skipped: code=${e.code}');
+    }
+  }
+
+  Future<bool> hasApplied(String jobId) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    try {
+      final snap = await _db
+          .collection('job_applications')
+          .where('jobId', isEqualTo: jobId)
+          .where('labourId', isEqualTo: uid)
+          .limit(1)
+          .get();
+      return snap.docs.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Stream<List<JobApplication>> streamMyApplications() {
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _db
+        .collection('job_applications')
+        .where('labourId', isEqualTo: uid)
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs
+              .map((d) { try { return JobApplication.fromDoc(d); } catch (_) { return null; } })
+              .whereType<JobApplication>()
+              .toList();
+          list.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+          return list;
+        });
+  }
+
+  Stream<List<JobApplication>> streamJobApplications(String jobId) {
+    return _db
+        .collection('job_applications')
+        .where('jobId', isEqualTo: jobId)
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs
+              .map((d) { try { return JobApplication.fromDoc(d); } catch (_) { return null; } })
+              .whereType<JobApplication>()
+              .toList();
+          list.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+          return list;
+        });
+  }
+
+  Future<void> updateApplicationStatus(String appId, String status) async {
+    await _db
+        .collection('job_applications')
+        .doc(appId)
+        .update({'status': status});
+  }
+
+  // ── Reviews ────────────────────────────────────────────────────────────────
+
+  Future<void> addReview(LabourReview review) async {
+    final ref = _db.collection('labour_reviews').doc();
+    await ref.set(review.toMap());
+    // Recompute average rating
+    final snap = await _db
+        .collection('labour_reviews')
+        .where('labourId', isEqualTo: review.labourId)
+        .get();
+    if (snap.docs.isNotEmpty) {
+      final total = snap.docs.fold<double>(
+          0, (s, d) => s + ((d.data()['rating'] as num?)?.toDouble() ?? 0));
+      await _db.collection('labour_profiles').doc(review.labourId).update({
+        'rating': total / snap.docs.length,
+        'reviewCount': snap.docs.length,
+      });
+    }
+  }
+
+  Stream<List<LabourReview>> streamReviews(String labourId) {
+    return _db
+        .collection('labour_reviews')
+        .where('labourId', isEqualTo: labourId)
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs
+              .map((d) { try { return LabourReview.fromDoc(d); } catch (_) { return null; } })
+              .whereType<LabourReview>()
+              .toList();
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
+  }
+
+  // ── Favourites ─────────────────────────────────────────────────────────────
+
+  Future<void> toggleFavourite(String labourId) async {
+    final uid = _uid;
+    if (uid == null) return;
+    final ref = _db.collection('users').doc(uid);
+    final doc = await ref.get();
+    final favs = doc.exists
+        ? List<String>.from(doc.data()?['favouriteLabours'] ?? [])
+        : <String>[];
+    favs.contains(labourId) ? favs.remove(labourId) : favs.add(labourId);
+    await ref.set({'favouriteLabours': favs}, SetOptions(merge: true));
+  }
+
+  Future<List<String>> getFavourites() async {
+    final uid = _uid;
+    if (uid == null) return [];
+    try {
+      final doc = await _db.collection('users').doc(uid).get();
+      return doc.exists
+          ? List<String>.from(doc.data()?['favouriteLabours'] ?? [])
+          : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Stream<List<String>> streamFavouriteIds() {
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _db.collection('users').doc(uid).snapshots().map(
+        (doc) => List<String>.from(doc.data()?['favouriteLabours'] ?? []));
+  }
+
+  Future<List<LabourProfile>> fetchFavouriteProfiles() async {
+    final ids = await getFavourites();
+    if (ids.isEmpty) return [];
+    final results = <LabourProfile>[];
+    for (final id in ids) {
+      // Try new collection first, then legacy
+      try {
+        final doc = await _db.collection('labour_profiles').doc(id).get();
+        if (doc.exists) { results.add(LabourProfile.fromDoc(doc)); continue; }
+      } catch (_) {}
+      try {
+        final doc = await _db.collection('labours').doc(id).get();
+        if (doc.exists) results.add(_legacyToProfile(doc));
+      } catch (_) {}
+    }
+    return results;
+  }
+
+  // ── Legacy compat (old listing/form pages) ───────────────────────────────
+
+  Stream<List<dynamic>> streamLabours() =>
+      streamAllProfiles().map((list) => list);
+
+  Future<void> deleteLabour(String id) async {
+    await _db.collection('labour_profiles').doc(id).delete();
+  }
+
+  Future<String> addLabour(dynamic labour) async {
+    final ref = _db.collection('labours').doc();
+    final map = labour.toMap() as Map<String, dynamic>;
+    map['postedAt'] = FieldValue.serverTimestamp();
+    await ref.set(map);
+    return ref.id;
+  }
+
+  Future<void> updateLabour(String id, dynamic labour) async {
+    final map = labour.toMap() as Map<String, dynamic>;
+    map.remove('id');
+    map.remove('createdBy');
+    await _db.collection('labours').doc(id).update(map);
   }
 }

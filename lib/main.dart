@@ -18,7 +18,7 @@ import 'image_test_page.dart';
 
 import 'exporter_hub/exporter_service.dart';
 import 'plant_vendor/plant_vendor_home.dart';
-import 'labour_hub/labour_hub_listing_page.dart';
+import 'labour_hub/labour_hub_home_page.dart';
 import 'labour_hub/labour_hub_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'profile/profile_page.dart';
@@ -940,202 +940,171 @@ class _DashboardPageState extends State<DashboardPage> {
   // ---------- Improved: load saved default location (reads both userProfile & users) ----------
   Future<void> _loadSavedLocation() async {
     final user = fb.FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        final userProfileDoc = FirebaseFirestore.instance.collection('userProfile').doc(user.uid);
-        final usersDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    if (user == null) return;
+    final uid = user.uid;
 
-        DocumentSnapshot<Map<String, dynamic>> doc = await userProfileDoc.get();
-        Map<String, dynamic>? data;
-        if (doc.exists) {
-          data = doc.data();
-        } else {
-          final doc2 = await usersDoc.get();
-          if (doc2.exists) data = doc2.data();
-        }
-
-        if (data != null) {
-          final location = data['defaultLocation'] ?? data['default_location'] ?? data['default_loc'];
-          final lat = data['defaultLat'] ?? data['default_lat'] ?? data['lat'];
-          final lon = data['defaultLon'] ?? data['default_lon'] ?? data['lon'];
-
-          if (location != null && location is String && mounted) {
-            setState(() {
-              selectedLocation = location;
-              _searchController.text = location;
-              if (lat != null && lon != null) {
-                try {
-                  final doubleLat = (lat is num) ? lat.toDouble() : double.parse(lat.toString());
-                  final doubleLon = (lon is num) ? lon.toDouble() : double.parse(lon.toString());
-                  _defaultCoords = LatLng(doubleLat, doubleLon);
-                } catch (_) {}
-              }
-            });
-            return;
-          }
-        }
-      } catch (_) {
-        // ignore and fallback
-      }
-    }
-
-    // Fallback to original LocationService behavior
-    try {
-      final location = await LocationService.getDefaultLocation(
-        userId: fb.FirebaseAuth.instance.currentUser?.uid ?? "",
-      );
-      if (location != null && location.isNotEmpty && mounted) {
-        setState(() {
-          selectedLocation = location;
-          _searchController.text = location;
-        });
-      }
-    } catch (_) {}
-  }
-
-  // ---------- Improved: load recent locations (local then Firestore) ----------
-  Future<void> _loadRecentLocations() async {
-    // load local prefs first for quick UI
+    // ── Step 1: SharedPreferences (instant, offline, no permission issues) ──
     try {
       final prefs = await SharedPreferences.getInstance();
-      final local = prefs.getStringList('recent_locations') ?? [];
+      final loc = prefs.getString('loc_name_$uid') ?? '';
+      final lat = prefs.getDouble('loc_lat_$uid');
+      final lon = prefs.getDouble('loc_lon_$uid');
+      if (loc.isNotEmpty && mounted) {
+        setState(() {
+          selectedLocation = loc;
+          _searchController.text = loc;
+          if (lat != null && lon != null) _defaultCoords = LatLng(lat, lon);
+        });
+        return; // SharedPreferences hit — no need to wait for Firestore
+      }
+    } catch (_) {}
+
+    // ── Step 2: Firestore fallback (first-time or new device) ──
+    for (final col in ['users', 'userProfile']) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection(col)
+            .doc(uid)
+            .get();
+        if (!doc.exists) continue;
+        final data = doc.data()!;
+        final location = data['defaultLocation']?.toString() ??
+            data['default_location']?.toString() ?? '';
+        if (location.isEmpty) continue;
+        final lat = (data['defaultLat'] ?? data['default_lat']) as num?;
+        final lon = (data['defaultLon'] ?? data['default_lon']) as num?;
+        if (mounted) {
+          setState(() {
+            selectedLocation = location;
+            _searchController.text = location;
+            if (lat != null && lon != null) {
+              _defaultCoords = LatLng(lat.toDouble(), lon.toDouble());
+            }
+          });
+        }
+        // Mirror to SharedPreferences so next cold start is instant
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('loc_name_$uid', location);
+          if (lat != null) await prefs.setDouble('loc_lat_$uid', lat.toDouble());
+          if (lon != null) await prefs.setDouble('loc_lon_$uid', lon.toDouble());
+        } catch (_) {}
+        return;
+      } catch (_) {
+        continue;
+      }
+    }
+  }
+
+  // ---------- Improved: load recent locations (per-user, local then Firestore) ----------
+  Future<void> _loadRecentLocations() async {
+    final user = fb.FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+    if (uid == null) return;
+
+    // Load from per-user SharedPreferences key first for instant UI
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final local = prefs.getStringList('recent_locations_$uid') ?? [];
       if (local.isNotEmpty && mounted) setState(() => _recentLocations = local);
     } catch (_) {}
 
-    // then try to sync from Firestore (so it persists across devices)
-    final user = fb.FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        final doc1 = await FirebaseFirestore.instance.collection('userProfile').doc(user.uid).get();
-        List<String> fromFs = [];
-        if (doc1.exists && doc1.data()?['recentLocations'] != null) {
-          fromFs = (doc1.data()!['recentLocations'] as List).map((e) => e.toString()).toList();
-        } else {
-          final doc2 = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-          if (doc2.exists && doc2.data()?['recentLocations'] != null) {
-            fromFs = (doc2.data()!['recentLocations'] as List).map((e) => e.toString()).toList();
-          }
-        }
+    // Sync from Firestore for cross-device persistence
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      if (doc.exists && doc.data()?['recentLocations'] != null) {
+        final fromFs = (doc.data()!['recentLocations'] as List)
+            .map((e) => e.toString())
+            .toList();
         if (fromFs.isNotEmpty && mounted) {
-          setState(() => _recentLocations = fromFs.take(5).toList());
-          // update local prefs too
+          setState(() => _recentLocations = fromFs.take(8).toList());
           try {
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setStringList('recent_locations', _recentLocations);
+            await prefs.setStringList(
+                'recent_locations_$uid', _recentLocations);
           } catch (_) {}
         }
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
   }
 
-  // ---------- Improved: save selected location (writes Firestore userProfile & users) ----------
+  // ---------- Save selected location (SharedPreferences primary, Firestore backup) ----------
   Future<void> _saveLocation(String location) async {
-    // Resolve coordinates using your existing LocationService
     double lat = 0.0;
     double lon = 0.0;
     try {
       final coords = await LocationService.getCoordinatesFromName(location);
-      lat = (coords['lat'] is num) ? (coords['lat'] as num).toDouble() : double.tryParse(coords['lat'].toString()) ?? 0.0;
-      lon = (coords['lon'] is num) ? (coords['lon'] as num).toDouble() : double.tryParse(coords['lon'].toString()) ?? 0.0;
+      lat = (coords['lat'] as num?)?.toDouble() ?? 0.0;
+      lon = (coords['lon'] as num?)?.toDouble() ?? 0.0;
     } catch (_) {}
 
     final user = fb.FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final userProfileRef = FirebaseFirestore.instance.collection('userProfile').doc(user.uid);
-      final usersRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final uid = user.uid;
 
-      final locMap = {
-        'defaultLocation': location,
-        'defaultLat': lat,
-        'defaultLon': lon,
-      };
+      // ── Primary: SharedPreferences with UID key ──
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('loc_name_$uid', location);
+        if (lat != 0) await prefs.setDouble('loc_lat_$uid', lat);
+        if (lon != 0) await prefs.setDouble('loc_lon_$uid', lon);
 
-      // Write to both collections (merge) to be compatible with different code paths
-      try {
-        await userProfileRef.set(locMap, SetOptions(merge: true));
-      } catch (_) {}
-      try {
-        await usersRef.set(locMap, SetOptions(merge: true));
-      } catch (_) {}
-
-      // Maintain recentLocations array in Firestore (server-side copy)
-      try {
-        final userDoc = await userProfileRef.get();
-        List existing = [];
-        if (userDoc.exists && userDoc.data()?['recentLocations'] != null) {
-          existing = List.from(userDoc.data()?['recentLocations'] as List);
-        } else {
-          final udoc2 = await usersRef.get();
-          if (udoc2.exists && udoc2.data()?['recentLocations'] != null) {
-            existing = List.from(udoc2.data()?['recentLocations'] as List);
-          }
+        _recentLocations.remove(location);
+        _recentLocations.insert(0, location);
+        if (_recentLocations.length > 8) {
+          _recentLocations = _recentLocations.sublist(0, 8);
         }
+        await prefs.setStringList('recent_locations_$uid', _recentLocations);
+      } catch (_) {}
 
-        // Remove duplicates (by string equality) and insert new at front
-        existing.removeWhere((e) {
-          try {
-            final s = e is String ? e : (e is Map ? (e['displayName'] ?? e['name'] ?? e['defaultLocation']) : e.toString());
-            return s == location;
-          } catch (_) {
-            return false;
-          }
-        });
-
-        existing.insert(0, location);
-        // Trim to 10 items
-        final trimmed = existing.take(10).toList();
-
-        await userProfileRef.set({'recentLocations': trimmed}, SetOptions(merge: true));
-        await usersRef.set({'recentLocations': trimmed}, SetOptions(merge: true));
-      } catch (_) {
-        // ignore
-      }
+      // ── Backup: Firestore ──
+      try {
+        final ref = FirebaseFirestore.instance.collection('users').doc(uid);
+        await ref.set({
+          'defaultLocation': location,
+          'defaultLat': lat,
+          'defaultLon': lon,
+        }, SetOptions(merge: true));
+      } catch (_) {}
     }
 
-    // Update local UI & SharedPreferences
     if (mounted) {
       setState(() {
         selectedLocation = location;
         _searchController.text = location;
         _showSuggestions = false;
-        _defaultCoords = LatLng(lat, lon);
-        if (!_recentLocations.contains(location)) {
-          _recentLocations.insert(0, location);
-          if (_recentLocations.length > 5) _recentLocations = _recentLocations.sublist(0, 5);
-        } else {
-          // move to front
-          _recentLocations.remove(location);
-          _recentLocations.insert(0, location);
+        if (lat != 0) _defaultCoords = LatLng(lat, lon);
+        _recentLocations.remove(location);
+        _recentLocations.insert(0, location);
+        if (_recentLocations.length > 8) {
+          _recentLocations = _recentLocations.sublist(0, 8);
         }
       });
     }
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('recent_locations', _recentLocations);
-    } catch (_) {}
   }
 
   // ---------- Keep user profile loader (unchanged but robust) ----------
   Future<void> _loadUserProfile() async {
-    try {
-      final user = fb.FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+    final user = fb.FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-      Map<String, dynamic>? data;
-      final doc1 = await FirebaseFirestore.instance.collection('userProfile').doc(user.uid).get();
-      if (doc1.exists) data = doc1.data();
-
-      if (data == null) {
-        final doc2 = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if (doc2.exists) data = doc2.data();
+    for (final col in ['users', 'userProfile']) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection(col)
+            .doc(user.uid)
+            .get();
+        if (doc.exists && mounted) {
+          setState(() => userProfile = doc.data());
+          return;
+        }
+      } catch (_) {
+        continue;
       }
-
-      if (!mounted) return;
-      setState(() {
-        userProfile = data;
-      });
-    } catch (_) {}
+    }
   }
 
   // ---------- small helpers used by search & dialog ----------
@@ -1538,7 +1507,7 @@ switch (feature['title']) {
   } else if (key == "Plant Vendors") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
   } else if (key == "Labour Hub") {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourHubHomePage()));
   } else if (key == "Crop Disease") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage()));
   } else if (key == "export hub") {
@@ -1590,7 +1559,7 @@ switch (feature['title']) {
   } else if (key == "Plant Vendors") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
   } else if (key == "Labour Hub") {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourHubHomePage()));
   } else if (key == "Crop Disease") {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage()));
   } else if (key == "export hub") {

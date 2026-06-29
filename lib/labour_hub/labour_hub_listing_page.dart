@@ -44,6 +44,7 @@ class LabourHubListingPage extends StatefulWidget {
 
 class _LabourHubListingPageState extends State<LabourHubListingPage> {
   final _service = LabourHubService();
+  late final Stream<List<dynamic>> _stream;
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
 
@@ -56,6 +57,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   @override
   void initState() {
     super.initState();
+    _stream = _service.streamLabours();
     _fetchLocation();
   }
 
@@ -63,6 +65,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
   void dispose() {
     _searchCtrl.dispose();
     _searchFocus.dispose();
+    _service.dispose();
     super.dispose();
   }
 
@@ -257,8 +260,8 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
         ),
         // ── Worker list ─────────────────────────────────────────
         Expanded(
-          child: StreamBuilder<List<Labour>>(
-            stream: _service.streamLabours(),
+          child: StreamBuilder<List<dynamic>>(
+            stream: _stream,
             builder: (ctx, snap) {
               if (snap.hasError) {
                 return Center(child: Column(mainAxisSize: MainAxisSize.min,
@@ -275,9 +278,10 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
                 return _LHShimmer(isDark: isDark);
               }
 
-              final filtered = _applyFilters(snap.data!);
-              final total = snap.data!.length;
-              final available = snap.data!.where((x) => x.available).length;
+              final typedData = snap.data!.whereType<Labour>().toList();
+              final filtered = _applyFilters(typedData);
+              final total = typedData.length;
+              final available = typedData.where((x) => x.available).length;
 
               if (filtered.isEmpty) {
                 return Center(child: Column(mainAxisSize: MainAxisSize.min,

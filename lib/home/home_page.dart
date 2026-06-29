@@ -16,7 +16,7 @@ import '../exporter_hub/exporter_home_page.dart';
 import '../exporter_hub/notifications_page.dart';
 import '../f2b_mart/f2b_home_page.dart';
 import '../l10n/app_localizations.dart';
-import '../labour_hub/labour_hub_listing_page.dart';
+import '../labour_hub/labour_hub_home_page.dart';
 import '../plant_vendor/plant_vendor_home.dart';
 import '../profile/profile_page.dart';
 import '../rent/rent_home_page.dart';
@@ -151,42 +151,71 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _loadLocation() async {
     final user = _auth.currentUser;
-    if (user != null) {
-      try {
-        for (final col in ['userProfile', 'users']) {
-          final doc = await _db.collection(col).doc(user.uid).get();
-          if (doc.exists) {
-            final d = doc.data()!;
-            final loc = d['defaultLocation']?.toString() ?? '';
-            if (loc.isNotEmpty && mounted) {
-              final lat = (d['defaultLat'] as num?)?.toDouble();
-              final lon = (d['defaultLon'] as num?)?.toDouble();
-              setState(() {
-                _location = loc;
-                if (lat != null && lon != null) { _coords = LatLng(lat, lon); }
-              });
-              break;
-            }
+    if (user == null) return;
+    final uid = user.uid;
+
+    // ── Step 1: SharedPreferences (instant, offline, zero permission issues) ──
+    // This is the primary source — always written on every save.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final loc = prefs.getString('loc_name_$uid') ?? '';
+      final lat = prefs.getDouble('loc_lat_$uid');
+      final lon = prefs.getDouble('loc_lon_$uid');
+      if (loc.isNotEmpty && mounted) {
+        setState(() {
+          _location = loc;
+          if (lat != null && lon != null) _coords = LatLng(lat, lon);
+        });
+      }
+      _recentLocations = prefs.getStringList('recent_locations_$uid') ?? [];
+    } catch (_) {}
+
+    // ── Step 2: Firestore (cross-device sync, async backup) ──
+    // Only updates state if SharedPreferences had nothing.
+    if (_location == 'Select Location') {
+      for (final col in ['users', 'userProfile']) {
+        try {
+          final doc = await _db.collection(col).doc(uid).get();
+          if (!doc.exists) continue;
+          final d = doc.data()!;
+          final loc = d['defaultLocation']?.toString() ?? '';
+          if (loc.isNotEmpty && mounted) {
+            final lat = (d['defaultLat'] as num?)?.toDouble();
+            final lon = (d['defaultLon'] as num?)?.toDouble();
+            setState(() {
+              _location = loc;
+              if (lat != null && lon != null) _coords = LatLng(lat, lon);
+            });
+            // Mirror Firestore data to SharedPreferences for next cold start
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('loc_name_$uid', loc);
+              if (lat != null) await prefs.setDouble('loc_lat_$uid', lat);
+              if (lon != null) await prefs.setDouble('loc_lon_$uid', lon);
+            } catch (_) {}
+            break;
           }
+        } catch (_) {
+          continue;
         }
-        final prefs = await SharedPreferences.getInstance();
-        _recentLocations = prefs.getStringList('recent_locations') ?? [];
-      } catch (_) {}
+      }
     }
   }
 
   Future<void> _loadUserProfile() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    try {
-      for (final col in ['userProfile', 'users']) {
+    for (final col in ['users', 'userProfile']) {
+      try {
         final doc = await _db.collection(col).doc(user.uid).get();
         if (doc.exists && mounted) {
           setState(() => _userProfile = doc.data());
           return;
         }
+      } catch (_) {
+        continue;
       }
-    } catch (_) {}
+    }
   }
 
   Future<void> _saveLocation(String loc) async {
@@ -196,19 +225,37 @@ class _HomeTabState extends State<HomeTab> {
       lat = (c['lat'] as num?)?.toDouble() ?? 0;
       lon = (c['lon'] as num?)?.toDouble() ?? 0;
     } catch (_) {}
+
     final user = _auth.currentUser;
     if (user != null) {
-      final payload = {'defaultLocation': loc, 'defaultLat': lat, 'defaultLon': lon};
-      for (final col in ['userProfile', 'users']) {
-        try { await _db.collection(col).doc(user.uid).set(payload, SetOptions(merge: true)); } catch (_) {}
-      }
+      final uid = user.uid;
+
+      // ── Primary: SharedPreferences (keyed by UID, survives re-login) ──
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('loc_name_$uid', loc);
+        if (lat != 0) await prefs.setDouble('loc_lat_$uid', lat);
+        if (lon != 0) await prefs.setDouble('loc_lon_$uid', lon);
+
+        // Per-user recent searches
+        _recentLocations.remove(loc);
+        _recentLocations.insert(0, loc);
+        if (_recentLocations.length > 8) {
+          _recentLocations = _recentLocations.sublist(0, 8);
+        }
+        await prefs.setStringList('recent_locations_$uid', _recentLocations);
+      } catch (_) {}
+
+      // ── Backup: Firestore (cross-device sync) ──
+      try {
+        await _db.collection('users').doc(uid).set({
+          'defaultLocation': loc,
+          'defaultLat': lat,
+          'defaultLon': lon,
+        }, SetOptions(merge: true));
+      } catch (_) {}
     }
-    final prefs = await SharedPreferences.getInstance();
-    if (!_recentLocations.contains(loc)) {
-      _recentLocations.insert(0, loc);
-      if (_recentLocations.length > 8) _recentLocations = _recentLocations.sublist(0, 8);
-      await prefs.setStringList('recent_locations', _recentLocations);
-    }
+
     if (mounted) setState(() {
       _location = loc;
       if (lat != 0) _coords = LatLng(lat, lon);
@@ -580,7 +627,7 @@ class _HomeTabState extends State<HomeTab> {
         color: Colors.purple,
         title: l.labourHub,
         subtitle: l.hireFarmWorkers,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LabourHubListingPage())),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
       ),
       _SmartServiceData(
         icon: Icons.bug_report_outlined,
@@ -961,7 +1008,7 @@ final _kBanners = [
     icon: Icons.groups_outlined,
     title: (l) => l.hireLabourBanner,
     subtitle: (l) => l.findSkilledFarmWorkers,
-    onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => LabourHubListingPage())),
+    onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
   ),
 ];
 
@@ -1004,7 +1051,7 @@ List<_QuickActionData> _quickActions(BuildContext ctx, AppLocalizations l, Strin
     icon: Icons.groups_outlined,
     gradient: [const Color(0xFF4A148C), const Color(0xFFAB47BC)],
     label: l.labourHub,
-    onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => LabourHubListingPage())),
+    onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
   ),
   _QuickActionData(
     icon: Icons.local_shipping_outlined,
