@@ -7,10 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chatbot/chatbot_page.dart';
+import 'home_search_page.dart';
 import '../crop_disease/crop_disease_page.dart';
 import '../exporter_hub/exporter_home_page.dart';
 import '../exporter_hub/notifications_page.dart';
@@ -256,10 +256,12 @@ class _HomeTabState extends State<HomeTab> {
       } catch (_) {}
     }
 
-    if (mounted) setState(() {
-      _location = loc;
-      if (lat != 0) _coords = LatLng(lat, lon);
-    });
+    if (mounted) {
+      setState(() {
+        _location = loc;
+        if (lat != 0) { _coords = LatLng(lat, lon); }
+      });
+    }
   }
 
   String _greeting(AppLocalizations l) {
@@ -535,21 +537,27 @@ class _HomeTabState extends State<HomeTab> {
           elevation: 3,
           shadowColor: Colors.black.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(14),
-          child: TextField(
-            controller: _searchCtrl,
-            readOnly: true,
-            onTap: () => showToast('Search coming soon'),
-            decoration: InputDecoration(
-              hintText: l.searchHint,
-              hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-              prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
-              suffixIcon: Icon(Icons.mic_outlined, color: cs.primary),
-              filled: true,
-              fillColor: cs.surface,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeSearchPage()),
+            ),
+            child: AbsorbPointer(
+              child: TextField(
+                controller: _searchCtrl,
+                decoration: InputDecoration(
+                  hintText: l.searchHint,
+                  hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                  prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
+                  suffixIcon: Icon(Icons.mic_outlined, color: cs.primary),
+                  filled: true,
+                  fillColor: cs.surface,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
             ),
           ),
@@ -690,12 +698,12 @@ class _HomeTabState extends State<HomeTab> {
   // ── GreenBazaar Highlights ────────────────────────────────────────────────
   Widget _buildGreenBazaar(BuildContext context, AppLocalizations l, ColorScheme cs) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _db.collection('plant_vendors')
-          .orderBy('createdAt', descending: true)
-          .limit(8)
-          .snapshots(),
+      stream: _db.collection('plant_vendors').limit(8).snapshots(),
       builder: (_, snap) {
         if (snap.connectionState == ConnectionState.waiting) return _shimmerRow();
+        if (snap.hasError) {
+          return _emptyHorizontalSection(l.greenBazaar, Icons.storefront_outlined);
+        }
         final docs = snap.data?.docs ?? [];
         if (docs.isEmpty) {
           return _emptyHorizontalSection(l.greenBazaar, Icons.storefront_outlined);
@@ -711,9 +719,9 @@ class _HomeTabState extends State<HomeTab> {
               final d = docs[i].data() as Map<String, dynamic>;
               return _ProductCard(
                 imageUrl: d['imageUrl']?.toString() ?? d['primaryImage']?.toString() ?? '',
-                name: d['name']?.toString() ?? d['plantName']?.toString() ?? '',
+                name: d['plantName']?.toString() ?? d['name']?.toString() ?? '',
                 detail: '₹${d['price']?.toString() ?? d['pricePerUnit']?.toString() ?? ''}',
-                badge: d['category']?.toString(),
+                badge: d['type']?.toString() ?? d['category']?.toString(),
                 badgeColor: Colors.green,
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const PlantVendorHome())),
@@ -728,11 +736,31 @@ class _HomeTabState extends State<HomeTab> {
   // ── Nearby Farmers ────────────────────────────────────────────────────────
   Widget _buildNearbyFarmers(BuildContext context, AppLocalizations l, ColorScheme cs) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _db.collection('export_products')
-          .where('status', isEqualTo: 'approved')
-          .limit(4)
-          .snapshots(),
+      stream: _db.collection('export_products').limit(5).snapshots(),
       builder: (_, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            height: 80,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        if (snap.hasError) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(child: Text(l.noProcurementItems,
+                style: TextStyle(color: cs.onSurfaceVariant))),
+          );
+        }
         final docs = snap.data?.docs ?? [];
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 14),
@@ -744,42 +772,56 @@ class _HomeTabState extends State<HomeTab> {
           child: Column(children: [
             if (docs.isEmpty)
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 child: Column(children: [
                   Icon(Icons.people_outline, size: 48, color: cs.onSurfaceVariant.withValues(alpha: 0.3)),
                   const SizedBox(height: 8),
-                  Text(l.noProcurementItems, style: TextStyle(color: cs.onSurfaceVariant)),
+                  Text('No farmers listed yet',
+                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14)),
                 ]),
               ),
             ...docs.asMap().entries.map((e) {
               final i = e.key;
               final d = e.value.data() as Map<String, dynamic>;
-              final name = d['farmerName']?.toString() ?? 'Farmer';
+              final name = d['farmerName']?.toString() ??
+                  d['sellerName']?.toString() ?? 'Farmer';
               final loc = d['location']?.toString() ?? '';
-              final crop = d['productName']?.toString() ?? '';
-              final img = d['primaryImage']?.toString() ?? '';
+              final crop = d['productName']?.toString() ??
+                  d['name']?.toString() ?? '';
+              final img = d['primaryImage']?.toString() ??
+                  d['imageUrl']?.toString() ?? '';
               return Column(children: [
-                if (i > 0) Divider(height: 1, indent: 60, color: cs.outlineVariant.withValues(alpha: 0.3)),
+                if (i > 0) Divider(height: 1, indent: 60,
+                    color: cs.outlineVariant.withValues(alpha: 0.3)),
                 ListTile(
                   leading: CircleAvatar(
                     backgroundColor: cs.primaryContainer,
                     backgroundImage: img.isNotEmpty ? NetworkImage(img) : null,
-                    child: img.isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'F',
-                        style: TextStyle(color: cs.primary, fontWeight: FontWeight.bold)) : null,
+                    child: img.isEmpty
+                        ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'F',
+                            style: TextStyle(color: cs.primary,
+                                fontWeight: FontWeight.bold))
+                        : null,
                   ),
-                  title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: Text('$crop · $loc', maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                  title: Text(name,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text(
+                    [if (crop.isNotEmpty) crop, if (loc.isNotEmpty) loc].join(' · '),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
                   trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ExporterHomePage())),
                 ),
               ]);
             }),
             if (docs.isNotEmpty)
               TextButton.icon(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
-                icon: const Icon(Icons.map_outlined, size: 16),
-                label: Text(l.openMap),
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ExporterHomePage())),
+                icon: const Icon(Icons.storefront_outlined, size: 16),
+                label: Text(l.viewAll),
               ),
           ]),
         );
@@ -787,20 +829,44 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // ── Personalized Insights ─────────────────────────────────────────────────
+  // ── Personalized Insights / For You ──────────────────────────────────────
   Widget _buildInsights(BuildContext context, AppLocalizations l, fb.User? user) {
     final insights = [
-      _InsightData(icon: Icons.water_drop_outlined, color: Colors.blue,
-          title: l.insightMonitorSoilTitle, subtitle: l.insightMonitorSoilSubtitle),
-      _InsightData(icon: Icons.trending_up_outlined, color: Colors.green,
-          title: l.insightExportPricesTitle, subtitle: l.insightExportPricesSubtitle),
-      _InsightData(icon: Icons.agriculture_outlined, color: Colors.brown,
-          title: l.insightRentMachineTitle, subtitle: l.insightRentMachineSubtitle),
-      _InsightData(icon: Icons.chat_bubble_outlined, color: Colors.indigo,
-          title: l.insightAskAiTitle, subtitle: l.insightAskAiSubtitle),
+      _InsightData(
+        icon: Icons.wb_sunny_outlined,
+        color: Colors.orange,
+        title: l.insightMonitorSoilTitle,
+        subtitle: l.insightMonitorSoilSubtitle,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => WeatherPage(location: _location))),
+      ),
+      _InsightData(
+        icon: Icons.trending_up_outlined,
+        color: Colors.green,
+        title: l.insightExportPricesTitle,
+        subtitle: l.insightExportPricesSubtitle,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ExporterHomePage())),
+      ),
+      _InsightData(
+        icon: Icons.agriculture_outlined,
+        color: const Color(0xFF795548),
+        title: l.insightRentMachineTitle,
+        subtitle: l.insightRentMachineSubtitle,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const RentHomePage())),
+      ),
+      _InsightData(
+        icon: Icons.chat_bubble_outline_rounded,
+        color: Colors.indigo,
+        title: l.insightAskAiTitle,
+        subtitle: l.insightAskAiSubtitle,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ChatbotPage())),
+      ),
     ];
     return SizedBox(
-      height: 116,
+      height: 130,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1089,7 +1155,8 @@ class _InsightData {
   final Color color;
   final String title;
   final String subtitle;
-  const _InsightData({required this.icon, required this.color, required this.title, required this.subtitle});
+  final VoidCallback? onTap;
+  const _InsightData({required this.icon, required this.color, required this.title, required this.subtitle, this.onTap});
 }
 
 // ─── UI helper widgets ────────────────────────────────────────────────────────
@@ -1302,30 +1369,33 @@ class _InsightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: data.color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: data.color.withValues(alpha: 0.2)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-        Row(children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(color: data.color.withValues(alpha: 0.15), shape: BoxShape.circle),
-            child: Icon(data.icon, color: data.color, size: 18),
-          ),
-          const Spacer(),
-          Icon(Icons.arrow_forward_rounded, color: data.color, size: 16),
+    return GestureDetector(
+      onTap: data.onTap,
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: data.color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: data.color.withValues(alpha: 0.2)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+          Row(children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: data.color.withValues(alpha: 0.15), shape: BoxShape.circle),
+              child: Icon(data.icon, color: data.color, size: 18),
+            ),
+            const Spacer(),
+            Icon(Icons.arrow_forward_rounded, color: data.color, size: 16),
+          ]),
+          const SizedBox(height: 8),
+          Text(data.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: data.color)),
+          const SizedBox(height: 3),
+          Text(data.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
         ]),
-        const SizedBox(height: 8),
-        Text(data.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: data.color)),
-        const SizedBox(height: 3),
-        Text(data.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-      ]),
+      ),
     );
   }
 }

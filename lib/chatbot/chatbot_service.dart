@@ -3,68 +3,78 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class ChatbotService {
-  final String? _geminiKey = dotenv.env['GEMINI_API_KEY'];
+  final String _geminiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  // ✅ Use v1beta (important)
   static const String _geminiUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-  Future<String> getBotReply(String userMessage, String language) async {
-    if (_geminiKey == null || _geminiKey!.isEmpty) {
-      return "⚠️ AI service not configured.";
+  static String _langInstruction(String langCode) {
+    switch (langCode) {
+      case 'kn': return 'Respond in Kannada (ಕನ್ನಡ).';
+      case 'hi': return 'Respond in Hindi (हिंदी).';
+      case 'ta': return 'Respond in Tamil (தமிழ்).';
+      case 'te': return 'Respond in Telugu (తెలుగు).';
+      case 'mr': return 'Respond in Marathi (मराठी).';
+      default:   return 'Respond in simple English.';
     }
+  }
 
-    // 🌐 Language control
-    String langInstruction = "";
-
-    if (language == "KN") {
-      langInstruction = "Respond in Kannada.";
-    } else if (language == "HI") {
-      langInstruction = "Respond in Hindi.";
-    } else {
-      langInstruction = "Respond in simple English.";
+  Future<String> getBotReply(String userMessage, String langCode) async {
+    if (_geminiKey.isEmpty) {
+      return '⚠️ AI service not configured. Please add GEMINI_API_KEY to .env';
     }
+    final prompt =
+        'You are KrishiMithra, an expert Indian agriculture assistant.\n'
+        'Give clear, practical, farmer-friendly answers.\n'
+        'Keep answers concise (under 200 words).\n'
+        '${_langInstruction(langCode)}\n\n'
+        'User question: $userMessage';
+    return _callGemini(prompt);
+  }
 
+  /// Calls Gemini to translate/adapt a [contextHint] from the local knowledge
+  /// base into [langCode], keeping it relevant to [userMessage].
+  Future<String> getBotReplyWithContext(
+      String userMessage, String langCode, String contextHint) async {
+    if (_geminiKey.isEmpty) {
+      return '⚠️ AI service not configured. Please add GEMINI_API_KEY to .env';
+    }
+    final prompt =
+        'You are KrishiMithra, an expert Indian agriculture assistant.\n'
+        '${_langInstruction(langCode)}\n'
+        'Use the reference information below to answer the farmer\'s question accurately.\n'
+        'Keep the response practical and under 200 words.\n\n'
+        'Reference information (in English):\n$contextHint\n\n'
+        'Farmer\'s question: $userMessage';
+    return _callGemini(prompt);
+  }
+
+  Future<String> _callGemini(String prompt) async {
     try {
-      final uri = Uri.parse("$_geminiUrl?key=$_geminiKey");
-
+      final uri = Uri.parse('$_geminiUrl?key=$_geminiKey');
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "contents": [
+          'contents': [
             {
-              "parts": [
-                {
-                  "text":
-                      "You are KrishiMithra, an expert Indian agriculture assistant.\n"
-                      "Give clear, practical, farmer-friendly answers.\n"
-                      "Keep answers short and useful.\n"
-                      "$langInstruction\n\n"
-                      "User question: $userMessage"
-                }
+              'parts': [
+                {'text': prompt}
               ]
             }
           ]
         }),
       );
-
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
-
       if (response.statusCode != 200) {
-        return "⚠️ AI server error (${response.statusCode})";
+        return '⚠️ AI server error (${response.statusCode}). Please try again.';
       }
-
       final decoded = jsonDecode(response.body);
-
       return decoded['candidates']?[0]?['content']?['parts']?[0]?['text']
               ?.toString()
               .trim() ??
-          "Sorry, I couldn't understand that.";
-    } catch (e) {
-      print("ERROR: $e");
-      return "⚠️ Error connecting to AI service.";
+          'Sorry, I could not generate a response.';
+    } catch (_) {
+      return '⚠️ Unable to connect to AI service. Check your internet connection.';
     }
   }
 }

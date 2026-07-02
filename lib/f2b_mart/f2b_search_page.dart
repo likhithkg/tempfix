@@ -425,7 +425,7 @@ class _F2BSearchPageState extends State<F2BSearchPage> {
                 child: Row(
                   children: [
                     Text(
-                      '${results.length} ${l.resultsFound}',
+                      l.resultsFound(results.length),
                       style: const TextStyle(
                           fontSize: 13,
                           color: KMColors.textSecondary,

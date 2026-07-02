@@ -1,0 +1,205 @@
+{
+  "category": "crop_diseases",
+  "items": [
+    {
+      "title": "Rice Blast Disease",
+      "keywords": ["rice blast", "paddy blast", "Pyricularia", "diamond shaped lesion", "grey lesion", "neck blast", "collar blast", "leaf blast", "node blast", "fungal disease rice"],
+      "question": "How do I identify and control rice blast disease?",
+      "answer": "Rice blast (Magnaporthe oryzae) is the most destructive rice disease worldwide. Leaf blast: diamond or spindle-shaped lesions with grey-white centre and brown border. Neck blast: rotting of the panicle neck causes the entire panicle to turn white (called 'deadhead'). Favoured by cool nights (below 24°C), heavy dew, and excess nitrogen. Control: (1) Treat seeds with Carbendazim 50WP (2 g/kg) before sowing. (2) Avoid excess nitrogen — split application is key. (3) At first sign of leaf blast, spray Tricyclazole 75WP at 0.6 g/litre or Isoprothiolane 40EC at 1.5 ml/litre. (4) Repeat spray at heading/flowering stage to protect the neck. (5) Drain water for 5–7 days after spray. Use resistant varieties like IR-64, Swarna Sub1, CO-51. Avoid planting susceptible varieties continuously.",
+      "related_topics": ["rice cultivation", "fungicide", "seed treatment", "nitrogen management"],
+      "language": "en"
+    },
+    {
+      "title": "Rice Sheath Blight",
+      "keywords": ["sheath blight", "rice", "Rhizoctonia", "water soaked lesion", "oval lesion", "lodging", "humid conditions", "banded leaf"],
+      "question": "What is sheath blight in rice and how to control it?",
+      "answer": "Sheath blight (Rhizoctonia solani) is the second most important rice disease. Initial symptoms: oval or irregular water-soaked lesions on leaf sheath near water level, with white-grey centre and dark brown border. As disease progresses, lesions coalesce, leaves collapse. Favoured by high humidity, dense planting, and high nitrogen. Control: (1) Avoid dense transplanting — maintain recommended spacing (20×15 cm). (2) Reduce nitrogen dose, split application. (3) Spray Hexaconazole 5EC at 2 ml/litre or Propiconazole 25EC at 1 ml/litre or Validamycin 3L at 2 ml/litre at early disease stage. (4) Sclerotia survive in soil — drain and dry field between crops. (5) Use moderate nitrogen; avoid luxury nitrogen application. Biological control: Trichoderma viride or T. harzianum @ 2.5 kg/ha in irrigation water.",
+      "related_topics": ["rice cultivation", "fungicide", "nitrogen management", "biological control"],
+      "language": "en"
+    },
+    {
+      "title": "Bacterial Leaf Blight of Rice",
+      "keywords": ["bacterial leaf blight", "BLB", "Xanthomonas", "rice", "kresek", "wilting seedlings", "yellow stripe", "water soaked margins", "turbid droplets"],
+      "question": "How do I control bacterial leaf blight in rice?",
+      "answer": "Bacterial Leaf Blight (BLB) is caused by Xanthomonas oryzae pv. oryzae. Two phases: (1) Kresek — seedlings wilt and die in nursery or soon after transplanting in heavily infected fields. (2) Leaf blight — water-soaked to yellow stripes along leaf margins from tip, which dry into straw-yellow to white. Bacterial ooze (milky droplets) on cut leaf surface placed in water is diagnostic. Favoured by flood, injuries from storms, and excess nitrogen. No effective curative chemical; management is preventive: (1) Use resistant varieties (IR-64, Swarna Sub1, Pusa Basmati 1509). (2) Drain water after a cyclone/flood to reduce spread. (3) Spray Copper oxychloride 50WP at 3 g/litre + Streptomycin sulphate 90% at 0.5 g/10 litres at early stages. (4) Avoid excess N, especially urea top dressing during rainy weather. (5) Remove and burn crop debris.",
+      "related_topics": ["rice cultivation", "copper fungicide", "bacterial disease", "resistant varieties"],
+      "language": "en"
+    },
+    {
+      "title": "Brown Spot of Rice",
+      "keywords": ["brown spot", "rice", "Helminthosporium", "Bipolaris", "circular brown lesion", "nutrient deficiency", "seed borne"],
+      "question": "What causes brown spots on rice leaves?",
+      "answer": "Brown Spot (Bipolaris oryzae / Helminthosporium oryzae) causes circular to oval lesions with brown margin and grey-white centre on leaves, grains, and sheaths. Often associated with nutrient-deficient soils, particularly potassium and silicon deficiency. Grains show dark discolouration reducing quality. Severely affected in areas with nutrient-poor, light soils. Management: (1) Correct soil nutrient deficiencies — apply balanced NPK, especially potassium. (2) Apply silica-containing amendments (slag, silica gel) where silicon is deficient. (3) Treat seeds with Carbendazim 2 g/kg or Iprodione 2 g/kg before sowing. (4) Spray Mancozeb 75WP at 2.5 g/litre or Copper oxychloride 50WP at 3 g/litre. (5) Avoid water stress during crop growth. This disease indicates an underlying soil nutrient problem — soil testing is recommended.",
+      "related_topics": ["rice cultivation", "soil testing", "nutrient management", "seed treatment"],
+      "language": "en"
+    },
+    {
+      "title": "False Smut and Narrow Brown Leaf Spot of Rice",
+      "keywords": ["false smut", "rice", "Ustilaginoidea", "green balls", "narrow brown leaf spot", "Cercospora"],
+      "question": "What is false smut in rice?",
+      "answer": "False Smut (Ustilaginoidea virens) converts individual rice grains into orange-yellow powdery balls that become olive-green to black. Only a few grains per panicle are affected. Favoured by high humidity and rainfall during the flowering and grain-filling stages. The smut balls are toxic — grain contamination can cause food safety issues. Control: (1) Spray Propiconazole 25EC at 1 ml/litre at boot leaf stage (10–15 days before heading). (2) Copper oxychloride 50WP at 3 g/litre can also be used at panicle initiation. (3) Avoid excess nitrogen. (4) Use certified clean seed. Narrow Brown Leaf Spot (Cercospora janseana) causes narrow brown lines with yellow halo — spray Carbendazim 50WP at 1 g/litre or Mancozeb 75WP at 2.5 g/litre.",
+      "related_topics": ["rice cultivation", "fungicide", "grain quality"],
+      "language": "en"
+    },
+    {
+      "title": "Wheat Rust Diseases",
+      "keywords": ["wheat rust", "yellow rust", "stripe rust", "brown rust", "leaf rust", "stem rust", "black rust", "Puccinia", "orange pustule", "urediniospore"],
+      "question": "How do I identify and manage rust diseases in wheat?",
+      "answer": "Three rust types affect wheat in India: (1) Yellow/Stripe Rust (Puccinia striiformis) — yellow stripes of pustules along leaf veins; appears in cool temperatures (10–15°C); mainly in Punjab, Haryana, HP. (2) Brown/Leaf Rust (P. triticina) — round orange-brown pustules on upper leaf surface; most common rust; favoured at 15–22°C. (3) Stem/Black Rust (P. graminis) — red-brown pustules on stems and leaves turning black; less common now due to resistant varieties. Management: (1) Grow resistant varieties — HD-3086, PBW-343 resist leaf rust; HD-2967 resists yellow rust. (2) At first appearance of pustules, spray Propiconazole 25EC at 1 ml/litre or Tebuconazole 250EW at 1 ml/litre. (3) Repeat spray after 15 days if disease persists. (4) Avoid late sowing, which increases rust susceptibility. (5) Destroy volunteer plants and alternate hosts.",
+      "related_topics": ["wheat cultivation", "fungicide", "resistant varieties", "rabi crops"],
+      "language": "en"
+    },
+    {
+      "title": "Karnal Bunt of Wheat",
+      "keywords": ["karnal bunt", "wheat", "partial bunt", "Tilletia indica", "fishy smell", "smut", "black powder", "grain quality"],
+      "question": "What is Karnal bunt in wheat and how to prevent it?",
+      "answer": "Karnal Bunt (Tilletia indica) is a seed-borne fungal disease of wheat where part of the grain is converted to black, fishy-smelling spore mass. Unlike loose smut, only part of the grain is infected (partial bunt). Spores survive in soil for many years. It is a quarantine pest in many importing countries. Management: (1) Use certified disease-free seed. (2) Treat seed with Vitavax (Carboxin + Thiram) at 2.5 g/kg or Tebuconazole 2 DS at 1 g/kg seed before sowing. (3) Avoid late planting, which favours infection during heading. (4) Spray Propiconazole 25EC at 1 ml/litre at heading stage when 50% heads have emerged. (5) Do not use infected grain as seed. (6) Rotate fields; maintain field hygiene. Report infected fields to the local agriculture department as it affects export.",
+      "related_topics": ["wheat cultivation", "seed treatment", "fungicide", "wheat export"],
+      "language": "en"
+    },
+    {
+      "title": "Loose Smut and Powdery Mildew of Wheat",
+      "keywords": ["loose smut", "wheat smut", "powdery mildew", "wheat", "Ustilago", "white powder", "Erysiphe", "seed treatment"],
+      "question": "How do I control loose smut and powdery mildew in wheat?",
+      "answer": "Loose Smut (Ustilago tritici): Entire grain is replaced by black smut mass that blows away at heading, leaving bare rachis. Infection happens through flowers during the previous season — the pathogen overwinters in seed embryo. Control entirely through seed treatment: Carboxin 37.5% + Thiram 37.5% WP (Vitavax 200) at 2.5–3 g/kg seed, or Tebuconazole DS 2% at 1 g/kg. Hot Water Treatment: soak seed in water at 52°C for 10 minutes, then cool and dry — effective but must be precise. Powdery Mildew (Erysiphe graminis): White, powdery fungal growth on leaves and stems; severe in cool, humid weather. Spray Sulphur 80WP at 3 g/litre or Triadimefon 25WP at 0.5 g/litre at first appearance. Use resistant varieties when available.",
+      "related_topics": ["wheat cultivation", "seed treatment", "fungicide", "wheat rust"],
+      "language": "en"
+    },
+    {
+      "title": "Late Blight of Potato and Tomato",
+      "keywords": ["late blight", "potato", "tomato", "Phytophthora infestans", "water soaked", "white mold", "mildewy", "green-brown lesion", "rapid spread", "cool humid"],
+      "question": "How do I control late blight in potato and tomato?",
+      "answer": "Late Blight (Phytophthora infestans) is the most destructive disease of potato and tomato — the same pathogen caused the Irish Famine. Initial symptoms: water-soaked, irregular, greenish-brown spots on older leaves, with white mouldy growth on undersides in humid conditions. Disease spreads rapidly — entire field can be destroyed in 3–5 days under cool (10–20°C), humid (>90% RH) conditions. On tubers: reddish-brown rot from surface inward. Management: (1) Apply Metalaxyl + Mancozeb 72WP (Ridomil Gold) at 2.5 g/litre preventively when weather is cool and humid. (2) Alternate with Copper oxychloride 50WP at 3 g/litre. (3) Spray Cymoxanil + Mancozeb (Curzate M) at 3 g/litre for curative action. (4) Spray every 7 days during favourable weather. (5) Avoid overhead irrigation; water in morning. (6) Remove and burn infected debris. (7) Harvest tubers in dry weather; cure before storage.",
+      "related_topics": ["potato cultivation", "tomato cultivation", "fungicide", "crop diseases"],
+      "language": "en"
+    },
+    {
+      "title": "Early Blight of Potato and Tomato",
+      "keywords": ["early blight", "Alternaria", "potato", "tomato", "target spot", "concentric rings", "older leaves", "dark brown lesion"],
+      "question": "What is early blight and how do I manage it?",
+      "answer": "Early Blight (Alternaria solani) affects potato and tomato, appearing first on older lower leaves. Symptoms: dark-brown circular lesions with concentric rings (target-board appearance) and yellow halo. Unlike late blight, early blight appears on older leaves and does not spread explosively. Favoured by alternating wet and dry conditions, and high temperatures (25–30°C). Spread is slower than late blight but reduces yield significantly. Management: (1) Spray Mancozeb 75WP at 2.5 g/litre or Chlorothalonil 75WP at 2 g/litre preventively from 30 DAS onwards, every 10–15 days. (2) At first appearance of lesions, spray Azoxystrobin 23SC at 1 ml/litre or Difenoconazole 25EC at 1 ml/litre. (3) Avoid overhead irrigation, irrigate in morning. (4) Remove infected lower leaves. (5) Apply balanced fertilization — excess nitrogen increases susceptibility.",
+      "related_topics": ["potato cultivation", "tomato cultivation", "fungicide", "late blight"],
+      "language": "en"
+    },
+    {
+      "title": "Bacterial Wilt Disease",
+      "keywords": ["bacterial wilt", "Ralstonia", "tomato", "potato", "brinjal", "wilt", "vascular browning", "brown stem", "rapid wilt", "soilborne"],
+      "question": "What causes bacterial wilt in vegetables and how to manage it?",
+      "answer": "Bacterial Wilt (Ralstonia solanacearum) is a soilborne disease affecting tomato, potato, brinjal, chilli, and ginger. Classic symptom: sudden wilting of plants during warm part of the day, initially recovering at night; then permanent wilt and death. Cut the stem near soil — dark brown vascular discolouration is visible. In water, a milky bacterial ooze streams from the cut. No effective chemical cure once established in soil. Management: (1) Grow grafted tomato/brinjal on resistant rootstocks (Solanum torvum for brinjal; KNVF-rootstock for tomato). (2) Do not replant solanaceous crops in infected fields for 3–4 years — rotate with maize, cereals, or non-host crops. (3) Solarise soil before planting (covered with transparent plastic film for 40–60 days in summer). (4) Use PGPR (Pseudomonas fluorescens) drench at transplanting. (5) Avoid injury to roots during cultivation. (6) Remove and burn infected plants immediately.",
+      "related_topics": ["tomato cultivation", "brinjal cultivation", "crop rotation", "soil solarisation"],
+      "language": "en"
+    },
+    {
+      "title": "Fusarium Wilt",
+      "keywords": ["fusarium wilt", "vascular wilt", "cotton", "banana", "tomato", "chickpea", "yellowing", "brown vascular tissue", "soilborne", "Panama wilt"],
+      "question": "How do I identify and control Fusarium wilt?",
+      "answer": "Fusarium Wilt (Fusarium oxysporum — various formae speciales) is a vascular soilborne disease causing yellowing of lower leaves, progressing upward, with eventual plant death. Cross-section of stem shows characteristic brown discolouration of vascular tissue. Persists in soil for 20+ years as chlamydospores. Crop-specific forms: F. oxysporum f.sp. vasinfectum (cotton), f.sp. cubense (banana Panama wilt), f.sp. lycopersici (tomato), f.sp. ciceris (chickpea). Management: (1) Use resistant/tolerant varieties — most important strategy. (2) Soil drench with Carbendazim 50WP (1 g/litre) or Trichoderma viride (4 g/litre) before planting. (3) Treat seeds with Trichoderma viride (4 g/kg) + Carbendazim (2 g/kg). (4) Avoid acid soils (raise pH to 6.5–7.0). (5) Crop rotation — avoid planting same susceptible crop for 3–5 years. (6) Apply FYM/compost to enhance soil microbial activity. (7) For banana: plant in uninfected soil using tissue culture plants.",
+      "related_topics": ["cotton cultivation", "banana cultivation", "soil health", "biological control"],
+      "language": "en"
+    },
+    {
+      "title": "Damping Off and Seedling Diseases",
+      "keywords": ["damping off", "seedling rot", "Pythium", "Rhizoctonia", "nursery", "stem rot", "collar rot", "seedling death", "pre-emergence", "post-emergence"],
+      "question": "How do I prevent damping off in nurseries?",
+      "answer": "Damping Off is caused by Pythium, Rhizoctonia, and Phytophthora species, killing seedlings before (pre-emergence) or just after (post-emergence) emergence. Pre-emergence: seeds rot underground. Post-emergence: stem at soil level becomes water-soaked and thin, seedling falls over (characteristic symptom). Severe in wet, cool conditions with overcrowded nurseries. Management: (1) Sterilise nursery soil by solarisation for 4–6 weeks or drenching with Formalin (1:40) 2 weeks before sowing. (2) Treat seeds with Thiram 3 g/kg + Carbendazim 1 g/kg before sowing. (3) Avoid overwatering — maintain adequate drainage in nursery beds. (4) Drench nursery beds with Metalaxyl + Mancozeb 72WP (2.5 g/litre) at sowing or at first sign of disease. (5) Spray Copper oxychloride 3 g/litre on seedlings as preventive. (6) Maintain 4–6 cm raised bed height for drainage. (7) Remove and destroy affected seedlings immediately.",
+      "related_topics": ["nursery management", "seed treatment", "vegetable cultivation", "fungicide"],
+      "language": "en"
+    },
+    {
+      "title": "Downy Mildew Diseases",
+      "keywords": ["downy mildew", "grape", "cucumber", "pearl millet", "bajra", "onion", "maize", "yellow patches", "purple downy", "angular lesion", "sporulation undersides"],
+      "question": "What is downy mildew and how do I control it?",
+      "answer": "Downy Mildew affects many crops including grapes, cucurbits, pearl millet (Bajra), onion, and sorghum. Symptoms: yellow or chlorotic patches on upper leaf surface with grey-purple downy fungal sporulation on the underside. In pearl millet downy mildew (Sclerospora graminicola), plants produce profuse small green leaves ('green ear') instead of grain. In grape, yellow oil-spot lesions on leaves with white downy growth underneath; infected berries shrivel. Management: (1) Spray Metalaxyl + Mancozeb 72WP at 2.5 g/litre preventively (most effective systemic fungicide). (2) Fosetyl-Al 80WP at 3 g/litre is effective for grape downy mildew. (3) Copper oxychloride 50WP at 3 g/litre as protective spray. (4) For bajra: treat seeds with Metalaxyl 35WS at 6 g/kg; use resistant varieties (HHB-67, MPMH-17). (5) Avoid overwatering; improve air circulation in dense canopies. (6) Remove and burn infected plant material.",
+      "related_topics": ["fungicide", "pearl millet", "grape disease", "crop rotation"],
+      "language": "en"
+    },
+    {
+      "title": "Powdery Mildew Diseases",
+      "keywords": ["powdery mildew", "white powder", "chilli", "mango", "pea", "cucurbits", "grape", "gourd", "sulphur", "fungicide"],
+      "question": "How do I control powdery mildew?",
+      "answer": "Powdery Mildew (various Erysiphales fungi) appears as white, talc-like powdery growth on the upper surface of leaves, young shoots, and fruit. Unlike downy mildew, it favours warm days and cool nights with low humidity (does not need free water). Affects mango (Oidium mangiferae), chilli, cucurbits (Sphaerotheca fuliginea), pea, grape (Erysiphe necator), and wheat. On mango, white powder on inflorescences causes fruit drop. Management: (1) Sulphur (Wettable Sulphur 80WP) at 3 g/litre is the most cost-effective control — do not use above 35°C as it causes burning. (2) Triadimefon 25WP at 0.5 g/litre or Hexaconazole 5EC at 2 ml/litre are systemic options. (3) Azoxystrobin 23SC at 1 ml/litre gives excellent control. (4) For mango: spray Dinocap 0.5 ml/litre or Karathane at bud emergence. (5) Alternate fungicides to prevent resistance. (6) Avoid excess nitrogen, which increases susceptibility.",
+      "related_topics": ["mango cultivation", "fungicide", "wheat powdery mildew", "cucurbit diseases"],
+      "language": "en"
+    },
+    {
+      "title": "Anthracnose Disease",
+      "keywords": ["anthracnose", "mango", "chilli", "grape", "Colletotrichum", "sunken lesion", "fruit rot", "postharvest", "dark lesion", "bitter rot"],
+      "question": "What is anthracnose and how do I control it?",
+      "answer": "Anthracnose (Colletotrichum gloeosporioides and related species) causes dark, sunken, water-soaked lesions on fruits, leaves, and stems. Most important on mango, chilli, grape, papaya, and avocado. On mango: dark sunken spots on ripe fruit that enlarge rapidly; lesions on flowers reduce fruit set. On chilli: sunken black lesions on fruit, often post-harvest. On grape: dark angular lesions on berries, shoots, and leaves (Bird's-eye spot). Management: (1) Pre-harvest spray programme: Carbendazim 50WP at 1 g/litre or Copper oxychloride 50WP at 3 g/litre at fortnightly intervals during fruit development. (2) For mango: spray Mancozeb 75WP at 2.5 g/litre at panicle emergence, repeat at fruit set. (3) Post-harvest: hot water treatment at 52°C for 5 minutes, or treat with Carbendazim dip (1 g/litre). (4) Prune and burn infected twigs. (5) Avoid injuries during harvest.",
+      "related_topics": ["mango cultivation", "chilli cultivation", "post harvest management", "fungicide"],
+      "language": "en"
+    },
+    {
+      "title": "Mosaic Virus Diseases",
+      "keywords": ["mosaic virus", "yellow mosaic", "mottling", "stunting", "soybean mosaic", "bean mosaic", "cucumber mosaic", "CMV", "whitefly transmitted", "aphid transmitted"],
+      "question": "How do I control mosaic virus in crops?",
+      "answer": "Mosaic viruses cause characteristic yellow-green mottling of leaves, leaf distortion, stunting, and reduced yield in many crops. Yellow Mosaic Virus (MYMV) is devastating in soybean, black gram, mung bean, and cowpea — transmitted by whitefly (Bemisia tabaci). Cucumber Mosaic Virus (CMV) affects cucurbits, peppers, and tomato — transmitted by aphids. Tobacco Mosaic Virus (TMV) is mechanically spread in tobacco, tomato, and pepper. Management: (1) No chemical cures viral diseases — focus on vector control. (2) Control whitefly with Imidacloprid 17.8SL at 0.3 ml/litre or Thiamethoxam 25WG at 0.3 g/litre; control aphids with Dimethoate 30EC at 2 ml/litre. (3) Use resistant varieties wherever available (VBN-1 for black gram; JS-335 for soybean). (4) Remove and burn infected plants. (5) Install reflective mulch to repel vectors. (6) Maintain weed-free fields — weeds harbour viruses. (7) Do not transplant obviously infected seedlings.",
+      "related_topics": ["whitefly control", "aphid control", "soybean cultivation", "vegetable cultivation"],
+      "language": "en"
+    },
+    {
+      "title": "Leaf Curl Virus in Chilli, Tomato, and Cotton",
+      "keywords": ["leaf curl", "chilli leaf curl", "tomato leaf curl", "cotton leaf curl", "CLCuV", "TYLCV", "begomovirus", "whitefly", "upward curl", "yellow edge"],
+      "question": "How do I identify and control leaf curl virus?",
+      "answer": "Leaf Curl Viruses (Begomoviruses — genus Begomovirus) are transmitted exclusively by whitefly (Bemisia tabaci). Chilli Leaf Curl: leaves curl upward, veins turn purple, stunted growth. Tomato Yellow Leaf Curl (TYLCV): leaves curl upward with yellow margins, severely stunted plants. Cotton Leaf Curl (CLCuV): leaves curl downward, veins swell (vein swelling), small leaf-like enations on undersides — devastating in Punjab and Haryana cotton. Management: (1) Control whitefly populations early and aggressively — spray Spiromesifen 22.9SC at 0.75 ml/litre or Buprofezin 25SC at 2 ml/litre. (2) Apply Neonicotinoids (Imidacloprid, Thiamethoxam) as soil drench or seed treatment at planting. (3) Install 60-mesh insect-proof nets over nursery beds. (4) Remove and destroy infected plants. (5) Plant tolerant varieties for cotton (CLCuV-tolerant hybrids). (6) Avoid planting near older infected crops. (7) Maintain 15-day virus-free period before transplanting.",
+      "related_topics": ["whitefly control", "cotton cultivation", "chilli cultivation", "tomato cultivation"],
+      "language": "en"
+    },
+    {
+      "title": "Root Rot and Crown Rot Diseases",
+      "keywords": ["root rot", "crown rot", "Rhizoctonia", "Pythium", "Fusarium root rot", "charcoal rot", "root discolouration", "plant collapse", "soilborne"],
+      "question": "How do I identify and manage root rot in crops?",
+      "answer": "Root rot and crown rot diseases are caused by Pythium, Rhizoctonia solani, Fusarium spp., Macrophomina phaseolina (charcoal rot), and Sclerotium rolfsii. Symptoms: plant yellows, wilts, and collapses; roots are brown/black and rotted; stem base shows brown lesion. Charcoal rot (Macrophomina): plants dry prematurely with black discolouration of root and lower stem tissues that resemble charcoal. Crown rot (Sclerotium rolfsii): white cottony mycelium with tiny brown mustard-seed-like sclerotia at soil level. Management: (1) Improve drainage — raised beds, deep ploughing, organic matter addition. (2) Treat seeds with Thiram + Carbendazim (1:1) at 3 g/kg. (3) Soil application of Trichoderma viride (5 kg/ha mixed in FYM). (4) Drench with Metalaxyl + Mancozeb (2.5 g/litre) for Pythium or Copper oxychloride (3 g/litre). (5) Avoid overwatering. (6) Rotate crops. (7) For Sclerotium: deep plough to bury sclerotia, apply Neem cake at 250 kg/ha.",
+      "related_topics": ["soil health", "drainage", "biological control", "seed treatment"],
+      "language": "en"
+    },
+    {
+      "title": "Sugarcane Red Rot and Wilt",
+      "keywords": ["sugarcane red rot", "Colletotrichum falcatum", "red discolouration", "pith white patches", "wilt", "Fusarium", "stalks dry", "juice reduces"],
+      "question": "How do I control red rot disease in sugarcane?",
+      "answer": "Red Rot (Colletotrichum falcatum) is the most serious fungal disease of sugarcane. Symptoms: third leaf from top shows red midrib; on splitting stalks, internodes show red discolouration with white patches at intervals ('red and white' appearance); characteristic acidic/alcoholic fermented smell of infected juice. Disease spreads through infected setts and by water splash. Wilt (Fusarium sacchari): yellowing and drying of leaves from bottom up; pink discolouration at nodes inside split stalks. Management: (1) Use disease-free seed cane — plant from certified nurseries. (2) Treat setts in hot water at 50°C for 2 hours or Carbendazim 0.1% solution for 5 minutes before planting. (3) Use resistant varieties like Co-86032, CoSe-92423 — avoid susceptible ones like Co-419, CoJ-64. (4) Drain waterlogged fields — fungus spreads rapidly in flooded conditions. (5) Remove and burn infected clumps. (6) Follow a 3-year gap before replanting in infected areas.",
+      "related_topics": ["sugarcane cultivation", "seed sett treatment", "fungicide", "resistant varieties"],
+      "language": "en"
+    },
+    {
+      "title": "Pepper Quick Wilt (Foot Rot)",
+      "keywords": ["pepper quick wilt", "Phytophthora capsici", "black pepper", "foot rot", "collar rot", "sudden collapse", "waterlogging", "Kerala"],
+      "question": "What is quick wilt in pepper and how do I manage it?",
+      "answer": "Quick Wilt (Phytophthora capsici) is the most destructive disease of black pepper, capable of killing an entire garden in a short rainy season. Symptoms: vines wilt suddenly, leaves droop and turn yellow, black lesion at collar region and roots; infected tissue smells putrid. Spread is rapid through contaminated soil and water. Management: (1) Avoid waterlogging — ensure good drainage on slopes; remove soil accumulated against the base of standards. (2) Drench soil at base of vines with Metalaxyl + Mancozeb 72WP (3 g/litre) at start of monsoon. (3) Apply Potassium Phosphonate (0.3%) to collar region and spray foliage with 0.3% solution at monthly intervals during monsoon. (4) Apply Trichoderma harzianum + Pseudomonas fluorescens (each at 25 g/vine mixed with FYM) as a biocontrol measure in April–May. (5) Maintain thick mulch to prevent soil splash. (6) Disinfect cutting tools with bleach. (7) Uproot and burn dead vines; do not replant immediately in the same spot.",
+      "related_topics": ["pepper cultivation", "Phytophthora", "biological control", "spice crops"],
+      "language": "en"
+    },
+    {
+      "title": "Cardamom Katte (Mosaic) Disease",
+      "keywords": ["cardamom katte", "cardamom mosaic", "yellow mosaic", "cardamom disease", "aphid transmitted", "stunting", "cardamom virus"],
+      "question": "What is Katte disease in cardamom?",
+      "answer": "Katte (meaning 'blemish' in Kannada) or Cardamom Mosaic Disease is a devastating viral disease caused by Banana streak virus-cardamom strain, transmitted by the aphid Pentalonia nigronervosa. Symptoms: characteristic yellow mosaic pattern on leaves — alternate yellow and green streaks; stunted plants with reduced tillering; capsules are few and small. Severely infected plants stop producing. No cure exists once infected. Management: (1) Rogue out (remove and burn) infected plants along with soil from the root zone — the most critical step. (2) Control aphid vectors with Dimethoate 30EC at 2 ml/litre sprayed on new growth monthly. (3) Maintain weed-free field; many weeds harbour aphids. (4) Plant new gardens only with certified disease-free nursery material (sucker-indexed for freedom from Katte). (5) Do not take planting material from infected gardens. (6) Install yellow sticky traps to monitor aphid population. (7) Early rouging (within 2 weeks of symptom observation) prevents spread.",
+      "related_topics": ["cardamom cultivation", "aphid control", "virus disease", "spice crops"],
+      "language": "en"
+    },
+    {
+      "title": "Turmeric Rhizome Rot and Leaf Blotch",
+      "keywords": ["turmeric rhizome rot", "Pythium", "Colletotrichum", "soft rot", "leaf blotch", "brown spots", "turmeric disease"],
+      "question": "How do I manage rhizome rot in turmeric?",
+      "answer": "Rhizome Rot (Pythium aphanidermatum): Water-soaked lesions on collar region, rotting of rhizome with characteristic foul smell; leaves yellow and plant collapses. Most serious in waterlogged conditions. Management: (1) Treat seed rhizomes with Metalaxyl + Mancozeb 72WP at 3 g/kg before planting. (2) Drench beds with Metalaxyl + Mancozeb (3 g/litre) at 30 and 60 DAS. (3) Improve drainage — plant on raised beds. (4) Remove infected plants immediately. Leaf Blotch (Colletotrichum capsici): Brown spots with yellow halo on leaf surface, spots enlarge causing large irregular brown patches. Spray Mancozeb 75WP at 2.5 g/litre or Copper oxychloride 50WP at 3 g/litre at monthly intervals from July to October. Leaf spot (Taphrina maculans): Very small round, white spots with yellow border — spray Mancozeb or Carbendazim 50WP at 1 g/litre.",
+      "related_topics": ["turmeric cultivation", "fungicide", "spice crops", "drainage management"],
+      "language": "en"
+    },
+    {
+      "title": "Banana Sigatoka Leaf Spot Diseases",
+      "keywords": ["banana sigatoka", "yellow sigatoka", "black sigatoka", "Mycosphaerella", "streak disease", "cigar end rot", "Panama wilt", "fusarium", "leaf necrosis"],
+      "question": "What diseases affect banana and how to control them?",
+      "answer": "Yellow Sigatoka (Mycosphaerella musicola): Yellow streaks on 3rd–5th leaves from top, turning brown with grey centres and dark borders; reduces leaf area and photosynthesis. Spray Propiconazole 25EC at 1 ml/litre + Mancozeb 75WP at 2.5 g/litre every 4–6 weeks. Black Sigatoka (M. fijiensis): More serious; streak starts yellow then turns black; avoid by spraying oil emulsions (Spray oil 1%) + Copper oxychloride. Remove affected leaves. Panama Wilt (Fusarium oxysporum f.sp. cubense): Internal yellowing of pseudostem, plant dies; no cure — use resistant varieties (Dwarf Cavendish, Grand Naine), do not plant in infected soil. Bunchy Top Virus (BBTV): Short, narrow, yellow-margin leaves forming a rosette at top of plant; transmitted by aphid Pentalonia nigronervosa; rogue and destroy infected plants; control aphids. Cigar End Rot (Verticillium theobromae): Tip of banana finger turns brown, dry, resembles cigar — reduce humidity, remove affected fingers.",
+      "related_topics": ["banana cultivation", "fungicide", "virus disease", "Panama wilt"],
+      "language": "en"
+    },
+    {
+      "title": "General Disease Identification Tips for Farmers",
+      "keywords": ["disease identification", "yellow leaves", "spots", "wilting", "rot", "mould", "discolouration", "symptoms", "diagnosis", "plant disease"],
+      "question": "How do I identify what disease is affecting my crop?",
+      "answer": "Use these clues to narrow down plant disease: (1) Yellow leaves: Nutrient deficiency (particularly N, Mg, Fe), virus, or root rot. (2) Brown spots: Fungal diseases (blight, leaf spot, blast) — look for pattern, size, and shape of lesions. (3) White powdery coating: Powdery mildew. (4) White-grey sporulation on underside of leaves: Downy mildew. (5) Water-soaked lesions becoming brown/black rapidly: Phytophthora or bacterial blight. (6) Sudden wilting of whole plant: Bacterial wilt, Fusarium wilt, or root rot — cut stem and look for vascular brown discolouration or bacterial ooze. (7) Mosaic/mottling of leaves with distortion: Viral disease — look for vectors (aphids, whitefly). (8) Galls on roots: Root-knot nematode. (9) Rotting at soil level: Damping off, Sclerotium, or crown rot. When in doubt: send samples to your nearest State Agricultural University Plant Disease Diagnostic Lab. Take a clear photograph of the symptoms on different plant parts.",
+      "related_topics": ["pest control", "fertilizer deficiency", "plant disease management"],
+      "language": "en"
+    }
+  ]
+}

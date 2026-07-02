@@ -1,0 +1,221 @@
+{
+  "category": "crops",
+  "items": [
+    {
+      "title": "Rice / Paddy Cultivation",
+      "keywords": ["rice", "paddy", "dhan", "chawal", "kharif", "transplant", "nursery", "standing water", "IR-64", "Swarna", "Basmati", "cultivation", "sowing"],
+      "question": "How do I grow rice or paddy?",
+      "answer": "Rice is India's most important Kharif crop. Prepare a nursery 25–30 days before transplanting. Maintain 5–7 cm standing water in the field. Popular varieties: Swarna Sub1, IR-64, Pusa Basmati 1121, MTU-7029. Seed rate: 20–25 kg/ha (transplanted) or 80–100 kg/ha (direct seeded). Apply fertilizer at 120:60:60 kg N:P:K per hectare in 3 splits — basal, tillering, and panicle initiation. Transplant 2–3 seedlings per hill at 20×15 cm spacing. Harvest when 80% grains turn golden and moisture is around 20–22%. Expected yield: 4–6 tonnes/ha.",
+      "related_topics": ["rice blast", "fertilizer for rice", "irrigation for rice", "rice varieties"],
+      "language": "en"
+    },
+    {
+      "title": "Rice — Common Problems and Solutions",
+      "keywords": ["rice", "paddy", "yellow leaves", "blast", "borer", "sheath blight", "brown plant hopper", "nitrogen deficiency", "waterlogging"],
+      "question": "What are the common problems in rice farming?",
+      "answer": "Yellow leaves in rice indicate nitrogen deficiency — apply 25 kg urea/ha as top dressing. Rice blast (grey-brown spots with diamond shape) — spray Tricyclazole 75WP at 0.6 g/litre. Brown Plant Hopper (BPH) causes hopperburn — avoid excess nitrogen, use resistant varieties, spray Imidacloprid 17.8 SL. Stem borer causes dead heart in vegetative stage and white ear in reproductive stage — use Cartap Hydrochloride 4G at 18 kg/ha. Sheath blight — spray Hexaconazole 5EC at 2 ml/litre. Maintain proper water management; drain field 2 weeks before harvest.",
+      "related_topics": ["rice blast", "pest control", "nitrogen fertilizer", "irrigation"],
+      "language": "en"
+    },
+    {
+      "title": "Wheat Cultivation",
+      "keywords": ["wheat", "gehu", "rabi", "sowing", "November", "October", "HD-2967", "PBW-343", "GW-322", "irrigation", "harvesting", "winter crop"],
+      "question": "How do I grow wheat?",
+      "answer": "Wheat is India's main Rabi crop, sown October–November and harvested March–April. Recommended varieties: HD-3086, HD-2967, PBW-343 (Punjab/Haryana), GW-322 (Gujarat), K-307 (UP). Seed rate: 100–125 kg/ha. Sow at 22.5 cm row spacing, 5 cm depth. Apply 120 kg N, 60 kg P, 40 kg K per hectare. Give first irrigation at crown root initiation (20–25 DAS), then at tillering (45 DAS), jointing (65 DAS), and grain filling (85 DAS). Harvest when straw turns golden and grain hardens, at 12–14% moisture. Expected yield: 4–5 tonnes/ha under irrigated conditions.",
+      "related_topics": ["wheat rust", "fertilizer for wheat", "rabi crops", "wheat varieties"],
+      "language": "en"
+    },
+    {
+      "title": "Wheat — Rust and Disease Management",
+      "keywords": ["wheat", "rust", "yellow rust", "brown rust", "leaf rust", "powdery mildew", "karnal bunt", "loose smut", "fungicide", "Propiconazole"],
+      "question": "How do I control rust in wheat?",
+      "answer": "Yellow rust (stripe rust) appears as yellow stripes along leaves in cool weather. Brown (leaf) rust forms orange-brown pustules. Spray Propiconazole 25EC at 1 ml/litre at first appearance, repeat after 15 days. Stem rust (black rust) — use resistant varieties like PBW-343 and spray Mancozeb 75WP at 2.5 g/litre. Loose smut — treat seed with Carboxin 37.5% + Thiram 37.5% at 2 g/kg seed before sowing. Karnal bunt — treat seed with Vitavax and avoid late planting. Powdery mildew — spray Sulphur 80WP at 3 g/litre or Hexaconazole 5EC.",
+      "related_topics": ["fungicide", "seed treatment", "wheat cultivation", "crop diseases"],
+      "language": "en"
+    },
+    {
+      "title": "Maize / Corn Cultivation",
+      "keywords": ["maize", "corn", "makka", "bhutta", "Kharif", "Rabi", "hybrid", "seed rate", "fertilizer", "spacing", "yield"],
+      "question": "How do I grow maize or corn?",
+      "answer": "Maize is grown in Kharif (June–July) and Rabi (October–November) seasons. Use hybrid varieties: DHM-117, Pusa HM-4, HQPM-1 (quality protein maize), or Pioneer 30V92. Seed rate: 20–25 kg/ha. Spacing: 60×20 cm or 75×20 cm. Sow 3–4 cm deep. Apply 150 kg N, 75 kg P, 75 kg K per hectare — 1/3 N at sowing, 1/3 at knee-high stage (25 DAS), and 1/3 at tasseling. Requires 5–6 irrigations; avoid waterlogging. Harvest cobs when husks dry and kernels are hard. Expected yield: 5–8 tonnes/ha (grain) under good management.",
+      "related_topics": ["maize stalk borer", "fertilizer for maize", "hybrid seeds", "kharif crops"],
+      "language": "en"
+    },
+    {
+      "title": "Maize — Pest and Disease Management",
+      "keywords": ["maize", "fall armyworm", "stalk borer", "downy mildew", "leaf blight", "Spodoptera frugiperda", "FAW", "control"],
+      "question": "How do I control Fall Armyworm in maize?",
+      "answer": "Fall Armyworm (Spodoptera frugiperda) is the most dangerous maize pest. Look for ragged leaf feeding and frass in the whorl. Spray Emamectin benzoate 5SG at 0.4 g/litre or Spinetoram 11.7 SC at 0.5 ml/litre. Apply 5% Neem Seed Kernel Extract (NSKE) at early infestation. Drop sand-ash mixture (9:1) into the whorl for early control. Maize Downy Mildew — remove and burn infected plants, spray Metalaxyl+Mancozeb 72WP. Leaf blight — spray Mancozeb 75WP at 2.5 g/litre. For stem borer, apply Chlorpyriphos 10G at 20 kg/ha into the whorl at 25–30 DAS.",
+      "related_topics": ["pest control", "fall armyworm", "maize cultivation", "neem spray"],
+      "language": "en"
+    },
+    {
+      "title": "Sugarcane Cultivation",
+      "keywords": ["sugarcane", "ganna", "ikku", "planting", "ratoon", "varieties", "Co-86032", "CoM-0265", "jaggery", "sugar", "yield"],
+      "question": "How do I grow sugarcane?",
+      "answer": "Sugarcane is a long-duration crop (12–18 months). Planting time: October–November (Autumn) or February–March (Spring). Use two-budded setts from healthy stalks. Popular varieties: Co-86032, CoM-0265, Co-419, CoSe-92423. Planting spacing: 90 cm (single row) or 120–150 cm for paired row method. Apply 250 kg N, 115 kg P, 115 kg K per hectare in splits. Irrigate every 7–10 days; critical stages are germination, tillering, and grand growth. Apply earthing-up at 3 and 5 months. Harvest at 12–14 months when brix is above 18–20%. Retain ratoon for 1–2 years. Expected yield: 80–100 tonnes/ha.",
+      "related_topics": ["sugarcane borer", "sugarcane diseases", "irrigation", "jaggery making"],
+      "language": "en"
+    },
+    {
+      "title": "Sugarcane — Pest and Disease Management",
+      "keywords": ["sugarcane", "top borer", "internode borer", "red rot", "wilt", "pyrilla", "woolly aphid", "ratoon stunting"],
+      "question": "What diseases and pests affect sugarcane?",
+      "answer": "Top borer (Scirpophaga excerptalis) causes dead heart and bunchy top — use Chlorpyriphos 20EC at 2 ml/litre spray or release Trichogramma chilonis @ 50,000/ha. Internode borer causes tunnelling — apply Carbofuran 3G at 33 kg/ha. Red Rot (Colletotrichum falcatum) — reddish discolouration of pith with white patches — destroy infected clumps, use resistant varieties. Sugarcane Wilt — stunted growth, yellowing — avoid waterlogged fields, treat setts with Carbendazim. Woolly aphid — spray Chlorpyriphos or release Dipha aphidivora as biocontrol. Pyrilla — spray Quinalphos 25EC.",
+      "related_topics": ["pest control", "sugarcane cultivation", "borer management"],
+      "language": "en"
+    },
+    {
+      "title": "Cotton Cultivation",
+      "keywords": ["cotton", "kapas", "BT cotton", "black cotton soil", "Vertisols", "bollworm", "spacing", "Maharashtra", "Telangana", "Karnataka"],
+      "question": "How do I grow cotton?",
+      "answer": "Cotton grows well in black cotton soil (Vertisols) in Maharashtra, Telangana, Karnataka, Gujarat, and Punjab. Sow BT hybrid seeds in June after first monsoon rain. Seed rate: 750 g to 1 kg per acre for BT hybrids. Spacing: 90×60 cm (rainfed) or 120×45 cm (irrigated). Apply 150 kg N, 75 kg P, 75 kg K per hectare in 3–4 splits. Give 5–6 irrigations at critical stages: germination, squaring, flowering, and boll development. Use pheromone traps for bollworm monitoring (1 trap/acre). Avoid continuous use of same insecticide to prevent resistance. Harvest bolls when fully open. Expected yield: 15–20 quintals/ha seed cotton.",
+      "related_topics": ["bollworm", "whitefly in cotton", "fertilizer for cotton", "pest management"],
+      "language": "en"
+    },
+    {
+      "title": "Cotton — Bollworm and Whitefly Management",
+      "keywords": ["cotton", "bollworm", "American bollworm", "pink bollworm", "whitefly", "CLCuV", "leaf curl", "sucking pests", "Helicoverpa"],
+      "question": "How do I control bollworm in cotton?",
+      "answer": "American Bollworm (Helicoverpa armigera) — spray Emamectin benzoate 5SG at 0.4 g/litre or Chlorantraniliprole 18.5SC at 0.3 ml/litre. Pink Bollworm — use sex pheromone traps (5/acre); spray Chlorpyriphos + Cypermethrin at boll formation. Avoid spraying during flowering (harms pollinators). For Whitefly, which spreads Cotton Leaf Curl Virus (CLCuV) — spray Spiromesifen 22.9SC at 0.75 ml/litre or Thiamethoxam 25WG at 0.3 g/litre. Avoid excess nitrogen which promotes sucking pests. Use yellow sticky traps for whitefly monitoring. Destroy crop residues after harvest. Do not use same chemical class for more than 2 sprays.",
+      "related_topics": ["pest control", "cotton cultivation", "whitefly", "CLCuV"],
+      "language": "en"
+    },
+    {
+      "title": "Coconut Cultivation",
+      "keywords": ["coconut", "nariyal", "tengu", "tall variety", "dwarf", "hybrid", "West Coast Tall", "planting", "spacing", "yield", "Kerala", "Karnataka", "Tamil Nadu"],
+      "question": "How do I grow coconut?",
+      "answer": "Coconut grows well in coastal areas of Kerala, Karnataka, Tamil Nadu, Andhra Pradesh, and Goa. Choose healthy seedlings of West Coast Tall, Chowghat Orange Dwarf (COD), or hybrid varieties (VHC-1, Kalpasree). Plant in 7.5×7.5 m spacing (triangular), 1×1×1 m pit. Fill pit with topsoil, compost (20 kg), and rock phosphate (1 kg). Apply 1.3 kg N, 0.5 kg P, 3.5 kg K per palm per year in 2–3 splits (May-June and September-October). Irrigate at 3–4 day intervals in summer; 10–15 in monsoon. Intercrops like banana, pineapple, cocoa increase income. First bearing at 5–7 years. Yield: 80–120 nuts/palm/year for tall, 150–200 for dwarf.",
+      "related_topics": ["coconut rhinoceros beetle", "coconut diseases", "nut fall", "intercropping"],
+      "language": "en"
+    },
+    {
+      "title": "Coconut — Pest and Disease Management",
+      "keywords": ["coconut", "rhinoceros beetle", "red palm weevil", "bud rot", "wilt", "root wilt", "nut fall", "mite"],
+      "question": "What are the main pests and diseases of coconut?",
+      "answer": "Rhinoceros Beetle (Oryctes rhinoceros) bores into crown — apply Chlorpyriphos 0.4% solution into the bore hole, place pheromone traps, maintain clean gardens. Red Palm Weevil — look for reddish ooze and smell; inject Monocrotophos 36% SL (2 ml + 2 ml water) into bore holes. Bud Rot (Phytophthora) — remove and burn infected portions, drench crown with Copper oxychloride 50WP at 3 g/litre. Kerala Wilt or Root Wilt — yellowing and slanting of fronds, no cure; uproot and burn. Nut fall — ensure balanced fertilization, especially potassium. Eriophyid mite (coconut mite) — causes nut deformation; spray Wettable Sulphur 3 g/litre.",
+      "related_topics": ["pest control", "coconut cultivation", "crop diseases"],
+      "language": "en"
+    },
+    {
+      "title": "Cardamom Cultivation",
+      "keywords": ["cardamom", "elaichi", "spice", "Kerala", "Karnataka", "shade crop", "ICRI", "Malabar", "Mysore", "Vazhukka", "spacing", "planting"],
+      "question": "How do I grow cardamom?",
+      "answer": "Cardamom thrives in humid forests of Kerala (Idukki), Karnataka (Kodagu), and Tamil Nadu (Nilgiris). Grow at elevations of 600–1500 m. Preferred varieties: Malabar (runner type), Mysore (erect), Vazhukka (semi-erect). Plant suckers in pits of 45×45×45 cm at 2×2 m spacing under 40–50% shade. Apply 75 kg N, 75 kg P, 150 kg K per hectare per year in 3 splits. Mulch heavily to conserve moisture. Irrigate at 4–7 day intervals in dry months. Rhizomes can be harvested from 2nd or 3rd year. Yield: 150–250 kg/ha (dry cardamom). Good shade management and moisture are critical.",
+      "related_topics": ["cardamom thrips", "katte disease", "spice crops", "organic cardamom"],
+      "language": "en"
+    },
+    {
+      "title": "Coffee Cultivation",
+      "keywords": ["coffee", "Arabica", "Robusta", "Coorg", "Kodagu", "Chikmagalur", "shade grown", "wilt", "borer", "berries", "pulping", "drying"],
+      "question": "How do I grow coffee?",
+      "answer": "Coffee grows in the hill districts of Karnataka (Kodagu, Chikmagalur), Kerala, and Tamil Nadu. Arabica (Coffea arabica) grows at 1000–1500 m altitude; Robusta (C. canephora) at 500–1000 m. Plant in 3×3 m spacing under shade trees (silver oak, Erythrina). Use nursery-raised seedlings at 12–14 months. Apply 40 kg N, 15 kg P, 40 kg K per 100 plants per year. Irrigate at 10–15 day intervals post-monsoon. Coffee Berry Borer — most destructive pest; spray Endosulfan 35EC or use traps. White Stem Borer — paint stem with BHC. Wilt (Fusarium) — avoid waterlogging. Harvest cherries when fully red (selective picking). Pulp, ferment (36–48 hrs), wash, and dry. Yield: 800–1200 kg green beans/ha.",
+      "related_topics": ["coffee borer", "coffee diseases", "shade trees", "coffee processing"],
+      "language": "en"
+    },
+    {
+      "title": "Tea Cultivation",
+      "keywords": ["tea", "chai", "Camellia sinensis", "Assam", "Darjeeling", "Nilgiri", "pruning", "plucking", "vegetative propagation", "clones"],
+      "question": "How do I grow tea?",
+      "answer": "Tea (Camellia sinensis) grows in Assam, West Bengal (Darjeeling), Tamil Nadu (Nilgiri), and Kerala (Munnar). Propagate vegetatively from stem cuttings of high-yielding clones (SA-6, TV-1, UPASI-9). Plant at 1.2×0.6 m or 0.9×0.6 m spacing. Requires deep, well-drained acid soil (pH 4.5–5.5) with good rainfall (1500–2500 mm). Apply 200 kg N, 40 kg P, 70 kg K per hectare per year in 4–5 splits. Prune every 3–4 years (January–February). Pluck 'two leaves and a bud' every 7–14 days. Blister blight (Exobasidium) — spray Copper oxychloride 50WP at 3 g/litre. Red spider mite — spray Kelthane. Yield: 1500–2000 kg made tea/ha.",
+      "related_topics": ["tea blister blight", "tea pests", "pruning tea", "organic tea"],
+      "language": "en"
+    },
+    {
+      "title": "Black Pepper Cultivation",
+      "keywords": ["pepper", "black pepper", "kali mirch", "Piper nigrum", "Karnataka", "Kerala", "Panniyur", "Sreekara", "standard tree", "vine", "spike", "yield"],
+      "question": "How do I grow black pepper?",
+      "answer": "Black pepper (Piper nigrum) is grown in Kerala, Karnataka, and Tamil Nadu as a climbing vine on standard trees (Garuga, Erythrina). Use rooted cuttings of improved varieties: Panniyur-1, Sreekara, Panchami, Karimunda. Plant in 45×45×45 cm pits with FYM at 3×3 m spacing on standards. Apply 100 g N, 40 g P, 140 g K per vine per year in 2 splits (May and September). Mulch heavily. Train 2–3 runner shoots on the standard. Pollu beetle (Longitarsus nigripennis) causes empty berries — spray Quinalphos 25EC. Phytophthora foot rot (Quick Wilt) — most destructive; apply Potassium phosphonate (0.3%) to collar region. Slow decline (Radopholus similis nematode) — apply Phorate 10G. Harvest when 1–2 berries per spike turn red. Sun dry for 3–5 days. Yield: 2–4 kg dry pepper/vine/year.",
+      "related_topics": ["pepper quick wilt", "pollu beetle", "spice crops", "organic pepper"],
+      "language": "en"
+    },
+    {
+      "title": "Turmeric Cultivation",
+      "keywords": ["turmeric", "haldi", "manjal", "Curcuma longa", "rhizome", "BSR-1", "Roma", "Suroma", "planting", "yield", "dry turmeric", "curcumin"],
+      "question": "How do I grow turmeric?",
+      "answer": "Turmeric grows well in Andhra Pradesh, Telangana, Tamil Nadu, Maharashtra, and Karnataka. Plant mother and daughter rhizomes in April–May at 40–45 cm row spacing and 25 cm plant spacing. Use disease-free seed rhizomes of Pragati, BSR-1, Suroma, Roma, or local varieties. Seed rate: 2000–2500 kg/ha. Apply 60 kg N, 60 kg P, 120 kg K per hectare in 2–3 splits; top dress with 20 kg N at 45 DAS and 60 DAS. Mulch with green leaves to conserve moisture. Irrigate at 7–10 day intervals. Earthing up at 45 DAS and 90 DAS promotes rhizome development. Harvest at 8–9 months when leaves turn yellow. Boil rhizomes for 1 hour, sun dry for 10–15 days. Polishing improves appearance. Yield: 20–25 tonnes/ha fresh (4–5 tonnes dry).",
+      "related_topics": ["turmeric leaf blotch", "rhizome rot", "spice crops", "turmeric export"],
+      "language": "en"
+    },
+    {
+      "title": "Ginger Cultivation",
+      "keywords": ["ginger", "adrak", "inji", "Zingiber officinale", "rhizome", "planting", "shade", "Maran", "Nadia", "IISR Mahima", "soft rot"],
+      "question": "How do I grow ginger?",
+      "answer": "Ginger is grown in Kerala, Meghalaya, Assam, Odisha, and Karnataka. Plant seed rhizomes (15–20 g pieces) in April–May in well-prepared raised beds. Use improved varieties: IISR Mahima, IISR Varada, Maran, Nadia. Seed rate: 1500–2000 kg/ha. Spacing: 30×30 cm. Apply well-rotted FYM (25 tonnes/ha) + 75 kg N, 50 kg P, 50 kg K. Mulch with green leaves immediately after planting. Provide partial shade (30–40%). Irrigate at 3–5 day intervals. Soft rot (Pythium aphanidermatum) is the most serious disease — treat seed rhizomes with Metalaxyl+Mancozeb (3 g/kg) before planting; drench beds with Metalaxyl. Rhizome scale (Aspidiella hartii) — drench with Dimethoate. Harvest green ginger at 6 months; dry ginger at 8–9 months. Yield: 15–20 tonnes/ha fresh.",
+      "related_topics": ["ginger soft rot", "rhizome treatment", "spice crops", "ginger storage"],
+      "language": "en"
+    },
+    {
+      "title": "Banana Cultivation",
+      "keywords": ["banana", "kela", "bale", "Cavendish", "Robusta", "Grand Naine", "Nendran", "Red Banana", "tissue culture", "sucker", "bunch", "yield"],
+      "question": "How do I grow banana?",
+      "answer": "Banana is grown across India, especially in Maharashtra, Tamil Nadu, Gujarat, Andhra Pradesh, and Karnataka. Use tissue culture plants or disease-free sword suckers of Grand Naine (Cavendish), Robusta, Nendran (Kerala), Poovan, or Red Banana. Plant at 1.8×1.8 m spacing in 60×60×60 cm pits with 10 kg FYM. Apply 200 g N, 60 g P, 300 g K per plant per year in 4–6 monthly doses. Drip irrigation recommended — 8–10 litres/plant/day. Remove unwanted suckers; retain one follower for ratoon crop. Prop plants to prevent toppling. Bunch appears at 8–9 months; harvest when angular fruits round out and turn light green. Expected yield: 25–40 tonnes/ha. Panama wilt (Fusarium oxysporum) — use resistant varieties; do not grow in infected fields.",
+      "related_topics": ["banana sigatoka", "panama wilt", "drip irrigation", "banana export"],
+      "language": "en"
+    },
+    {
+      "title": "Mango Cultivation",
+      "keywords": ["mango", "aam", "mavina", "Alphonso", "Kesar", "Dasheri", "Langra", "Totapuri", "grafting", "pruning", "flowering", "fruit fly", "malformation"],
+      "question": "How do I grow mango?",
+      "answer": "Mango is grown in Uttar Pradesh, Andhra Pradesh, Karnataka, Maharashtra, and Bihar. Use grafted plants of superior varieties: Alphonso, Kesar (Gujarat), Dasheri (UP), Langra (UP/Bihar), Totapuri (South India), Neelam. Plant at 10×10 m spacing in 1×1×1 m pits. Apply 100 kg FYM + 1 kg N, 0.5 kg P, 1 kg K per tree per year (increase each year up to 10 years). Irrigate during fruit development (March–May); withhold water 2 months before flowering (Oct–Nov) to promote flowering. Control floral malformation — spray NAA 200 ppm or Carbendazim 0.1% at bud break. Mango Hopper — spray Imidacloprid or Thiamethoxam at bud emergence. Fruit Fly (Bactrocera) — use methyl eugenol traps; cover fruits with paper bags. Powdery mildew — spray Wettable Sulphur 3 g/litre. First commercial yield at 5–7 years. Yield: 100–200 fruits/tree at maturity.",
+      "related_topics": ["mango hopper", "fruit fly", "powdery mildew", "mango export"],
+      "language": "en"
+    },
+    {
+      "title": "Tomato Cultivation",
+      "keywords": ["tomato", "tamatar", "tomato", "hybrid", "Arka Saurabh", "Pusa Rohini", "transplanting", "staking", "pruning", "blight", "fruit borer"],
+      "question": "How do I grow tomatoes?",
+      "answer": "Tomato can be grown in two seasons: June–July (Kharif) or November–December (Rabi) in most parts of India. Raise seedlings in nursery for 25–30 days. Use hybrid varieties (MHT-10, Arka Rakshak, Pusa Hybrid-2) or open-pollinated (Pusa Ruby, Arka Saurabh). Transplant at 60×45 cm spacing. Apply 200 kg N, 120 kg P, 120 kg K per hectare in splits. Use drip irrigation; avoid overhead watering to reduce foliar diseases. Stake plants at 30 cm height for indeterminate varieties. Fruit Borer (Helicoverpa) — use pheromone traps, spray Emamectin benzoate. Early Blight (Alternaria) — spray Mancozeb 75WP at 2.5 g/litre. Late Blight — spray Metalaxyl+Mancozeb. Harvest when 50–75% of fruits turn red. Yield: 30–50 tonnes/ha (hybrid).",
+      "related_topics": ["tomato blight", "tomato fruit borer", "early blight", "hybrid vegetables"],
+      "language": "en"
+    },
+    {
+      "title": "Onion Cultivation",
+      "keywords": ["onion", "pyaz", "eerulli", "Agrifound Light Red", "N-2-4-1", "Nashik", "raised bed", "transplanting", "purple blotch", "thrips", "bulb formation"],
+      "question": "How do I grow onion?",
+      "answer": "Onion is grown as Kharif (June–August), late Kharif (September–October), and Rabi (November–December) crops. Best varieties: Agrifound Light Red, N-2-4-1, Bhima Kiran (Kharif); Pusa Red, Nasik Red (Rabi). Raise seedlings in nursery for 40–45 days. Transplant at 15×10 cm spacing on raised beds. Apply 110 kg N, 50 kg P, 60 kg K per hectare. Irrigate at 7–10 day intervals; stop 2 weeks before harvest. Thrips (Thrips tabaci) — most serious pest; spray Spinosad 45SC at 0.3 ml/litre or Dimethoate 30EC. Purple Blotch (Alternaria porri) — spray Mancozeb 75WP or Iprodione 50WP. Stemphylium leaf blight — spray Chlorothalonil 75WP. Harvest when 75% of tops fall over; allow bulbs to cure for 7–10 days. Yield: 25–35 tonnes/ha.",
+      "related_topics": ["onion storage", "thrips control", "onion export", "bulb crops"],
+      "language": "en"
+    },
+    {
+      "title": "Potato Cultivation",
+      "keywords": ["potato", "aloo", "alu", "Kufri Jyoti", "Kufri Sindhuri", "seed potato", "late blight", "cut seed", "ridge planting", "tuber formation"],
+      "question": "How do I grow potato?",
+      "answer": "Potato is the most important vegetable crop in India, grown mainly in Uttar Pradesh, West Bengal, Bihar, and Punjab. Sow certified seed tubers in October–November (plains) or March–April (hills). Cut tubers to 30–40 g with at least 2 buds each; treat cut pieces with Indofil M-45 (3 g/kg). Popular varieties: Kufri Jyoti, Kufri Pukhraj, Kufri Sindhuri, Kufri Chipsona. Spacing: 60×20 cm. Apply 150 kg N, 75 kg P, 100 kg K per hectare. Earthing up at 30 and 45 DAS is essential. Late Blight (Phytophthora infestans) — most destructive; spray Metalaxyl+Mancozeb 72WP at 2.5 g/litre every 7–10 days. Cut seed haulms 2 weeks before harvest for skin set. Harvest when leaves turn yellow. Cure in shade for 10–15 days. Yield: 20–30 tonnes/ha.",
+      "related_topics": ["late blight", "potato storage", "seed potato", "rabi vegetables"],
+      "language": "en"
+    },
+    {
+      "title": "Brinjal (Eggplant) Cultivation",
+      "keywords": ["brinjal", "eggplant", "baingan", "badnekai", "Pusa Purple Long", "Arka Nidhi", "shoot borer", "grafting", "wilt", "transplanting"],
+      "question": "How do I grow brinjal or eggplant?",
+      "answer": "Brinjal (Solanum melongena) is grown year-round in most parts of India. Raise seedlings for 25–30 days in nursery. Use varieties Pusa Purple Long, Arka Nidhi, Arka Shirish (long), or Pusa Purple Cluster (round). Transplant at 60×45 cm spacing. Apply 150 kg N, 75 kg P, 75 kg K per hectare. Irrigate at 5–7 day intervals. Shoot and Fruit Borer (Leucinodes orbonalis) is the most serious pest — use pheromone traps (5/acre), spray Spinosad 45SC at 0.3 ml/litre or clip and destroy shoots showing wilting. Bacterial Wilt — no chemical cure; use grafted plants on resistant rootstocks (Solanum torvum). Little Leaf Phytoplasma — spray Oxytetracycline; remove infected plants. Harvest when fruits are bright, glossy, and before seeds harden. Yield: 20–35 tonnes/ha.",
+      "related_topics": ["shoot and fruit borer", "brinjal wilt", "vegetable cultivation"],
+      "language": "en"
+    },
+    {
+      "title": "Chilli Cultivation",
+      "keywords": ["chilli", "mirchi", "menasinakai", "Capsicum", "Byadagi", "Guntur", "Teja", "K2", "fruit rot", "thrips", "mites", "transplanting", "drying"],
+      "question": "How do I grow chilli?",
+      "answer": "Chilli (Capsicum annuum) is a major spice crop of India grown in Andhra Pradesh, Telangana, Karnataka, Maharashtra, and Rajasthan. Famous varieties: Byadagi (Karnataka), Teja/334 (AP), Mathania (Rajasthan), Pusa Jwala (green chilli). Raise seedlings for 30–35 days. Transplant at 60×45 cm spacing. Apply 100 kg N, 60 kg P, 50 kg K per hectare. Thrips (Scirtothrips dorsalis) — most important vector of chilli leaf curl; spray Fipronil 5SC at 1.5 ml/litre or Acephate 75SP. Yellow mite (Polyphagotarsonemus latus) — spray Abamectin 1.9EC at 0.5 ml/litre. Fruit Rot (Colletotrichum) — spray Copper oxychloride + Mancozeb. Phytophthora Blight — drench with Metalaxyl+Mancozeb; avoid waterlogging. Harvest green chilli at 70–80 DAS; allow to ripen red for dry chilli. Yield: 15–20 tonnes/ha (green) or 2–3 tonnes/ha (dry).",
+      "related_topics": ["thrips control", "chilli diseases", "spice export", "pepper cultivation"],
+      "language": "en"
+    },
+    {
+      "title": "Groundnut (Peanut) Cultivation",
+      "keywords": ["groundnut", "peanut", "moongphali", "kadalai", "ICGS-76", "TAG-24", "Kharif", "Rabi", "pegging", "leaf spot", "tikka disease", "aflatoxin"],
+      "question": "How do I grow groundnut?",
+      "answer": "Groundnut is an important oilseed crop of Gujarat, Rajasthan, Andhra Pradesh, Tamil Nadu, and Karnataka. Sow in June–July (Kharif) or January–February (Rabi/Summer). Use bold-seeded varieties: TAG-24, ICGS-76 (Kharif); TG-26, K-9 (Rabi). Seed rate: 80–100 kg/ha (bold), 60–70 kg/ha (small). Spacing: 30×10 cm. Shell and treat seeds with Thiram 3 g/kg + Rhizobium inoculant before sowing. Apply 20 kg N, 50 kg P, 30 kg K per hectare at basal. Calcium is critical — apply gypsum (500 kg/ha) at pegging stage. Late Leaf Spot and Early Leaf Spot (Tikka disease) — spray Chlorothalonil 75WP at 2 g/litre every 10–15 days. Bud Necrosis Virus — control thrips vectors. Dig when 70–80% pods show dark inner wall. Dry to 8–9% moisture to prevent aflatoxin. Yield: 1.5–2.5 tonnes pods/ha.",
+      "related_topics": ["tikka disease", "aflatoxin", "oilseed crops", "groundnut export"],
+      "language": "en"
+    },
+    {
+      "title": "Millets (Sorghum, Pearl Millet, Finger Millet)",
+      "keywords": ["millet", "jowar", "bajra", "ragi", "finger millet", "sorghum", "pearl millet", "drought tolerant", "JNKVV", "Pusa", "kharif", "dryland farming"],
+      "question": "How do I grow millets like jowar, bajra, and ragi?",
+      "answer": "Millets are drought-tolerant, nutritious crops for dryland farming. Sorghum (Jowar): sow CSH-23, CSH-17 in June–July at 45×15 cm spacing; 10 kg seed/ha; apply 80:40:40 N:P:K. Pearl Millet (Bajra): sow HHB-67 Improved, MPMH-17 in June–July at 45×15 cm; 3–4 kg seed/ha; apply 80:40 N:P kg/ha. Finger Millet (Ragi): transplant or direct sow GPU-28, VR-708 in June–July at 22.5×10 cm; 8–10 kg seed/ha; apply 100:50:50 N:P:K. All millets need no irrigation after monsoon establishment in rainfed areas. Ergot in bajra — spray Mancozeb at flowering. Downy Mildew in bajra — use resistant varieties; drench with Metalaxyl. Charcoal Rot in jowar — avoid moisture stress at grain fill. Millets are ideal for Karnataka, Rajasthan, Maharashtra, and AP dryland regions. Yield: 2–4 tonnes/ha.",
+      "related_topics": ["dryland farming", "drought management", "millet diseases", "organic millets"],
+      "language": "en"
+    }
+  ]
+}

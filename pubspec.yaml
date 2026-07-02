@@ -82,4 +82,5 @@ flutter:
     - assets/log.png
     - assets/leaves.png
     - assets/farmer_logo.png
+    - assets/knowledge_base/
     - .env
