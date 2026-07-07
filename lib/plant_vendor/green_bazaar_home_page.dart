@@ -343,6 +343,13 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                 isOwner: isOwner,
                 onTap: () => _openDetail(v),
                 gbService: _gbService,
+                onEdit: isOwner
+                    ? () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                PlantListFormPage(existingVendor: v)))
+                    : null,
               );
             },
             childCount: plants.length,
@@ -440,6 +447,13 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                               onTap: () => _openDetail(v),
                               gbService: _gbService,
                               compact: true,
+                              onEdit: isOwner
+                                  ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              PlantListFormPage(existingVendor: v)))
+                                  : null,
                             ),
                           );
                         },
@@ -849,6 +863,7 @@ class _PlantCard extends StatefulWidget {
   final bool isOwner;
   final bool compact;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
   final GreenBazaarService gbService;
   const _PlantCard({
     required this.vendor,
@@ -856,6 +871,7 @@ class _PlantCard extends StatefulWidget {
     required this.isOwner,
     required this.onTap,
     required this.gbService,
+    this.onEdit,
     this.compact = false,
   });
   @override
@@ -994,12 +1010,12 @@ class _PlantCardState extends State<_PlantCard> {
                             _Placeholder(accent: accent, height: widget.compact ? 120 : 130))
                     : _Placeholder(accent: accent, height: widget.compact ? 120 : 130),
               ),
-              // Wishlist button
+              // Top-right: edit (owner) or wishlist (others)
               Positioned(
                 top: 6,
                 right: 6,
                 child: GestureDetector(
-                  onTap: _toggleWish,
+                  onTap: widget.isOwner ? widget.onEdit : _toggleWish,
                   child: Container(
                     width: 28,
                     height: 28,
@@ -1013,19 +1029,49 @@ class _PlantCardState extends State<_PlantCard> {
                       ],
                     ),
                     child: Icon(
-                      _wishlisted
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_outline_rounded,
+                      widget.isOwner
+                          ? Icons.edit_rounded
+                          : (_wishlisted
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_outline_rounded),
                       size: 15,
-                      color: _wishlisted
-                          ? const Color(0xFFE53935)
-                          : Colors.grey,
+                      color: widget.isOwner
+                          ? const Color(0xFF2E7D32)
+                          : (_wishlisted
+                              ? const Color(0xFFE53935)
+                              : Colors.grey),
                     ),
                   ),
                 ),
               ),
-              // Flash deal badge
-              if (isFlashDeal)
+              // Top-left: "My Listing" badge (owner) or Flash Deal badge
+              if (widget.isOwner)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person_rounded,
+                            size: 8, color: Colors.white),
+                        SizedBox(width: 2),
+                        Text('My Listing',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                )
+              else if (isFlashDeal)
                 Positioned(
                   top: 6,
                   left: 6,
@@ -1088,7 +1134,7 @@ class _PlantCardState extends State<_PlantCard> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    // Nursery
+                    // Nursery / listed-by
                     if (v.vendorName.isNotEmpty)
                       Text(
                         v.vendorName,
@@ -1098,6 +1144,19 @@ class _PlantCardState extends State<_PlantCard> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                    if (widget.isOwner) ...[
+                      const SizedBox(height: 2),
+                      const Row(children: [
+                        Icon(Icons.storefront_rounded,
+                            size: 9, color: Color(0xFF2E7D32)),
+                        SizedBox(width: 2),
+                        Text('You listed this',
+                            style: TextStyle(
+                                fontSize: 9,
+                                color: Color(0xFF2E7D32),
+                                fontWeight: FontWeight.w700)),
+                      ]),
+                    ],
                     const SizedBox(height: 3),
                     // Rating row
                     Row(children: [
@@ -1146,7 +1205,7 @@ class _PlantCardState extends State<_PlantCard> {
                         ),
                         const Spacer(),
                         GestureDetector(
-                          onTap: _addToCart,
+                          onTap: widget.isOwner ? widget.onEdit : _addToCart,
                           child: Container(
                             width: 28,
                             height: 28,
@@ -1154,8 +1213,12 @@ class _PlantCardState extends State<_PlantCard> {
                               color: accent,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.add_rounded,
-                                color: Colors.white, size: 16),
+                            child: Icon(
+                                widget.isOwner
+                                    ? Icons.edit_rounded
+                                    : Icons.add_rounded,
+                                color: Colors.white,
+                                size: 16),
                           ),
                         ),
                       ],

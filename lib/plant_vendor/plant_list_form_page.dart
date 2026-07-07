@@ -20,6 +20,18 @@ const String LOCATIONIQ_API_KEY =
     'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 // ----------------------------
 
+// Variety options — keys must match home page _kCategories keys
+const _kVarieties = [
+  ('fruit',      'Fruit',       '🍎', Color(0xFFE67E22)),
+  ('flower',     'Flower',      '🌸', Color(0xFFE91E8C)),
+  ('vegetable',  'Vegetable',   '🥦', Color(0xFF27AE60)),
+  ('medicinal',  'Medicinal',   '💊', Color(0xFF16A085)),
+  ('ornamental', 'Ornamental',  '🪴', Color(0xFF8E44AD)),
+  ('timber',     'Timber',      '🌳', Color(0xFF795548)),
+  ('aromatic',   'Aromatic',    '🌿', Color(0xFF00897B)),
+  ('seeds',      'Seeds',       '🌾', Color(0xFFF39C12)),
+];
+
 class PlantListFormPage extends StatefulWidget {
   final PlantVendor? existingVendor;
 
@@ -40,8 +52,7 @@ class _PlantListFormPageState
   final _plantNameController =
       TextEditingController();
 
-  final _typeController =
-      TextEditingController();
+  String _selectedVariety = '';
 
   final _priceController =
       TextEditingController();
@@ -92,19 +103,16 @@ class _PlantListFormPageState
         final parts = savedType.split(' - ');
 
         if (parts.length >= 2 &&
-            (parts[0].toLowerCase() ==
-                    'seeds' ||
-                parts[0].toLowerCase() ==
-                    'plant')) {
+            (parts[0].toLowerCase() == 'seeds' ||
+                parts[0].toLowerCase() == 'plant')) {
           _productCategory = parts[0];
-
-          _typeController.text =
-              parts.sublist(1).join(' - ');
+          _selectedVariety = _matchVariety(
+              parts.sublist(1).join(' - '));
         } else {
-          _typeController.text = savedType;
+          _selectedVariety = _matchVariety(savedType);
         }
       } else {
-        _typeController.text = savedType;
+        _selectedVariety = _matchVariety(savedType);
       }
 
       _plantNameController.text =
@@ -149,7 +157,6 @@ class _PlantListFormPageState
   @override
   void dispose() {
     _plantNameController.dispose();
-    _typeController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
     _vendorNameController.dispose();
@@ -337,10 +344,108 @@ class _PlantListFormPageState
     }
   }
 
+  // ---------- Variety helpers ----------
+  String _matchVariety(String raw) {
+    const keys = [
+      'fruit', 'flower', 'vegetable', 'medicinal',
+      'ornamental', 'timber', 'aromatic', 'seeds'
+    ];
+    final lower = raw.toLowerCase();
+    for (final k in keys) {
+      if (lower.contains(k)) return k;
+    }
+    return '';
+  }
+
+  Widget _buildVarietyGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 8, bottom: 8),
+          child: Row(children: [
+            Icon(Icons.grid_view_rounded, size: 16, color: Color(0xFF2E7D32)),
+            SizedBox(width: 6),
+            Text('Variety',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            SizedBox(width: 4),
+            Text('*', style: TextStyle(color: Colors.red, fontSize: 14)),
+          ]),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _kVarieties.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.9,
+          ),
+          itemBuilder: (_, i) {
+            final (key, label, emoji, color) = _kVarieties[i];
+            final selected = _selectedVariety == key;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedVariety = key),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? color.withValues(alpha: 0.15)
+                      : const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selected ? color : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(emoji,
+                        style: const TextStyle(fontSize: 22)),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? color : const Color(0xFF616161),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        if (_selectedVariety.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 6, left: 4),
+            child: Text('Please select a variety',
+                style: TextStyle(fontSize: 11, color: Colors.red)),
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   // ---------- Save ----------
   Future<void> _save() async {
     if (!_formKey.currentState!
         .validate()) {
+      return;
+    }
+    if (_selectedVariety.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a variety'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -353,7 +458,7 @@ class _PlantListFormPageState
         FirebaseAuth.instance.currentUser;
 
     final combinedType =
-        '${_productCategory.trim()} - ${_typeController.text.trim()}';
+        '${_productCategory.trim()} - $_selectedVariety';
 
     final selected =
         _selectedSuggestion;
@@ -757,14 +862,7 @@ class _PlantListFormPageState
                           ),
                         ),
 
-                        _field(
-                          controller:
-                              _typeController,
-                          label:
-                              'Type (e.g., Tomato, Rose)',
-                          icon: Icons
-                              .category,
-                        ),
+                        _buildVarietyGrid(),
 
                         _field(
                           controller:
