@@ -272,7 +272,11 @@ service cloud.firestore {
                     resource.data.get('userId', '') == ''    ||
                     isAdmin()
                   );
-      allow create: if isAdmin();
+      // Any signed-in user can create takeaway_order notifications for sellers.
+      // All other notification types remain admin-only.
+      allow create: if isAdmin() ||
+                      (isSignedIn() &&
+                       request.resource.data.get('type', '') == 'takeaway_order');
       allow update: if isSignedIn() &&
                       request.resource.data.diff(resource.data)
                         .affectedKeys().hasOnly(['isRead']);

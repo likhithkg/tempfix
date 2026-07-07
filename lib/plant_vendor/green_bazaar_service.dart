@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'green_bazaar_models.dart';
 
 class GreenBazaarService {
@@ -230,27 +231,35 @@ class GreenBazaarService {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // Notify each seller
+    // Order is now created — clear cart regardless of what happens next.
+    await clearCart();
+
+    // Best-effort: notify each seller. Failures are logged but do not
+    // surface to the user since the order is already placed.
     if (sellerUids.isNotEmpty) {
-      final plantNames =
-          items.map((i) => '${i.plantName} ×${i.orderQty}').join(', ');
-      final batch = _db.batch();
-      for (final sellerUid in sellerUids) {
-        final notifRef = _db.collection('km_notifications').doc();
-        batch.set(notifRef, {
-          'userId': sellerUid,
-          'title': '🌿 New Takeaway Order!',
-          'body': 'Pickup order received: $plantNames',
-          'type': 'takeaway_order',
-          'orderId': orderRef.id,
-          'isRead': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+      try {
+        final plantNames =
+            items.map((i) => '${i.plantName} ×${i.orderQty}').join(', ');
+        final batch = _db.batch();
+        for (final sellerUid in sellerUids) {
+          final notifRef = _db.collection('km_notifications').doc();
+          batch.set(notifRef, {
+            'userId': sellerUid,
+            'title': '🌿 New Takeaway Order!',
+            'body': 'Pickup order received: $plantNames',
+            'type': 'takeaway_order',
+            'orderId': orderRef.id,
+            'isRead': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      } catch (e) {
+        // Non-fatal: order and cart are already handled.
+        debugPrint('GreenBazaarService: seller notification failed: $e');
       }
-      await batch.commit();
     }
 
-    await clearCart();
     return orderRef.id;
   }
 
