@@ -394,6 +394,9 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                             builder: (_) =>
                                 PlantListFormPage(existingVendor: v)))
                     : null,
+                onDelete: isOwner
+                    ? () => _confirmDelete(context, v)
+                    : null,
               );
             },
             childCount: plants.length,
@@ -498,6 +501,9 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                                           builder: (_) =>
                                               PlantListFormPage(existingVendor: v)))
                                   : null,
+                              onDelete: isOwner
+                                  ? () => _confirmDelete(context, v)
+                                  : null,
                             ),
                           );
                         },
@@ -527,6 +533,47 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
       }
     }
     return names.take(10).toList();
+  }
+
+  Future<void> _confirmDelete(BuildContext ctx, PlantVendor v) async {
+    final confirmed = await showDialog<bool>(
+      context: ctx,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Listing?'),
+        content: Text(
+            '"${v.plantName}" will be permanently removed from GreenBazaar.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await _service.deletePlantVendor(v.id);
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+            content: Text('"${v.plantName}" deleted'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      } catch (e) {
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+            content: Text('Delete failed: $e'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    }
   }
 
   void _openDetail(PlantVendor v) {
@@ -908,6 +955,7 @@ class _PlantCard extends StatefulWidget {
   final bool compact;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final GreenBazaarService gbService;
   const _PlantCard({
     required this.vendor,
@@ -916,6 +964,7 @@ class _PlantCard extends StatefulWidget {
     required this.onTap,
     required this.gbService,
     this.onEdit,
+    this.onDelete,
     this.compact = false,
   });
   @override
@@ -1000,6 +1049,60 @@ class _PlantCardState extends State<_PlantCard> {
     }
   }
 
+  void _showOwnerActions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF2E7D32), size: 18),
+            ),
+            title: const Text('Edit Listing',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () {
+              Navigator.pop(context);
+              widget.onEdit?.call();
+            },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.delete_rounded,
+                  color: Colors.red, size: 18),
+            ),
+            title: const Text('Delete Listing',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w600)),
+            onTap: () {
+              Navigator.pop(context);
+              widget.onDelete?.call();
+            },
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
+
   Color _accentColor() {
     final lower = widget.vendor.type.toLowerCase();
     if (lower.contains('fruit')) return const Color(0xFFE67E22);
@@ -1054,12 +1157,14 @@ class _PlantCardState extends State<_PlantCard> {
                             _Placeholder(accent: accent, height: widget.compact ? 120 : 130))
                     : _Placeholder(accent: accent, height: widget.compact ? 120 : 130),
               ),
-              // Top-right: edit (owner) or wishlist (others)
+              // Top-right: ⋮ menu (owner) or wishlist (others)
               Positioned(
                 top: 6,
                 right: 6,
                 child: GestureDetector(
-                  onTap: widget.isOwner ? widget.onEdit : _toggleWish,
+                  onTap: widget.isOwner
+                      ? () => _showOwnerActions(context)
+                      : _toggleWish,
                   child: Container(
                     width: 28,
                     height: 28,
@@ -1074,7 +1179,7 @@ class _PlantCardState extends State<_PlantCard> {
                     ),
                     child: Icon(
                       widget.isOwner
-                          ? Icons.edit_rounded
+                          ? Icons.more_vert_rounded
                           : (_wishlisted
                               ? Icons.favorite_rounded
                               : Icons.favorite_outline_rounded),

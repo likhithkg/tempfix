@@ -10,6 +10,8 @@ import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
 import 'cart_page.dart';
 import 'nursery_profile_page.dart';
+import 'plant_vendor_service.dart';
+import 'plant_list_form_page.dart';
 
 class PlantDetailPage extends StatefulWidget {
   final PlantVendor vendor;
@@ -97,6 +99,107 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
         ));
       }
     }
+  }
+
+  bool get _isOwner {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final v = widget.vendor;
+    return uid.isNotEmpty &&
+        (v.createdBy.isNotEmpty ? v.createdBy : v.ownerId) == uid;
+  }
+
+  void _edit() {
+    Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+          builder: (_) => PlantListFormPage(existingVendor: widget.vendor)),
+    ).then((changed) {
+      if (changed == true && mounted) setState(() {});
+    });
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Listing?'),
+        content: Text(
+            '"${widget.vendor.plantName}" will be permanently removed.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await PlantVendorService().deletePlantVendor(widget.vendor.id);
+        if (mounted) Navigator.pop(context, true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Delete failed: $e'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    }
+  }
+
+  void _showOwnerActions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF2E7D32), size: 18),
+            ),
+            title: const Text('Edit Listing',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _edit(); },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.delete_rounded,
+                  color: Colors.red, size: 18),
+            ),
+            title: const Text('Delete Listing',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _delete(); },
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
   }
 
   // Keeps original static helpers but now delegated
@@ -297,30 +400,45 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
                   ),
                 ),
                 actions: [
-                  // Wishlist button
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black38,
-                      child: IconButton(
-                        icon: Icon(
-                          _wishlisted
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_outline_rounded,
-                          color: _wishlisted
-                              ? const Color(0xFFFF5252)
-                              : Colors.white,
+                  // Owner: ⋮ menu with Edit + Delete; others: wishlist
+                  if (_isOwner)
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black38,
+                        child: IconButton(
+                          icon: const Icon(Icons.more_vert_rounded,
+                              color: Colors.white),
+                          tooltip: 'Edit / Delete',
+                          onPressed: _showOwnerActions,
                         ),
-                        onPressed: _toggleWish,
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black38,
+                        child: IconButton(
+                          icon: Icon(
+                            _wishlisted
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_outline_rounded,
+                            color: _wishlisted
+                                ? const Color(0xFFFF5252)
+                                : Colors.white,
+                          ),
+                          onPressed: _toggleWish,
+                        ),
                       ),
                     ),
-                  ),
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: CircleAvatar(
                       backgroundColor: Colors.black38,
                       child: IconButton(
-                        icon: const Icon(Icons.map_outlined, color: Colors.white),
+                        icon: const Icon(Icons.map_outlined,
+                            color: Colors.white),
                         onPressed: () =>
                             _openMap(context, vendor.latitude, vendor.longitude),
                       ),
@@ -621,46 +739,59 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
                   ),
                 ],
               ),
-              child: Row(children: [
-                // Cart button
-                Expanded(
-                  flex: 3,
-                  child: ElevatedButton.icon(
-                    onPressed: vendor.quantity == 0 ? null : _addToCart,
-                    icon: Icon(_inCart
-                        ? Icons.shopping_cart_rounded
-                        : Icons.add_shopping_cart_rounded),
-                    label: Text(
-                      _inCart ? 'In Cart' : 'Add to Cart',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 14),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          _inCart ? const Color(0xFF1565C0) : accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Call button
-                _iconBtn(
-                  Icons.call_rounded,
-                  accent,
-                  () => _call(context, phone),
-                ),
-                const SizedBox(width: 8),
-                // WhatsApp button
-                _iconBtn(
-                  Icons.chat_rounded,
-                  const Color(0xFF25D366),
-                  () => _whatsapp(context, phone),
-                ),
-              ]),
+              child: _isOwner
+                  ? Row(children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _edit,
+                          icon: const Icon(Icons.edit_rounded),
+                          label: const Text('Edit Listing',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 14)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E7D32),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _iconBtn(Icons.delete_rounded, Colors.red, _delete),
+                    ])
+                  : Row(children: [
+                      Expanded(
+                        flex: 3,
+                        child: ElevatedButton.icon(
+                          onPressed: vendor.quantity == 0 ? null : _addToCart,
+                          icon: Icon(_inCart
+                              ? Icons.shopping_cart_rounded
+                              : Icons.add_shopping_cart_rounded),
+                          label: Text(
+                            _inCart ? 'In Cart' : 'Add to Cart',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                _inCart ? const Color(0xFF1565C0) : accent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _iconBtn(Icons.call_rounded, accent,
+                          () => _call(context, phone)),
+                      const SizedBox(width: 8),
+                      _iconBtn(Icons.chat_rounded, const Color(0xFF25D366),
+                          () => _whatsapp(context, phone)),
+                    ]),
             ),
           ),
         ],
