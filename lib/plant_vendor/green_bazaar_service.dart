@@ -174,4 +174,81 @@ class GreenBazaarService {
     await clearCart();
     return ref.id;
   }
+
+  Future<String> placeTakeAwayOrder({
+    required List<CartItem> items,
+    required String buyerName,
+  }) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in');
+
+    final total =
+        items.fold(0.0, (s, i) => s + i.price * i.orderQty);
+
+    // Create order document
+    final orderRef = _db.collection('gb_orders').doc();
+    await orderRef.set({
+      'userId': uid,
+      'userName': buyerName,
+      'items': items
+          .map((c) => {
+                'vendorId': c.vendorId,
+                'plantName': c.plantName,
+                'vendorName': c.vendorName,
+                'price': c.price,
+                'quantity': c.orderQty,
+                'imageUrl': c.imageUrl,
+                'type': c.type,
+              })
+          .toList(),
+      'itemsTotal': total,
+      'deliveryCharge': 0,
+      'orderType': 'takeaway',
+      'paymentMethod': 'cash_on_pickup',
+      'status': 'placed',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Look up each unique seller and notify them
+    final sellerUids = <String>{};
+    for (final item in items) {
+      try {
+        final plantDoc =
+            await _db.collection('plant_vendors').doc(item.vendorId).get();
+        if (plantDoc.exists) {
+          final d = plantDoc.data()!;
+          final sellerUid =
+              (d['createdBy'] as String? ?? '').isNotEmpty
+                  ? d['createdBy'] as String
+                  : d['ownerId'] as String? ?? '';
+          if (sellerUid.isNotEmpty && sellerUid != uid) {
+            sellerUids.add(sellerUid);
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (sellerUids.isNotEmpty) {
+      final plantNames =
+          items.map((i) => '${i.plantName} ×${i.orderQty}').join(', ');
+      final batch = _db.batch();
+      for (final sellerUid in sellerUids) {
+        final notifRef = _db.collection('km_notifications').doc();
+        batch.set(notifRef, {
+          'userId': sellerUid,
+          'title': '🌿 New Takeaway Order!',
+          'body': 'Pickup order received: $plantNames',
+          'type': 'takeaway_order',
+          'orderId': orderRef.id,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+    }
+
+    await clearCart();
+    return orderRef.id;
+  }
 }

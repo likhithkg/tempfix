@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
-import 'checkout_page.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -14,6 +13,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   final _svc = GreenBazaarService();
   late final Stream<List<CartItem>> _stream;
+  bool _placing = false;
 
   @override
   void initState() {
@@ -24,10 +24,51 @@ class _CartPageState extends State<CartPage> {
   double _total(List<CartItem> items) =>
       items.fold(0, (s, i) => s + i.price * i.orderQty);
 
+  Future<void> _confirmTakeAway(List<CartItem> items, double total) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _TakeAwaySheet(items: items, total: total),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _placing = true);
+    try {
+      await _svc.placeTakeAwayOrder(
+        items: items,
+        buyerName: user.displayName ?? 'Buyer',
+      );
+      if (mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => _SuccessDialog(
+            onDone: () {
+              Navigator.pop(context); // close dialog
+              Navigator.pop(context); // close cart
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Order failed: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _placing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
@@ -68,7 +109,8 @@ class _CartPageState extends State<CartPage> {
                       await _svc.clearCart();
                     } catch (_) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
                           content: Text('Failed to clear cart'),
                           backgroundColor: Colors.red,
                         ));
@@ -83,138 +125,143 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ),
-      body: StreamBuilder<List<CartItem>>(
-        stream: _stream,
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return Center(
+      body: _placing
+          ? const Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
-                const Text('Failed to load cart',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                Text('${snap.error}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
-                    textAlign: TextAlign.center),
-              ]),
-            );
-          }
-          final items = snap.data ?? [];
-
-          if (items.isEmpty) {
-            return Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('🛒',
-                    style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 16),
-                const Text('Your cart is empty',
+                CircularProgressIndicator(color: Color(0xFF2E7D32)),
+                SizedBox(height: 16),
+                Text('Placing your order…',
                     style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                const Text('Add plants to get started',
-                    style: TextStyle(
-                        color: Color(0xFF9E9E9E))),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.local_florist_rounded),
-                  label: const Text('Browse Plants'),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white),
-                ),
+                        fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
               ]),
-            );
-          }
-
-          final total = _total(items);
-          const delivery = 49.0;
-          final grand = total + delivery;
-
-          return Column(children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                itemCount: items.length,
-                itemBuilder: (_, i) {
-                  final item = items[i];
-                  return _CartTile(item: item, svc: _svc);
-                },
-              ),
-            ),
-
-            // Price summary + checkout
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                  16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, -4))
-                ],
-              ),
-              child: Column(children: [
-                _priceRow('Items total', '₹${total.toStringAsFixed(2)}',
-                    isBold: false),
-                const SizedBox(height: 4),
-                _priceRow('Delivery charge', '₹${delivery.toStringAsFixed(0)}',
-                    isBold: false,
-                    valueColor: const Color(0xFF2E7D32)),
-                const Divider(height: 16),
-                _priceRow('Grand Total', '₹${grand.toStringAsFixed(2)}',
-                    isBold: true),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: uid.isEmpty
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CheckoutPage(
-                                  items: items,
-                                  itemsTotal: total,
-                                  deliveryCharge: delivery,
-                                ),
-                              ),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.shopping_bag_rounded),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Proceed to Checkout  ₹${grand.toStringAsFixed(2)}',
+            )
+          : StreamBuilder<List<CartItem>>(
+              stream: _stream,
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.error_outline,
+                          size: 48, color: Colors.red),
+                      const SizedBox(height: 12),
+                      const Text('Failed to load cart',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      Text('${snap.error}',
                           style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w700),
-                        ),
-                      ],
+                              fontSize: 12, color: Color(0xFF9E9E9E)),
+                          textAlign: TextAlign.center),
+                    ]),
+                  );
+                }
+                final items = snap.data ?? [];
+
+                if (items.isEmpty) {
+                  return Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Text('🛒', style: TextStyle(fontSize: 64)),
+                      const SizedBox(height: 16),
+                      const Text('Your cart is empty',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 8),
+                      const Text('Add plants to get started',
+                          style: TextStyle(color: Color(0xFF9E9E9E))),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.local_florist_rounded),
+                        label: const Text('Browse Plants'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E7D32),
+                            foregroundColor: Colors.white),
+                      ),
+                    ]),
+                  );
+                }
+
+                final total = _total(items);
+
+                return Column(children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      itemCount: items.length,
+                      itemBuilder: (_, i) =>
+                          _CartTile(item: items[i], svc: _svc),
                     ),
                   ),
-                ),
-              ]),
+
+                  // ── Price summary + Take Away ──────────────────────────
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                        16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, -4))
+                      ],
+                    ),
+                    child: Column(children: [
+                      _priceRow('Items total',
+                          '₹${total.toStringAsFixed(2)}',
+                          isBold: false),
+                      const Divider(height: 16),
+                      _priceRow('Grand Total',
+                          '₹${total.toStringAsFixed(2)}',
+                          isBold: true),
+                      const SizedBox(height: 14),
+
+                      // Take Away block
+                      GestureDetector(
+                        onTap: () => _confirmTakeAway(items, total),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: const Color(0xFF2E7D32)
+                                      .withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: Column(children: [
+                            const Text('🏪',
+                                style: TextStyle(fontSize: 28)),
+                            const SizedBox(height: 4),
+                            const Text('Take Away',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5)),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Pick up from the nursery  ·  ₹${total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12),
+                            ),
+                          ]),
+                        ),
+                      ),
+                    ]),
+                  ),
+                ]);
+              },
             ),
-          ]);
-        },
-      ),
     );
   }
 
@@ -226,19 +273,20 @@ class _CartPageState extends State<CartPage> {
         Text(label,
             style: TextStyle(
                 fontSize: 13,
-                fontWeight:
-                    isBold ? FontWeight.w800 : FontWeight.w400,
+                fontWeight: isBold ? FontWeight.w800 : FontWeight.w400,
                 color: isBold ? null : const Color(0xFF616161))),
         Text(value,
             style: TextStyle(
                 fontSize: isBold ? 15 : 13,
-                fontWeight:
-                    isBold ? FontWeight.w900 : FontWeight.w600,
-                color: valueColor ?? (isBold ? const Color(0xFF2E7D32) : null))),
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w600,
+                color: valueColor ??
+                    (isBold ? const Color(0xFF2E7D32) : null))),
       ],
     );
   }
 }
+
+// ─── Cart Tile ────────────────────────────────────────────────────────────────
 
 class _CartTile extends StatelessWidget {
   final CartItem item;
@@ -280,17 +328,17 @@ class _CartTile extends StatelessWidget {
         ],
       ),
       child: Row(children: [
-        // Image
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: hasImg
               ? Image.network(item.imageUrl!,
-                  width: 70, height: 70, fit: BoxFit.cover,
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => _imgPlaceholder(accent))
               : _imgPlaceholder(accent),
         ),
         const SizedBox(width: 12),
-        // Info
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +362,6 @@ class _CartTile extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                         color: accent)),
                 const Spacer(),
-                // Qty stepper
                 Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFE0E0E0)),
@@ -359,7 +406,6 @@ class _CartTile extends StatelessWidget {
             ],
           ),
         ),
-        // Delete
         IconButton(
           icon: const Icon(Icons.delete_outline_rounded,
               color: Color(0xFF9E9E9E), size: 20),
@@ -393,11 +439,217 @@ class _CartTile extends StatelessWidget {
         height: 70,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [accent.withValues(alpha: 0.3), accent.withValues(alpha: 0.6)],
+            colors: [
+              accent.withValues(alpha: 0.3),
+              accent.withValues(alpha: 0.6)
+            ],
           ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(Icons.local_florist_rounded,
             size: 30, color: Colors.white.withValues(alpha: 0.6)),
       );
+}
+
+// ─── Take Away Confirmation Sheet ─────────────────────────────────────────────
+
+class _TakeAwaySheet extends StatelessWidget {
+  final List<CartItem> items;
+  final double total;
+  const _TakeAwaySheet({required this.items, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          const Row(children: [
+            Text('🏪', style: TextStyle(fontSize: 28)),
+            SizedBox(width: 10),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Confirm Takeaway',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              Text('You will pick up from the nursery',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E))),
+            ]),
+          ]),
+          const SizedBox(height: 20),
+
+          // Info banner
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(children: [
+              Icon(Icons.info_outline_rounded,
+                  size: 16, color: Color(0xFF2E7D32)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'The seller will be notified immediately. Visit the nursery to collect your plants.',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF2E7D32),
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // Order summary
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(children: [
+                  const Icon(Icons.local_florist_rounded,
+                      size: 14, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('${item.plantName} ×${item.orderQty}',
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w600)),
+                  ),
+                  Text(
+                      '₹${(item.price * item.orderQty).toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700)),
+                ]),
+              )),
+
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Total to pay at nursery',
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700)),
+              Text('₹${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF2E7D32))),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: Color(0xFFE0E0E0)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Cancel',
+                    style: TextStyle(color: Color(0xFF616161))),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Confirm Takeaway',
+                    style:
+                        TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Success Dialog ───────────────────────────────────────────────────────────
+
+class _SuccessDialog extends StatelessWidget {
+  final VoidCallback onDone;
+  const _SuccessDialog({required this.onDone});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                  child: Text('✅', style: TextStyle(fontSize: 36))),
+            ),
+            const SizedBox(height: 16),
+            const Text('Order Placed!',
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            const Text(
+              'The seller has been notified.\nVisit the nursery to pick up your plants.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF616161),
+                  height: 1.5),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onDone,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Done',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

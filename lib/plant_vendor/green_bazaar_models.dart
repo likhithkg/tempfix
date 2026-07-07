@@ -212,8 +212,9 @@ class PlantOrder {
   final double itemsTotal;
   final double deliveryCharge;
   final String paymentMethod;
-  final DeliveryAddress address;
+  final DeliveryAddress? address;
   final String status;
+  final String orderType; // 'takeaway' | 'delivery'
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -225,38 +226,32 @@ class PlantOrder {
     required this.itemsTotal,
     required this.deliveryCharge,
     required this.paymentMethod,
-    required this.address,
+    this.address,
     required this.status,
+    this.orderType = 'takeaway',
     required this.createdAt,
     this.updatedAt,
   });
 
   double get grandTotal => itemsTotal + deliveryCharge;
 
-  static const List<String> statusSteps = [
-    'placed',
-    'confirmed',
-    'packed',
-    'out_for_delivery',
-    'delivered',
-  ];
+  bool get isTakeaway => orderType == 'takeaway';
+
+  static List<String> statusStepsForType(String type) => type == 'takeaway'
+      ? ['placed', 'confirmed', 'ready', 'collected']
+      : ['placed', 'confirmed', 'packed', 'out_for_delivery', 'delivered'];
 
   static String statusLabel(String s) {
     switch (s) {
-      case 'placed':
-        return 'Order Placed';
-      case 'confirmed':
-        return 'Confirmed';
-      case 'packed':
-        return 'Packed';
-      case 'out_for_delivery':
-        return 'Out for Delivery';
-      case 'delivered':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return s;
+      case 'placed':        return 'Order Placed';
+      case 'confirmed':     return 'Seller Confirmed';
+      case 'ready':         return 'Ready for Pickup';
+      case 'collected':     return 'Collected';
+      case 'packed':        return 'Packed';
+      case 'out_for_delivery': return 'Out for Delivery';
+      case 'delivered':     return 'Delivered';
+      case 'cancelled':     return 'Cancelled';
+      default:              return s;
     }
   }
 
@@ -265,6 +260,8 @@ class PlantOrder {
         .map((e) => OrderLineItem.fromMap(Map<String, dynamic>.from(e as Map)))
         .toList();
 
+    final addressMap = m['address'] as Map?;
+
     return PlantOrder(
       id: docId,
       userId: m['userId'] ?? '',
@@ -272,11 +269,12 @@ class PlantOrder {
       items: itemsList,
       itemsTotal: (m['itemsTotal'] as num? ?? 0).toDouble(),
       deliveryCharge: (m['deliveryCharge'] as num? ?? 0).toDouble(),
-      paymentMethod: m['paymentMethod'] ?? 'cod',
-      address: DeliveryAddress.fromMap(
-        Map<String, dynamic>.from(m['address'] as Map? ?? {}),
-      ),
+      paymentMethod: m['paymentMethod'] ?? 'cash_on_pickup',
+      address: addressMap != null
+          ? DeliveryAddress.fromMap(Map<String, dynamic>.from(addressMap))
+          : null,
       status: m['status'] ?? 'placed',
+      orderType: m['orderType'] as String? ?? 'takeaway',
       createdAt: m['createdAt'] is Timestamp
           ? (m['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -293,8 +291,9 @@ class PlantOrder {
         'itemsTotal': itemsTotal,
         'deliveryCharge': deliveryCharge,
         'paymentMethod': paymentMethod,
-        'address': address.toMap(),
+        if (address != null) 'address': address!.toMap(),
         'status': status,
+        'orderType': orderType,
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt':
             updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
