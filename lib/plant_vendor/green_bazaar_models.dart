@@ -215,6 +215,7 @@ class PlantOrder {
   final DeliveryAddress? address;
   final String status;
   final String orderType; // 'takeaway' | 'delivery'
+  final List<String> sellerUids;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -229,6 +230,7 @@ class PlantOrder {
     this.address,
     required this.status,
     this.orderType = 'takeaway',
+    this.sellerUids = const [],
     required this.createdAt,
     this.updatedAt,
   });
@@ -275,6 +277,7 @@ class PlantOrder {
           : null,
       status: m['status'] ?? 'placed',
       orderType: m['orderType'] as String? ?? 'takeaway',
+      sellerUids: List<String>.from(m['sellerUids'] as List? ?? []),
       createdAt: m['createdAt'] is Timestamp
           ? (m['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -294,6 +297,7 @@ class PlantOrder {
         if (address != null) 'address': address!.toMap(),
         'status': status,
         'orderType': orderType,
+        'sellerUids': sellerUids,
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt':
             updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,

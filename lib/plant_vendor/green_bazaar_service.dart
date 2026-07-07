@@ -187,6 +187,25 @@ class GreenBazaarService {
 
     // Create order document
     final orderRef = _db.collection('gb_orders').doc();
+    // Look up each unique seller first
+    final sellerUids = <String>{};
+    for (final item in items) {
+      try {
+        final plantDoc =
+            await _db.collection('plant_vendors').doc(item.vendorId).get();
+        if (plantDoc.exists) {
+          final d = plantDoc.data()!;
+          final sellerUid =
+              (d['createdBy'] as String? ?? '').isNotEmpty
+                  ? d['createdBy'] as String
+                  : d['ownerId'] as String? ?? '';
+          if (sellerUid.isNotEmpty && sellerUid != uid) {
+            sellerUids.add(sellerUid);
+          }
+        }
+      } catch (_) {}
+    }
+
     await orderRef.set({
       'userId': uid,
       'userName': buyerName,
@@ -206,29 +225,12 @@ class GreenBazaarService {
       'orderType': 'takeaway',
       'paymentMethod': 'cash_on_pickup',
       'status': 'placed',
+      'sellerUids': sellerUids.toList(),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // Look up each unique seller and notify them
-    final sellerUids = <String>{};
-    for (final item in items) {
-      try {
-        final plantDoc =
-            await _db.collection('plant_vendors').doc(item.vendorId).get();
-        if (plantDoc.exists) {
-          final d = plantDoc.data()!;
-          final sellerUid =
-              (d['createdBy'] as String? ?? '').isNotEmpty
-                  ? d['createdBy'] as String
-                  : d['ownerId'] as String? ?? '';
-          if (sellerUid.isNotEmpty && sellerUid != uid) {
-            sellerUids.add(sellerUid);
-          }
-        }
-      } catch (_) {}
-    }
-
+    // Notify each seller
     if (sellerUids.isNotEmpty) {
       final plantNames =
           items.map((i) => '${i.plantName} ×${i.orderQty}').join(', ');
@@ -250,5 +252,31 @@ class GreenBazaarService {
 
     await clearCart();
     return orderRef.id;
+  }
+
+  // ─── Seller order management ──────────────────────────────────────────────
+
+  Stream<List<PlantOrder>> streamSellerOrders() {
+    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
+      if (user == null) return const Stream.empty();
+      return _db
+          .collection('gb_orders')
+          .where('sellerUids', arrayContains: user.uid)
+          .snapshots()
+          .map((s) {
+        final orders = s.docs
+            .map((d) => PlantOrder.fromMap(d.data(), d.id))
+            .toList();
+        orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return orders;
+      });
+    });
+  }
+
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    await _db.collection('gb_orders').doc(orderId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

@@ -303,11 +303,17 @@ service cloud.firestore {
     // ── GreenBazaar Orders ────────────────────────────────────────────────────
 
     match /gb_orders/{orderId} {
-      allow read:   if isSignedIn() && (
-                      resource.data.get('userId', '') == uid() || isAdmin()
-                    );
+      allow read: if isSignedIn() && (
+                    resource.data.get('userId', '') == uid() ||
+                    uid() in resource.data.get('sellerUids', []) ||
+                    isAdmin()
+                  );
       allow create: if isSignedIn() && request.resource.data.userId == uid();
-      allow update: if isAdmin();
+      allow update: if isAdmin() ||
+                      (isSignedIn() &&
+                       uid() in resource.data.get('sellerUids', []) &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['status', 'updatedAt']));
       allow delete: if false;
     }
 

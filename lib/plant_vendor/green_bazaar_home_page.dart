@@ -14,6 +14,7 @@ import 'wishlist_page.dart';
 import 'ai_plant_assistant_page.dart';
 import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
+import 'seller_orders_page.dart';
 
 // ─── Category data ────────────────────────────────────────────────────────────
 
@@ -89,6 +90,10 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
   int _cartCount = 0;
   StreamSubscription<List<CartItem>>? _cartSub;
 
+  // Seller orders badge (new/placed orders)
+  int _newOrderCount = 0;
+  StreamSubscription<List<PlantOrder>>? _sellerOrderSub;
+
   @override
   void initState() {
     super.initState();
@@ -97,8 +102,14 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
     _cartSub = _cartStream.listen((items) {
       if (mounted) {
         setState(() {
-          _cartCount =
-              items.fold(0, (sum, i) => sum + i.orderQty);
+          _cartCount = items.fold(0, (sum, i) => sum + i.orderQty);
+        });
+      }
+    });
+    _sellerOrderSub = _gbService.streamSellerOrders().listen((orders) {
+      if (mounted) {
+        setState(() {
+          _newOrderCount = orders.where((o) => o.status == 'placed').length;
         });
       }
     });
@@ -123,6 +134,7 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
     _bannerCtrl.dispose();
     _searchCtrl.dispose();
     _cartSub?.cancel();
+    _sellerOrderSub?.cancel();
     super.dispose();
   }
 
@@ -244,6 +256,38 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                     tooltip: 'Wishlist',
                     onPressed: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const WishlistPage())),
+                  ),
+                  // Seller orders with badge
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.receipt_long_rounded, color: Colors.white),
+                        tooltip: 'My Orders (Seller)',
+                        onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => const SellerOrdersPage())),
+                      ),
+                      if (_newOrderCount > 0)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF39C12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$_newOrderCount',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   // Cart with badge
                   Stack(
