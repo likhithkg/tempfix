@@ -321,6 +321,29 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── F2B Mart Cart ─────────────────────────────────────────────────────────
+
+    match /f2b_cart/{userId}/items/{itemId} {
+      allow read, write: if isSignedIn() && uid() == userId;
+    }
+
+    // ── F2B Mart Orders ───────────────────────────────────────────────────────
+
+    match /f2b_orders/{orderId} {
+      allow read: if isSignedIn() && (
+                    resource.data.get('userId', '') == uid() ||
+                    uid() in resource.data.get('sellerUids', []) ||
+                    isAdmin()
+                  );
+      allow create: if isSignedIn() && request.resource.data.userId == uid();
+      allow update: if isAdmin() ||
+                      (isSignedIn() &&
+                       uid() in resource.data.get('sellerUids', []) &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['status', 'updatedAt']));
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -20,6 +20,10 @@ import 'f2b_search_page.dart';
 import 'f2b_shimmer.dart';
 import 'f2b_wishlist_page.dart';
 import 'f2b_wishlist_service.dart';
+import 'f2b_models.dart';
+import 'f2b_cart_service.dart';
+import 'f2b_cart_page.dart';
+import 'f2b_seller_orders_page.dart';
 
 // ─── Data classes ──────────────────────────────────────────────────────────
 
@@ -56,13 +60,19 @@ class F2BHomePage extends StatefulWidget {
 
 class _F2BHomePageState extends State<F2BHomePage> {
   final _service = ExporterService();
+  final _cartSvc = F2BCartService();
   final _bannerCtrl = PageController();
 
   String _selectedCategory = 'all';
   int _currentBanner = 0;
   Timer? _bannerTimer;
   Set<String> _wishlistIds = {};
+  Set<String> _cartProductIds = {};
+  int _cartCount = 0;
+  int _newOrderCount = 0;
   StreamSubscription<Set<String>>? _wishlistSub;
+  StreamSubscription<List<F2BCartItem>>? _cartSub;
+  StreamSubscription<List<F2BOrder>>? _sellerOrderSub;
 
   static const _banners = [
     _BannerData(
@@ -125,6 +135,22 @@ class _F2BHomePageState extends State<F2BHomePage> {
       );
     });
     _startWishlistListener();
+    _cartSub = _cartSvc.streamCart().listen((items) {
+      if (mounted) {
+        setState(() {
+          _cartProductIds = items.map((i) => i.productId).toSet();
+          _cartCount = items.length;
+        });
+      }
+    });
+    _sellerOrderSub = _cartSvc.streamSellerOrders().listen((orders) {
+      if (mounted) {
+        setState(() {
+          _newOrderCount =
+              orders.where((o) => o.status == 'placed').length;
+        });
+      }
+    });
   }
 
   void _startWishlistListener() {
@@ -139,6 +165,8 @@ class _F2BHomePageState extends State<F2BHomePage> {
     _bannerTimer?.cancel();
     _bannerCtrl.dispose();
     _wishlistSub?.cancel();
+    _cartSub?.cancel();
+    _sellerOrderSub?.cancel();
     super.dispose();
   }
 
@@ -174,6 +202,81 @@ class _F2BHomePageState extends State<F2BHomePage> {
       return;
     }
     await WishlistService.toggle(uid, productId);
+  }
+
+  Future<void> _addToCart(BuildContext ctx, ExportProduct p) async {
+    try {
+      await _cartSvc.addToCart(p);
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+          content: Text('${p.productName} added to cart'),
+          backgroundColor: const Color(0xFF1B5E20),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(ctx,
+                MaterialPageRoute(builder: (_) => const F2BCartPage())),
+          ),
+        ));
+      }
+    } catch (e) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+          content: Text('Failed to add to cart: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
+  void _editProduct(BuildContext ctx, ExportProduct p) {
+    Navigator.push(ctx,
+        MaterialPageRoute(
+            builder: (_) => ExporterFormPage(existingProduct: p)));
+  }
+
+  Future<void> _deleteProduct(BuildContext ctx, ExportProduct p) async {
+    final confirmed = await showDialog<bool>(
+      context: ctx,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Listing?'),
+        content: Text(
+            '"${p.productName}" will be permanently removed.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await ExporterService().deleteExportProduct(p.id);
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+            content: Text('"${p.productName}" deleted'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      } catch (e) {
+        if (ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+            content: Text('Delete failed: $e'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    }
   }
 
   void _showRfqDialog(BuildContext ctx) {
@@ -346,8 +449,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
         children: [
           _GBHeader(
             topPad: topPad,
+            cartCount: _cartCount,
+            newOrderCount: _newOrderCount,
             onWishlist: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const F2BWishlistPage())),
+            onCart: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const F2BCartPage())),
+            onSellerOrders: () => Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (_) => const F2BSellerOrdersPage())),
             onOrders: () => Navigator.push(context,
                 MaterialPageRoute(
                     builder: (_) => const PurchaseOrderListPage())),
@@ -433,10 +543,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
                           child: _HScrollSection(
                             items: trending, langCode: langCode,
                             wishlistIds: _wishlistIds,
+                            cartProductIds: _cartProductIds,
+                            currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
                             onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                            onAddToCart: (p) => _addToCart(ctx, p),
+                            onEdit: (p) => _editProduct(ctx, p),
+                            onDelete: (p) => _deleteProduct(ctx, p),
                           ),
                         ),
                       ],
@@ -457,10 +572,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
                           child: _HScrollSection(
                             items: organic, langCode: langCode,
                             wishlistIds: _wishlistIds,
+                            cartProductIds: _cartProductIds,
+                            currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
                             onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                            onAddToCart: (p) => _addToCart(ctx, p),
+                            onEdit: (p) => _editProduct(ctx, p),
+                            onDelete: (p) => _deleteProduct(ctx, p),
                           ),
                         ),
                       ],
@@ -481,10 +601,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
                           child: _HScrollSection(
                             items: exportRdy, langCode: langCode,
                             wishlistIds: _wishlistIds,
+                            cartProductIds: _cartProductIds,
+                            currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
                             onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                            onAddToCart: (p) => _addToCart(ctx, p),
+                            onEdit: (p) => _editProduct(ctx, p),
+                            onDelete: (p) => _deleteProduct(ctx, p),
                           ),
                         ),
                       ],
@@ -552,16 +677,20 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
                                 final p = filtered[i];
+                                final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                                final isOwner = p.farmerId == uid;
                                 return _GridCard(
                                   product: p, langCode: langCode,
-                                  isWishlisted:
-                                      _wishlistIds.contains(p.id),
+                                  isWishlisted: _wishlistIds.contains(p.id),
+                                  isInCart: _cartProductIds.contains(p.id),
+                                  isOwner: isOwner,
                                   onTap: () => Navigator.push(ctx,
                                       MaterialPageRoute(builder: (_) =>
-                                          F2BProductDetailPage(
-                                              product: p))),
-                                  onWishlist: () =>
-                                      _toggleWishlist(ctx, p.id),
+                                          F2BProductDetailPage(product: p))),
+                                  onWishlist: () => _toggleWishlist(ctx, p.id),
+                                  onAddToCart: () => _addToCart(ctx, p),
+                                  onEdit: () => _editProduct(ctx, p),
+                                  onDelete: () => _deleteProduct(ctx, p),
                                 );
                               },
                               childCount: filtered.length,
@@ -584,9 +713,52 @@ class _F2BHomePageState extends State<F2BHomePage> {
 
 class _GBHeader extends StatelessWidget {
   final double topPad;
-  final VoidCallback onWishlist, onOrders, onDashboard, onMap;
-  const _GBHeader({required this.topPad, required this.onWishlist,
-      required this.onOrders, required this.onDashboard, required this.onMap});
+  final int cartCount;
+  final int newOrderCount;
+  final VoidCallback onWishlist, onCart, onSellerOrders,
+      onOrders, onDashboard, onMap;
+  const _GBHeader({
+    required this.topPad,
+    required this.cartCount,
+    required this.newOrderCount,
+    required this.onWishlist,
+    required this.onCart,
+    required this.onSellerOrders,
+    required this.onOrders,
+    required this.onDashboard,
+    required this.onMap,
+  });
+
+  Widget _badgeIcon(
+      {required IconData icon,
+      required VoidCallback onTap,
+      required String tooltip,
+      int badge = 0}) {
+    return Stack(clipBehavior: Clip.none, children: [
+      IconButton(
+          icon: Icon(icon, size: 22),
+          color: Colors.white,
+          tooltip: tooltip,
+          onPressed: onTap),
+      if (badge > 0)
+        Positioned(
+          top: 6,
+          right: 4,
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+                color: Colors.amber, shape: BoxShape.circle),
+            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+            child: Text('$badge',
+                style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black),
+                textAlign: TextAlign.center),
+          ),
+        ),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -625,18 +797,30 @@ class _GBHeader extends StatelessWidget {
           ]),
         ),
         const Spacer(),
+        // Seller orders badge (receipt icon)
+        _badgeIcon(
+            icon: Icons.receipt_long_rounded,
+            tooltip: 'My Orders (Seller)',
+            badge: newOrderCount,
+            onTap: onSellerOrders),
+        // Cart badge
+        _badgeIcon(
+            icon: Icons.shopping_cart_outlined,
+            tooltip: 'Cart',
+            badge: cartCount,
+            onTap: onCart),
         IconButton(
-          icon: const Icon(Icons.favorite_border_rounded, size: 22),
-          color: Colors.white, tooltip: 'Wishlist', onPressed: onWishlist),
+            icon: const Icon(Icons.favorite_border_rounded, size: 22),
+            color: Colors.white, tooltip: 'Wishlist', onPressed: onWishlist),
         IconButton(
-          icon: const Icon(Icons.shopping_bag_outlined, size: 22),
-          color: Colors.white, tooltip: 'Orders', onPressed: onOrders),
+            icon: const Icon(Icons.shopping_bag_outlined, size: 22),
+            color: Colors.white, tooltip: 'My POs', onPressed: onOrders),
         IconButton(
-          icon: const Icon(Icons.storefront_outlined, size: 22),
-          color: Colors.white, tooltip: 'Dashboard', onPressed: onDashboard),
+            icon: const Icon(Icons.storefront_outlined, size: 22),
+            color: Colors.white, tooltip: 'Dashboard', onPressed: onDashboard),
         IconButton(
-          icon: const Icon(Icons.map_outlined, size: 22),
-          color: Colors.white, tooltip: 'Map', onPressed: onMap),
+            icon: const Icon(Icons.map_outlined, size: 22),
+            color: Colors.white, tooltip: 'Map', onPressed: onMap),
       ]),
     );
   }
@@ -932,10 +1116,25 @@ class _HScrollSection extends StatelessWidget {
   final List<ExportProduct> items;
   final String langCode;
   final Set<String> wishlistIds;
+  final Set<String> cartProductIds;
+  final String currentUid;
   final ValueChanged<ExportProduct> onTap;
   final ValueChanged<ExportProduct> onWishlist;
-  const _HScrollSection({required this.items, required this.langCode,
-      required this.wishlistIds, required this.onTap, required this.onWishlist});
+  final ValueChanged<ExportProduct> onAddToCart;
+  final ValueChanged<ExportProduct> onEdit;
+  final ValueChanged<ExportProduct> onDelete;
+  const _HScrollSection({
+    required this.items,
+    required this.langCode,
+    required this.wishlistIds,
+    required this.cartProductIds,
+    required this.currentUid,
+    required this.onTap,
+    required this.onWishlist,
+    required this.onAddToCart,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -945,12 +1144,21 @@ class _HScrollSection extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
         itemCount: items.length,
-        itemBuilder: (_, i) => _PremiumCard(
-          product: items[i], langCode: langCode,
-          isWishlisted: wishlistIds.contains(items[i].id),
-          onTap: () => onTap(items[i]),
-          onWishlist: () => onWishlist(items[i]),
-        ),
+        itemBuilder: (_, i) {
+          final p = items[i];
+          final isOwner = p.farmerId == currentUid;
+          return _PremiumCard(
+            product: p, langCode: langCode,
+            isWishlisted: wishlistIds.contains(p.id),
+            isInCart: cartProductIds.contains(p.id),
+            isOwner: isOwner,
+            onTap: () => onTap(p),
+            onWishlist: () => onWishlist(p),
+            onAddToCart: () => onAddToCart(p),
+            onEdit: () => onEdit(p),
+            onDelete: () => onDelete(p),
+          );
+        },
       ),
     );
   }
@@ -983,10 +1191,19 @@ class _PremiumCard extends StatelessWidget {
   final ExportProduct product;
   final String langCode;
   final bool isWishlisted;
+  final bool isInCart;
+  final bool isOwner;
   final VoidCallback onTap;
   final VoidCallback onWishlist;
-  const _PremiumCard({required this.product, required this.langCode,
-      required this.isWishlisted, required this.onTap, required this.onWishlist});
+  final VoidCallback onAddToCart;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _PremiumCard({
+    required this.product, required this.langCode,
+    required this.isWishlisted, required this.isInCart, required this.isOwner,
+    required this.onTap, required this.onWishlist,
+    required this.onAddToCart, required this.onEdit, required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1031,10 +1248,13 @@ class _PremiumCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Top-right: ⋮ for owner, wishlist for others
                 Positioned(
                   top: 6, right: 6,
                   child: GestureDetector(
-                    onTap: onWishlist,
+                    onTap: isOwner
+                        ? () => _showOwnerSheet(context, onEdit, onDelete)
+                        : onWishlist,
                     child: Container(
                       width: 28, height: 28,
                       decoration: BoxDecoration(
@@ -1042,16 +1262,33 @@ class _PremiumCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isWishlisted
-                            ? Icons.favorite
-                            : Icons.favorite_border,
+                        isOwner
+                            ? Icons.more_vert_rounded
+                            : (isWishlisted ? Icons.favorite : Icons.favorite_border),
                         size: 14,
-                        color: isWishlisted ? Colors.red : Colors.grey,
+                        color: isOwner
+                            ? const Color(0xFF1B5E20)
+                            : (isWishlisted ? Colors.red : Colors.grey),
                       ),
                     ),
                   ),
                 ),
-                if (product.isOrganic)
+                // Top-left: My Listing badge (owner) or Organic
+                if (isOwner)
+                  Positioned(
+                    top: 6, left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF1B5E20),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: const Text('My Listing',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w700)),
+                    ),
+                  )
+                else if (product.isOrganic)
                   Positioned(
                     top: 6, left: 6,
                     child: Container(
@@ -1092,6 +1329,12 @@ class _PremiumCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 12.5,
                           fontWeight: FontWeight.w700, height: 1.2),
                       maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (isOwner)
+                    const Text('You listed this',
+                        style: TextStyle(
+                            fontSize: 9,
+                            color: Color(0xFF1B5E20),
+                            fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Text('₹${product.pricePerUnit}',
                       style: const TextStyle(fontSize: 15,
@@ -1107,10 +1350,109 @@ class _PremiumCard extends StatelessWidget {
                             color: KMColors.textSecondary),
                         maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ]),
+                  // Add to cart / edit button
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: isOwner ? onEdit : onAddToCart,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isOwner
+                            ? const Color(0xFF1B5E20).withValues(alpha: 0.10)
+                            : (isInCart
+                                ? const Color(0xFF1565C0).withValues(alpha: 0.10)
+                                : const Color(0xFF1B5E20)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isOwner
+                                ? Icons.edit_rounded
+                                : (isInCart
+                                    ? Icons.shopping_cart_rounded
+                                    : Icons.add_shopping_cart_rounded),
+                            size: 12,
+                            color: isOwner
+                                ? const Color(0xFF1B5E20)
+                                : (isInCart
+                                    ? const Color(0xFF1565C0)
+                                    : Colors.white),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isOwner
+                                ? 'Edit'
+                                : (isInCart ? 'In Cart' : 'Add'),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: isOwner
+                                  ? const Color(0xFF1B5E20)
+                                  : (isInCart
+                                      ? const Color(0xFF1565C0)
+                                      : Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+        ]),
+      ),
+    );
+  }
+
+  void _showOwnerSheet(
+      BuildContext ctx, VoidCallback onEdit, VoidCallback onDelete) {
+    showModalBottomSheet(
+      context: ctx,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF1B5E20), size: 18),
+            ),
+            title: const Text('Edit Listing',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(ctx); onEdit(); },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.delete_rounded,
+                  color: Colors.red, size: 18),
+            ),
+            title: const Text('Delete Listing',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(ctx); onDelete(); },
+          ),
+          const SizedBox(height: 8),
         ]),
       ),
     );
@@ -1350,10 +1692,19 @@ class _GridCard extends StatelessWidget {
   final ExportProduct product;
   final String langCode;
   final bool isWishlisted;
+  final bool isInCart;
+  final bool isOwner;
   final VoidCallback onTap;
   final VoidCallback onWishlist;
-  const _GridCard({required this.product, required this.langCode,
-      required this.isWishlisted, required this.onTap, required this.onWishlist});
+  final VoidCallback onAddToCart;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _GridCard({
+    required this.product, required this.langCode,
+    required this.isWishlisted, required this.isInCart, required this.isOwner,
+    required this.onTap, required this.onWishlist,
+    required this.onAddToCart, required this.onEdit, required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1406,26 +1757,46 @@ class _GridCard extends StatelessWidget {
                       ]),
                     ),
                   ),
+                // Top-right: ⋮ for owner, wishlist for others
                 Positioned(
                   top: 7, right: 7,
                   child: GestureDetector(
-                    onTap: onWishlist,
+                    onTap: isOwner
+                        ? () => _showOwnerSheet(context, onEdit, onDelete)
+                        : onWishlist,
                     child: Container(
                       width: 30, height: 30,
                       decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.92),
                           shape: BoxShape.circle),
                       child: Icon(
-                        isWishlisted
-                            ? Icons.favorite
-                            : Icons.favorite_border,
+                        isOwner
+                            ? Icons.more_vert_rounded
+                            : (isWishlisted ? Icons.favorite : Icons.favorite_border),
                         size: 15,
-                        color: isWishlisted ? Colors.red : Colors.grey,
+                        color: isOwner
+                            ? const Color(0xFF1B5E20)
+                            : (isWishlisted ? Colors.red : Colors.grey),
                       ),
                     ),
                   ),
                 ),
-                if (product.isOrganic)
+                // Top-left: My Listing badge (owner) or Organic
+                if (isOwner)
+                  Positioned(
+                    top: 7, left: 7,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF1B5E20),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: const Text('My Listing',
+                          style: TextStyle(color: Colors.white,
+                              fontSize: 8, fontWeight: FontWeight.w700)),
+                    ),
+                  )
+                else if (product.isOrganic)
                   Positioned(
                     top: 7, left: 7,
                     child: Container(
@@ -1467,6 +1838,12 @@ class _GridCard extends StatelessWidget {
                           fontWeight: FontWeight.w700, height: 1.2,
                           color: KMColors.textPrimary),
                       maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (isOwner)
+                    const Text('You listed this',
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF1B5E20),
+                            fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
                   Text('₹${product.pricePerUnit}',
                       style: const TextStyle(fontSize: 16,
@@ -1498,24 +1875,89 @@ class _GridCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity, height: 30,
-                    child: ElevatedButton(
-                      onPressed: onTap,
+                    child: ElevatedButton.icon(
+                      onPressed: isOwner ? onEdit : onAddToCart,
+                      icon: Icon(
+                        isOwner
+                            ? Icons.edit_rounded
+                            : (isInCart
+                                ? Icons.shopping_cart_rounded
+                                : Icons.add_shopping_cart_rounded),
+                        size: 13,
+                      ),
+                      label: Text(
+                        isOwner
+                            ? 'Edit'
+                            : (isInCart ? 'In Cart' : 'Add to Cart'),
+                        style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w800),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: isOwner
+                            ? const Color(0xFF2E7D32)
+                            : (isInCart
+                                ? const Color(0xFF1565C0)
+                                : const Color(0xFF1B5E20)),
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.zero, elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('Buy Now',
-                          style: TextStyle(fontSize: 11.5,
-                              fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+        ]),
+      ),
+    );
+  }
+
+  void _showOwnerSheet(
+      BuildContext ctx, VoidCallback onEdit, VoidCallback onDelete) {
+    showModalBottomSheet(
+      context: ctx,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF1B5E20), size: 18),
+            ),
+            title: const Text('Edit Listing',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(ctx); onEdit(); },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.delete_rounded,
+                  color: Colors.red, size: 18),
+            ),
+            title: const Text('Delete Listing',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(ctx); onDelete(); },
+          ),
+          const SizedBox(height: 8),
         ]),
       ),
     );

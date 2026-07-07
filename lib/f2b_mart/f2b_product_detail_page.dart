@@ -9,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../exporter_hub/exporter_model.dart';
 import '../exporter_hub/exporter_service.dart';
-import '../exporter_hub/create_purchase_order_page.dart';
+import '../exporter_hub/exporter_form_page.dart';
 import '../exporter_hub/purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
@@ -17,6 +17,8 @@ import '../services/content_translation_service.dart';
 import '../exporter_hub/nearby_farmers_map_page.dart';
 import 'f2b_wishlist_service.dart';
 import 'f2b_rating_service.dart';
+import 'f2b_cart_service.dart';
+import 'f2b_cart_page.dart';
 
 class F2BProductDetailPage extends StatefulWidget {
   final ExportProduct product;
@@ -28,11 +30,15 @@ class F2BProductDetailPage extends StatefulWidget {
 
 class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
   bool _isWishlisted = false;
+  bool _inCart = false;
   StreamSubscription<Set<String>>? _wishlistSub;
+  StreamSubscription<List<dynamic>>? _cartSub;
   int _imgIndex = 0;
   late final PageController _imgCtrl = PageController();
+  final _cartSvc = F2BCartService();
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  bool get _isOwner => _uid != null && widget.product.farmerId == _uid;
 
   @override
   void initState() {
@@ -43,17 +49,142 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
           setState(() => _isWishlisted = ids.contains(widget.product.id));
         }
       });
+      _cartSub = _cartSvc.streamCart().listen((items) {
+        if (mounted) {
+          setState(() => _inCart =
+              items.any((i) => i.productId == widget.product.id));
+        }
+      });
     }
   }
 
   @override
   void dispose() {
     _wishlistSub?.cancel();
+    _cartSub?.cancel();
     _imgCtrl.dispose();
     super.dispose();
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  Future<void> _addToCart() async {
+    try {
+      await _cartSvc.addToCart(widget.product);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${widget.product.productName} added to cart'),
+          backgroundColor: const Color(0xFF1B5E20),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const F2BCartPage())),
+          ),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to add to cart: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
+  void _showOwnerActions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40, height: 4,
+            margin: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF1B5E20), size: 18),
+            ),
+            title: const Text('Edit Listing',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(
+                      builder: (_) => ExporterFormPage(
+                          existingProduct: widget.product)));
+            },
+          ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.delete_rounded,
+                  color: Colors.red, size: 18),
+            ),
+            title: const Text('Delete Listing',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w600)),
+            onTap: () { Navigator.pop(context); _deleteProduct(); },
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _deleteProduct() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Listing?'),
+        content: Text(
+            '"${widget.product.productName}" will be permanently removed.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await ExporterService().deleteExportProduct(widget.product.id);
+        if (mounted) Navigator.pop(context, true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Delete failed: $e'),
+            backgroundColor: Colors.red,
+          ));
+        }
+      }
+    }
+  }
 
   String get _contact =>
       (widget.product.farmerMobile?.isNotEmpty == true)
@@ -334,18 +465,29 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                 backgroundColor: accent,
                 foregroundColor: Colors.white,
                 actions: [
-                  // Wishlist heart
-                  IconButton(
-                    tooltip: l.wishlist,
-                    icon: Icon(
-                      _isWishlisted
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color: _isWishlisted ? Colors.red.shade200 : Colors.white,
+                  if (_isOwner)
+                    // Owner: ⋮ menu for Edit + Delete
+                    IconButton(
+                      tooltip: 'Edit / Delete',
+                      icon: const Icon(Icons.more_vert_rounded),
+                      onPressed: _showOwnerActions,
+                    )
+                  else ...[
+                    // Buyer: wishlist heart
+                    IconButton(
+                      tooltip: l.wishlist,
+                      icon: Icon(
+                        _isWishlisted
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: _isWishlisted
+                            ? Colors.red.shade200
+                            : Colors.white,
+                      ),
+                      onPressed: () => _toggleWishlist(l),
                     ),
-                    onPressed: () => _toggleWishlist(l),
-                  ),
-                  // Share
+                  ],
+                  // Share (always visible)
                   IconButton(
                     tooltip: l.shareProduct,
                     icon: const Icon(Icons.ios_share_rounded),
@@ -572,59 +714,104 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
                       offset: const Offset(0, -3)),
                 ],
               ),
-              child: Row(children: [
-                // Call
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _contact.isNotEmpty
-                        ? () => _call(_contact)
-                        : null,
-                    icon: const Icon(Icons.phone_rounded, size: 18),
-                    label: Text(l.contactFarmer,
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // WhatsApp
-                Container(
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF25D366),
-                      borderRadius: BorderRadius.circular(12)),
-                  child: IconButton(
-                    icon: const Icon(Icons.chat_rounded, color: Colors.white),
-                    tooltip: l.whatsApp,
-                    onPressed: _contact.isNotEmpty
-                        ? () => _whatsApp(context, _contact)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // Buy Now
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CreatePurchaseOrderPage(
-                            listingData: widget.product),
+              child: _isOwner
+                  // Owner bottom bar: Edit + Delete
+                  ? Row(children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (_) => ExporterFormPage(
+                                      existingProduct: widget.product))),
+                          icon: const Icon(Icons.edit_rounded, size: 18),
+                          label: const Text('Edit Listing',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1B5E20),
+                            foregroundColor: Colors.white,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.shopping_cart_rounded, size: 18),
-                    label: Text(l.buyNow,
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-              ]),
+                      const SizedBox(width: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: IconButton(
+                          icon: const Icon(Icons.delete_rounded,
+                              color: Colors.white),
+                          tooltip: 'Delete Listing',
+                          onPressed: _deleteProduct,
+                        ),
+                      ),
+                    ])
+                  // Buyer bottom bar: Call + WhatsApp + Add to Cart
+                  : Row(children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _contact.isNotEmpty
+                              ? () => _call(_contact)
+                              : null,
+                          icon: const Icon(Icons.phone_rounded, size: 18),
+                          label: Text(l.contactFarmer,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700)),
+                          style: OutlinedButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                            color: const Color(0xFF25D366),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: IconButton(
+                          icon: const Icon(Icons.chat_rounded,
+                              color: Colors.white),
+                          tooltip: l.whatsApp,
+                          onPressed: _contact.isNotEmpty
+                              ? () => _whatsApp(context, _contact)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Add to Cart
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _addToCart,
+                          icon: Icon(
+                            _inCart
+                                ? Icons.shopping_cart_rounded
+                                : Icons.add_shopping_cart_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            _inCart ? 'In Cart' : 'Add to Cart',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _inCart
+                                ? const Color(0xFF1565C0)
+                                : const Color(0xFF1B5E20),
+                            foregroundColor: Colors.white,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ]),
             ),
           ),
         ],
