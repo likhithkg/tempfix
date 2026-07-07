@@ -21,18 +21,27 @@ class _WishlistPageState extends State<WishlistPage> {
   }
 
   Future<void> _moveToCart(WishlistItem wi) async {
-    await _svc.moveWishlistToCart(wi);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${wi.plantName} moved to cart'),
-        backgroundColor: const Color(0xFF2E7D32),
-        action: SnackBarAction(
-          label: 'View Cart',
-          textColor: Colors.white,
-          onPressed: () => Navigator.push(
-              context, MaterialPageRoute(builder: (_) => const CartPage())),
-        ),
-      ));
+    try {
+      await _svc.moveWishlistToCart(wi);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${wi.plantName} moved to cart'),
+          backgroundColor: const Color(0xFF2E7D32),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const CartPage())),
+          ),
+        ));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Failed to move to cart. Please try again.'),
+          backgroundColor: Colors.red,
+        ));
+      }
     }
   }
 
@@ -101,23 +110,33 @@ class _WishlistPageState extends State<WishlistPage> {
                 const Spacer(),
                 TextButton(
                   onPressed: () async {
-                    for (final wi in items) {
-                      await _svc.moveWishlistToCart(wi);
-                    }
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            const Text('All items moved to cart'),
-                        backgroundColor: const Color(0xFF2E7D32),
-                        action: SnackBarAction(
-                          label: 'View Cart',
-                          textColor: Colors.white,
-                          onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const CartPage())),
-                        ),
-                      ));
+                    try {
+                      for (final wi in items) {
+                        await _svc.moveWishlistToCart(wi);
+                      }
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text('All items moved to cart'),
+                          backgroundColor: const Color(0xFF2E7D32),
+                          action: SnackBarAction(
+                            label: 'View Cart',
+                            textColor: Colors.white,
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const CartPage())),
+                          ),
+                        ));
+                      }
+                    } catch (_) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to move items to cart'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   },
                   child: const Text('Add All to Cart',
@@ -176,8 +195,20 @@ class _WishlistPageState extends State<WishlistPage> {
                             top: 6,
                             right: 6,
                             child: GestureDetector(
-                              onTap: () =>
-                                  _svc.removeFromWishlist(wi.vendorId),
+                              onTap: () async {
+                                try {
+                                  await _svc.removeFromWishlist(wi.vendorId);
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Failed to remove from wishlist'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                               child: Container(
                                 width: 28,
                                 height: 28,

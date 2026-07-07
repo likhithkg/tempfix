@@ -63,7 +63,18 @@ class _CartPageState extends State<CartPage> {
                       ],
                     ),
                   );
-                  if (ok == true) await _svc.clearCart();
+                  if (ok == true) {
+                    try {
+                      await _svc.clearCart();
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Failed to clear cart'),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    }
+                  }
                 },
                 child: const Text('Clear',
                     style: TextStyle(color: Colors.white70, fontSize: 13)),
@@ -77,6 +88,20 @@ class _CartPageState extends State<CartPage> {
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError) {
+            return Center(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                const Text('Failed to load cart',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Text('${snap.error}',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
+                    textAlign: TextAlign.center),
+              ]),
+            );
           }
           final items = snap.data ?? [];
 
@@ -228,6 +253,14 @@ class _CartTile extends StatelessWidget {
     return const Color(0xFF2E7D32);
   }
 
+  void _showError(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = _accent();
@@ -290,8 +323,16 @@ class _CartTile extends StatelessWidget {
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     _stepBtn(
                       icon: Icons.remove_rounded,
-                      onTap: () => svc.updateCartQty(
-                          item.vendorId, item.orderQty - 1),
+                      onTap: () async {
+                        try {
+                          await svc.updateCartQty(
+                              item.vendorId, item.orderQty - 1);
+                        } catch (_) {
+                          if (context.mounted) {
+                            _showError(context, 'Could not update quantity');
+                          }
+                        }
+                      },
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -301,8 +342,16 @@ class _CartTile extends StatelessWidget {
                     ),
                     _stepBtn(
                       icon: Icons.add_rounded,
-                      onTap: () => svc.updateCartQty(
-                          item.vendorId, item.orderQty + 1),
+                      onTap: () async {
+                        try {
+                          await svc.updateCartQty(
+                              item.vendorId, item.orderQty + 1);
+                        } catch (_) {
+                          if (context.mounted) {
+                            _showError(context, 'Could not update quantity');
+                          }
+                        }
+                      },
                     ),
                   ]),
                 ),
@@ -314,7 +363,15 @@ class _CartTile extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.delete_outline_rounded,
               color: Color(0xFF9E9E9E), size: 20),
-          onPressed: () => svc.removeFromCart(item.vendorId),
+          onPressed: () async {
+            try {
+              await svc.removeFromCart(item.vendorId);
+            } catch (_) {
+              if (context.mounted) {
+                _showError(context, 'Could not remove item');
+              }
+            }
+          },
         ),
       ]),
     );

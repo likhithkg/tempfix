@@ -10,25 +10,30 @@ class GreenBazaarService {
 
   // ─── Cart ────────────────────────────────────────────────────────────────
 
-  CollectionReference<Map<String, dynamic>> _cartCol() =>
-      _db.collection('gb_cart').doc(_uid).collection('items');
+  CollectionReference<Map<String, dynamic>> _cartCol(String uid) =>
+      _db.collection('gb_cart').doc(uid).collection('items');
 
   Stream<List<CartItem>> streamCart() {
-    final uid = _uid;
-    if (uid == null) return const Stream.empty();
-    return _cartCol()
-        .orderBy('addedAt', descending: true)
-        .snapshots()
-        .map((s) => s.docs
-            .map((d) => CartItem.fromMap(d.data(), d.id))
-            .toList());
+    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
+      if (user == null) return const Stream.empty();
+      return _db
+          .collection('gb_cart')
+          .doc(user.uid)
+          .collection('items')
+          .orderBy('addedAt', descending: true)
+          .snapshots()
+          .map((s) => s.docs
+              .map((d) => CartItem.fromMap(d.data(), d.id))
+              .toList());
+    });
   }
 
   Future<void> addToCart(CartItem item) async {
     final uid = _uid;
-    if (uid == null) return;
-    // Use vendorId as doc key so same plant = same doc
-    final ref = _cartCol().doc(item.vendorId);
+    if (uid == null) throw Exception('Not signed in');
+    if (item.vendorId.isEmpty) throw Exception('Invalid plant ID');
+    final col = _cartCol(uid);
+    final ref = col.doc(item.vendorId);
     final existing = await ref.get();
     if (existing.exists) {
       final current = CartItem.fromMap(existing.data()!, existing.id);
@@ -39,22 +44,26 @@ class GreenBazaarService {
   }
 
   Future<void> updateCartQty(String vendorId, int qty) async {
-    if (_uid == null) return;
+    final uid = _uid;
+    if (uid == null) return;
+    final col = _cartCol(uid);
     if (qty <= 0) {
-      await _cartCol().doc(vendorId).delete();
+      await col.doc(vendorId).delete();
     } else {
-      await _cartCol().doc(vendorId).update({'orderQty': qty});
+      await col.doc(vendorId).update({'orderQty': qty});
     }
   }
 
   Future<void> removeFromCart(String vendorId) async {
-    if (_uid == null) return;
-    await _cartCol().doc(vendorId).delete();
+    final uid = _uid;
+    if (uid == null) return;
+    await _cartCol(uid).doc(vendorId).delete();
   }
 
   Future<void> clearCart() async {
-    if (_uid == null) return;
-    final snap = await _cartCol().get();
+    final uid = _uid;
+    if (uid == null) return;
+    final snap = await _cartCol(uid).get();
     final batch = _db.batch();
     for (final doc in snap.docs) {
       batch.delete(doc.reference);
@@ -63,36 +72,43 @@ class GreenBazaarService {
   }
 
   Future<bool> isInCart(String vendorId) async {
-    if (_uid == null) return false;
-    final doc = await _cartCol().doc(vendorId).get();
+    final uid = _uid;
+    if (uid == null) return false;
+    final doc = await _cartCol(uid).doc(vendorId).get();
     return doc.exists;
   }
 
   // ─── Wishlist ─────────────────────────────────────────────────────────────
 
-  CollectionReference<Map<String, dynamic>> _wishCol() =>
-      _db.collection('gb_wishlist').doc(_uid).collection('items');
+  CollectionReference<Map<String, dynamic>> _wishCol(String uid) =>
+      _db.collection('gb_wishlist').doc(uid).collection('items');
 
   Stream<List<WishlistItem>> streamWishlist() {
-    final uid = _uid;
-    if (uid == null) return const Stream.empty();
-    return _wishCol()
-        .orderBy('savedAt', descending: true)
-        .snapshots()
-        .map((s) => s.docs
-            .map((d) => WishlistItem.fromMap(d.data(), d.id))
-            .toList());
+    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
+      if (user == null) return const Stream.empty();
+      return _db
+          .collection('gb_wishlist')
+          .doc(user.uid)
+          .collection('items')
+          .orderBy('savedAt', descending: true)
+          .snapshots()
+          .map((s) => s.docs
+              .map((d) => WishlistItem.fromMap(d.data(), d.id))
+              .toList());
+    });
   }
 
   Future<bool> isWishlisted(String vendorId) async {
-    if (_uid == null) return false;
-    final doc = await _wishCol().doc(vendorId).get();
+    final uid = _uid;
+    if (uid == null) return false;
+    final doc = await _wishCol(uid).doc(vendorId).get();
     return doc.exists;
   }
 
   Future<void> toggleWishlist(WishlistItem item) async {
-    if (_uid == null) return;
-    final ref = _wishCol().doc(item.vendorId);
+    final uid = _uid;
+    if (uid == null) return;
+    final ref = _wishCol(uid).doc(item.vendorId);
     final doc = await ref.get();
     if (doc.exists) {
       await ref.delete();
@@ -102,8 +118,9 @@ class GreenBazaarService {
   }
 
   Future<void> removeFromWishlist(String vendorId) async {
-    if (_uid == null) return;
-    await _wishCol().doc(vendorId).delete();
+    final uid = _uid;
+    if (uid == null) return;
+    await _wishCol(uid).doc(vendorId).delete();
   }
 
   Future<void> moveWishlistToCart(WishlistItem wi) async {

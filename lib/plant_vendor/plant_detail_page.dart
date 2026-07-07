@@ -73,19 +73,29 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
       userId: uid,
       addedAt: DateTime.now(),
     );
-    await _gbSvc.addToCart(ci);
-    if (mounted) {
-      setState(() => _inCart = true);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${widget.vendor.plantName} added to cart'),
-        backgroundColor: const Color(0xFF2E7D32),
-        action: SnackBarAction(
-          label: 'View Cart',
-          textColor: Colors.white,
-          onPressed: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const CartPage())),
-        ),
-      ));
+    try {
+      await _gbSvc.addToCart(ci);
+      if (mounted) {
+        setState(() => _inCart = true);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${widget.vendor.plantName} added to cart'),
+          backgroundColor: const Color(0xFF2E7D32),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const CartPage())),
+          ),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Add to cart failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ));
+      }
     }
   }
 
