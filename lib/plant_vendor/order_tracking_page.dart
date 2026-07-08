@@ -24,10 +24,12 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
   Future<void> _load() async {
     final o = await _svc.getOrder(widget.orderId);
-    if (mounted) setState(() {
-      _order = o;
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _order = o;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -51,7 +53,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
   Widget _buildBody(PlantOrder order) {
     final isCancelled = order.status == 'cancelled';
-    final steps = PlantOrder.statusSteps;
+    final steps = PlantOrder.statusStepsForType(order.orderType);
     final currentIdx = isCancelled ? -1 : steps.indexOf(order.status);
 
     return SingleChildScrollView(
@@ -137,24 +139,25 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
           const SizedBox(height: 16),
 
-          // Delivery address
-          _card([
-            const _SH(icon: Icons.location_on_rounded, title: 'Delivery Address'),
-            const SizedBox(height: 10),
-            Text(order.address.name,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(order.address.phone,
-                style: const TextStyle(
-                    fontSize: 12, color: Color(0xFF757575))),
-            const SizedBox(height: 4),
-            Text(order.address.formatted,
-                style: const TextStyle(
-                    fontSize: 12, color: Color(0xFF757575), height: 1.4)),
-          ]),
-
-          const SizedBox(height: 16),
+          // Delivery address (only for delivery orders with an address)
+          if (order.address != null) ...[
+            _card([
+              const _SH(icon: Icons.location_on_rounded, title: 'Delivery Address'),
+              const SizedBox(height: 10),
+              Text(order.address!.name,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(order.address!.phone,
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF757575))),
+              const SizedBox(height: 4),
+              Text(order.address!.formatted,
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF757575), height: 1.4)),
+            ]),
+            const SizedBox(height: 16),
+          ],
 
           // Order items
           _card([

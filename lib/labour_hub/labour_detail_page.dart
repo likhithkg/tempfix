@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'labour_review_model.dart';
-import 'job_post_form_page.dart';
 
 const _kP1 = Color(0xFF1B5E20);
 const _kP2 = Color(0xFF2E7D32);
@@ -34,9 +34,6 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Cache stream once — prevents creating a new Firestore listener on every
-    // rebuild (e.g. during pop animation), which triggers WatchChangeAggregator
-    // INTERNAL ASSERTION FAILED on Flutter Web (Firestore 11.9.1).
     _reviewsStream = _service.streamReviews(widget.profile.id);
     _loadFav();
   }
@@ -53,51 +50,73 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
   }
 
   void _call() async {
-    if (widget.profile.phone.isEmpty) return;
-    final uri = Uri.parse('tel:${widget.profile.phone}');
+    final p = widget.profile;
+    final number = p.phone.isNotEmpty ? p.phone : '';
+    if (number.isEmpty) return;
+    final uri = Uri.parse('tel:$number');
     if (await canLaunchUrl(uri)) launchUrl(uri);
   }
 
   void _whatsapp() async {
-    if (widget.profile.phone.isEmpty) return;
-    final phone = widget.profile.phone.replaceAll(RegExp(r'\D'), '');
-    final uri = Uri.parse('https://wa.me/91$phone');
+    final p = widget.profile;
+    final raw = (p.whatsappNumber.isNotEmpty ? p.whatsappNumber : p.phone)
+        .replaceAll(RegExp(r'\D'), '');
+    if (raw.isEmpty) return;
+    final number = raw.startsWith('91') ? raw : '91$raw';
+    final uri = Uri.parse('https://wa.me/$number');
     if (await canLaunchUrl(uri)) launchUrl(uri);
+  }
+
+  void _openMap() async {
+    final p = widget.profile;
+    if (!p.hasLocation) return;
+    final uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}');
+    if (await canLaunchUrl(uri)) launchUrl(uri);
+  }
+
+  void _share() {
+    final p = widget.profile;
+    final text =
+        '${p.name} — ${p.skills.take(3).join(', ')}\n${p.locationDisplay} | ${p.wageDisplay}\nContact: ${p.phone}';
+    Clipboard.setData(ClipboardData(text: text));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Profile link copied to clipboard'),
+        backgroundColor: _kP2,
+      ));
+    }
   }
 
   Future<void> _submitReview() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final comment = _reviewCtrl.text.trim();
     final review = LabourReview(
       id: '',
       labourId: widget.profile.id,
       reviewerId: user.uid,
       reviewerName: user.displayName ?? 'Anonymous',
       rating: _reviewRating,
-      comment: comment,
+      comment: _reviewCtrl.text.trim(),
       jobTitle: 'Direct review',
       createdAt: DateTime.now(),
     );
     try {
       await _service.addReview(review);
-      setState(() {
-        _showReviewForm = false;
-        _reviewCtrl.clear();
-      });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Review submitted!'),
-              backgroundColor: _kP2),
-        );
+        setState(() {
+          _showReviewForm = false;
+          _reviewCtrl.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Review submitted!'), backgroundColor: _kP2));
       }
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Failed to submit review'),
-            backgroundColor: Colors.red),
-      );
+            backgroundColor: Colors.red));
+      }
     }
   }
 
@@ -111,9 +130,9 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
       backgroundColor: const Color(0xFFF2F7F2),
       body: CustomScrollView(
         slivers: [
-          // ── Hero header ──────────────────────────────────────────────────
+          // ── Hero Header ─────────────────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 260,
+            expandedHeight: 280,
             pinned: true,
             backgroundColor: _kP1,
             leading: IconButton(
@@ -123,8 +142,14 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.share_rounded, color: Colors.white),
+                onPressed: _share,
+              ),
+              IconButton(
                 icon: Icon(
-                    _isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    _isFav
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
                     color: _isFav ? Colors.red.shade300 : Colors.white),
                 onPressed: () async {
                   await _service.toggleFavourite(p.id);
@@ -144,33 +169,50 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
-                      Stack(alignment: Alignment.bottomRight, children: [
-                        CircleAvatar(
-                          radius: 52,
-                          backgroundColor: Colors.white24,
-                          backgroundImage: p.photoUrl.isNotEmpty
-                              ? NetworkImage(p.photoUrl)
-                              : null,
-                          child: p.photoUrl.isEmpty
-                              ? Text(
-                                  p.name.isNotEmpty
-                                      ? p.name[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(
-                                      fontSize: 40,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold))
-                              : null,
-                        ),
-                        if (p.isVerified)
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle),
-                            child: const Icon(Icons.verified_rounded,
-                                color: _kP2, size: 18),
+                      const SizedBox(height: 44),
+                      // Online indicator + avatar
+                      Stack(alignment: Alignment.center, children: [
+                        Stack(alignment: Alignment.bottomRight, children: [
+                          CircleAvatar(
+                            radius: 52,
+                            backgroundColor: Colors.white24,
+                            backgroundImage: p.photoUrl.isNotEmpty
+                                ? NetworkImage(p.photoUrl)
+                                : null,
+                            child: p.photoUrl.isEmpty
+                                ? Text(
+                                    p.name.isNotEmpty
+                                        ? p.name[0].toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(
+                                        fontSize: 40,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold))
+                                : null,
+                          ),
+                          if (p.isVerified)
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle),
+                              child: const Icon(Icons.verified_rounded,
+                                  color: _kP2, size: 18),
+                            ),
+                        ]),
+                        if (p.onlineStatus)
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                  color: _kGreen,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white, width: 2)),
+                            ),
                           ),
                       ]),
                       const SizedBox(height: 12),
@@ -179,10 +221,24 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      Text(p.locationDisplay,
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13)),
+                      const SizedBox(height: 3),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.access_time_rounded,
+                                size: 12, color: Colors.white54),
+                            const SizedBox(width: 4),
+                            Text(p.lastSeenText,
+                                style: const TextStyle(
+                                    color: Colors.white60, fontSize: 12)),
+                            const SizedBox(width: 12),
+                            const Icon(Icons.location_on_rounded,
+                                size: 12, color: Colors.white54),
+                            const SizedBox(width: 4),
+                            Text(p.locationDisplay,
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12)),
+                          ]),
                       const SizedBox(height: 8),
                       _AvailPill(status: p.availabilityStatus),
                     ],
@@ -192,7 +248,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
             ),
           ),
 
-          // ── Stats row ────────────────────────────────────────────────────
+          // ── Stats Row ───────────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -208,156 +264,333 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                 ],
               ),
               child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _Stat(
-                        icon: Icons.star_rounded,
-                        color: _kAmber,
-                        value: p.rating > 0
-                            ? p.rating.toStringAsFixed(1)
-                            : '–',
-                        label: 'Rating'),
-                    _divider(),
-                    _Stat(
-                        icon: Icons.work_history_rounded,
-                        color: _kP2,
-                        value: '${p.completedJobs}',
-                        label: 'Jobs Done'),
-                    _divider(),
-                    _Stat(
-                        icon: Icons.timer_rounded,
-                        color: _kOrange,
-                        value: '${p.experienceYears}y',
-                        label: 'Experience'),
-                    _divider(),
-                    _Stat(
-                        icon: Icons.currency_rupee_rounded,
-                        color: _kGreen,
-                        value: '${p.dailyWage.toStringAsFixed(0)}',
-                        label: 'Per Day'),
-                  ]),
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _Stat(
+                      icon: Icons.star_rounded,
+                      color: _kAmber,
+                      value: p.rating > 0
+                          ? p.rating.toStringAsFixed(1)
+                          : '–',
+                      label: 'Rating'),
+                  _divider(),
+                  _Stat(
+                      icon: Icons.work_history_rounded,
+                      color: _kP2,
+                      value: '${p.completedJobs}',
+                      label: 'Jobs Done'),
+                  _divider(),
+                  _Stat(
+                      icon: Icons.timer_rounded,
+                      color: _kOrange,
+                      value: '${p.experienceYears}y',
+                      label: 'Experience'),
+                  _divider(),
+                  _Stat(
+                      icon: Icons.currency_rupee_rounded,
+                      color: _kGreen,
+                      value: p.wageDisplay,
+                      label: 'Wage'),
+                ],
+              ),
             ),
           ),
 
-          // ── Skills ───────────────────────────────────────────────────────
+          // ── Gallery ─────────────────────────────────────────────────────────
+          if (p.galleryUrls.isNotEmpty)
+            _Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _CardTitle('Photo Gallery', Icons.photo_library_rounded),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 110,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemCount: p.galleryUrls.length,
+                      itemBuilder: (_, i) => GestureDetector(
+                        onTap: () => _showGalleryImage(context, p.galleryUrls, i),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            p.galleryUrls[i],
+                            width: 110,
+                            height: 110,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 110,
+                              height: 110,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.broken_image_rounded,
+                                  color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // ── Description ──────────────────────────────────────────────────────
+          if (p.description.isNotEmpty)
+            _Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _CardTitle('About', Icons.description_rounded),
+                  const SizedBox(height: 12),
+                  Text(p.description,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          height: 1.55)),
+                ],
+              ),
+            ),
+
+          // ── Skills ──────────────────────────────────────────────────────────
           if (p.skills.isNotEmpty)
             _Card(
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _CardTitle('Skills', Icons.handyman_rounded),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: p.skills
-                          .map((s) => _SkillBadge(s))
-                          .toList(),
-                    ),
-                  ]),
-            ),
-
-          // ── Details ──────────────────────────────────────────────────────
-          _Card(
-            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _CardTitle('Details', Icons.info_outline_rounded),
+                  const _CardTitle('Skills', Icons.handyman_rounded),
                   const SizedBox(height: 12),
-                  _DetailRow(Icons.person_rounded, 'Gender', p.gender),
-                  _DetailRow(Icons.cake_rounded, 'Age',
-                      '${p.age} years'),
-                  _DetailRow(Icons.phone_rounded, 'Phone', p.phone),
-                  _DetailRow(Icons.location_on_rounded, 'Location',
-                      p.locationDisplay),
-                  if (p.taluk.isNotEmpty)
-                    _DetailRow(Icons.map_rounded, 'Taluk', p.taluk),
-                  _DetailRow(Icons.language_rounded, 'Languages',
-                      p.languages.isEmpty
-                          ? 'Not specified'
-                          : p.languages.join(', ')),
-                  if (p.isAadhaarVerified)
-                    _DetailRow(Icons.verified_user_rounded,
-                        'Aadhaar', '✅ Verified'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: p.skills.map((s) => _SkillBadge(s)).toList(),
+                  ),
+                ],
+              ),
+            ),
+
+          // ── Availability ─────────────────────────────────────────────────────
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _CardTitle('Availability', Icons.event_available_rounded),
+                const SizedBox(height: 12),
+                Row(children: [
+                  _AvailPill(status: p.availabilityStatus),
+                  const SizedBox(width: 8),
+                  Text('Working radius: ${p.workingRadiusKm} km',
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.grey)),
                 ]),
+                if (p.availabilityTypes.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: p.availabilityTypes.map((t) {
+                      final label =
+                          kAvailabilityTypeLabels[t] ?? t;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: _kLightGreen,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: _kGreen.withOpacity(0.3))),
+                        child: Text(label,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: _kP2,
+                                fontWeight: FontWeight.w500)),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
+            ),
           ),
 
-          // ── Verification Badges ───────────────────────────────────────────
-          if (p.isVerified || p.isAadhaarVerified || p.rating >= 4)
+          // ── Wage Details ─────────────────────────────────────────────────────
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _CardTitle('Wage Information',
+                    Icons.currency_rupee_rounded),
+                const SizedBox(height: 12),
+                if (p.dailyWage > 0)
+                  _DetailRow(Icons.wb_sunny_rounded, 'Daily Wage',
+                      '₹${p.dailyWage.toStringAsFixed(0)} / day'),
+                if (p.hourlyWage > 0)
+                  _DetailRow(Icons.access_time_rounded, 'Hourly Wage',
+                      '₹${p.hourlyWage.toStringAsFixed(0)} / hour'),
+                if (p.monthlyWage > 0)
+                  _DetailRow(Icons.calendar_month_rounded, 'Monthly Wage',
+                      '₹${p.monthlyWage.toStringAsFixed(0)} / month'),
+                _DetailRow(Icons.thumb_up_rounded, 'Preferred',
+                    kWageTypeLabels[p.preferredWageType] ?? p.preferredWageType),
+              ],
+            ),
+          ),
+
+          // ── Details ──────────────────────────────────────────────────────────
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _CardTitle('Details', Icons.info_outline_rounded),
+                const SizedBox(height: 12),
+                _DetailRow(Icons.person_rounded, 'Gender', p.gender),
+                _DetailRow(Icons.cake_rounded, 'Age', '${p.age} years'),
+                _DetailRow(Icons.phone_rounded, 'Phone', p.phone),
+                if (p.whatsappNumber.isNotEmpty)
+                  _DetailRow(Icons.chat_rounded, 'WhatsApp', p.whatsappNumber),
+                _DetailRow(Icons.location_on_rounded, 'Location',
+                    p.locationDisplay),
+                if (p.taluk.isNotEmpty)
+                  _DetailRow(Icons.map_rounded, 'Taluk', p.taluk),
+                if (p.state.isNotEmpty)
+                  _DetailRow(Icons.flag_rounded, 'State', p.state),
+                if (p.pincode.isNotEmpty)
+                  _DetailRow(Icons.pin_drop_rounded, 'Pincode', p.pincode),
+                _DetailRow(Icons.language_rounded, 'Languages',
+                    p.languages.isEmpty
+                        ? 'Not specified'
+                        : p.languages.join(', ')),
+                if (p.isAadhaarVerified)
+                  _DetailRow(Icons.verified_user_rounded, 'Aadhaar',
+                      '✅ Verified'),
+              ],
+            ),
+          ),
+
+          // ── Location Map Link ────────────────────────────────────────────────
+          if (p.hasLocation)
+            _Card(
+              child: InkWell(
+                onTap: _openMap,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border:
+                          Border.all(color: Colors.blue.shade200)),
+                  child: Row(children: [
+                    const Icon(Icons.map_rounded,
+                        color: Colors.blue, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            const Text('View on Map',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue)),
+                            Text(
+                                '${p.latitude.toStringAsFixed(4)}, ${p.longitude.toStringAsFixed(4)}',
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey)),
+                          ]),
+                    ),
+                    const Icon(Icons.open_in_new_rounded,
+                        color: Colors.blue, size: 16),
+                  ]),
+                ),
+              ),
+            ),
+
+          // ── Badges ───────────────────────────────────────────────────────────
+          if (p.isVerified ||
+              p.isAadhaarVerified ||
+              p.rating >= 4 ||
+              p.completedJobs >= 10)
             _Card(
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _CardTitle('Badges', Icons.military_tech_rounded),
-                    const SizedBox(height: 12),
-                    Wrap(spacing: 8, runSpacing: 8, children: [
-                      if (p.isVerified)
-                        _Badge('✅ Verified Worker', _kGreen),
-                      if (p.isAadhaarVerified)
-                        _Badge('🪪 Aadhaar Verified', _kP2),
-                      if (p.rating >= 4.5)
-                        _Badge('⭐ Top Rated', _kAmber),
-                      if (p.completedJobs >= 10)
-                        _Badge('🏆 Trusted Worker', _kOrange),
-                    ]),
-                  ]),
-            ),
-
-          // ── Reviews ──────────────────────────────────────────────────────
-          _Card(
-            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    _CardTitle('Reviews', Icons.reviews_rounded),
-                    const Spacer(),
-                    if (!isOwn)
-                      TextButton(
-                        onPressed: () =>
-                            setState(() => _showReviewForm = !_showReviewForm),
-                        child: Text(_showReviewForm ? 'Cancel' : 'Write Review',
-                            style: const TextStyle(color: _kP2)),
-                      ),
+                  const _CardTitle('Badges', Icons.military_tech_rounded),
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    if (p.isVerified)
+                      _Badge('✅ Verified Worker', _kGreen),
+                    if (p.isAadhaarVerified)
+                      _Badge('🪪 Aadhaar Verified', _kP2),
+                    if (p.rating >= 4.5)
+                      _Badge('⭐ Top Rated', _kAmber),
+                    if (p.completedJobs >= 10)
+                      _Badge('🏆 Trusted Worker', _kOrange),
+                    if (p.experienceYears >= 5)
+                      _Badge('💪 Experienced', Colors.purple),
+                    if (p.gender == 'Female')
+                      _Badge('👩 Women Worker', Colors.pink),
                   ]),
-                  if (_showReviewForm) ...[
-                    const SizedBox(height: 12),
-                    _ReviewForm(
-                      rating: _reviewRating,
-                      onRatingChanged: (r) =>
-                          setState(() => _reviewRating = r),
-                      controller: _reviewCtrl,
-                      onSubmit: _submitReview,
+                ],
+              ),
+            ),
+
+          // ── Reviews ──────────────────────────────────────────────────────────
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Expanded(
+                      child: _CardTitle(
+                          'Reviews', Icons.reviews_rounded)),
+                  if (!isOwn)
+                    TextButton(
+                      onPressed: () => setState(
+                          () => _showReviewForm = !_showReviewForm),
+                      child: Text(
+                          _showReviewForm ? 'Cancel' : 'Write Review',
+                          style: const TextStyle(color: _kP2)),
                     ),
-                  ],
-                  StreamBuilder<List<LabourReview>>(
-                    stream: _reviewsStream,
-                    builder: (ctx, snap) {
-                      if (!snap.hasData || snap.data!.isEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text('No reviews yet',
-                              style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 13)),
-                        );
-                      }
-                      return Column(
-                          children: snap.data!
-                              .map((r) => _ReviewTile(review: r))
-                              .toList());
-                    },
-                  ),
                 ]),
+                if (_showReviewForm) ...[
+                  const SizedBox(height: 12),
+                  _ReviewForm(
+                    rating: _reviewRating,
+                    onRatingChanged: (r) =>
+                        setState(() => _reviewRating = r),
+                    controller: _reviewCtrl,
+                    onSubmit: _submitReview,
+                  ),
+                ],
+                StreamBuilder<List<LabourReview>>(
+                  stream: _reviewsStream,
+                  builder: (ctx, snap) {
+                    if (!snap.hasData || snap.data!.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text('No reviews yet',
+                            style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 13)),
+                      );
+                    }
+                    return Column(
+                        children: snap.data!
+                            .map((r) => _ReviewTile(review: r))
+                            .toList());
+                  },
+                ),
+              ],
+            ),
           ),
 
-          const SliverPadding(padding: EdgeInsets.only(bottom: 110)),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
         ],
       ),
 
-      // ── Bottom action bar ─────────────────────────────────────────────────
-      bottomNavigationBar: isOwn
-          ? null
-          : Container(
+      // ── Bottom Action Bar ─────────────────────────────────────────────────
+      bottomNavigationBar: Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -370,63 +603,167 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
               ),
               child: Row(children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: ElevatedButton.icon(
                     onPressed: _call,
                     icon: const Icon(Icons.phone_rounded),
-                    label: const Text('Call'),
-                    style: OutlinedButton.styleFrom(
-                        foregroundColor: _kP2,
-                        side: const BorderSide(color: _kP2),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _whatsapp,
-                    icon: const Icon(Icons.chat_rounded),
-                    label: const Text('WhatsApp'),
-                    style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.green.shade700,
-                        side:
-                            BorderSide(color: Colors.green.shade700),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => JobPostFormPage(
-                                prefilledWorker: p))),
-                    icon: const Icon(Icons.handshake_rounded),
-                    label: const Text('Hire Now',
+                    label: const Text('Call',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: _kOrange,
+                        backgroundColor: _kP2,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12))),
                   ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _whatsapp,
+                    icon: const Icon(Icons.chat_rounded),
+                    label: const Text('WhatsApp',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                  ),
+                ),
+                if (p.hasLocation) ...[
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _openMap,
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    child: const Icon(Icons.map_rounded),
+                  ),
+                ],
               ]),
             ),
     );
   }
 
-  Widget _divider() => Container(
-      width: 1, height: 40, color: Colors.grey.shade200);
+  void _showGalleryImage(
+      BuildContext context, List<String> urls, int index) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => _GalleryViewer(urls: urls, initialIndex: index)));
+  }
+
+  Widget _divider() =>
+      Container(width: 1, height: 40, color: Colors.grey.shade200);
 }
 
-// ── Shared small widgets ──────────────────────────────────────────────────────
+// ── Gallery Viewer ────────────────────────────────────────────────────────────
+
+class _GalleryViewer extends StatefulWidget {
+  final List<String> urls;
+  final int initialIndex;
+
+  const _GalleryViewer({required this.urls, required this.initialIndex});
+
+  @override
+  State<_GalleryViewer> createState() => _GalleryViewerState();
+}
+
+class _GalleryViewerState extends State<_GalleryViewer> {
+  late final PageController _ctrl;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _ctrl = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_current + 1} / ${widget.urls.length}'),
+      ),
+      body: PageView.builder(
+        controller: _ctrl,
+        itemCount: widget.urls.length,
+        onPageChanged: (i) => setState(() => _current = i),
+        itemBuilder: (_, i) => Center(
+          child: InteractiveViewer(
+            child: Image.network(widget.urls[i], fit: BoxFit.contain),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Action Button ─────────────────────────────────────────────────────────────
+
+class _ActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool outlined;
+  final VoidCallback onTap;
+
+  const _ActionBtn({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.outlined,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (outlined) {
+      return OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 16),
+        label: Text(label, style: const TextStyle(fontSize: 12)),
+        style: OutlinedButton.styleFrom(
+            foregroundColor: color,
+            side: BorderSide(color: color),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12))),
+      );
+    }
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12))),
+    );
+  }
+}
+
+// ── Shared Widgets ────────────────────────────────────────────────────────────
 
 class _AvailPill extends StatelessWidget {
   final String status;
@@ -444,11 +781,15 @@ class _AvailPill extends StatelessWidget {
               : Colors.orange.shade700.withOpacity(0.3),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: isAvail ? Colors.green.shade300 : Colors.orange.shade300)),
+              color: isAvail
+                  ? Colors.green.shade300
+                  : Colors.orange.shade300)),
       child: Text(
         isAvail ? '● Available for work' : '○ Currently busy',
         style: TextStyle(
-            color: isAvail ? Colors.green.shade100 : Colors.orange.shade100,
+            color: isAvail
+                ? Colors.green.shade100
+                : Colors.orange.shade100,
             fontSize: 12,
             fontWeight: FontWeight.w600),
       ),
@@ -475,9 +816,9 @@ class _Stat extends StatelessWidget {
       const SizedBox(height: 4),
       Text(value,
           style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 16, color: _kDark)),
+              fontWeight: FontWeight.bold, fontSize: 14, color: _kDark)),
       Text(label,
-          style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          style: const TextStyle(fontSize: 10, color: Colors.grey)),
     ]);
   }
 }
@@ -522,9 +863,7 @@ class _CardTitle extends StatelessWidget {
       const SizedBox(width: 8),
       Text(title,
           style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: _kDark)),
+              fontSize: 15, fontWeight: FontWeight.bold, color: _kDark)),
     ]);
   }
 }
@@ -573,9 +912,7 @@ class _SkillBadge extends StatelessWidget {
           border: Border.all(color: _kGreen.withOpacity(0.4))),
       child: Text(label,
           style: const TextStyle(
-              fontSize: 12,
-              color: _kP2,
-              fontWeight: FontWeight.w500)),
+              fontSize: 12, color: _kP2, fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -596,9 +933,7 @@ class _Badge extends StatelessWidget {
           border: Border.all(color: color.withOpacity(0.4))),
       child: Text(label,
           style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.bold)),
+              fontSize: 12, color: color, fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -675,15 +1010,19 @@ class _ReviewForm extends StatelessWidget {
       const Text('Your Rating',
           style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
       const SizedBox(height: 8),
-      Row(children: List.generate(5, (i) {
-        return GestureDetector(
-          onTap: () => onRatingChanged(i + 1.0),
-          child: Icon(
-              i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: _kAmber,
-              size: 32),
-        );
-      })),
+      Row(
+        children: List.generate(5, (i) {
+          return GestureDetector(
+            onTap: () => onRatingChanged(i + 1.0),
+            child: Icon(
+                i < rating
+                    ? Icons.star_rounded
+                    : Icons.star_outline_rounded,
+                color: _kAmber,
+                size: 32),
+          );
+        }),
+      ),
       const SizedBox(height: 10),
       TextField(
         controller: controller,

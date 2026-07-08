@@ -30,9 +30,10 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   bool _submitting = false;
   bool _locating = false;
 
-  // Basic info
+  // Personal info
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _whatsappCtrl = TextEditingController();
   final _ageCtrl = TextEditingController();
   String _gender = 'Male';
 
@@ -40,16 +41,26 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   final _villageCtrl = TextEditingController();
   final _talukCtrl = TextEditingController();
   final _districtCtrl = TextEditingController();
+  final _stateCtrl = TextEditingController();
+  final _pincodeCtrl = TextEditingController();
   double _lat = 0, _lon = 0;
 
   // Work info
   final _expCtrl = TextEditingController();
-  final _wageCtrl = TextEditingController();
+  final _dailyWageCtrl = TextEditingController();
+  final _hourlyWageCtrl = TextEditingController();
+  final _monthlyWageCtrl = TextEditingController();
+  String _preferredWageType = 'daily';
   String _availability = 'available';
+  final Set<String> _availabilityTypes = {};
+  int _workingRadiusKm = 20;
 
-  // Multi-select
+  // Skills & languages
   final Set<String> _selectedSkills = {};
   final Set<String> _selectedLangs = {};
+
+  // Description
+  final _descCtrl = TextEditingController();
 
   // Photo
   String _photoUrl = '';
@@ -67,19 +78,31 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
     if (p != null) {
       _nameCtrl.text = p.name;
       _phoneCtrl.text = p.phone;
+      _whatsappCtrl.text = p.whatsappNumber;
       _ageCtrl.text = p.age.toString();
       _gender = p.gender;
       _villageCtrl.text = p.village;
       _talukCtrl.text = p.taluk;
       _districtCtrl.text = p.district;
+      _stateCtrl.text = p.state;
+      _pincodeCtrl.text = p.pincode;
       _lat = p.latitude;
       _lon = p.longitude;
       _expCtrl.text = p.experienceYears.toString();
-      _wageCtrl.text = p.dailyWage.toStringAsFixed(0);
+      _dailyWageCtrl.text =
+          p.dailyWage > 0 ? p.dailyWage.toStringAsFixed(0) : '';
+      _hourlyWageCtrl.text =
+          p.hourlyWage > 0 ? p.hourlyWage.toStringAsFixed(0) : '';
+      _monthlyWageCtrl.text =
+          p.monthlyWage > 0 ? p.monthlyWage.toStringAsFixed(0) : '';
+      _preferredWageType = p.preferredWageType;
       _availability = p.availabilityStatus;
+      _availabilityTypes.addAll(p.availabilityTypes);
+      _workingRadiusKm = p.workingRadiusKm;
       _selectedSkills.addAll(p.skills);
       _selectedLangs.addAll(p.languages);
       _photoUrl = p.photoUrl;
+      _descCtrl.text = p.description;
     } else if (user != null) {
       _nameCtrl.text = user.displayName ?? '';
       _phoneCtrl.text = user.phoneNumber ?? '';
@@ -90,19 +113,25 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _whatsappCtrl.dispose();
     _ageCtrl.dispose();
     _villageCtrl.dispose();
     _talukCtrl.dispose();
     _districtCtrl.dispose();
+    _stateCtrl.dispose();
+    _pincodeCtrl.dispose();
     _expCtrl.dispose();
-    _wageCtrl.dispose();
+    _dailyWageCtrl.dispose();
+    _hourlyWageCtrl.dispose();
+    _monthlyWageCtrl.dispose();
+    _descCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _pickPhoto() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(
-        source: ImageSource.gallery, imageQuality: 80);
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (picked == null) return;
     setState(() => _uploadingPhoto = true);
     try {
@@ -136,6 +165,8 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
           _villageCtrl.text = pl.subLocality ?? pl.locality ?? '';
           _talukCtrl.text = pl.subAdministrativeArea ?? '';
           _districtCtrl.text = pl.administrativeArea ?? '';
+          _stateCtrl.text = pl.administrativeArea ?? '';
+          _pincodeCtrl.text = pl.postalCode ?? '';
         });
       }
     } catch (_) {
@@ -162,19 +193,29 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
         age: int.tryParse(_ageCtrl.text) ?? 18,
         gender: _gender,
         phone: _phoneCtrl.text.trim(),
+        whatsappNumber: _whatsappCtrl.text.trim(),
         village: _villageCtrl.text.trim(),
         taluk: _talukCtrl.text.trim(),
         district: _districtCtrl.text.trim(),
+        state: _stateCtrl.text.trim(),
+        pincode: _pincodeCtrl.text.trim(),
         latitude: _lat,
         longitude: _lon,
         experienceYears: int.tryParse(_expCtrl.text) ?? 0,
-        dailyWage: double.tryParse(_wageCtrl.text) ?? 0,
+        dailyWage: double.tryParse(_dailyWageCtrl.text) ?? 0,
+        hourlyWage: double.tryParse(_hourlyWageCtrl.text) ?? 0,
+        monthlyWage: double.tryParse(_monthlyWageCtrl.text) ?? 0,
+        preferredWageType: _preferredWageType,
         availabilityStatus: _availability,
+        availabilityTypes: _availabilityTypes.toList(),
+        workingRadiusKm: _workingRadiusKm,
         skills: _selectedSkills.toList(),
         languages: _selectedLangs.toList(),
         photoUrl: _photoUrl,
+        description: _descCtrl.text.trim(),
         createdAt: widget.existing?.createdAt ?? now,
         updatedAt: now,
+        lastActive: now,
       );
       await _service.saveProfile(profile);
       if (mounted) {
@@ -204,7 +245,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
         key: _form,
         child: CustomScrollView(
           slivers: [
-            // ── Header ──────────────────────────────────────────────────────
+            // ── Header ────────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Container(
                 decoration: const BoxDecoration(
@@ -215,7 +256,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(4, 12, 16, 24),
                     child: Row(children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -231,7 +272,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                                     color: Colors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold)),
-                            Text('Create your worker profile',
+                            Text('Build your worker profile',
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 13)),
                           ],
@@ -243,22 +284,26 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
               ),
             ),
 
-            // ── Photo Card ──────────────────────────────────────────────────
-            _SliverCard(
-              child: _buildPhotoSection(),
-            ),
+            // ── Profile Photo ────────────────────────────────────────────────
+            _SliverCard(child: _buildPhotoSection()),
 
-            // ── Basic Info ──────────────────────────────────────────────────
+            // ── Personal Details ─────────────────────────────────────────────
             _SliverCard(
-              child: _buildSection('Personal Details', Icons.person_rounded, [
+              child: _buildSection(
+                  'Personal Details', Icons.person_rounded, [
                 _field('Full Name', _nameCtrl,
                     validator: (v) =>
                         v!.trim().isEmpty ? 'Name is required' : null),
-                _field('Phone Number', _phoneCtrl,
+                _field('Mobile Number', _phoneCtrl,
                     keyboardType: TextInputType.phone,
                     validator: (v) =>
                         v!.trim().isEmpty ? 'Phone is required' : null),
-                _field('Age', _ageCtrl, keyboardType: TextInputType.number),
+                _field('WhatsApp Number', _whatsappCtrl,
+                    keyboardType: TextInputType.phone,
+                    hint: 'Same as mobile or different'),
+                _field('Age', _ageCtrl,
+                    keyboardType: TextInputType.number,
+                    hint: 'e.g. 25'),
                 _label('Gender'),
                 const SizedBox(height: 8),
                 Wrap(
@@ -287,6 +332,11 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                 _field('District', _districtCtrl,
                     validator: (v) =>
                         v!.trim().isEmpty ? 'District is required' : null),
+                _field('State', _stateCtrl,
+                    hint: 'e.g. Karnataka'),
+                _field('Pincode', _pincodeCtrl,
+                    keyboardType: TextInputType.number,
+                    hint: 'e.g. 560001'),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -298,9 +348,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                             height: 14,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: _kP2))
-                        : const Icon(Icons.my_location_rounded,
-                            color: _kP2),
-                    label: Text(_locating ? 'Getting location…' : 'Use GPS'),
+                        : const Icon(Icons.my_location_rounded, color: _kP2),
+                    label: Text(
+                        _locating ? 'Getting location…' : 'Use GPS Location'),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: _kP2,
                         side: const BorderSide(color: _kP2),
@@ -318,14 +368,33 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       const SizedBox(width: 6),
                       Text(
                           'GPS: ${_lat.toStringAsFixed(4)}, ${_lon.toStringAsFixed(4)}',
-                          style: const TextStyle(
-                              fontSize: 12, color: _kGreen)),
+                          style:
+                              const TextStyle(fontSize: 12, color: _kGreen)),
                     ]),
                   ),
+                const SizedBox(height: 12),
+                _label('Working Radius'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: kWorkingRadii.map((r) {
+                    final sel = _workingRadiusKm == r;
+                    return ChoiceChip(
+                      label: Text('$r km'),
+                      selected: sel,
+                      selectedColor: _kP2,
+                      labelStyle: TextStyle(
+                          color: sel ? Colors.white : _kDark,
+                          fontSize: 12),
+                      onSelected: (_) =>
+                          setState(() => _workingRadiusKm = r),
+                    );
+                  }).toList(),
+                ),
               ]),
             ),
 
-            // ── Skills ────────────────────────────────────────────────────────
+            // ── Skills ───────────────────────────────────────────────────────
             _SliverCard(
               child: _buildSection(
                   'Skills (select all that apply)',
@@ -336,13 +405,12 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                   children: kLabourSkills.map((s) {
                     final sel = _selectedSkills.contains(s);
                     return FilterChip(
-                      label: Text(s),
+                      label: Text(s, style: const TextStyle(fontSize: 12)),
                       selected: sel,
                       selectedColor: _kP2,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark,
-                          fontSize: 12),
+                          color: sel ? Colors.white : _kDark),
                       onSelected: (v) {
                         setState(() {
                           v
@@ -356,17 +424,54 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
               ]),
             ),
 
-            // ── Work Details ──────────────────────────────────────────────────
+            // ── Wage Details ─────────────────────────────────────────────────
             _SliverCard(
-              child: _buildSection('Work Details', Icons.work_rounded, [
-                _field('Experience (years)', _expCtrl,
+              child: _buildSection(
+                  'Wage & Experience', Icons.currency_rupee_rounded, [
+                _field('Years of Experience', _expCtrl,
                     keyboardType: TextInputType.number,
                     hint: 'e.g. 3'),
-                _field('Daily Wage (₹)', _wageCtrl,
+                _label('Preferred Wage Type'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: kWageTypeLabels.entries.map((e) {
+                    final sel = _preferredWageType == e.key;
+                    return ChoiceChip(
+                      label:
+                          Text(e.value, style: const TextStyle(fontSize: 12)),
+                      selected: sel,
+                      selectedColor: _kP2,
+                      labelStyle: TextStyle(
+                          color: sel ? Colors.white : _kDark),
+                      onSelected: (_) =>
+                          setState(() => _preferredWageType = e.key),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(
+                      child: _field('Daily Wage (₹)', _dailyWageCtrl,
+                          keyboardType: TextInputType.number,
+                          hint: 'e.g. 500')),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: _field('Hourly Wage (₹)', _hourlyWageCtrl,
+                          keyboardType: TextInputType.number,
+                          hint: 'e.g. 80')),
+                ]),
+                _field('Monthly Wage (₹)', _monthlyWageCtrl,
                     keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'Wage is required' : null),
-                _label('Availability'),
+                    hint: 'e.g. 12000'),
+              ]),
+            ),
+
+            // ── Availability ─────────────────────────────────────────────────
+            _SliverCard(
+              child: _buildSection(
+                  'Availability', Icons.event_available_rounded, [
+                _label('Current Status'),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -383,10 +488,38 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       selectedColor: col.withOpacity(0.15),
                       labelStyle: TextStyle(
                           color: sel ? col : Colors.grey.shade600,
-                          fontWeight: sel ? FontWeight.bold : FontWeight.normal),
-                      side: BorderSide(color: sel ? col : Colors.grey.shade300),
+                          fontWeight:
+                              sel ? FontWeight.bold : FontWeight.normal),
+                      side: BorderSide(
+                          color: sel ? col : Colors.grey.shade300),
                       onSelected: (_) =>
                           setState(() => _availability = val),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+                _label('When are you available? (select all that apply)'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: kAvailabilityTypeLabels.entries.map((e) {
+                    final sel = _availabilityTypes.contains(e.key);
+                    return FilterChip(
+                      label:
+                          Text(e.value, style: const TextStyle(fontSize: 12)),
+                      selected: sel,
+                      selectedColor: _kGreen,
+                      checkmarkColor: Colors.white,
+                      labelStyle: TextStyle(
+                          color: sel ? Colors.white : _kDark),
+                      onSelected: (v) {
+                        setState(() {
+                          v
+                              ? _availabilityTypes.add(e.key)
+                              : _availabilityTypes.remove(e.key);
+                        });
+                      },
                     );
                   }).toList(),
                 ),
@@ -410,7 +543,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       labelStyle: TextStyle(
                           color: sel ? Colors.white : _kDark),
                       onSelected: (v) => setState(() {
-                        v ? _selectedLangs.add(l) : _selectedLangs.remove(l);
+                        v
+                            ? _selectedLangs.add(l)
+                            : _selectedLangs.remove(l);
                       }),
                     );
                   }).toList(),
@@ -418,7 +553,38 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
               ]),
             ),
 
-            // ── Submit ────────────────────────────────────────────────────────
+            // ── About / Description ──────────────────────────────────────────
+            _SliverCard(
+              child: _buildSection(
+                  'About You', Icons.description_rounded, [
+                TextFormField(
+                  controller: _descCtrl,
+                  maxLines: 4,
+                  maxLength: 300,
+                  decoration: InputDecoration(
+                    hintText:
+                        'Tell farmers about yourself — your experience, work style, specialties…',
+                    filled: true,
+                    fillColor: const Color(0xFFF8FDF8),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: Colors.grey.shade300)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: Colors.grey.shade300)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: _kP2, width: 2)),
+                    contentPadding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ]),
+            ),
+
+            // ── Save Button ──────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
@@ -452,24 +618,24 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   Widget _buildPhotoSection() {
     return Column(children: [
       const Text('Profile Photo',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          style:
+              TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
       const SizedBox(height: 16),
       GestureDetector(
         onTap: _pickPhoto,
         child: Stack(alignment: Alignment.bottomRight, children: [
           CircleAvatar(
-            radius: 50,
+            radius: 52,
             backgroundColor: _kLightGreen,
             backgroundImage:
                 _photoUrl.isNotEmpty ? NetworkImage(_photoUrl) : null,
             child: _photoUrl.isEmpty
-                ? const Icon(Icons.person_rounded, size: 50, color: _kP2)
+                ? const Icon(Icons.person_rounded, size: 52, color: _kP2)
                 : null,
           ),
           Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-                color: _kP2, shape: BoxShape.circle),
+            padding: const EdgeInsets.all(7),
+            decoration: const BoxDecoration(color: _kP2, shape: BoxShape.circle),
             child: _uploadingPhoto
                 ? const SizedBox(
                     width: 14,
@@ -483,21 +649,19 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
       ),
       const SizedBox(height: 8),
       Text('Tap to upload photo',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+          style:
+              TextStyle(fontSize: 12, color: Colors.grey.shade500)),
     ]);
   }
 
-  Widget _buildSection(
-      String title, IconData icon, List<Widget> children) {
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Icon(icon, size: 18, color: _kP2),
         const SizedBox(width: 8),
         Text(title,
             style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: _kDark)),
+                fontSize: 15, fontWeight: FontWeight.bold, color: _kDark)),
       ]),
       const SizedBox(height: 16),
       ...children,

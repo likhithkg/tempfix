@@ -1,19 +1,18 @@
-// lib/labour_hub/labour_nearby_page.dart
-// Polished Nearby Labour page — header image removed and Add FAB removed.
 import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'labour_hub_service.dart';
+import 'labour_profile_model.dart';
+import 'labour_detail_page.dart';
 
-import 'labour_hub_detail_page.dart';
-import 'labour_model.dart';
-import '../l10n/app_localizations.dart';
-import '../widgets/km_listing_card.dart';
-import '../widgets/km_action_button.dart';
-import '../widgets/km_status_chip.dart';
-import '../theme.dart';
-import '../services/content_translation_service.dart';
+const _kP1 = Color(0xFF1B5E20);
+const _kP2 = Color(0xFF2E7D32);
+const _kGreen = Color(0xFF4CAF50);
+const _kLightGreen = Color(0xFFE8F5E9);
+const _kOrange = Color(0xFFE65100);
+const _kAmber = Color(0xFFFFA000);
+const _kDark = Color(0xFF1A2D1A);
 
 class LabourNearbyPage extends StatefulWidget {
   const LabourNearbyPage({super.key});
@@ -22,389 +21,823 @@ class LabourNearbyPage extends StatefulWidget {
   State<LabourNearbyPage> createState() => _LabourNearbyPageState();
 }
 
-class _LabourNearbyPageState extends State<LabourNearbyPage> with SingleTickerProviderStateMixin {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _LabourNearbyPageState extends State<LabourNearbyPage> {
+  final _service = LabourHubService();
+  final _searchCtrl = TextEditingController();
 
   bool _loading = true;
-  String? _error;
-  Position? _currentPosition;
-  List<_NearbyLabour> _nearby = [];
-
-  double _radiusKm = 150.0;
   bool _permissionDenied = false;
-
+  String? _error;
+  double? _userLat, _userLng;
   String _query = '';
-  final String _skillFilter = 'All';
+  int _radiusKm = 20;
 
-  // header image path (not used anymore but kept for reference)
-  final String headerImageUrl = '/mnt/data/e197c40d-db36-4f5f-ad56-9d5c5aec7599.png';
-
-  late final AnimationController _animController;
+  late final Stream<List<LabourProfile>> _stream;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
-    _initAndLoad();
+    _stream = _service.streamAllProfiles();
+    _fetchLocation();
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _searchCtrl.dispose();
+    _service.dispose();
     super.dispose();
   }
 
-  Future<void> _initAndLoad() async {
+  Future<void> _fetchLocation() async {
     setState(() {
       _loading = true;
       _error = null;
       _permissionDenied = false;
     });
-
     try {
-      final pos = await _determinePosition();
-      setState(() => _currentPosition = pos);
-      await _loadNearbyLabours(pos.latitude, pos.longitude, _radiusKm);
-      _animController.forward(from: 0);
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        if (e is PermissionDeniedException || e.toString().toLowerCase().contains('permission')) {
+      final bool serviceEnabled =
+          await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception(
+            'Location services are disabled. Please enable them.');
+      }
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.deniedForever) {
+        setState(() {
           _permissionDenied = true;
-        }
-      });
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Location services are disabled. Please enable them.');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) {
-      throw PermissionDeniedException('Location permission is permanently denied.');
-    }
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        throw PermissionDeniedException('Location permission denied.');
+          _loading = false;
+        });
+        return;
       }
-    }
-
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
-    );
-  }
-
-  Future<void> _loadNearbyLabours(double myLat, double myLng, double radiusKm) async {
-    try {
-      final snapshot = await _firestore.collection('labours').get();
-      final List<_NearbyLabour> results = [];
-
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        Labour labour;
-        try {
-          labour = Labour.fromMap(Map<String, dynamic>.from(data), doc.id);
-        } catch (_) {
-          continue;
-        }
-
-        final lat = labour.latitude;
-        final lng = labour.longitude;
-        if (lat == null || lng == null) continue;
-
-        final distanceKm = _haversineDistance(myLat, myLng, lat, lng);
-
-        if (distanceKm <= radiusKm) {
-          if (_skillFilter != 'All' && labour.skill.trim().isNotEmpty) {
-            if (labour.skill.toLowerCase() != _skillFilter.toLowerCase()) continue;
-          }
-          if (_query.isNotEmpty) {
-            final q = _query.toLowerCase();
-            if (!labour.name.toLowerCase().contains(q) && !labour.location.toLowerCase().contains(q)) continue;
-          }
-
-          results.add(_NearbyLabour(
-            labour: labour,
-            docId: doc.id,
-            lat: lat,
-            lng: lng,
-            distanceKm: distanceKm,
-          ));
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+        if (perm == LocationPermission.denied ||
+            perm == LocationPermission.deniedForever) {
+          setState(() {
+            _permissionDenied = true;
+            _loading = false;
+          });
+          return;
         }
       }
-
-      results.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
-
-      setState(() => _nearby = results);
+      final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium);
+      if (mounted) {
+        setState(() {
+          _userLat = pos.latitude;
+          _userLng = pos.longitude;
+        });
+      }
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _distanceTo(LabourProfile p) {
+    if (_userLat == null || _userLng == null || !p.hasLocation) {
+      return double.infinity;
+    }
     const R = 6371.0;
-    final dLat = _deg2rad(lat2 - lat1);
-    final dLon = _deg2rad(lon2 - lon1);
+    final dLat = (p.latitude - _userLat!) * pi / 180;
+    final dLon = (p.longitude - _userLng!) * pi / 180;
     final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_deg2rad(lat1)) * cos(_deg2rad(lat2)) * sin(dLon / 2) * sin(dLon / 2);
-    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c;
+        cos(_userLat! * pi / 180) *
+            cos(p.latitude * pi / 180) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a));
   }
 
-  double _deg2rad(double deg) => deg * (pi / 180.0);
-
-  Future<void> _openOnMap(double lat, double lng) async {
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenMaps)));
+  List<LabourProfile> _filter(List<LabourProfile> all) {
+    var list = all.where((p) => p.hasLocation).toList();
+    list = list
+        .where((p) => _distanceTo(p) <= _radiusKm)
+        .toList();
+    if (_query.isNotEmpty) {
+      final q = _query.toLowerCase();
+      list = list
+          .where((p) =>
+              p.name.toLowerCase().contains(q) ||
+              p.skills.any((s) => s.toLowerCase().contains(q)) ||
+              p.village.toLowerCase().contains(q) ||
+              p.district.toLowerCase().contains(q))
+          .toList();
     }
+    list.sort((a, b) => _distanceTo(a).compareTo(_distanceTo(b)));
+    return list;
   }
 
-  Future<void> _callNumber(String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.couldNotOpenDialer)));
-    }
-  }
-
-  Future<void> _refresh() async {
-    if (_currentPosition != null) {
-      setState(() => _loading = true);
-      await _loadNearbyLabours(_currentPosition!.latitude, _currentPosition!.longitude, _radiusKm);
-      setState(() => _loading = false);
-    } else {
-      await _initAndLoad();
-    }
-  }
-
-  Future<void> _showRadiusPicker() async {
-    final selected = await showDialog<double>(
+  void _showRadiusPicker() async {
+    final selected = await showModalBottomSheet<int>(
       context: context,
-      builder: (ctx) {
-        return SimpleDialog(
-          title: Text(AppLocalizations.of(context)!.selectRadius),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ...[5, 10, 20, 50, 100, 150, 200, 500].map((v) {
-              return SimpleDialogOption(
-                onPressed: () => Navigator.pop(ctx, v.toDouble()),
-                child: Text('$v km'),
-              );
-            }),
+            Center(
+              child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2))),
+            ),
+            const Text('Select Search Radius',
+                style: TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [5, 10, 20, 50, 100].map((r) {
+                final sel = _radiusKm == r;
+                return GestureDetector(
+                  onTap: () => Navigator.pop(ctx, r),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: sel ? _kP2 : _kLightGreen,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: sel ? _kP2 : Colors.grey.shade300),
+                    ),
+                    child: Text('$r km',
+                        style: TextStyle(
+                            color: sel ? Colors.white : _kDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15)),
+                  ),
+                );
+              }).toList(),
+            ),
           ],
-        );
-      },
+        ),
+      ),
     );
-
-    if (selected != null) {
+    if (selected != null && mounted) {
       setState(() => _radiusKm = selected);
-      if (_currentPosition != null) {
-        _loadNearbyLabours(_currentPosition!.latitude, _currentPosition!.longitude, _radiusKm);
-      }
     }
+  }
+
+  void _call(LabourProfile p) async {
+    if (p.phone.isEmpty) return;
+    final uri = Uri.parse('tel:${p.phone}');
+    if (await canLaunchUrl(uri)) launchUrl(uri);
+  }
+
+  void _whatsapp(LabourProfile p) async {
+    final raw =
+        (p.whatsappNumber.isNotEmpty ? p.whatsappNumber : p.phone)
+            .replaceAll(RegExp(r'\D'), '');
+    if (raw.isEmpty) return;
+    final number = raw.startsWith('91') ? raw : '91$raw';
+    final uri = Uri.parse('https://wa.me/$number');
+    if (await canLaunchUrl(uri)) launchUrl(uri);
+  }
+
+  void _openMap(LabourProfile p) async {
+    if (!p.hasLocation) return;
+    final uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}');
+    if (await canLaunchUrl(uri)) launchUrl(uri);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.nearbyLabourTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refresh,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Material(
-                      elevation: 2,
-                      borderRadius: BorderRadius.circular(12),
-                      child: TextField(
-                        onChanged: (v) {
-                          setState(() => _query = v.trim());
-                          if (_currentPosition != null) {
-                            _loadNearbyLabours(_currentPosition!.latitude, _currentPosition!.longitude, _radiusKm);
-                          }
-                        },
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.searchLabourHint,
-                          prefixIcon: const Icon(Icons.search, color: Colors.green),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
+      backgroundColor: const Color(0xFFF2F7F2),
+      body: CustomScrollView(
+        slivers: [
+          // ── Header ──────────────────────────────────────────────────────────
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 130,
+            backgroundColor: _kP1,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded,
+                    color: Colors.white),
+                onPressed: _fetchLocation,
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        const Row(children: [
+                          Icon(Icons.near_me_rounded,
+                              color: Colors.white, size: 22),
+                          SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text('Nearby Workers',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold)),
+                              Text('Sorted by distance from you',
+                                  style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12)),
+                            ],
+                          ),
+                        ]),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  InkWell(
-                    onTap: _showRadiusPicker,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
+                ),
+              ),
+            ),
+          ),
+
+          // ── Search + Radius ──────────────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(children: [
+                Expanded(
+                  child: Container(
+                    height: 46,
+                    decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green.shade100),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.place, color: Colors.green, size: 18),
-                          const SizedBox(width: 6),
-                          Text('${_radiusKm.toStringAsFixed(0)} km'),
-                        ],
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2))
+                        ]),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      onChanged: (v) => setState(() => _query = v.trim()),
+                      decoration: const InputDecoration(
+                        hintText: 'Search name, skill, village…',
+                        prefixIcon: Icon(Icons.search_rounded,
+                            size: 20, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 13),
+                        hintStyle: TextStyle(fontSize: 13),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: _showRadiusPicker,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                        color: _kP2,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                              color: _kP2.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2))
+                        ]),
+                    child: Row(children: [
+                      const Icon(Icons.my_location_rounded,
+                          color: Colors.white, size: 16),
+                      const SizedBox(width: 4),
+                      Text('$_radiusKm km',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13)),
+                    ]),
+                  ),
+                ),
+              ]),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _permissionDenied
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(AppLocalizations.of(context)!.locationPermissionDenied),
-                                const SizedBox(height: 8),
-                                ElevatedButton(
-                                  onPressed: () => Geolocator.openAppSettings(),
-                                  child: Text(AppLocalizations.of(context)!.openSettings),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _error != null
-                            ? Center(child: Text('Error: $_error'))
-                            : _nearby.isEmpty
-                                ? Center(child: Text(AppLocalizations.of(context)!.noLabourFoundNearby))
-                                : RefreshIndicator(
-                                    onRefresh: _refresh,
-                                    child: ListView.separated(
-                                      padding: const EdgeInsets.only(top: 8, bottom: 16),
-                                      itemCount: _nearby.length,
-                                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                      itemBuilder: (context, i) {
-                                        final n = _nearby[i];
-                                        final labour = n.labour;
+          ),
 
-                                        final anim = CurvedAnimation(
-                                          parent: _animController,
-                                          curve: Curves.easeOut,
-                                        );
-                                        final l = AppLocalizations.of(context)!;
-                                        final langCode = Localizations.localeOf(context).languageCode;
-                                        return SizeTransition(
-                                          sizeFactor: anim,
-                                          axis: Axis.vertical,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(bottom: 8),
-                                            child: KMListingCard(
-                                              imageUrl: labour.imageUrl,
-                                              fallbackIcon: Icons.person_outline,
-                                              imageHeight: 130,
-                                              title: labour.name,
-                                              subtitle: labour.skill.trim().isNotEmpty
-                                                  ? '${l.skillProfessionLabel}: ${ContentTranslationService.translateLabourSkill(labour.skill, langCode)}'
-                                                  : null,
-                                              caption: '${l.locationLabel}: ${ContentTranslationService.translateLocation(labour.location, langCode)}',
-                                              statusBadge: KMStatusChip(
-                                                label: labour.available ? l.available : l.busy,
-                                                color: labour.available
-                                                    ? KMColors.available
-                                                    : KMColors.unavailable,
-                                              ),
-                                              infoRow: Row(
-                                                children: [
-                                                  const Icon(Icons.location_pin,
-                                                      size: 14, color: Colors.grey),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    l.kmAway(n.distanceKm.toStringAsFixed(1)),
-                                                    style: const TextStyle(fontSize: 13),
-                                                  ),
-                                                ],
-                                              ),
-                                              actionRow: Row(
-                                                children: [
-                                                  KMCallIconButton(
-                                                    onPressed: () =>
-                                                        _callNumber(labour.contact),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  IconButton(
-                                                    icon: const Icon(Icons.map,
-                                                        color: Colors.blue),
-                                                    onPressed: () =>
-                                                        _openOnMap(n.lat, n.lng),
-                                                  ),
-                                                ],
-                                              ),
-                                              onTap: () => Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      LabourHubDetailPage(labour: labour),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
+          // ── Body ────────────────────────────────────────────────────────────
+          if (_loading)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(color: _kP2),
+                      const SizedBox(height: 12),
+                      Text('Getting your location…',
+                          style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14)),
+                    ]),
               ),
+            )
+          else if (_permissionDenied)
+            SliverFillRemaining(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.location_off_rounded,
+                            size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text('Location Permission Denied',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text(
+                            'Please allow location access to find workers near you.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.grey.shade600)),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: Geolocator.openAppSettings,
+                          icon: const Icon(Icons.settings_rounded),
+                          label: const Text('Open Settings'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _kP2,
+                              foregroundColor: Colors.white),
+                        ),
+                      ]),
+                ),
+              ),
+            )
+          else if (_error != null)
+            SliverFillRemaining(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.wifi_off_rounded,
+                            size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text('Error: $_error',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _fetchLocation,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _kP2,
+                              foregroundColor: Colors.white),
+                        ),
+                      ]),
+                ),
+              ),
+            )
+          else if (_userLat == null)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.gps_not_fixed_rounded,
+                          size: 64, color: Colors.grey),
+                      const SizedBox(height: 12),
+                      const Text('Could not get location'),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: _fetchLocation,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: _kP2,
+                            foregroundColor: Colors.white),
+                      ),
+                    ]),
+              ),
+            )
+          else
+            StreamBuilder<List<LabourProfile>>(
+              stream: _stream,
+              builder: (ctx, snap) {
+                if (snap.hasError) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Text('Error loading data',
+                          style:
+                              TextStyle(color: Colors.grey.shade600)),
+                    ),
+                  );
+                }
+                if (!snap.hasData) {
+                  return const SliverFillRemaining(
+                    child: Center(
+                        child: CircularProgressIndicator(color: _kP2)),
+                  );
+                }
+
+                final workers = _filter(snap.data!);
+
+                if (workers.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                  Icons.person_search_rounded,
+                                  size: 64,
+                                  color: Colors.grey),
+                              const SizedBox(height: 16),
+                              const Text('No workers found nearby',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              const SizedBox(height: 8),
+                              Text(
+                                  'Try increasing the radius or changing your search',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.grey.shade500)),
+                              const SizedBox(height: 16),
+                              OutlinedButton.icon(
+                                onPressed: _showRadiusPicker,
+                                icon: const Icon(
+                                    Icons.add_circle_outline_rounded,
+                                    color: _kP2),
+                                label: const Text('Increase Radius',
+                                    style: TextStyle(color: _kP2)),
+                                style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                        color: _kP2)),
+                              ),
+                            ]),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) {
+                      if (i == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              16, 12, 16, 8),
+                          child: Row(children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 5),
+                              decoration: BoxDecoration(
+                                  color: _kLightGreen,
+                                  borderRadius:
+                                      BorderRadius.circular(20)),
+                              child: Text(
+                                  '${workers.length} workers within $_radiusKm km',
+                                  style: const TextStyle(
+                                      color: _kP2,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12)),
+                            ),
+                          ]),
+                        );
+                      }
+                      return _NearbyWorkerCard(
+                        worker: workers[i - 1],
+                        distance: _distanceTo(workers[i - 1]),
+                        onTap: () => Navigator.push(
+                            ctx,
+                            MaterialPageRoute(
+                                builder: (_) => LabourDetailPage(
+                                    profile: workers[i - 1]))),
+                        onCall: () => _call(workers[i - 1]),
+                        onWhatsApp: () => _whatsapp(workers[i - 1]),
+                        onMap: () => _openMap(workers[i - 1]),
+                      );
+                    },
+                    childCount: workers.length + 1,
+                  ),
+                );
+              },
             ),
+
+          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Nearby Worker Card ────────────────────────────────────────────────────────
+
+class _NearbyWorkerCard extends StatelessWidget {
+  final LabourProfile worker;
+  final double distance;
+  final VoidCallback onTap;
+  final VoidCallback onCall;
+  final VoidCallback onWhatsApp;
+  final VoidCallback onMap;
+
+  const _NearbyWorkerCard({
+    required this.worker,
+    required this.distance,
+    required this.onTap,
+    required this.onCall,
+    required this.onWhatsApp,
+    required this.onMap,
+  });
+
+  String get _distText {
+    if (distance == double.infinity) return '';
+    if (distance < 1) return '${(distance * 1000).round()}m away';
+    return '${distance.toStringAsFixed(1)} km away';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = worker;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+            Stack(children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: _kLightGreen,
+                backgroundImage: p.photoUrl.isNotEmpty
+                    ? NetworkImage(p.photoUrl)
+                    : null,
+                child: p.photoUrl.isEmpty
+                    ? Text(
+                        p.name.isNotEmpty
+                            ? p.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                            fontSize: 24,
+                            color: _kP2,
+                            fontWeight: FontWeight.bold))
+                    : null,
+              ),
+              if (p.onlineStatus)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                        color: _kGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.white, width: 2)),
+                  ),
+                ),
+            ]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Expanded(
+                        child: Text(p.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                      ),
+                      if (p.isVerified)
+                        const Icon(Icons.verified_rounded,
+                            color: _kP2, size: 16),
+                    ]),
+                    const SizedBox(height: 3),
+                    // Distance badge
+                    if (_distText.isNotEmpty)
+                      Row(children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.blue.shade200)),
+                          child: Row(children: [
+                            Icon(Icons.near_me_rounded,
+                                size: 11,
+                                color: Colors.blue.shade600),
+                            const SizedBox(width: 3),
+                            Text(_distText,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600)),
+                          ]),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.location_on_rounded,
+                            size: 12, color: Colors.grey),
+                        Expanded(
+                          child: Text(
+                              ' ${p.locationDisplay}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: Colors.grey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ]),
+                    const SizedBox(height: 6),
+                    if (p.skills.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: p.skills
+                            .take(3)
+                            .map((s) => _SmallChip(s))
+                            .toList(),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                            color:
+                                p.availabilityStatus == 'available'
+                                    ? _kLightGreen
+                                    : Colors.orange.shade50,
+                            borderRadius:
+                                BorderRadius.circular(20)),
+                        child: Text(
+                          p.availabilityStatus == 'available'
+                              ? '● Available'
+                              : '○ Busy',
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: p.availabilityStatus ==
+                                      'available'
+                                  ? _kGreen
+                                  : Colors.orange,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (p.rating > 0) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.star_rounded,
+                            color: _kAmber, size: 13),
+                        Text(' ${p.rating.toStringAsFixed(1)}',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                      const Spacer(),
+                      Text(p.wageDisplay,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: _kOrange)),
+                    ]),
+                    const SizedBox(height: 10),
+                    Row(children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onCall,
+                          icon: const Icon(Icons.phone_rounded,
+                              size: 14),
+                          label: const Text('Call',
+                              style: TextStyle(fontSize: 12)),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _kP2,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(10))),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onWhatsApp,
+                          icon: const Icon(Icons.chat_rounded,
+                              size: 14),
+                          label: const Text('WhatsApp',
+                              style: TextStyle(fontSize: 12)),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF25D366),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(10))),
+                        ),
+                      ),
+                      if (p.hasLocation) ...[
+                        const SizedBox(width: 6),
+                        ElevatedButton(
+                          onPressed: onMap,
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(10))),
+                          child: const Icon(Icons.map_rounded,
+                              size: 16),
+                        ),
+                      ],
+                    ]),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: onTap,
+                        icon: const Icon(Icons.person_rounded,
+                            size: 14),
+                        label: const Text('View Full Profile',
+                            style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                            foregroundColor: _kP2,
+                            side: const BorderSide(color: _kP2),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(10))),
+                      ),
+                    ),
+                  ]),
+            ),
+          ]),
         ),
       ),
     );
   }
 }
 
-class _NearbyLabour {
-  final Labour labour;
-  final String docId;
-  final double lat;
-  final double lng;
-  final double distanceKm;
+class _SmallChip extends StatelessWidget {
+  final String label;
 
-  _NearbyLabour({
-    required this.labour,
-    required this.docId,
-    required this.lat,
-    required this.lng,
-    required this.distanceKm,
-  });
-}
+  const _SmallChip(this.label);
 
-class PermissionDeniedException implements Exception {
-  final String message;
-  PermissionDeniedException([this.message = 'Permission denied']);
   @override
-  String toString() => message;
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+          color: _kLightGreen,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _kGreen.withOpacity(0.3))),
+      child: Text(label,
+          style: const TextStyle(
+              fontSize: 10, color: _kP2, fontWeight: FontWeight.w500)),
+    );
+  }
 }
