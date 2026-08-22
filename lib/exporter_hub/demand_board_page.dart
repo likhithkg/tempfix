@@ -1,9 +1,17 @@
 // lib/exporter_hub/demand_board_page.dart
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
+import '../services/image_upload_service.dart';
+import '../labour_hub/location_search_dialog.dart';
 
 // ── Demand Board Page ──────────────────────────────────────────────────────────
 // Admin posts export demand; farmers can indicate they can supply.
@@ -106,6 +114,7 @@ class _CreateDemandSheet extends StatefulWidget {
 class _CreateDemandSheetState extends State<_CreateDemandSheet> {
   final _formKey = GlobalKey<FormState>();
   final _db = FirebaseFirestore.instance;
+  final _picker = ImagePicker();
 
   final _cropCtrl = TextEditingController();
   final _quantityCtrl = TextEditingController();
@@ -116,6 +125,9 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
   DateTime? _deliveryDeadline;
   bool _isSubmitting = false;
 
+  File? _imageFile;
+  bool _isUploadingImage = false;
+
   @override
   void dispose() {
     _cropCtrl.dispose();
@@ -125,6 +137,29 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.photo_camera),
+            title: const Text('Camera'),
+            onTap: () => Navigator.pop(context, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Gallery'),
+            onTap: () => Navigator.pop(context, ImageSource.gallery),
+          ),
+        ]),
+      ),
+    );
+    if (source == null) return;
+    final picked = await _picker.pickImage(source: source, imageQuality: 80, maxWidth: 1200);
+    if (picked != null && mounted) setState(() => _imageFile = File(picked.path));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final user = FirebaseAuth.instance.currentUser;
@@ -132,12 +167,20 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
 
     setState(() => _isSubmitting = true);
     try {
+      String? imageUrl;
+      if (_imageFile != null) {
+        setState(() => _isUploadingImage = true);
+        imageUrl = await ImageUploadService.uploadImage(_imageFile!);
+        if (mounted) setState(() => _isUploadingImage = false);
+      }
+
       await _db.collection('export_demand').add({
         'crop': _cropCtrl.text.trim(),
         'quantity': '${_quantityCtrl.text.trim()} $_unit',
         'grade': _gradeCtrl.text.trim(),
         'deliveryDeadline': _deliveryDeadline?.toIso8601String(),
         'notes': _notesCtrl.text.trim(),
+        'imageUrl': imageUrl ?? '',
         'postedBy': user.uid,
         'postedByName': user.displayName ?? user.email ?? user.uid,
         'status': 'open',        // open | fulfilled | closed
@@ -179,9 +222,39 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
 
               TextFormField(
                 controller: _cropCtrl,
-                decoration: InputDecoration(labelText: l.cropLabel, border: const OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Product Name', border: OutlineInputBorder(),
+                    hintText: 'e.g. Tomatoes, Basmati Rice, Alphonso Mangoes'),
                 validator: (v) => (v ?? '').trim().isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 12),
+
+              // ── Demand image ──
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: double.infinity,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey.shade50,
+                  ),
+                  child: _imageFile != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(9),
+                          child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity),
+                        )
+                      : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(Icons.add_photo_alternate_outlined, size: 38, color: Colors.grey.shade400),
+                          const SizedBox(height: 6),
+                          Text('Add Product Image (optional)',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                        ]),
+                ),
+              ),
+              if (_isUploadingImage)
+                const Padding(padding: EdgeInsets.only(top: 6), child: LinearProgressIndicator()),
               const SizedBox(height: 12),
 
               Row(children: [
@@ -309,7 +382,6 @@ class _DemandCardState extends State<_DemandCard> {
       return;
     }
 
-    // Show response sheet
     final l = AppLocalizations.of(context)!;
     final farmerNameCtrl = TextEditingController(text: user.displayName ?? '');
     final phoneCtrl = TextEditingController();
@@ -317,95 +389,337 @@ class _DemandCardState extends State<_DemandCard> {
     final quantityCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
 
+    File? productPhoto;
+    bool isSubmitting = false;
+    bool isLocating = false;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: SingleChildScrollView(
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.respondToDemand, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: farmerNameCtrl,
+                  decoration: const InputDecoration(labelText: 'Your Name', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Enhanced location field ──
+                Material(
+                  elevation: 2,
+                  borderRadius: BorderRadius.circular(12),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final result = await showDialog<LocationResult>(
+                        context: sheetCtx,
+                        builder: (_) => const LocationSearchDialog(),
+                      );
+                      if (result != null) setSheet(() => locationCtrl.text = result.displayName);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.location_on_rounded, color: Color(0xFFE65100), size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: locationCtrl,
+                            builder: (_, val, __) => Text(
+                              val.text.isNotEmpty ? val.text : 'Location (Village / District)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: val.text.isNotEmpty ? Colors.black87 : Colors.grey.shade500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                      ]),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final result = await showDialog<LocationResult>(
+                          context: sheetCtx,
+                          builder: (_) => const LocationSearchDialog(),
+                        );
+                        if (result != null) setSheet(() => locationCtrl.text = result.displayName);
+                      },
+                      icon: const Icon(Icons.search_rounded, size: 16),
+                      label: const Text('Search Place', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green.shade700,
+                        side: BorderSide(color: Colors.green.shade700),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: isLocating ? null : () async {
+                        setSheet(() => isLocating = true);
+                        try {
+                          bool svcEnabled = await Geolocator.isLocationServiceEnabled();
+                          if (!svcEnabled) return;
+                          LocationPermission perm = await Geolocator.checkPermission();
+                          if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
+                          if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) return;
+                          final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+                          final marks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+                          if (marks.isNotEmpty) {
+                            final pm = marks.first;
+                            final loc = [pm.locality, pm.subAdministrativeArea, pm.administrativeArea]
+                                .where((e) => e != null && e.isNotEmpty).join(', ');
+                            setSheet(() => locationCtrl.text = loc);
+                          }
+                        } catch (_) {} finally {
+                          setSheet(() => isLocating = false);
+                        }
+                      },
+                      icon: isLocating
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.my_location_rounded, size: 16),
+                      label: Text(isLocating ? 'Locating…' : 'Use GPS',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1565C0),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: quantityCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: l.canSupplyQty, border: const OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notesCtrl,
+                  maxLines: 2,
+                  decoration: InputDecoration(labelText: l.additionalNotes, border: const OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+
+                // ── Product photo ──
+                GestureDetector(
+                  onTap: () async {
+                    final src = await showModalBottomSheet<ImageSource>(
+                      context: sheetCtx,
+                      builder: (_) => SafeArea(
+                        child: Column(mainAxisSize: MainAxisSize.min, children: [
+                          ListTile(
+                            leading: const Icon(Icons.photo_camera),
+                            title: const Text('Camera'),
+                            onTap: () => Navigator.pop(sheetCtx, ImageSource.camera),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.photo_library),
+                            title: const Text('Gallery'),
+                            onTap: () => Navigator.pop(sheetCtx, ImageSource.gallery),
+                          ),
+                        ]),
+                      ),
+                    );
+                    if (src == null) return;
+                    final picked = await ImagePicker().pickImage(source: src, imageQuality: 80, maxWidth: 1200);
+                    if (picked != null) setSheet(() => productPhoto = File(picked.path));
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: productPhoto != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(9),
+                            child: Image.file(productPhoto!, fit: BoxFit.cover, width: double.infinity),
+                          )
+                        : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Icon(Icons.add_photo_alternate_outlined, size: 36, color: Colors.grey.shade400),
+                            const SizedBox(height: 6),
+                            Text('Add Product Photo (optional)',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                          ]),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting ? null : () async {
+                      setSheet(() => isSubmitting = true);
+                      setState(() => _responding = true);
+                      try {
+                        String? photoUrl;
+                        if (productPhoto != null) {
+                          photoUrl = await ImageUploadService.uploadImage(productPhoto!);
+                        }
+                        await widget.db.collection('export_demand').doc(widget.demandId).update({
+                          'responses': FieldValue.arrayUnion([
+                            {
+                              'farmerId': user.uid,
+                              'farmerName': farmerNameCtrl.text.trim().isNotEmpty
+                                  ? farmerNameCtrl.text.trim()
+                                  : (user.displayName ?? user.email ?? user.uid),
+                              'farmerPhone': phoneCtrl.text.trim(),
+                              'farmerLocation': locationCtrl.text.trim(),
+                              'canSupplyQty': quantityCtrl.text.trim(),
+                              'notes': notesCtrl.text.trim(),
+                              'productPhotoUrl': photoUrl ?? '',
+                              'respondedAt': DateTime.now().toIso8601String(),
+                            }
+                          ]),
+                        });
+                        if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l.responseSubmitted)));
+                        }
+                      } catch (e) {
+                        if (sheetCtx.mounted) {
+                          ScaffoldMessenger.of(sheetCtx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        }
+                      } finally {
+                        if (mounted) setState(() => _responding = false);
+                        setSheet(() => isSubmitting = false);
+                      }
+                    },
+                    child: isSubmitting
+                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(l.submitResponse),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    farmerNameCtrl.dispose();
+    phoneCtrl.dispose();
+    locationCtrl.dispose();
+    quantityCtrl.dispose();
+    notesCtrl.dispose();
+  }
+
+  void _showFarmerContactSheet(BuildContext context, String name, String phone, String location, String qty, String notes, String photoUrl) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l.respondToDemand, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              TextField(
-                controller: farmerNameCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Your Name', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneCtrl,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                    labelText: 'Phone Number', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: locationCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Location (Village / District)', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: quantityCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                    labelText: l.canSupplyQty, border: const OutlineInputBorder()),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: notesCtrl,
-                maxLines: 2,
-                decoration: InputDecoration(
-                    labelText: l.additionalNotes, border: const OutlineInputBorder()),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    setState(() => _responding = true);
-                    try {
-                      await widget.db.collection('export_demand').doc(widget.demandId).update({
-                        'responses': FieldValue.arrayUnion([
-                          {
-                            'farmerId': user.uid,
-                            'farmerName': farmerNameCtrl.text.trim().isNotEmpty
-                                ? farmerNameCtrl.text.trim()
-                                : (user.displayName ?? user.email ?? user.uid),
-                            'farmerPhone': phoneCtrl.text.trim(),
-                            'farmerLocation': locationCtrl.text.trim(),
-                            'canSupplyQty': quantityCtrl.text.trim(),
-                            'notes': notesCtrl.text.trim(),
-                            'respondedAt': DateTime.now().toIso8601String(),
-                          }
-                        ]),
-                      });
-                      if (context.mounted) Navigator.pop(context);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context)!.responseSubmitted)));
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                      }
-                    } finally {
-                      if (mounted) setState(() => _responding = false);
-                      farmerNameCtrl.dispose();
-                      phoneCtrl.dispose();
-                      locationCtrl.dispose();
-                      quantityCtrl.dispose();
-                      notesCtrl.dispose();
-                    }
-                  },
-                  child: Text(l.submitResponse),
+              Row(children: [
+                if (photoUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(photoUrl, width: 60, height: 60, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                  )
+                else
+                  Container(
+                    width: 60, height: 60,
+                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+                    child: Icon(Icons.person, color: Colors.green.shade400, size: 32),
+                  ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                    if (location.isNotEmpty)
+                      Text(location, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                    if (qty.isNotEmpty)
+                      Text('Can supply: $qty', style: const TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.w600)),
+                  ]),
                 ),
-              ),
+              ]),
+              if (notes.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(notes, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+              ],
+              const SizedBox(height: 20),
+              if (phone.isNotEmpty) ...[
+                Row(children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final uri = Uri(scheme: 'tel', path: phone);
+                        if (await canLaunchUrl(uri)) await launchUrl(uri);
+                      },
+                      icon: const Icon(Icons.call),
+                      label: const Text('Call', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final msg = Uri.encodeComponent('Hello $name, I saw your response to our export demand.');
+                        final uri = Uri.parse('https://wa.me/91${phone.replaceAll(RegExp(r'\D'), '')}?text=$msg');
+                        if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                      icon: const Icon(Icons.message),
+                      label: const Text('Message', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ]),
+              ] else
+                Text('No phone number provided', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
               const SizedBox(height: 8),
             ],
           ),
@@ -496,51 +810,69 @@ class _DemandCardState extends State<_DemandCard> {
                 final rLocation = (r['farmerLocation'] ?? '').toString();
                 final rQty = (r['canSupplyQty'] ?? '').toString();
                 final rNotes = (r['notes'] ?? '').toString();
+                final rPhoto = (r['productPhotoUrl'] ?? '').toString();
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          const Icon(Icons.person, size: 15),
-                          const SizedBox(width: 6),
-                          Text(rName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        ]),
-                        if (rPhone.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Row(children: [
-                            const Icon(Icons.phone, size: 14),
-                            const SizedBox(width: 6),
-                            Text(rPhone, style: const TextStyle(fontSize: 13)),
-                          ]),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _showFarmerContactSheet(context, rName, rPhone, rLocation, rQty, rNotes, rPhoto),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (rPhoto.isNotEmpty)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(rPhoto, width: 54, height: 54, fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                            )
+                          else
+                            Container(
+                              width: 54, height: 54,
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(Icons.person, color: Colors.green.shade300, size: 28),
+                            ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(rName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                if (rPhone.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Row(children: [
+                                    Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
+                                    const SizedBox(width: 4),
+                                    Text(rPhone, style: const TextStyle(fontSize: 12)),
+                                  ]),
+                                ],
+                                if (rLocation.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Row(children: [
+                                    Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
+                                    const SizedBox(width: 4),
+                                    Expanded(child: Text(rLocation, style: const TextStyle(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  ]),
+                                ],
+                                if (rQty.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text('Supply: $rQty', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green)),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 20),
                         ],
-                        if (rLocation.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Row(children: [
-                            const Icon(Icons.location_on, size: 14),
-                            const SizedBox(width: 6),
-                            Text(rLocation, style: const TextStyle(fontSize: 13)),
-                          ]),
-                        ],
-                        if (rQty.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Row(children: [
-                            const Icon(Icons.inventory_2_outlined, size: 14),
-                            const SizedBox(width: 6),
-                            Text('Can supply: $rQty', style: const TextStyle(fontSize: 13)),
-                          ]),
-                        ],
-                        if (rNotes.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(rNotes, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 );

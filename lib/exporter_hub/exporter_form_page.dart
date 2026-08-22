@@ -1,7 +1,5 @@
 // lib/exporter_hub/exporter_form_page.dart
-import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,13 +7,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:http/http.dart' as http;
 
 import 'export_constants.dart';
 import 'exporter_model.dart';
 import 'exporter_service.dart';
 import '../services/image_upload_service.dart';
 import '../l10n/app_localizations.dart';
+import '../labour_hub/location_search_dialog.dart';
 
 class ExporterFormPage extends StatefulWidget {
   final ExportProduct? existingProduct;
@@ -78,8 +76,6 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
 
   final List<String> _categories = ['Crops', 'Fruits', 'Vegetables', 'Grains', 'Spices', 'Other'];
   final List<String?> _grades = [null, 'A', 'B', 'C'];
-
-  static const String _locationIQKey = 'pk.56ccd9d8fb2cd5f3e9d7a656e3b52566';
 
   @override
   void initState() {
@@ -192,89 +188,6 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
 
   // ── Location ──
 
-  Future<void> _openLocationSearchModal() async {
-    final ctrl = TextEditingController();
-    try {
-      final result = await showDialog<Map<String, dynamic>>(
-        context: context,
-        builder: (ctx) {
-          List<dynamic> results = [];
-          bool loading = false;
-          String? error;
-          Timer? debounce;
-
-          Future<void> doSearch(String val, void Function(void Function()) setStateDialog) async {
-            if (val.trim().length < 2) { results = []; error = null; setStateDialog(() {}); return; }
-            loading = true; error = null; setStateDialog(() {});
-            final q = Uri.encodeQueryComponent(val.trim());
-            final url = "https://us1.locationiq.com/v1/search.php?key=$_locationIQKey&q=$q&format=json&limit=8&countrycodes=in";
-            try {
-              final resp = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
-              if (resp.statusCode == 200) {
-                final body = json.decode(resp.body);
-                if (body is List) results = body;
-              }
-            } catch (e) { error = 'Network error'; }
-            finally { loading = false; setStateDialog(() {}); }
-          }
-
-          return StatefulBuilder(
-            builder: (ctx2, setStateDialog) => AlertDialog(
-              title: const Text('Search location'),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 360,
-                child: Column(children: [
-                  TextField(
-                    controller: ctrl,
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Type location...'),
-                    onChanged: (val) {
-                      debounce?.cancel();
-                      debounce = Timer(const Duration(milliseconds: 400), () => doSearch(val, setStateDialog));
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  if (loading) const LinearProgressIndicator(),
-                  if (error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(error!, style: const TextStyle(color: Colors.red))),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: results.isEmpty
-                        ? Center(child: Text(loading ? 'Searching...' : 'No results'))
-                        : ListView.builder(
-                            itemCount: results.length,
-                            itemBuilder: (_, i) {
-                              final r = results[i];
-                              return ListTile(
-                                leading: const Icon(Icons.location_on),
-                                title: Text(r['display_name'], maxLines: 2, overflow: TextOverflow.ellipsis),
-                                onTap: () => Navigator.pop(ctx, {
-                                  'display': r['display_name'],
-                                  'lat': double.tryParse(r['lat']) ?? 0,
-                                  'lon': double.tryParse(r['lon']) ?? 0,
-                                }),
-                              );
-                            },
-                          ),
-                  ),
-                ]),
-              ),
-            ),
-          );
-        },
-      );
-
-      if (result != null) {
-        setState(() {
-          _locationCtrl.text = result['display'];
-          _selectedLat = result['lat'];
-          _selectedLon = result['lon'];
-        });
-      }
-    } finally {
-      ctrl.dispose();
-    }
-  }
 
   Future<void> _detectLocation() async {
     setState(() => _detectingLocation = true);
@@ -441,7 +354,7 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
               _Field(child: TextFormField(
                 controller: _priceCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Price per unit (₹)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Price per unit/KG (₹)', border: OutlineInputBorder()),
               )),
               _Field(child: Row(children: [
                 Expanded(child: TextFormField(
@@ -466,20 +379,98 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(labelText: 'Farmer Mobile', border: OutlineInputBorder()),
               )),
-              _Field(child: Row(children: [
-                Expanded(child: TextFormField(
-                  controller: _locationCtrl,
-                  readOnly: true,
-                  onTap: _openLocationSearchModal,
-                  decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder()),
-                )),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: _detectingLocation ? null : _detectLocation,
-                  icon: const Icon(Icons.my_location, size: 18),
-                  label: Text(_detectingLocation ? 'Detecting' : 'Auto'),
-                ),
-              ])),
+              _Field(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Material(
+                    elevation: 2,
+                    borderRadius: BorderRadius.circular(12),
+                    child: GestureDetector(
+                      onTap: () async {
+                        final result = await showDialog<LocationResult>(
+                          context: context,
+                          builder: (_) => const LocationSearchDialog(),
+                        );
+                        if (result != null && mounted) {
+                          setState(() {
+                            _locationCtrl.text = result.displayName;
+                            _selectedLat = result.lat;
+                            _selectedLon = result.lon;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.location_on_rounded, color: Color(0xFFE65100), size: 22),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _locationCtrl.text.isNotEmpty ? _locationCtrl.text : 'Location (Village / District)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _locationCtrl.text.isNotEmpty ? Colors.black87 : Colors.grey.shade500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+                        ]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final result = await showDialog<LocationResult>(
+                            context: context,
+                            builder: (_) => const LocationSearchDialog(),
+                          );
+                          if (result != null && mounted) {
+                            setState(() {
+                              _locationCtrl.text = result.displayName;
+                              _selectedLat = result.lat;
+                              _selectedLon = result.lon;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.search_rounded, size: 16),
+                        label: const Text('Search Place', style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.green.shade700,
+                          side: BorderSide(color: Colors.green.shade700),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _detectingLocation ? null : _detectLocation,
+                        icon: _detectingLocation
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.my_location_rounded, size: 16),
+                        label: Text(_detectingLocation ? 'Locating…' : 'Use GPS',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1565C0),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ]),
+                ],
+              )),
               _Field(child: TextFormField(
                 controller: _descriptionCtrl,
                 maxLines: 3,

@@ -289,7 +289,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: _isAdmin ? null : FloatingActionButton.extended(
         onPressed: () {
           if (user == null) {
             ScaffoldMessenger.of(context).showSnackBar(
