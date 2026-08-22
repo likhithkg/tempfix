@@ -202,17 +202,26 @@ class _ChatbotPageState extends State<ChatbotPage> {
     String reply;
     String? matchedCategory;
 
-    final match = _engine.search(text, _entries);
-    if (match != null) {
-      matchedCategory = '${match.categoryEmoji} ${match.category}';
-      if (_lang == 'en') {
-        reply = match.getAnswer('en');
+    try {
+      final currentMessages = _current!.messages;
+
+      final match = _engine.search(text, _entries);
+      if (match != null) {
+        matchedCategory = '${match.categoryEmoji} ${match.category}';
+        if (_lang == 'en') {
+          reply = match.getAnswer('en');
+        } else {
+          reply = await _service.getBotReplyWithContext(
+              text, _lang, match.getAnswer('en'), currentMessages);
+        }
       } else {
-        reply = await _service.getBotReplyWithContext(
-            text, _lang, match.getAnswer('en'));
+        reply = await _service.getBotReply(text, _lang, currentMessages);
       }
-    } else {
-      reply = await _service.getBotReply(text, _lang);
+    } catch (e) {
+      reply = 'Sorry, something went wrong. Please try again.';
+      debugPrint('KM Chatbot _send error: $e');
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
 
     final botMsg = ChatMessage(
@@ -231,7 +240,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
     if (!mounted) return;
     setState(() {
       _current = conv;
-      _sending = false;
       _syncHistory(conv);
     });
 
@@ -294,7 +302,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.bold)),
-        Text('Powered by Gemini',
+        Text('Agriculture Assistant',
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.75), fontSize: 11)),
       ]),

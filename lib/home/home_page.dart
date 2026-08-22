@@ -70,8 +70,16 @@ class _KrishiMithraHomeState extends State<KrishiMithraHome> {
             label: l.greenBazaar,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.local_shipping_outlined),
-            selectedIcon: Icon(Icons.local_shipping_rounded, color: cs.primary),
+            icon: Stack(clipBehavior: Clip.none, children: [
+              const Icon(Icons.local_shipping_outlined),
+              const Positioned(right: -4, bottom: -4,
+                  child: Icon(Icons.lock, size: 12, color: Colors.grey)),
+            ]),
+            selectedIcon: Stack(clipBehavior: Clip.none, children: [
+              Icon(Icons.local_shipping_rounded, color: cs.primary),
+              const Positioned(right: -4, bottom: -4,
+                  child: Icon(Icons.lock, size: 12, color: Colors.grey)),
+            ]),
             label: l.exportHub,
           ),
           NavigationDestination(
@@ -382,13 +390,13 @@ class _HomeTabState extends State<HomeTab> {
             SliverToBoxAdapter(child: _buildSectionHeader(context, l.smartServices, null, cs)),
             SliverToBoxAdapter(child: _buildSmartServices(context, l)),
 
-            // ── 6. EXPORT OPPORTUNITIES ─────────────────────────────────────
+            // ── 6. PLANT VENDORS ────────────────────────────────────────────
             SliverToBoxAdapter(
-              child: _buildSectionHeader(context, l.exportOpportunities, () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ExporterHomePage()));
+              child: _buildSectionHeader(context, l.plantVendors, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
               }, cs),
             ),
-            SliverToBoxAdapter(child: _buildExportOpportunities(context, l, cs)),
+            SliverToBoxAdapter(child: _buildPlantVendorsSection(context, l, cs)),
 
             // ── 7. GREENBAZAAR HIGHLIGHTS ───────────────────────────────────
             SliverToBoxAdapter(
@@ -657,18 +665,15 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // ── Export Opportunities ──────────────────────────────────────────────────
-  Widget _buildExportOpportunities(BuildContext context, AppLocalizations l, ColorScheme cs) {
+  // ── Plant Vendors ─────────────────────────────────────────────────────────
+  Widget _buildPlantVendorsSection(BuildContext context, AppLocalizations l, ColorScheme cs) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _db.collection('export_products')
-          .orderBy('createdAt', descending: true)
-          .limit(8)
-          .snapshots(),
+      stream: _db.collection('plant_vendors').limit(8).snapshots(),
       builder: (_, snap) {
         if (snap.connectionState == ConnectionState.waiting) return _shimmerRow();
         final docs = snap.data?.docs ?? [];
         if (docs.isEmpty) {
-          return _emptyHorizontalSection(l.exportOpportunities, Icons.local_shipping_outlined);
+          return _emptyHorizontalSection(l.plantVendors, Icons.local_florist_outlined);
         }
         return SizedBox(
           height: 188,
@@ -680,13 +685,13 @@ class _HomeTabState extends State<HomeTab> {
             itemBuilder: (_, i) {
               final d = docs[i].data() as Map<String, dynamic>;
               return _ProductCard(
-                imageUrl: d['primaryImage']?.toString() ?? '',
-                name: d['productName']?.toString() ?? '',
-                detail: '${d['quantity'] ?? ''} · ₹${d['pricePerUnit'] ?? ''}',
-                badge: d['grade']?.toString(),
-                badgeColor: cs.primary,
+                imageUrl: d['imageUrl']?.toString() ?? d['primaryImage']?.toString() ?? '',
+                name: d['plantName']?.toString() ?? d['name']?.toString() ?? '',
+                detail: '₹${d['price']?.toString() ?? d['pricePerUnit']?.toString() ?? ''}',
+                badge: d['type']?.toString() ?? d['category']?.toString(),
+                badgeColor: Colors.green,
                 onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const ExporterHomePage())),
+                    MaterialPageRoute(builder: (_) => const PlantVendorHome())),
               );
             },
           ),

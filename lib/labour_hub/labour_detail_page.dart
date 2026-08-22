@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
+import 'labour_profile_form_page.dart';
 import 'labour_review_model.dart';
 
 const _kP1 = Color(0xFF1B5E20);
@@ -141,21 +142,36 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              if (isOwn)
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded, color: Colors.white),
+                  tooltip: 'Edit my card',
+                  onPressed: () async {
+                    final nav = Navigator.of(context);
+                    final updated = await nav.push<bool>(
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              LabourProfileFormPage(existing: p)),
+                    );
+                    if (updated == true && mounted) nav.pop();
+                  },
+                ),
               IconButton(
                 icon: const Icon(Icons.share_rounded, color: Colors.white),
                 onPressed: _share,
               ),
-              IconButton(
-                icon: Icon(
-                    _isFav
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: _isFav ? Colors.red.shade300 : Colors.white),
-                onPressed: () async {
-                  await _service.toggleFavourite(p.id);
-                  setState(() => _isFav = !_isFav);
-                },
-              ),
+              if (!isOwn)
+                IconButton(
+                  icon: Icon(
+                      _isFav
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: _isFav ? Colors.red.shade300 : Colors.white),
+                  onPressed: () async {
+                    await _service.toggleFavourite(p.id);
+                    setState(() => _isFav = !_isFav);
+                  },
+                ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(

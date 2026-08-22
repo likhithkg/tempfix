@@ -122,8 +122,9 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                         }
                       }
 
-                      // fallback
-                      return 'Order ${id.length >= 6 ? id.substring(0, 6) : id}';
+                      // fallback: show buyer name if available, else generic label
+                      final buyer = (order['buyerName'] ?? '').toString().trim();
+                      return buyer.isNotEmpty ? 'Order from $buyer' : 'Order from Exporter';
                     }
 
                     final rawCropName = extractCropName(m);
@@ -174,7 +175,9 @@ class _SellerPurchaseOrderListPageState extends State<SellerPurchaseOrderListPag
                       stream: respStream,
                       builder: (context, rs) {
                         final l = AppLocalizations.of(context)!;
-                        Widget subtitle = Text('${l.totalLabel} ₹$total  •  ${l.statusLabel} ${_localizedStatus(l, status)}\n$when');
+                        final buyerName = (m['buyerName'] ?? '').toString().trim();
+                        final buyerLine = buyerName.isNotEmpty ? 'From: $buyerName\n' : '';
+                        Widget subtitle = Text('$buyerLine${l.totalLabel} ₹$total  •  ${_localizedStatus(l, status)}\n$when');
 
                         if (rs.hasData && rs.data!.docs.isNotEmpty) {
                           final rd = rs.data!.docs.first;

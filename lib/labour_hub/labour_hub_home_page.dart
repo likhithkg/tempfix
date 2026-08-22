@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'labour_detail_page.dart';
+import 'labour_profile_form_page.dart';
 import 'saved_workers_page.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
@@ -127,6 +129,24 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
     } catch (_) {}
   }
 
+  Future<void> _openMyCard(BuildContext ctx) async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+        content: Text('Please sign in to manage your worker card'),
+        backgroundColor: _kOrange,
+      ));
+      return;
+    }
+    final nav = Navigator.of(ctx);
+    final existing = await _service.getMyProfile();
+    if (!mounted) return;
+    await nav.push(
+      MaterialPageRoute(
+          builder: (_) => LabourProfileFormPage(existing: existing)),
+    );
+    if (mounted) setState(() {});
+  }
+
   void _showFilterSheet() {
     showModalBottomSheet(
       context: context,
@@ -147,6 +167,13 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7F2),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openMyCard(context),
+        backgroundColor: _kP2,
+        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+        label: const Text('My Worker Card',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
       body: NestedScrollView(
         headerSliverBuilder: (ctx, _) => [
           SliverAppBar(
@@ -478,14 +505,6 @@ class _WorkersTabState extends State<_WorkersTab>
 
         return CustomScrollView(
           slivers: [
-            // Skill chips
-            SliverToBoxAdapter(
-              child: _SkillChips(
-                selected: widget.filter.skill,
-                onSelect: widget.onSkillChange,
-              ),
-            ),
-
             // Active filter indicator
             if (widget.filter.activeCount > 0)
               SliverToBoxAdapter(

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'export_constants.dart';
 import 'exporter_service.dart';
 import 'exporter_model.dart';
 import 'exporter_form_page.dart';
@@ -17,6 +18,7 @@ import 'export_documents_page.dart';
 import 'buyers_page.dart';
 import 'finance_dashboard.dart';
 import 'notifications_page.dart';
+import 'create_purchase_order_page.dart';
 import 'ai_insights_page.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
@@ -141,15 +143,20 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                       case 'buyer':
                         if (user == null) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
+                        } else if (_isAdmin) {
+                          Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => const PurchaseOrderListPage(isAdmin: true)));
                         } else {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PurchaseOrderListPage()));
+                          Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => const SellerPurchaseOrderListPage()));
                         }
                     }
                   },
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 'map', child: Row(children: [const Icon(Icons.map_outlined, size: 18), const SizedBox(width: 10), Text(l.openMap)])),
                     PopupMenuItem(value: 'nearby', child: Row(children: [const Icon(Icons.people_outline, size: 18), const SizedBox(width: 10), Text(l.nearbyFarmersList)])),
-                    PopupMenuItem(value: 'seller', child: Row(children: [const Icon(Icons.receipt_long_outlined, size: 18), const SizedBox(width: 10), Text(l.sellingOrders)])),
+                    if (!_isAdmin)
+                      PopupMenuItem(value: 'seller', child: Row(children: [const Icon(Icons.receipt_long_outlined, size: 18), const SizedBox(width: 10), Text(l.sellingOrders)])),
                     PopupMenuItem(value: 'buyer', child: Row(children: [const Icon(Icons.shopping_bag_outlined, size: 18), const SizedBox(width: 10), Text(l.verifiedBuyersTab)])),
                   ],
                 ),
@@ -206,58 +213,74 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               child: _OperationsHub(isAdmin: _isAdmin, user: user),
             ),
 
-            // ── Section 1: Recently Listed ──
-            _SectionHeader(
-              title: l.recentlyListedProduce,
-              icon: Icons.new_releases_outlined,
-              onViewAll: () => _showAllProducts(context, user),
-            ),
-            SliverToBoxAdapter(
-              child: _HorizontalProductScroll(
-                stream: _service.streamRecentListings(limit: 10),
-                emptyLabel: l.noProcurementItems,
-                onTap: (p) => _showDetail(context, p, user),
+            // ── Section 0: My Listings — only for admin (quick horizontal preview) ──
+            // Farmers see their full list below in the searchable section instead.
+            if (_isAdmin && user != null) ...[
+              _SectionHeader(
+                title: 'My Listings',
+                icon: Icons.person_outline,
+                onViewAll: null,
               ),
-            ),
-
-            // ── Section 2: High Quantity ──
-            _SectionHeader(
-              title: l.highQuantityListings,
-              icon: Icons.inventory_2_outlined,
-              onViewAll: () => _showAllProducts(context, user),
-            ),
-            SliverToBoxAdapter(
-              child: _HorizontalProductScroll(
-                stream: _service.streamHighQuantityListings(limit: 10),
-                emptyLabel: l.noProcurementItems,
-                onTap: (p) => _showDetail(context, p, user),
+              SliverToBoxAdapter(
+                child: _HorizontalProductScroll(
+                  stream: _service.getMyExportProducts(user.uid),
+                  emptyLabel: 'You have no listings yet. Tap + Add Listing to get started.',
+                  onTap: (p) => _showDetail(context, p, user),
+                ),
               ),
-            ),
+            ],
 
-            // ── Section 3: Export Ready ──
-            _SectionHeader(
-              title: l.exportReadyProduce,
-              icon: Icons.verified_outlined,
-              onViewAll: () => _showAllProducts(context, user),
-            ),
-            SliverToBoxAdapter(
-              child: _HorizontalProductScroll(
-                stream: _service.streamExportReadyListings(limit: 10),
-                emptyLabel: l.noProcurementItems,
-                onTap: (p) => _showDetail(context, p, user),
+            // ── Admin-only sections: global marketplace view ──
+            if (_isAdmin) ...[
+              _SectionHeader(
+                title: l.recentlyListedProduce,
+                icon: Icons.new_releases_outlined,
+                onViewAll: () => _showAllProducts(context, user),
               ),
-            ),
+              SliverToBoxAdapter(
+                child: _HorizontalProductScroll(
+                  stream: _service.streamRecentListings(limit: 10),
+                  emptyLabel: l.noProcurementItems,
+                  onTap: (p) => _showDetail(context, p, user),
+                ),
+              ),
+              _SectionHeader(
+                title: l.highQuantityListings,
+                icon: Icons.inventory_2_outlined,
+                onViewAll: () => _showAllProducts(context, user),
+              ),
+              SliverToBoxAdapter(
+                child: _HorizontalProductScroll(
+                  stream: _service.streamHighQuantityListings(limit: 10),
+                  emptyLabel: l.noProcurementItems,
+                  onTap: (p) => _showDetail(context, p, user),
+                ),
+              ),
+              _SectionHeader(
+                title: l.exportReadyProduce,
+                icon: Icons.verified_outlined,
+                onViewAll: () => _showAllProducts(context, user),
+              ),
+              SliverToBoxAdapter(
+                child: _HorizontalProductScroll(
+                  stream: _service.streamExportReadyListings(limit: 10),
+                  emptyLabel: l.noProcurementItems,
+                  onTap: (p) => _showDetail(context, p, user),
+                ),
+              ),
+            ],
 
-            // ── Section 4: All Listings ──
+            // ── All Listings (admin: all products; farmer: own products only) ──
             _SectionHeader(
-              title: l.cropsTab,
+              title: _isAdmin ? l.cropsTab : 'My Listed Products',
               icon: Icons.local_florist_outlined,
-              onViewAll: null,
+              onViewAll: _isAdmin ? () => _showAllProducts(context, user) : null,
             ),
             SliverToBoxAdapter(
               child: _AllListingsView(
                 service: _service,
                 user: user,
+                isAdmin: _isAdmin,
                 onTap: (p) => _showDetail(context, p, user),
               ),
             ),
@@ -297,7 +320,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     final langCode = Localizations.localeOf(context).languageCode;
     final name = ContentTranslationService.translateCropName(p.productName, langCode);
     final loc = ContentTranslationService.translateLocation(p.location, langCode);
-    final isOwner = user != null && p.ownerId == user.uid;
+    final isOwner = user != null && p.sellerUid == user.uid;
 
     Navigator.push(context, MaterialPageRoute(
       builder: (_) => ProductDetailPage(
@@ -326,26 +349,22 @@ class _OperationsHub extends StatelessWidget {
     final tiles = <_OpTileData>[
       _OpTileData(
         icon: Icons.pending_actions_outlined,
-        label: l.purchaseOrderTitle,
+        // Admin → all orders in system; Farmer → incoming POs on their produce
+        label: isAdmin ? 'All Orders' : 'Purchase Orders',
         color: Colors.orange,
         onTap: () {
           if (user == null) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
             return;
           }
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const PurchaseOrderListPage()));
-        },
-      ),
-      _OpTileData(
-        icon: Icons.receipt_long_outlined,
-        label: l.sellingOrders,
-        color: Colors.teal,
-        onTap: () {
-          if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewSeller)));
-            return;
+          if (isAdmin) {
+            Navigator.push(context, MaterialPageRoute(
+                builder: (_) => PurchaseOrderListPage(isAdmin: true)));
+          } else {
+            // Farmers: see orders raised against their listings (admin's POs appear here)
+            Navigator.push(context, MaterialPageRoute(
+                builder: (_) => const SellerPurchaseOrderListPage()));
           }
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
         },
       ),
       _OpTileData(
@@ -769,9 +788,15 @@ class _ShimmerCard extends StatelessWidget {
 class _AllListingsView extends StatefulWidget {
   final ExporterService service;
   final User? user;
+  final bool isAdmin;
   final void Function(ExportProduct) onTap;
 
-  const _AllListingsView({required this.service, required this.user, required this.onTap});
+  const _AllListingsView({
+    required this.service,
+    required this.user,
+    required this.isAdmin,
+    required this.onTap,
+  });
 
   @override
   State<_AllListingsView> createState() => _AllListingsViewState();
@@ -780,13 +805,13 @@ class _AllListingsView extends StatefulWidget {
 class _AllListingsViewState extends State<_AllListingsView> {
   String _query = '';
   String _selectedCategory = 'all';
-  final _categories = ['all', 'fruits', 'vegetables', 'grains', 'other'];
+  final _categories = ['all', ...ExportCategories.all];
 
   List<ExportProduct> _filter(List<ExportProduct> all) {
     final q = _query.toLowerCase();
     return all.where((p) {
-      final cat = p.category.toLowerCase();
-      if (_selectedCategory != 'all' && cat != _selectedCategory) return false;
+      if (_selectedCategory != 'all' &&
+          p.category.toLowerCase() != _selectedCategory.toLowerCase()) { return false; }
       if (q.isEmpty) return true;
       return p.productName.toLowerCase().contains(q) ||
           p.farmerName.toLowerCase().contains(q) ||
@@ -825,7 +850,7 @@ class _AllListingsViewState extends State<_AllListingsView> {
             separatorBuilder: (_, __) => const SizedBox(width: 6),
             itemBuilder: (_, i) {
               final c = _categories[i];
-              final label = c == 'all' ? l.cropsTab : (c[0].toUpperCase() + c.substring(1));
+              final label = c == 'all' ? l.cropsTab : c;
               return ChoiceChip(
                 label: Text(label, style: const TextStyle(fontSize: 12)),
                 selected: c == _selectedCategory,
@@ -836,7 +861,11 @@ class _AllListingsViewState extends State<_AllListingsView> {
         ),
         const SizedBox(height: 8),
         StreamBuilder<List<ExportProduct>>(
-          stream: widget.service.getExportProducts(),
+          stream: widget.isAdmin
+              ? widget.service.getExportProducts()
+              : (widget.user != null
+                  ? widget.service.getMyExportProducts(widget.user!.uid)
+                  : const Stream.empty()),
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
               return const Padding(
@@ -846,7 +875,10 @@ class _AllListingsViewState extends State<_AllListingsView> {
             if (filtered.isEmpty) {
               return Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Center(child: Text(l.noExportProductsFound)));
+                  child: Center(
+                      child: Text(widget.isAdmin
+                          ? l.noExportProductsFound
+                          : 'You have no listings yet. Tap + Add Listing to get started.')));
             }
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -913,7 +945,7 @@ class _ListingRow extends StatelessWidget {
     final langCode = Localizations.localeOf(context).languageCode;
     final name = ContentTranslationService.translateCropName(product.productName, langCode);
     final loc = ContentTranslationService.translateLocation(product.location, langCode);
-    final isOwner = user != null && product.ownerId == user!.uid;
+    final isOwner = user != null && product.sellerUid == user!.uid;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -1131,8 +1163,8 @@ class ProductDetailPage extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // Owner action
-                if (isOwner)
+                // Action buttons
+                if (isOwner) ...[
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -1143,6 +1175,35 @@ class ProductDetailPage extends StatelessWidget {
                       label: Text(l.edit),
                     ),
                   ),
+                ] else ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please sign in to place an order')));
+                          return;
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  CreatePurchaseOrderPage(listingData: product)),
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart_checkout),
+                      label: const Text('Place Order',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 40),
               ]),

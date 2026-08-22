@@ -1,17 +1,17 @@
 // lib/labour_hub/labour_hub_form_page.dart
 
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'labour_model.dart';
 import 'labour_hub_service.dart';
+import 'location_search_dialog.dart';
 
 import '../services/image_upload_service.dart';
 import '../l10n/app_localizations.dart';
@@ -101,14 +101,7 @@ class _LabourHubFormPageState
   ];
 
   bool _available = true;
-
-  final String _locationIqKey =
-      "pk.56ccd9d8fb2cd5f3e9d7a656e3b52566";
-
-  Timer? _debounce;
-
-  List<Map<String, String>>
-      _suggestions = [];
+  bool _locating = false;
 
   double? _selectedLat;
 
@@ -167,121 +160,70 @@ class _LabourHubFormPageState
           l.imageUrl;
     }
 
-    _locationController
-        .addListener(() {
-      _onLocationChanged(
-        _locationController.text
-            .trim(),
-      );
-    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-
     _skillController.dispose();
-
     _locationController.dispose();
-
     _contactController.dispose();
-
     _experienceController.dispose();
-
     _wageController.dispose();
-
     _descriptionController.dispose();
-
     super.dispose();
   }
 
-  void _onLocationChanged(
-      String query) {
-    _selectedLat = null;
-
-    _selectedLng = null;
-
-    if (_debounce?.isActive ??
-        false) {
-      _debounce!.cancel();
-    }
-
-    _debounce = Timer(
-      const Duration(
-          milliseconds: 350),
-      () {
-        if (query.length < 2) {
-          setState(() =>
-              _suggestions = []);
-
-          return;
-        }
-
-        _fetchLocationSuggestions(
-            query);
-      },
+  Future<void> _openLocationSearch() async {
+    final result = await showDialog<LocationResult>(
+      context: context,
+      builder: (_) => const LocationSearchDialog(),
     );
+    if (result != null && mounted) {
+      setState(() {
+        _locationController.text = result.displayName;
+        _selectedLat = result.lat;
+        _selectedLng = result.lon;
+      });
+    }
   }
 
-  Future<void>
-      _fetchLocationSuggestions(
-          String query) async {
-    final url =
-        'https://us1.locationiq.com/v1/autocomplete.php?key=$_locationIqKey&q=${Uri.encodeComponent(query)}&limit=6';
-
+  Future<void> _useGPS() async {
+    setState(() => _locating = true);
     try {
-      final res = await http.get(
-        Uri.parse(url),
-      );
-
-      if (res.statusCode == 200) {
-        final List data =
-            jsonDecode(res.body);
-
-        final items =
-            data.map<
-                Map<String, String>>(
-          (e) {
-            return {
-              'display_name':
-                  (e['display_name'] ??
-                          '')
-                      .toString(),
-              'lat':
-                  (e['lat'] ?? '')
-                      .toString(),
-              'lon':
-                  (e['lon'] ?? '')
-                      .toString(),
-            };
-          },
-        ).toList();
-
-        final seen = <String>{};
-
-        final deduped =
-            <Map<String, String>>[];
-
-        for (final i in items) {
-          if (!seen.contains(
-              i['display_name'])) {
-            seen.add(
-                i['display_name']!);
-
-            deduped.add(i);
-          }
+      final perm = await Geolocator.requestPermission();
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission denied')),
+          );
         }
-
-        setState(
-            () => _suggestions =
-                deduped);
-      } else {
-        setState(() =>
-            _suggestions = []);
+        return;
       }
-    } catch (e) {
-      setState(() =>
-          _suggestions = []);
+      final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.medium));
+      final places = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+      if (places.isNotEmpty && mounted) {
+        final pl = places.first;
+        final loc = [pl.subLocality, pl.locality, pl.administrativeArea]
+            .where((s) => s != null && s.isNotEmpty)
+            .join(', ');
+        setState(() {
+          _locationController.text = loc;
+          _selectedLat = pos.latitude;
+          _selectedLng = pos.longitude;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not get location')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
     }
   }
 
@@ -626,83 +568,88 @@ class _LabourHubFormPageState
               const SizedBox(
                   height: 14),
 
-              _input(
-                controller:
-                    _locationController,
-                label: "Location",
-                icon:
-                    Icons.location_on,
-                validator: (v) =>
-                    v == null ||
-                            v.trim()
-                                .isEmpty
-                        ? "Enter location"
-                        : null,
-              ),
-
-              if (_suggestions
-                  .isNotEmpty)
-                Container(
-                  margin:
-                      const EdgeInsets
-                          .only(top: 6),
-                  padding:
-                      const EdgeInsets
-                          .all(6),
-                  decoration:
-                      BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                                14),
-                    border: Border.all(
-                      color: Colors
-                          .green
-                          .shade100,
+              // ── Location picker ──────────────────────────────────────
+              Material(
+                elevation: 2,
+                borderRadius: BorderRadius.circular(16),
+                child: GestureDetector(
+                  onTap: _openLocationSearch,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                  child: Column(
-                    children:
-                        _suggestions.map(
-                      (s) {
-                        return ListTile(
-                          title: Text(
-                            s['display_name']!,
-                            maxLines: 2,
-                            overflow:
-                                TextOverflow
-                                    .ellipsis,
+                    child: Row(children: [
+                      const Icon(Icons.location_on_rounded,
+                          color: Color(0xFFE65100), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _locationController.text.isNotEmpty
+                              ? _locationController.text
+                              : 'Location',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _locationController.text.isNotEmpty
+                                ? Colors.black87
+                                : Colors.grey.shade500,
                           ),
-                          onTap: () {
-                            _locationController
-                                    .text =
-                                s[
-                                    'display_name']!;
-
-                            _selectedLat =
-                                double.tryParse(
-                              s['lat']!,
-                            );
-
-                            _selectedLng =
-                                double.tryParse(
-                              s['lon']!,
-                            );
-
-                            setState(
-                                () =>
-                                    _suggestions =
-                                        []);
-                          },
-                        );
-                      },
-                    ).toList(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(Icons.search_rounded,
+                          color: Colors.grey.shade400, size: 20),
+                    ]),
                   ),
                 ),
+              ),
 
-              const SizedBox(
-                  height: 14),
+              const SizedBox(height: 10),
+
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _openLocationSearch,
+                    icon: const Icon(Icons.search_rounded, size: 16),
+                    label: const Text('Search Place',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.green.shade700,
+                      side: BorderSide(color: Colors.green.shade700),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _locating ? null : _useGPS,
+                    icon: _locating
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.my_location_rounded, size: 16),
+                    label: Text(_locating ? 'Locating…' : 'Use GPS',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1565C0),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ]),
+
+              const SizedBox(height: 14),
 
               _input(
                 controller:

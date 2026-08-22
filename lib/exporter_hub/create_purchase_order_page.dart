@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'exporter_model.dart';
 import 'exporter_service.dart';
+import 'notifications_page.dart';
 import 'purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 
@@ -79,10 +80,11 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
       }
       final total = qty * price;
 
-      // items: include client-side timestamp (safe inside arrays)
+      // items: include product name so seller dashboard can display it
       final items = [
         {
           'listingId': widget.listingData.id,
+          'productName': widget.listingData.productName,
           'qtyKg': qty,
           'pricePerKg': price,
           'createdAt': Timestamp.now(),
@@ -100,17 +102,28 @@ class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
         paymentTerms: {'advancePercent': 0},
       );
 
+      // Notify the seller about the new PO
+      final sellerId = widget.listingData.sellerUid;
+      if (sellerId.isNotEmpty) {
+        NotificationService.send(
+          userId: sellerId,
+          type: 'new_purchase_order',
+          title: 'New Order Request',
+          body:
+              '${buyerName.isNotEmpty ? buyerName : 'A buyer'} has placed an order for ${widget.listingData.productName}.',
+          referenceId: docRef.id,
+          referenceType: 'purchase_order',
+        ).catchError((_) {}); // fire-and-forget; don't block the UX
+      }
+
       if (!mounted) return;
       setState(() => _isSubmitting = false);
 
-      // clear the form (optional nicety)
-      _qtyCtrl.clear();
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase order created successfully: ${docRef.id}')),
+        const SnackBar(content: Text('Order request sent! The seller has been notified.')),
       );
 
-      // Navigate to the Purchase Order list as buyer
+      // Navigate to the buyer's PO list
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => PurchaseOrderListPage(buyerId: user.uid)),

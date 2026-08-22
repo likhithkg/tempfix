@@ -311,6 +311,9 @@ class _DemandCardState extends State<_DemandCard> {
 
     // Show response sheet
     final l = AppLocalizations.of(context)!;
+    final farmerNameCtrl = TextEditingController(text: user.displayName ?? '');
+    final phoneCtrl = TextEditingController();
+    final locationCtrl = TextEditingController();
     final quantityCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
 
@@ -320,13 +323,32 @@ class _DemandCardState extends State<_DemandCard> {
       useSafeArea: true,
       builder: (_) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l.respondToDemand, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: farmerNameCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Your Name', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                    labelText: 'Phone Number', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: locationCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Location (Village / District)', border: OutlineInputBorder()),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: quantityCtrl,
@@ -352,7 +374,11 @@ class _DemandCardState extends State<_DemandCard> {
                         'responses': FieldValue.arrayUnion([
                           {
                             'farmerId': user.uid,
-                            'farmerName': user.displayName ?? user.email ?? user.uid,
+                            'farmerName': farmerNameCtrl.text.trim().isNotEmpty
+                                ? farmerNameCtrl.text.trim()
+                                : (user.displayName ?? user.email ?? user.uid),
+                            'farmerPhone': phoneCtrl.text.trim(),
+                            'farmerLocation': locationCtrl.text.trim(),
                             'canSupplyQty': quantityCtrl.text.trim(),
                             'notes': notesCtrl.text.trim(),
                             'respondedAt': DateTime.now().toIso8601String(),
@@ -370,6 +396,9 @@ class _DemandCardState extends State<_DemandCard> {
                       }
                     } finally {
                       if (mounted) setState(() => _responding = false);
+                      farmerNameCtrl.dispose();
+                      phoneCtrl.dispose();
+                      locationCtrl.dispose();
                       quantityCtrl.dispose();
                       notesCtrl.dispose();
                     }
@@ -377,6 +406,7 @@ class _DemandCardState extends State<_DemandCard> {
                   child: Text(l.submitResponse),
                 ),
               ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -461,17 +491,58 @@ class _DemandCardState extends State<_DemandCard> {
               Text(l.farmerResponses, style: const TextStyle(fontWeight: FontWeight.bold)),
               ...responses.map((r) {
                 if (r is! Map) return const SizedBox.shrink();
+                final rName = (r['farmerName'] ?? 'Farmer').toString();
+                final rPhone = (r['farmerPhone'] ?? '').toString();
+                final rLocation = (r['farmerLocation'] ?? '').toString();
+                final rQty = (r['canSupplyQty'] ?? '').toString();
+                final rNotes = (r['notes'] ?? '').toString();
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(children: [
-                    const Icon(Icons.person_outline, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text(
-                      '${r['farmerName'] ?? 'Farmer'} — ${r['canSupplyQty'] ?? ''}'
-                      '${(r['notes'] ?? '').toString().isNotEmpty ? ' (${r['notes']})' : ''}',
-                      style: const TextStyle(fontSize: 13),
-                    )),
-                  ]),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          const Icon(Icons.person, size: 15),
+                          const SizedBox(width: 6),
+                          Text(rName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        ]),
+                        if (rPhone.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Row(children: [
+                            const Icon(Icons.phone, size: 14),
+                            const SizedBox(width: 6),
+                            Text(rPhone, style: const TextStyle(fontSize: 13)),
+                          ]),
+                        ],
+                        if (rLocation.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Row(children: [
+                            const Icon(Icons.location_on, size: 14),
+                            const SizedBox(width: 6),
+                            Text(rLocation, style: const TextStyle(fontSize: 13)),
+                          ]),
+                        ],
+                        if (rQty.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Row(children: [
+                            const Icon(Icons.inventory_2_outlined, size: 14),
+                            const SizedBox(width: 6),
+                            Text('Can supply: $rQty', style: const TextStyle(fontSize: 13)),
+                          ]),
+                        ],
+                        if (rNotes.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(rNotes, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        ],
+                      ],
+                    ),
+                  ),
                 );
               }),
             ],

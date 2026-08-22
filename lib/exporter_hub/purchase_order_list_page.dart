@@ -7,12 +7,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../l10n/app_localizations.dart';
 
 /// PurchaseOrderListPage
-/// - If `buyerId` is provided, it will show orders for that buyerId.
-/// - If `buyerId` is null, it will use the currently authenticated user.
-/// - If no user is signed in, shows a friendly prompt and a button to open login.
+/// - `isAdmin: true` → streams ALL purchase orders (admin oversight mode).
+/// - `buyerId` → show orders for that specific buyer.
+/// - If both are omitted, uses the signed-in user's UID as buyerId.
 class PurchaseOrderListPage extends StatefulWidget {
   final String? buyerId;
-  const PurchaseOrderListPage({super.key, this.buyerId});
+  final bool isAdmin;
+  const PurchaseOrderListPage({super.key, this.buyerId, this.isAdmin = false});
 
   @override
   State<PurchaseOrderListPage> createState() => _PurchaseOrderListPageState();
@@ -153,13 +154,15 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.myPurchaseOrdersTitle),
+        title: Text(widget.isAdmin ? 'All Purchase Orders' : AppLocalizations.of(context)!.myPurchaseOrdersTitle),
         backgroundColor: Colors.green,
       ),
-      body: effectiveBuyerId == null
+      body: (!widget.isAdmin && effectiveBuyerId == null)
           ? _buildNotSignedIn(context)
           : StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _svc.streamPOsForBuyer(effectiveBuyerId),
+              stream: widget.isAdmin
+                  ? _svc.streamAllPOs()
+                  : _svc.streamPOsForBuyer(effectiveBuyerId!),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

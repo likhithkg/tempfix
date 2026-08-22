@@ -11,7 +11,6 @@ import '../exporter_hub/exporter_service.dart';
 import '../exporter_hub/exporter_form_page.dart';
 import '../exporter_hub/nearby_farmers_map_page.dart';
 import 'f2b_farmer_dashboard.dart';
-import '../exporter_hub/purchase_order_list_page.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 import '../services/content_translation_service.dart';
@@ -233,7 +232,8 @@ class _F2BHomePageState extends State<F2BHomePage> {
   void _editProduct(BuildContext ctx, ExportProduct p) {
     Navigator.push(ctx,
         MaterialPageRoute(
-            builder: (_) => ExporterFormPage(existingProduct: p)));
+            builder: (_) => ExporterFormPage(
+                existingProduct: p, listingSource: 'f2b_mart')));
   }
 
   Future<void> _deleteProduct(BuildContext ctx, ExportProduct p) async {
@@ -439,7 +439,9 @@ class _F2BHomePageState extends State<F2BHomePage> {
           isDark ? KMColors.backgroundDark : const Color(0xFFF3F6F3),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const ExporterFormPage())),
+            MaterialPageRoute(
+                builder: (_) =>
+                    const ExporterFormPage(listingSource: 'f2b_mart'))),
         icon: const Icon(Icons.add_rounded),
         label: Text(l.listProduce),
         backgroundColor: KMColors.primary,
@@ -458,9 +460,6 @@ class _F2BHomePageState extends State<F2BHomePage> {
             onSellerOrders: () => Navigator.push(context,
                 MaterialPageRoute(
                     builder: (_) => const F2BSellerOrdersPage())),
-            onOrders: () => Navigator.push(context,
-                MaterialPageRoute(
-                    builder: (_) => const PurchaseOrderListPage())),
             onDashboard: () => Navigator.push(context,
                 MaterialPageRoute(
                     builder: (_) => const F2BFarmerDashboard())),
@@ -474,7 +473,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
           ),
           Expanded(
             child: StreamBuilder<List<ExportProduct>>(
-              stream: _service.getExportProducts(),
+              stream: _service.getF2BProducts(),
               builder: (ctx, snap) {
                 if (snap.hasError) {
                   return Center(
@@ -716,7 +715,7 @@ class _GBHeader extends StatelessWidget {
   final int cartCount;
   final int newOrderCount;
   final VoidCallback onWishlist, onCart, onSellerOrders,
-      onOrders, onDashboard, onMap;
+      onDashboard, onMap;
   const _GBHeader({
     required this.topPad,
     required this.cartCount,
@@ -724,7 +723,6 @@ class _GBHeader extends StatelessWidget {
     required this.onWishlist,
     required this.onCart,
     required this.onSellerOrders,
-    required this.onOrders,
     required this.onDashboard,
     required this.onMap,
   });
@@ -812,9 +810,6 @@ class _GBHeader extends StatelessWidget {
         IconButton(
             icon: const Icon(Icons.favorite_border_rounded, size: 22),
             color: Colors.white, tooltip: 'Wishlist', onPressed: onWishlist),
-        IconButton(
-            icon: const Icon(Icons.shopping_bag_outlined, size: 22),
-            color: Colors.white, tooltip: 'My POs', onPressed: onOrders),
         IconButton(
             icon: const Icon(Icons.storefront_outlined, size: 22),
             color: Colors.white, tooltip: 'Dashboard', onPressed: onDashboard),

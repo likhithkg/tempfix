@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 
+import 'export_constants.dart';
 import 'exporter_model.dart';
 import 'exporter_service.dart';
 import '../services/image_upload_service.dart';
@@ -18,10 +19,12 @@ import '../l10n/app_localizations.dart';
 
 class ExporterFormPage extends StatefulWidget {
   final ExportProduct? existingProduct;
+  final String listingSource;
 
   const ExporterFormPage({
     Key? key,
     this.existingProduct,
+    this.listingSource = 'export_hub',
   }) : super(key: key);
 
   @override
@@ -348,7 +351,7 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
         productName: _productNameCtrl.text.trim(),
         pricePerUnit: _priceCtrl.text.trim(),
         quantity: '${_quantityCtrl.text.trim()} $_unit',
-        farmerId: farmerMobile,
+        farmerId: user.uid,
         farmerName: _farmerNameCtrl.text.trim(),
         location: _locationCtrl.text.trim(),
         description: _descriptionCtrl.text.trim(),
@@ -370,7 +373,10 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
         moistureLevel: _moistureLevelCtrl.text.trim().isNotEmpty ? _moistureLevelCtrl.text.trim() : null,
         storageLocation: _storageLocationCtrl.text.trim().isNotEmpty ? _storageLocationCtrl.text.trim() : null,
         packagingType: _packagingTypeCtrl.text.trim().isNotEmpty ? _packagingTypeCtrl.text.trim() : null,
-        listingStatus: widget.existingProduct?.listingStatus ?? 'listed',
+        listingStatus: widget.existingProduct?.listingStatus ?? ListingStatus.active,
+        listingSource: widget.existingProduct?.listingSource.isNotEmpty == true
+            ? widget.existingProduct!.listingSource
+            : widget.listingSource,
         imageUrls: allImageUrls,
       );
 

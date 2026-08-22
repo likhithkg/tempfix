@@ -2,6 +2,8 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'export_constants.dart';
+
 class ExportProduct {
   String id;
   String productName;
@@ -32,7 +34,8 @@ class ExportProduct {
   String? variety;
   String? packagingType;
   String? storageLocation;
-  String listingStatus;    // 'listed', 'under_review', 'collected', 'exported'
+  String listingStatus;    // 'active', 'inactive', 'sold_out', etc.
+  String listingSource;    // 'export_hub' | 'f2b_mart' — separates the two marketplaces
   int views;
   List<String> imageUrls;  // multiple images (supplements single imageUrl)
 
@@ -63,7 +66,8 @@ class ExportProduct {
     this.variety,
     this.packagingType,
     this.storageLocation,
-    this.listingStatus = 'listed',
+    this.listingStatus = ListingStatus.active,
+    this.listingSource = 'export_hub',
     this.views = 0,
     this.imageUrls = const [],
   });
@@ -108,7 +112,8 @@ class ExportProduct {
       variety: map['variety']?.toString(),
       packagingType: map['packagingType']?.toString(),
       storageLocation: map['storageLocation']?.toString(),
-      listingStatus: (map['listingStatus'] ?? 'listed').toString(),
+      listingStatus: _normalizeListingStatus((map['listingStatus'] ?? '').toString()),
+      listingSource: (map['listingSource'] ?? '').toString(),
       views: (map['views'] is int) ? map['views'] as int : 0,
       imageUrls: parseImageUrls(map['imageUrls']),
     );
@@ -127,6 +132,7 @@ class ExportProduct {
       'imageUrl': imageUrl,
       'farmerMobile': farmerMobile ?? farmerId,
       'listingStatus': listingStatus,
+      'listingSource': listingSource,
       'isOrganic': isOrganic,
       'views': views,
       if (imageUrls.isNotEmpty) 'imageUrls': imageUrls,
@@ -155,9 +161,29 @@ class ExportProduct {
     return imageUrl ?? '';
   }
 
-  // Parsed quantity as a number for sorting (strips unit suffixes like " kg", " MT")
+  // Parsed quantity as a number for sorting/validation (strips unit suffixes)
   double get quantityNum {
     final cleaned = quantity.replaceAll(RegExp(r'[^\d.]'), '');
     return double.tryParse(cleaned) ?? 0;
+  }
+
+  // Parsed price as a number
+  double get priceNum {
+    final cleaned = pricePerUnit.replaceAll(RegExp(r'[^\d.]'), '');
+    return double.tryParse(cleaned) ?? 0;
+  }
+
+  // Effective seller UID: prefer ownerId, fall back to farmerId (pre-fix docs)
+  String get sellerUid => (ownerId != null && ownerId!.isNotEmpty) ? ownerId! : farmerId;
+
+  static String _normalizeListingStatus(String raw) {
+    switch (raw.toLowerCase().trim()) {
+      case 'listed':
+      case 'under_review':
+      case '':
+        return ListingStatus.active;
+      default:
+        return raw.isEmpty ? ListingStatus.active : raw;
+    }
   }
 }

@@ -18,9 +18,27 @@ class ExporterService {
   // Export Products
   // --------------------------------------------------------------------------
 
-  /// Stream all export products (public)
+  /// Stream all Export Hub products — excludes GreenBazaar (f2b_mart) listings.
+  /// Old docs without a listingSource are treated as export_hub (original purpose of this collection).
   Stream<List<ExportProduct>> getExportProducts() {
     return _productsRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return ExportProduct.fromMap(data);
+            })
+            .where((p) => p.listingSource != 'f2b_mart')
+            .toList());
+  }
+
+  /// Stream GreenBazaar (f2b_mart) products.
+  /// Shows docs explicitly tagged 'f2b_mart'.
+  Stream<List<ExportProduct>> getF2BProducts() {
+    return _productsRef
+        .where('listingSource', isEqualTo: 'f2b_mart')
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map((doc) {
@@ -30,17 +48,20 @@ class ExporterService {
             }).toList());
   }
 
-  /// Stream only products owned by a specific user
+  /// Stream only products owned by the given user (Export Hub only).
   Stream<List<ExportProduct>> getMyExportProducts(String uid) {
     return _productsRef
         .where('ownerId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
+        .map((snap) => snap.docs
+            .map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               data['id'] = doc.id;
               return ExportProduct.fromMap(data);
-            }).toList());
+            })
+            .where((p) => p.listingSource != 'f2b_mart')
+            .toList());
   }
 
   /// Add a new export product. This method attaches ownership fields from the current user.
@@ -332,6 +353,18 @@ class ExporterService {
   Stream<List<Map<String, dynamic>>> streamPOsForImporter(String importerId) {
     return poRef
         .where('importerId', isEqualTo: importerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) {
+              final m = d.data() as Map<String, dynamic>;
+              m['id'] = d.id;
+              return m;
+            }).toList());
+  }
+
+  /// Stream ALL purchase orders (admin oversight — no user filter)
+  Stream<List<Map<String, dynamic>>> streamAllPOs() {
+    return poRef
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map((d) {

@@ -6,26 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'job_post_model.dart';
-
-// Common Karnataka / India agricultural districts for suggestions
-const _kLocationHints = [
-  'Mysuru, Karnataka', 'Mandya, Karnataka', 'Hassan, Karnataka',
-  'Tumkur, Karnataka', 'Shimoga, Karnataka', 'Davanagere, Karnataka',
-  'Bellary, Karnataka', 'Raichur, Karnataka', 'Bidar, Karnataka',
-  'Dharwad, Karnataka', 'Belgaum, Karnataka', 'Hubli, Karnataka',
-  'Chikmagalur, Karnataka', 'Kodagu, Karnataka', 'Udupi, Karnataka',
-  'Mangalore, Karnataka', 'Kolar, Karnataka', 'Chitradurga, Karnataka',
-  'Bangalore Rural, Karnataka', 'Bengaluru, Karnataka',
-  'Pune, Maharashtra', 'Nashik, Maharashtra', 'Kolhapur, Maharashtra',
-  'Coimbatore, Tamil Nadu', 'Salem, Tamil Nadu', 'Tiruppur, Tamil Nadu',
-  'Guntur, Andhra Pradesh', 'Krishna, Andhra Pradesh',
-  'Hyderabad, Telangana', 'Warangal, Telangana',
-  'Thrissur, Kerala', 'Palakkad, Kerala', 'Malappuram, Kerala',
-];
+import 'location_search_dialog.dart';
 
 const _kP1 = Color(0xFF1B5E20);
 const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
 const _kLightGreen = Color(0xFFE8F5E9);
 const _kOrange = Color(0xFFE65100);
 const _kDark = Color(0xFF1A2D1A);
@@ -303,11 +287,17 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
             // ── Location ────────────────────────────────────────────────────
             _SCard(
               child: _buildSection('Job Location', Icons.location_on_rounded, [
-                _LocationAutoField(
+                _LocationPickerField(
                   controller: _locationCtrl,
                   recentLocations: _recentLocations,
+                  onPicked: (lat, lon) {
+                    setState(() {
+                      _lat = lat;
+                      _lon = lon;
+                    });
+                  },
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -498,102 +488,89 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
   }
 }
 
-// ── Location field with suggestions ───────────────────────────────────────────
+// ── Location picker field ─────────────────────────────────────────────────────
 
-class _LocationAutoField extends StatefulWidget {
+class _LocationPickerField extends StatelessWidget {
   final TextEditingController controller;
   final List<String> recentLocations;
+  final void Function(double lat, double lon) onPicked;
 
-  const _LocationAutoField(
-      {required this.controller, required this.recentLocations});
+  const _LocationPickerField({
+    required this.controller,
+    required this.recentLocations,
+    required this.onPicked,
+  });
 
-  @override
-  State<_LocationAutoField> createState() => _LocationAutoFieldState();
-}
-
-class _LocationAutoFieldState extends State<_LocationAutoField> {
-  final _focusNode = FocusNode();
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  List<String> _getSuggestions(String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) {
-      return [
-        ...widget.recentLocations,
-        ..._kLocationHints.where((l) => !widget.recentLocations.contains(l)),
-      ].take(6).toList();
+  Future<void> _open(BuildContext ctx) async {
+    final result = await showDialog<LocationResult>(
+      context: ctx,
+      builder: (_) =>
+          LocationSearchDialog(recentLocations: recentLocations),
+    );
+    if (result != null) {
+      controller.text = result.displayName;
+      onPicked(result.lat, result.lon);
     }
-    final all = {...widget.recentLocations, ..._kLocationHints};
-    return all.where((l) => l.toLowerCase().contains(q)).take(6).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete<String>(
-      textEditingController: widget.controller,
-      focusNode: _focusNode,
-      optionsBuilder: (v) => _getSuggestions(v.text),
-      onSelected: (v) => widget.controller.text = v,
-      fieldViewBuilder: (ctx, ctrl, node, onSubmit) => TextFormField(
-        controller: ctrl,
-        focusNode: node,
-        onFieldSubmitted: (_) => onSubmit(),
-        validator: (v) => v!.trim().isEmpty ? 'Location is required' : null,
-        decoration: InputDecoration(
-          labelText: 'Location',
-          hintText: 'Village, District',
-          filled: true,
-          fillColor: const Color(0xFFF8FDF8),
-          prefixIcon: const Icon(Icons.location_on_outlined, color: _kP2),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300)),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kP2, width: 2)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      ),
-      optionsViewBuilder: (ctx, onSelected, options) => Align(
-        alignment: Alignment.topLeft,
-        child: Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400, maxHeight: 220),
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount: options.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.shade200),
-              itemBuilder: (ctx, i) {
-                final opt = options.elementAt(i);
-                final isRecent = widget.recentLocations.contains(opt);
-                return ListTile(
-                  dense: true,
-                  leading: Icon(
-                      isRecent
-                          ? Icons.history_rounded
-                          : Icons.location_on_outlined,
-                      size: 18,
-                      color: _kP2),
-                  title: Text(opt, style: const TextStyle(fontSize: 13)),
-                  onTap: () => onSelected(opt),
-                );
-              },
+    return FormField<String>(
+      validator: (_) =>
+          controller.text.trim().isEmpty ? 'Location is required' : null,
+      builder: (state) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => _open(context),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FDF8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: state.hasError
+                      ? Colors.red
+                      : controller.text.isNotEmpty
+                          ? _kP2
+                          : Colors.grey.shade300,
+                  width: controller.text.isNotEmpty ? 2 : 1,
+                ),
+              ),
+              child: Row(children: [
+                Icon(Icons.location_on_rounded,
+                    color: controller.text.isNotEmpty
+                        ? _kP2
+                        : Colors.grey.shade400,
+                    size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    controller.text.isNotEmpty
+                        ? controller.text
+                        : 'Tap to search location…',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: controller.text.isNotEmpty
+                          ? _kDark
+                          : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                Icon(Icons.search_rounded,
+                    color: Colors.grey.shade400, size: 20),
+              ]),
             ),
           ),
-        ),
+          if (state.hasError)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 14),
+              child: Text(state.errorText!,
+                  style:
+                      const TextStyle(color: Colors.red, fontSize: 12)),
+            ),
+        ],
       ),
     );
   }

@@ -1,9 +1,30 @@
 import 'chat_models.dart';
 
 // ── Search engine ─────────────────────────────────────────────────────────────
+//
+// Matches user queries against the local knowledge base.
+// Only single-word keywords are used for matching to avoid false positives
+// from multi-word phrases (e.g. "dryland farming" ≠ "farming").
+// Queries about market prices, weather, government schemes, etc. are
+// intentionally skipped so they go to Groq for better answers.
 
 class SearchEngine {
-  static const double _minScore = 0.18;
+  // Minimum fraction of query tokens that must exactly match KB keywords.
+  // 0.5 = at least 50% of tokens must match.
+  static const double _minScore = 0.5;
+
+  // If any of these words appear in the query, skip the KB entirely.
+  // These topics have no useful KB entry and should go straight to Groq.
+  static const Set<String> _skipTopics = {
+    'price', 'prices', 'cost', 'costs', 'market', 'rate', 'rates',
+    'value', 'rupee', 'rupees', 'money', 'income', 'profit', 'earn',
+    'weather', 'rain', 'rainfall', 'temperature', 'forecast', 'humidity',
+    'scheme', 'schemes', 'loan', 'loans', 'insurance', 'subsidy',
+    'government', 'policy', 'regulation', 'law',
+    'sell', 'selling', 'buy', 'buying', 'export', 'import', 'trade',
+    'labour', 'labor', 'worker', 'salary', 'wage',
+    'rent', 'hire', 'machine', 'tractor', 'equipment',
+  };
 
   static const List<String> _stopWords = [
     'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -19,11 +40,15 @@ class SearchEngine {
     'here', 'even', 'each', 'other',
   ];
 
-  /// Finds the single best-matching [KnowledgeEntry] for a user [query],
-  /// or returns null if no entry clears the minimum score threshold.
+  /// Returns the best-matching [KnowledgeEntry] for [query], or null if:
+  /// - the score is below [_minScore], or
+  /// - the query contains a skip-topic word.
   KnowledgeEntry? search(String query, List<KnowledgeEntry> entries) {
     final tokens = _tokenize(query);
     if (tokens.isEmpty) return null;
+
+    // Skip KB for topics it cannot answer well
+    if (tokens.any((t) => _skipTopics.contains(t))) return null;
 
     KnowledgeEntry? best;
     double bestScore = 0;
@@ -39,11 +64,15 @@ class SearchEngine {
     return bestScore >= _minScore ? best : null;
   }
 
-  /// Returns all matching entries ranked by score (for multi-answer scenarios).
+  /// All matching entries ranked by score (for multi-answer scenarios).
   List<KnowledgeEntry> searchAll(
-      String query, List<KnowledgeEntry> entries, {int limit = 3}) {
+    String query,
+    List<KnowledgeEntry> entries, {
+    int limit = 3,
+  }) {
     final tokens = _tokenize(query);
     if (tokens.isEmpty) return [];
+    if (tokens.any((t) => _skipTopics.contains(t))) return [];
 
     final scored = <_Scored>[];
     for (final entry in entries) {
@@ -54,36 +83,29 @@ class SearchEngine {
     return scored.take(limit).map((e) => e.entry).toList();
   }
 
-  double _score(List<String> queryTokens, KnowledgeEntry entry) {
-    if (queryTokens.isEmpty) return 0;
+  /// Scores a query against one KB entry using exact single-word matching.
+  ///
+  /// Only single-word keywords are used. Multi-word phrases (e.g. "dryland
+  /// farming", "yellow leaves") are excluded to avoid false partial matches
+  /// like token "farming" matching keyword phrase "dryland farming".
+  double _score(List<String> tokens, KnowledgeEntry entry) {
+    if (tokens.isEmpty) return 0;
 
-    double hits = 0;
-    final kwLower = entry.keywords.map((k) => k.toLowerCase()).toList();
-
-    for (final token in queryTokens) {
-      bool matched = false;
-      for (final kw in kwLower) {
-        // Exact match gets full credit
-        if (kw == token) {
-          hits += 1.0;
-          matched = true;
-          break;
-        }
-        // Partial match (keyword contains token or vice versa) gets half credit
-        if (!matched && (kw.contains(token) || token.contains(kw))) {
-          hits += 0.5;
-          matched = true;
-          break;
-        }
-      }
-      // Category name match
-      if (!matched &&
-          entry.category.toLowerCase().contains(token)) {
-        hits += 0.3;
-      }
+    // Collect only single-word keywords (no spaces)
+    final singleWordKws = <String>{};
+    for (final kw in entry.keywords) {
+      final lower = kw.toLowerCase();
+      if (!lower.contains(' ')) singleWordKws.add(lower);
     }
 
-    return hits / queryTokens.length;
+    if (singleWordKws.isEmpty) return 0;
+
+    double hits = 0;
+    for (final token in tokens) {
+      if (singleWordKws.contains(token)) hits += 1.0;
+    }
+
+    return hits / tokens.length;
   }
 
   List<String> _tokenize(String text) => text

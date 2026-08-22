@@ -6,13 +6,13 @@ import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
+import 'location_search_dialog.dart';
 import '../services/image_upload_service.dart';
 
 const _kP1 = Color(0xFF1B5E20);
 const _kP2 = Color(0xFF2E7D32);
 const _kGreen = Color(0xFF4CAF50);
 const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
 const _kDark = Color(0xFF1A2D1A);
 
 class LabourProfileFormPage extends StatefulWidget {
@@ -141,6 +141,25 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
       _snack('Photo upload failed', isError: true);
     } finally {
       if (mounted) setState(() => _uploadingPhoto = false);
+    }
+  }
+
+  Future<void> _openLocationSearch() async {
+    final result = await showDialog<LocationResult>(
+      context: context,
+      builder: (_) => const LocationSearchDialog(),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _villageCtrl.text = result.village.isNotEmpty
+            ? result.village
+            : result.displayName.split(',').first.trim();
+        if (result.district.isNotEmpty) _districtCtrl.text = result.district;
+        if (result.state.isNotEmpty) _stateCtrl.text = result.state;
+        if (result.pincode.isNotEmpty) _pincodeCtrl.text = result.pincode;
+        if (result.lat != 0) _lat = result.lat;
+        if (result.lon != 0) _lon = result.lon;
+      });
     }
   }
 
@@ -325,53 +344,111 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
             // ── Location ─────────────────────────────────────────────────────
             _SliverCard(
               child: _buildSection('Location', Icons.location_on_rounded, [
-                _field('Village / Town', _villageCtrl,
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'Village is required' : null),
-                _field('Taluk', _talukCtrl),
-                _field('District', _districtCtrl,
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'District is required' : null),
-                _field('State', _stateCtrl,
-                    hint: 'e.g. Karnataka'),
-                _field('Pincode', _pincodeCtrl,
-                    keyboardType: TextInputType.number,
-                    hint: 'e.g. 560001'),
+                // Display field
+                GestureDetector(
+                  onTap: _openLocationSearch,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FDF8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _villageCtrl.text.isNotEmpty
+                            ? _kP2
+                            : Colors.grey.shade300,
+                        width: _villageCtrl.text.isNotEmpty ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(children: [
+                      Icon(Icons.location_on_rounded,
+                          color: _villageCtrl.text.isNotEmpty
+                              ? _kP2
+                              : const Color(0xFFE65100),
+                          size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _villageCtrl.text.isNotEmpty
+                              ? [
+                                  _villageCtrl.text,
+                                  if (_districtCtrl.text.isNotEmpty)
+                                    _districtCtrl.text,
+                                  if (_stateCtrl.text.isNotEmpty)
+                                    _stateCtrl.text,
+                                ].join(', ')
+                              : 'Location',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _villageCtrl.text.isNotEmpty
+                                ? _kDark
+                                : Colors.grey.shade500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(Icons.search_rounded,
+                          color: Colors.grey.shade400, size: 20),
+                    ]),
+                  ),
+                ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _locating ? null : _getGPS,
-                    icon: _locating
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _kP2))
-                        : const Icon(Icons.my_location_rounded, color: _kP2),
-                    label: Text(
-                        _locating ? 'Getting location…' : 'Use GPS Location'),
-                    style: OutlinedButton.styleFrom(
+
+                // Search Place + Use GPS buttons
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _openLocationSearch,
+                      icon: const Icon(Icons.search_rounded, size: 16),
+                      label: const Text('Search Place',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
                         foregroundColor: _kP2,
                         side: const BorderSide(color: _kP2),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
-                ),
-                if (_lat != 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(children: [
-                      const Icon(Icons.check_circle_rounded,
-                          color: _kGreen, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                          'GPS: ${_lat.toStringAsFixed(4)}, ${_lon.toStringAsFixed(4)}',
-                          style:
-                              const TextStyle(fontSize: 12, color: _kGreen)),
-                    ]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _locating ? null : _getGPS,
+                      icon: _locating
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.my_location_rounded, size: 16),
+                      label: Text(_locating ? 'Locating…' : 'Use GPS',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1565C0),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
+                ]),
+
+                if (_lat != 0) ...[
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    const Icon(Icons.check_circle_rounded,
+                        color: _kGreen, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                        'GPS: ${_lat.toStringAsFixed(4)}, ${_lon.toStringAsFixed(4)}',
+                        style:
+                            const TextStyle(fontSize: 12, color: _kGreen)),
+                  ]),
+                ],
+
                 const SizedBox(height: 12),
                 _label('Working Radius'),
                 const SizedBox(height: 8),
@@ -384,8 +461,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       selected: sel,
                       selectedColor: _kP2,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark,
-                          fontSize: 12),
+                          color: sel ? Colors.white : _kDark, fontSize: 12),
                       onSelected: (_) =>
                           setState(() => _workingRadiusKm = r),
                     );
