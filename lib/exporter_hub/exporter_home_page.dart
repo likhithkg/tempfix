@@ -24,6 +24,12 @@ import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
 
+// ── Design tokens ──────────────────────────────────────────────────────────────
+const _kGreen1 = Color(0xFF1B5E20);
+const _kGreen2 = Color(0xFF2E7D32);
+const _kTeal   = Color(0xFF00897B);
+const _kGold   = Color(0xFFFFB300);
+
 class ExporterHomePage extends StatefulWidget {
   const ExporterHomePage({super.key});
 
@@ -75,6 +81,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F8E9),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() => _statsLoading = true);
@@ -82,88 +89,200 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
         },
         child: CustomScrollView(
           slivers: [
-            // ── SliverAppBar ──
+            // ── SliverAppBar ──────────────────────────────────────────────────
             SliverAppBar(
-              expandedHeight: 140,
+              expandedHeight: 220,
               pinned: true,
+              stretch: true,
+              backgroundColor: _kGreen1,
               flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  l.exporterHub,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18,
-                      shadows: [Shadow(color: Colors.black38, blurRadius: 4)]),
-                ),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                    ),
-                  ),
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 48),
-                      child: Text(
-                        l.procurementDashboard,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.85),
-                          fontSize: 13,
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Gradient background
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF1B5E20),
+                            Color(0xFF00796B),
+                            Color(0xFF004D40),
+                          ],
+                          stops: [0.0, 0.6, 1.0],
                         ),
                       ),
                     ),
-                  ),
+                    // Top-right decorative circle
+                    Positioned(
+                      top: -30,
+                      right: -30,
+                      child: Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                    // Bottom-left decorative circle
+                    Positioned(
+                      bottom: -20,
+                      left: -20,
+                      child: Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                    // Header content
+                    Positioned(
+                      bottom: 60,
+                      left: 16,
+                      right: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.moving_outlined,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _kGold,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  _isAdmin ? 'ADMIN' : 'FARMER',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Export Hub',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            l.procurementDashboard,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
+                  icon: const Icon(Icons.notifications_outlined, color: Colors.white),
                   tooltip: l.notificationCenter,
                   onPressed: () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const NotificationsPage())),
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
                   tooltip: 'More',
                   onSelected: (v) {
                     switch (v) {
                       case 'map':
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage()));
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const NearbyFarmersMapPage()));
                       case 'nearby':
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyFarmersPage()));
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const NearbyFarmersPage()));
                       case 'seller':
                         if (user == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewSeller)));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l.pleaseSignInToViewSeller)));
                         } else {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
+                          Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (_) => const SellerPurchaseOrderListPage()));
                         }
                       case 'buyer':
                         if (user == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l.pleaseSignInToViewOrders)));
                         } else if (_isAdmin) {
-                          Navigator.push(context, MaterialPageRoute(
-                              builder: (_) => const PurchaseOrderListPage(isAdmin: true)));
+                          Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (_) => const PurchaseOrderListPage(isAdmin: true)));
                         } else {
-                          Navigator.push(context, MaterialPageRoute(
-                              builder: (_) => const SellerPurchaseOrderListPage()));
+                          Navigator.push(context,
+                              MaterialPageRoute(
+                                  builder: (_) => const SellerPurchaseOrderListPage()));
                         }
                     }
                   },
                   itemBuilder: (_) => [
-                    PopupMenuItem(value: 'map', child: Row(children: [const Icon(Icons.map_outlined, size: 18), const SizedBox(width: 10), Text(l.openMap)])),
-                    PopupMenuItem(value: 'nearby', child: Row(children: [const Icon(Icons.people_outline, size: 18), const SizedBox(width: 10), Text(l.nearbyFarmersList)])),
+                    PopupMenuItem(
+                        value: 'map',
+                        child: Row(children: [
+                          const Icon(Icons.map_outlined, size: 18),
+                          const SizedBox(width: 10),
+                          Text(l.openMap)
+                        ])),
+                    PopupMenuItem(
+                        value: 'nearby',
+                        child: Row(children: [
+                          const Icon(Icons.people_outline, size: 18),
+                          const SizedBox(width: 10),
+                          Text(l.nearbyFarmersList)
+                        ])),
                     if (!_isAdmin)
-                      PopupMenuItem(value: 'seller', child: Row(children: [const Icon(Icons.receipt_long_outlined, size: 18), const SizedBox(width: 10), Text(l.sellingOrders)])),
-                    PopupMenuItem(value: 'buyer', child: Row(children: [const Icon(Icons.shopping_bag_outlined, size: 18), const SizedBox(width: 10), Text(l.verifiedBuyersTab)])),
+                      PopupMenuItem(
+                          value: 'seller',
+                          child: Row(children: [
+                            const Icon(Icons.receipt_long_outlined, size: 18),
+                            const SizedBox(width: 10),
+                            Text(l.sellingOrders)
+                          ])),
+                    PopupMenuItem(
+                        value: 'buyer',
+                        child: Row(children: [
+                          const Icon(Icons.shopping_bag_outlined, size: 18),
+                          const SizedBox(width: 10),
+                          Text(l.verifiedBuyersTab)
+                        ])),
                   ],
                 ),
               ],
             ),
 
-            // ── Analytics Cards ──
+            // ── Analytics Cards ───────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
@@ -171,52 +290,22 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               ),
             ),
 
-            // ── Role Banner ──
+            // ── Role Banner ───────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: _isAdmin
-                        ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
-                        : Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(children: [
-                    Icon(
-                      _isAdmin ? Icons.admin_panel_settings_outlined : Icons.info_outline,
-                      size: 16,
-                      color: _isAdmin
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _isAdmin ? l.adminRoleBanner : l.procurementAdminNote,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _isAdmin
-                              ? Theme.of(context).colorScheme.onPrimaryContainer
-                              : Theme.of(context).colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                  ]),
-                ),
+                child: _RoleBanner(isAdmin: _isAdmin),
               ),
             ),
 
-            // ── Operations Hub Grid ──
+            // ── Operations Hub Grid ───────────────────────────────────────────
             SliverToBoxAdapter(
               child: _OperationsHub(isAdmin: _isAdmin, user: user),
             ),
 
-            // ── Section 0: My Listings — only for admin (quick horizontal preview) ──
-            // Farmers see their full list below in the searchable section instead.
+            // ── Section 0: My Listings (admin quick preview) ──────────────────
             if (_isAdmin && user != null) ...[
-              _SectionHeader(
+              const _SectionHeader(
                 title: 'My Listings',
                 icon: Icons.person_outline,
                 onViewAll: null,
@@ -230,7 +319,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               ),
             ],
 
-            // ── Admin-only sections: global marketplace view ──
+            // ── Admin-only sections: global marketplace view ───────────────────
             if (_isAdmin) ...[
               _SectionHeader(
                 title: l.recentlyListedProduce,
@@ -289,19 +378,21 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
           ],
         ),
       ),
-      floatingActionButton: _isAdmin ? null : FloatingActionButton.extended(
-        onPressed: () {
-          if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l.pleaseSignInToAdd)));
-            return;
-          }
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const ExporterFormPage()));
-        },
-        icon: const Icon(Icons.add),
-        label: Text(l.addListing),
-      ),
+      floatingActionButton: _isAdmin
+          ? null
+          : FloatingActionButton(
+              backgroundColor: _kGreen2,
+              onPressed: () {
+                if (user == null) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(l.pleaseSignInToAdd)));
+                  return;
+                }
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ExporterFormPage()));
+              },
+              child: const Icon(Icons.add_rounded, color: Colors.white),
+            ),
     );
   }
 
@@ -334,6 +425,58 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
   }
 }
 
+// ── Role Banner ────────────────────────────────────────────────────────────────
+
+class _RoleBanner extends StatelessWidget {
+  final bool isAdmin;
+  const _RoleBanner({required this.isAdmin});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final color = isAdmin ? _kGreen2 : Colors.blue.shade700;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.12),
+            color.withValues(alpha: 0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isAdmin ? Icons.admin_panel_settings_outlined : Icons.info_outline,
+            size: 16,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            isAdmin ? l.adminRoleBanner : l.procurementAdminNote,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 // ── Operations Hub ─────────────────────────────────────────────────────────────
 
 class _OperationsHub extends StatelessWidget {
@@ -345,25 +488,23 @@ class _OperationsHub extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
 
-    // All users see procurement + demand. Admin sees warehouse/shipments/finance/buyers/docs/insights.
     final tiles = <_OpTileData>[
       _OpTileData(
         icon: Icons.pending_actions_outlined,
-        // Admin → all orders in system; Farmer → incoming POs on their produce
         label: isAdmin ? 'All Orders' : 'Purchase Orders',
         color: Colors.orange,
         onTap: () {
           if (user == null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(l.pleaseSignInToViewOrders)));
             return;
           }
           if (isAdmin) {
-            Navigator.push(context, MaterialPageRoute(
-                builder: (_) => PurchaseOrderListPage(isAdmin: true)));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PurchaseOrderListPage(isAdmin: true)));
           } else {
-            // Farmers: see orders raised against their listings (admin's POs appear here)
-            Navigator.push(context, MaterialPageRoute(
-                builder: (_) => const SellerPurchaseOrderListPage()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const SellerPurchaseOrderListPage()));
           }
         },
       ),
@@ -434,7 +575,11 @@ class _OperationsHub extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             isAdmin ? 'Operations Hub' : 'Quick Access',
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
           ),
         ),
         GridView.count(
@@ -456,7 +601,11 @@ class _OpTileData {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _OpTileData({required this.icon, required this.label, required this.color, required this.onTap});
+  const _OpTileData(
+      {required this.icon,
+      required this.label,
+      required this.color,
+      required this.onTap});
 }
 
 class _OpTile extends StatelessWidget {
@@ -466,21 +615,32 @@ class _OpTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: data.color.withValues(alpha: 0.08),
+      elevation: 3,
+      shadowColor: data.color.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: data.onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                data.color.withValues(alpha: 0.15),
+                data.color.withValues(alpha: 0.05),
+              ],
+            ),
+          ),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircleAvatar(
-                radius: 22,
-                backgroundColor: data.color.withValues(alpha: 0.15),
-                child: Icon(data.icon, color: data.color, size: 22),
+                radius: 24,
+                backgroundColor: data.color.withValues(alpha: 0.2),
+                child: Icon(data.icon, color: data.color, size: 24),
               ),
               const SizedBox(height: 8),
               Text(
@@ -488,7 +648,12 @@ class _OpTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: data.color),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: data.color,
+                  letterSpacing: 0.2,
+                ),
               ),
             ],
           ),
@@ -536,25 +701,52 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  const _StatCard({required this.label, required this.value, required this.icon, required this.color});
+  const _StatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(4),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 6),
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 2),
-            Text(label, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
-          ],
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              color.withValues(alpha: 0.15),
+              color.withValues(alpha: 0.04),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 26),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w900, color: color),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -572,18 +764,45 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    const primaryColor = _kGreen2;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 8, 4),
+        padding: const EdgeInsets.fromLTRB(16, 22, 12, 6),
         child: Row(children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          Container(
+            width: 4,
+            height: 20,
+            decoration: BoxDecoration(
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           const SizedBox(width: 8),
+          Icon(icon, size: 18, color: primaryColor),
+          const SizedBox(width: 6),
           Expanded(
-              child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
           if (onViewAll != null)
-            TextButton(
+            OutlinedButton(
               onPressed: onViewAll,
-              child: Text(l.viewAll, style: const TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                side: const BorderSide(color: primaryColor),
+              ),
+              child: Text(l.viewAll,
+                  style: const TextStyle(fontSize: 12, color: primaryColor)),
             ),
         ]),
       ),
@@ -611,7 +830,7 @@ class _HorizontalProductScroll extends StatelessWidget {
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return SizedBox(
-            height: 180,
+            height: 230,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -626,11 +845,12 @@ class _HorizontalProductScroll extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Text(emptyLabel,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           );
         }
         return SizedBox(
-          height: 200,
+          height: 230,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -663,48 +883,115 @@ class _ProcurementCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 160,
+        width: 175,
         child: Card(
+          elevation: 4,
+          shadowColor: Colors.black26,
           clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Hero(
-                tag: 'product-image-${product.id}',
-                child: SizedBox(
-                  height: 90,
-                  width: double.infinity,
-                  child: hasImage
-                      ? Image.network(product.primaryImage, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _ImagePlaceholder(product: product))
-                      : _ImagePlaceholder(product: product),
+              // Image area with overlay
+              SizedBox(
+                height: 120,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'product-image-${product.id}',
+                      child: hasImage
+                          ? Image.network(
+                              product.primaryImage,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _ImagePlaceholder(product: product),
+                            )
+                          : _ImagePlaceholder(product: product),
+                    ),
+                    // Gradient overlay
+                    const Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Colors.black54],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Price at bottom-left
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: Text(
+                        '₹${product.pricePerUnit}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    // Badges at top-right
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (product.isOrganic)
+                            _Badge(label: l.organic, color: Colors.green),
+                          if (product.isOrganic && (product.grade?.isNotEmpty ?? false))
+                            const SizedBox(height: 3),
+                          if (product.grade?.isNotEmpty ?? false)
+                            _Badge(
+                                label: '${l.grade} ${product.grade}',
+                                color: Colors.indigo),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // Info area
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (product.isOrganic || (product.grade?.isNotEmpty ?? false))
-                      Row(children: [
-                        if (product.isOrganic) _Badge(label: l.organic, color: Colors.green),
-                        if (product.isOrganic && (product.grade?.isNotEmpty ?? false))
-                          const SizedBox(width: 4),
-                        if (product.grade?.isNotEmpty ?? false)
-                          _Badge(label: '${l.grade} ${product.grade}', color: Colors.indigo),
-                      ]),
-                    if (product.isOrganic || (product.grade?.isNotEmpty ?? false))
-                      const SizedBox(height: 4),
-                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(height: 2),
-                    Text('₹${product.pricePerUnit} • ${product.quantity}',
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.primary)),
-                    Text(loc, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      const Icon(Icons.inventory_2_outlined,
+                          size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(product.quantity,
+                          style:
+                              const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ]),
+                    Row(children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          loc,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              const TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ),
+                    ]),
                   ],
                 ),
               ),
@@ -723,10 +1010,22 @@ class _ImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF1B5E20),
+            Color(0xFF00897B),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Center(
-        child: Icon(Icons.local_florist, size: 36,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+        child: Icon(
+          Icons.grain,
+          size: 36,
+          color: Colors.white.withValues(alpha: 0.5),
+        ),
       ),
     );
   }
@@ -740,13 +1039,16 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.bold)),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 10, color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
@@ -758,22 +1060,36 @@ class _ShimmerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = Theme.of(context).colorScheme.surfaceContainerHighest;
     return SizedBox(
-      width: 160,
+      width: 175,
       child: Card(
+        elevation: 4,
+        shadowColor: Colors.black26,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(height: 90, color: bg),
+            Container(height: 120, color: bg),
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Container(height: 12, width: 100,
-                    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4))),
+                Container(
+                    height: 12,
+                    width: 110,
+                    decoration: BoxDecoration(
+                        color: bg, borderRadius: BorderRadius.circular(4))),
                 const SizedBox(height: 6),
-                Container(height: 10, width: 80,
-                    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4))),
+                Container(
+                    height: 10,
+                    width: 80,
+                    decoration: BoxDecoration(
+                        color: bg, borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 4),
+                Container(
+                    height: 10,
+                    width: 90,
+                    decoration: BoxDecoration(
+                        color: bg, borderRadius: BorderRadius.circular(4))),
               ]),
             ),
           ],
@@ -811,7 +1127,9 @@ class _AllListingsViewState extends State<_AllListingsView> {
     final q = _query.toLowerCase();
     return all.where((p) {
       if (_selectedCategory != 'all' &&
-          p.category.toLowerCase() != _selectedCategory.toLowerCase()) { return false; }
+          p.category.toLowerCase() != _selectedCategory.toLowerCase()) {
+        return false;
+      }
       if (q.isEmpty) return true;
       return p.productName.toLowerCase().contains(q) ||
           p.farmerName.toLowerCase().contains(q) ||
@@ -826,21 +1144,35 @@ class _AllListingsViewState extends State<_AllListingsView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Search bar
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search, color: _kGreen2),
               hintText: l.searchByCropFarmer,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: _kGreen2, width: 2),
+              ),
             ),
             onChanged: (v) => setState(() => _query = v),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
+        // Category filter chips
         SizedBox(
           height: 36,
           child: ListView.separated(
@@ -851,15 +1183,27 @@ class _AllListingsViewState extends State<_AllListingsView> {
             itemBuilder: (_, i) {
               final c = _categories[i];
               final label = c == 'all' ? l.cropsTab : c;
+              final isSelected = c == _selectedCategory;
               return ChoiceChip(
-                label: Text(label, style: const TextStyle(fontSize: 12)),
-                selected: c == _selectedCategory,
+                label: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isSelected ? _kGreen2 : null,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: _kGreen2.withValues(alpha: 0.2),
+                shape: const StadiumBorder(),
                 onSelected: (_) => setState(() => _selectedCategory = c),
               );
             },
           ),
         ),
         const SizedBox(height: 8),
+        // Products stream
         StreamBuilder<List<ExportProduct>>(
           stream: widget.isAdmin
               ? widget.service.getExportProducts()
@@ -869,7 +1213,8 @@ class _AllListingsViewState extends State<_AllListingsView> {
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
               return const Padding(
-                  padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()));
             }
             final filtered = _filter(snap.data ?? []);
             if (filtered.isEmpty) {
@@ -882,40 +1227,48 @@ class _AllListingsViewState extends State<_AllListingsView> {
             }
             return Column(
               mainAxisSize: MainAxisSize.min,
-              children: filtered.map((p) => _ListingRow(
-                    product: p,
-                    user: widget.user,
-                    onTap: () => widget.onTap(p),
-                    onEdit: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => ExporterFormPage(existingProduct: p))),
-                    onDelete: () async {
-                      final l2 = AppLocalizations.of(context)!;
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (dialogCtx) => AlertDialog(
-                          title: Text(l2.deleteListingTitle),
-                          content: Text(l2.areYouSureDeleteProduct),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(dialogCtx, false),
-                                child: Text(l2.cancel)),
-                            TextButton(
-                                onPressed: () => Navigator.pop(dialogCtx, true),
-                                child: Text(l2.delete,
-                                    style: const TextStyle(color: Colors.redAccent))),
-                          ],
-                        ),
-                      );
-                      if (confirm == true && context.mounted) {
-                        await widget.service.deleteExportProduct(p.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                  AppLocalizations.of(context)!.productDeletedSuccessfully)));
-                        }
-                      }
-                    },
-                  )).toList(),
+              children: filtered
+                  .map((p) => _ListingRow(
+                        product: p,
+                        user: widget.user,
+                        onTap: () => widget.onTap(p),
+                        onEdit: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    ExporterFormPage(existingProduct: p))),
+                        onDelete: () async {
+                          final l2 = AppLocalizations.of(context)!;
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogCtx) => AlertDialog(
+                              title: Text(l2.deleteListingTitle),
+                              content: Text(l2.areYouSureDeleteProduct),
+                              actions: [
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogCtx, false),
+                                    child: Text(l2.cancel)),
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogCtx, true),
+                                    child: Text(l2.delete,
+                                        style: const TextStyle(
+                                            color: Colors.redAccent))),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && context.mounted) {
+                            await widget.service.deleteExportProduct(p.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(AppLocalizations.of(context)!
+                                      .productDeletedSuccessfully)));
+                            }
+                          }
+                        },
+                      ))
+                  .toList(),
             );
           },
         ),
@@ -946,39 +1299,151 @@ class _ListingRow extends StatelessWidget {
     final name = ContentTranslationService.translateCropName(product.productName, langCode);
     final loc = ContentTranslationService.translateLocation(product.location, langCode);
     final isOwner = user != null && product.sellerUid == user!.uid;
+    final hasImage = product.primaryImage.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: ListTile(
-          onTap: onTap,
-          leading: CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            backgroundImage:
-                product.primaryImage.isNotEmpty ? NetworkImage(product.primaryImage) : null,
-            child: product.primaryImage.isEmpty
-                ? Icon(Icons.local_florist, color: Theme.of(context).colorScheme.primary)
-                : null,
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: hasImage
+                      ? Image.network(product.primaryImage, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _ListingPlaceholder())
+                      : _ListingPlaceholder(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '₹${product.pricePerUnit}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: _kGreen2),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 12, color: Colors.grey),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          loc,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 11, color: Colors.grey),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      _QuantityChip(label: product.quantity),
+                      if (product.grade?.isNotEmpty ?? false) ...[
+                        const SizedBox(width: 4),
+                        _Badge(
+                            label: '${l.grade} ${product.grade}',
+                            color: Colors.indigo),
+                      ],
+                    ]),
+                  ],
+                ),
+              ),
+              // Actions
+              if (isOwner)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit,
+                          size: 20, color: Colors.blue),
+                      onPressed: onEdit,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(height: 4),
+                    IconButton(
+                      icon: const Icon(Icons.delete,
+                          size: 20, color: Colors.red),
+                      onPressed: onDelete,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                )
+              else if (product.grade?.isNotEmpty ?? false)
+                _Badge(
+                    label: '${AppLocalizations.of(context)!.grade} ${product.grade}',
+                    color: Colors.indigo),
+            ],
           ),
-          title: Text(name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          subtitle: Text('${l.quantityLabel}: ${product.quantity} • $loc\n₹${product.pricePerUnit}',
-              style: const TextStyle(fontSize: 12)),
-          isThreeLine: true,
-          trailing: isOwner
-              ? Row(mainAxisSize: MainAxisSize.min, children: [
-                  IconButton(
-                      icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                      onPressed: onEdit),
-                  IconButton(
-                      icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                      onPressed: onDelete),
-                ])
-              : (product.grade?.isNotEmpty ?? false)
-                  ? _Badge(label: '${l.grade} ${product.grade}', color: Colors.indigo)
-                  : null,
         ),
+      ),
+    );
+  }
+}
+
+class _ListingPlaceholder extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _kGreen1.withValues(alpha: 0.3),
+            _kTeal.withValues(alpha: 0.2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.local_florist, color: _kGreen2, size: 28),
+      ),
+    );
+  }
+}
+
+class _QuantityChip extends StatelessWidget {
+  final String label;
+  const _QuantityChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10, color: Colors.grey),
       ),
     );
   }
@@ -1037,7 +1502,7 @@ class _AllProductsSheet extends StatelessWidget {
   }
 }
 
-// ── Product Detail Page (full-screen with Hero animation) ─────────────────────
+// ── Product Detail Page ────────────────────────────────────────────────────────
 
 class ProductDetailPage extends StatelessWidget {
   final ExportProduct product;
@@ -1063,17 +1528,20 @@ class ProductDetailPage extends StatelessWidget {
     final hasImage = product.primaryImage.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F8E9),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 240,
+            expandedHeight: 280,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(translatedName,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold, shadows: [
-                    Shadow(color: Colors.black54, blurRadius: 4)
-                  ])),
+              title: Text(
+                translatedName,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 4)]),
+              ),
               background: Hero(
                 tag: 'product-image-${product.id}',
                 child: hasImage
@@ -1084,129 +1552,183 @@ class ProductDetailPage extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                // Badges
-                Wrap(spacing: 6, children: [
-                  if (product.isOrganic) _Badge(label: l.organic, color: Colors.green),
-                  if (product.grade?.isNotEmpty ?? false)
-                    _Badge(label: '${l.grade} ${product.grade}', color: Colors.indigo),
-                ]),
-                if (product.isOrganic || (product.grade?.isNotEmpty ?? false))
-                  const SizedBox(height: 10),
+            child: Card(
+              margin: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              elevation: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Price + category row
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _kGreen2,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '₹${product.pricePerUnit}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            product.category,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-                // Price
-                Text('₹${product.pricePerUnit}',
-                    style: TextStyle(
-                        fontSize: 24,
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(product.category,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 16),
-                const Divider(),
+                    // Badges
+                    if (product.isOrganic || (product.grade?.isNotEmpty ?? false)) ...[
+                      Wrap(spacing: 6, children: [
+                        if (product.isOrganic)
+                          _Badge(label: l.organic, color: Colors.green),
+                        if (product.grade?.isNotEmpty ?? false)
+                          _Badge(
+                              label: '${l.grade} ${product.grade}',
+                              color: Colors.indigo),
+                      ]),
+                      const SizedBox(height: 10),
+                    ],
 
-                // Core details
-                _DetailRow(l.quantityLabel, product.quantity),
-                _DetailRow(l.locationLabel, translatedLocation),
-                _DetailRow(l.farmerLabel, product.farmerName),
-                if (product.farmerMobile?.isNotEmpty ?? false)
-                  _DetailRow(l.mobileLabel, product.farmerMobile!),
+                    const Divider(),
 
-                // Phase 3 details
-                if (product.variety?.isNotEmpty ?? false)
-                  _DetailRow(l.varietyLabel, product.variety!),
-                if (product.harvestDate != null)
-                  _DetailRow(l.harvestDate, _fmt(product.harvestDate!)),
-                if (product.moistureLevel?.isNotEmpty ?? false)
-                  _DetailRow(l.moistureLevelLabel, product.moistureLevel!),
-                if (product.storageLocation?.isNotEmpty ?? false)
-                  _DetailRow(l.storageLocationLabel, product.storageLocation!),
-                if (product.packagingType?.isNotEmpty ?? false)
-                  _DetailRow(l.packagingTypeLabel, product.packagingType!),
-                if (product.minOrderQty?.isNotEmpty ?? false)
-                  _DetailRow(l.minOrder, product.minOrderQty!),
-                if (product.expectedPrice?.isNotEmpty ?? false)
-                  _DetailRow(l.expectedPriceLabel, '₹${product.expectedPrice}'),
+                    // Detail rows
+                    _DetailRow(l.quantityLabel, product.quantity,
+                        icon: Icons.inventory_2_outlined),
+                    _DetailRow(l.locationLabel, translatedLocation,
+                        icon: Icons.location_on_outlined),
+                    _DetailRow(l.farmerLabel, product.farmerName,
+                        icon: Icons.person_outline),
+                    if (product.farmerMobile?.isNotEmpty ?? false)
+                      _DetailRow(l.mobileLabel, product.farmerMobile!,
+                          icon: Icons.phone_outlined),
+                    if (product.variety?.isNotEmpty ?? false)
+                      _DetailRow(l.varietyLabel, product.variety!,
+                          icon: Icons.grass_outlined),
+                    if (product.harvestDate != null)
+                      _DetailRow(l.harvestDate, _fmt(product.harvestDate!),
+                          icon: Icons.event_outlined),
+                    if (product.moistureLevel?.isNotEmpty ?? false)
+                      _DetailRow(l.moistureLevelLabel, product.moistureLevel!,
+                          icon: Icons.water_drop_outlined),
+                    if (product.storageLocation?.isNotEmpty ?? false)
+                      _DetailRow(l.storageLocationLabel, product.storageLocation!,
+                          icon: Icons.warehouse_outlined),
+                    if (product.packagingType?.isNotEmpty ?? false)
+                      _DetailRow(l.packagingTypeLabel, product.packagingType!,
+                          icon: Icons.all_inbox_outlined),
+                    if (product.minOrderQty?.isNotEmpty ?? false)
+                      _DetailRow(l.minOrder, product.minOrderQty!,
+                          icon: Icons.shopping_cart_outlined),
+                    if (product.expectedPrice?.isNotEmpty ?? false)
+                      _DetailRow(l.expectedPriceLabel, '₹${product.expectedPrice}',
+                          icon: Icons.currency_rupee),
 
-                // Additional images gallery
-                if (product.imageUrls.length > 1) ...[
-                  const SizedBox(height: 16),
-                  Text(l.additionalImagesLabel,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 80,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: product.imageUrls.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (_, i) => ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(product.imageUrls[i],
-                            width: 80, height: 80, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                                width: 80, height: 80, color: Colors.grey.shade300)),
+                    // Additional images gallery
+                    if (product.imageUrls.length > 1) ...[
+                      const SizedBox(height: 16),
+                      Text(l.additionalImagesLabel,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: product.imageUrls.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (_, i) => ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              product.imageUrls[i],
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey.shade300),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
 
-                if (product.description.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text(l.description, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(product.description),
-                ],
+                    if (product.description.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(l.description,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(product.description),
+                    ],
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                // Action buttons
-                if (isOwner) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(
-                              builder: (_) => ExporterFormPage(existingProduct: product))),
-                      icon: const Icon(Icons.edit),
-                      label: Text(l.edit),
-                    ),
-                  ),
-                ] else ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    // Action buttons
+                    if (isOwner) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      ExporterFormPage(existingProduct: product))),
+                          icon: const Icon(Icons.edit),
+                          label: Text(l.edit),
+                        ),
                       ),
-                      onPressed: () {
-                        final user = FirebaseAuth.instance.currentUser;
-                        if (user == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please sign in to place an order')));
-                          return;
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  CreatePurchaseOrderPage(listingData: product)),
-                        );
-                      },
-                      icon: const Icon(Icons.shopping_cart_checkout),
-                      label: const Text('Place Order',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+                    ] else ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _kGreen2,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Please sign in to place an order')));
+                              return;
+                            }
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => CreatePurchaseOrderPage(
+                                      listingData: product)),
+                            );
+                          },
+                          icon: const Icon(Icons.shopping_cart_checkout),
+                          label: const Text('Place Order',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
 
-                const SizedBox(height: 40),
-              ]),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -1219,10 +1741,22 @@ class _PlaceholderBg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF1B5E20),
+            Color(0xFF00897B),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Center(
-        child: Icon(Icons.local_florist, size: 64,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
+        child: Icon(
+          Icons.grain,
+          size: 64,
+          color: Colors.white.withValues(alpha: 0.4),
+        ),
       ),
     );
   }
@@ -1231,17 +1765,25 @@ class _PlaceholderBg extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  const _DetailRow(this.label, this.value);
+  final IconData icon;
+  const _DetailRow(this.label, this.value, {required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
+        Container(
+          width: 24,
+          height: 24,
+          margin: const EdgeInsets.only(right: 8),
+          child: Icon(icon, size: 16, color: _kGreen2),
+        ),
         SizedBox(
-            width: 130,
+            width: 110,
             child: Text(label,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13))),
         Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
       ]),
     );
