@@ -1,137 +1,123 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import 'chat_models.dart';
 
 class ChatbotService {
-  // ============================================================
-  // BASE URL
-  // ============================================================
-  //
-  // Flutter Web / Chrome → http://localhost:5000          (automatic)
-  // Android Emulator     → http://10.0.2.2:5000           (automatic)
-  // Physical Android     → set _usePhysicalDevice = true
-  //                        and change _physicalDeviceUrl to your PC's LAN IP
-  //                        e.g. http://192.168.1.100:5000
-  //
-  static const bool _usePhysicalDevice = false;
-  static const String _physicalDeviceUrl = 'http://192.168.1.100:5000';
+  static const _model = 'gemini-2.0-flash';
+  static const _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
 
-  static String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:5000';
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return _usePhysicalDevice ? _physicalDeviceUrl : 'http://10.0.2.2:5000';
-      default:
-        return _usePhysicalDevice ? _physicalDeviceUrl : 'http://localhost:5000';
-    }
-  }
+  static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  Map<String, String> get _headers => const {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+  static const _systemInstruction =
+      'You are KrishiMithra AI, a friendly and knowledgeable agricultural assistant '
+      'for Indian farmers. You help with crop cultivation, pest and disease management, '
+      'fertilizers, irrigation techniques, market prices, weather guidance, and general '
+      'farming best practices. Always respond in the language the user specifies. '
+      'Keep answers practical, concise, and easy for a farmer to understand. '
+      'When relevant, mention Indian context (local crop varieties, seasons, regions). '
+      'Do not answer questions unrelated to agriculture or farming.';
 
-  // ============================================================
-  // HISTORY BUILDER
-  // ============================================================
+  // ── Public API ───────────────────────────────────────────────────────────────
 
-  /// Converts [messages] (the full conversation including the new user message)
-  /// into the history array sent to the backend.
-  ///
-  /// - Skips the initial greeting bot message (index 0).
-  /// - Skips the last message (the current user message — sent as "message").
-  /// - Limits to the most recent 10 messages for token efficiency.
-  List<Map<String, String>> _buildHistory(List<ChatMessage> messages) {
-    if (messages.length <= 2) return [];
-
-    // Strip greeting (index 0) and current user message (last)
-    final slice = messages.sublist(1, messages.length - 1);
-    final limited = slice.length > 10 ? slice.sublist(slice.length - 10) : slice;
-
-    return limited
-        .map((m) => {
-              'role': m.isUser ? 'user' : 'assistant',
-              'content': m.content,
-            })
-        .toList();
-  }
-
-  // ============================================================
-  // PUBLIC API — called from chatbot_page.dart
-  // ============================================================
-
-  /// Called when no knowledge-base entry matched. Pure Groq reply.
   Future<String> getBotReply(
     String userMessage,
     String language,
     List<ChatMessage> history,
-  ) {
-    return _post(
-      message: userMessage,
-      language: language,
-      history: _buildHistory(history),
-    );
-  }
+  ) =>
+      _generate(
+        userMessage: userMessage,
+        language: language,
+        history: history,
+      );
 
-  /// Called when a knowledge-base entry matched.
-  /// [knowledgeContext] is the English KB answer injected as context.
   Future<String> getBotReplyWithContext(
     String userMessage,
     String language,
     String knowledgeContext,
     List<ChatMessage> history,
-  ) {
-    return _post(
-      message: userMessage,
-      language: language,
-      context: knowledgeContext,
-      history: _buildHistory(history),
-    );
-  }
+  ) =>
+      _generate(
+        userMessage: userMessage,
+        language: language,
+        knowledgeContext: knowledgeContext,
+        history: history,
+      );
 
-  // ============================================================
-  // HTTP POST → Node.js backend
-  // ============================================================
+  // ── Core Gemini call ─────────────────────────────────────────────────────────
 
-  Future<String> _post({
-    required String message,
-    String language = 'en',
-    String? context,
-    List<Map<String, String>> history = const [],
+  Future<String> _generate({
+    required String userMessage,
+    required String language,
+    String? knowledgeContext,
+    List<ChatMessage> history = const [],
   }) async {
-    final uri = Uri.parse('$_baseUrl/api/chat');
-    debugPrint('KM Chatbot → $uri');
+    if (_apiKey.isEmpty) {
+      return 'Gemini API key is not configured. Please add GEMINI_API_KEY to your .env file.';
+    }
+
+    final uri = Uri.parse('$_baseUrl?key=$_apiKey');
+
+    // Build contents array (history + current message)
+    final contents = <Map<String, dynamic>>[];
+
+    // Previous turns (skip greeting at index 0, skip last user message)
+    final slice = history.length > 2 ? history.sublist(1, history.length - 1) : <ChatMessage>[];
+    final limited = slice.length > 10 ? slice.sublist(slice.length - 10) : slice;
+    for (final m in limited) {
+      contents.add({
+        'role': m.isUser ? 'user' : 'model',
+        'parts': [{'text': m.content}],
+      });
+    }
+
+    // Current user message — inject KB context as a preamble if present
+    final prompt = StringBuffer();
+    if (knowledgeContext != null && knowledgeContext.isNotEmpty) {
+      prompt.writeln('[Relevant knowledge base context]: $knowledgeContext');
+      prompt.writeln();
+    }
+    prompt.write('[Respond in language: $language] $userMessage');
+
+    contents.add({
+      'role': 'user',
+      'parts': [{'text': prompt.toString()}],
+    });
+
+    final body = jsonEncode({
+      'system_instruction': {
+        'parts': [{'text': _systemInstruction}],
+      },
+      'contents': contents,
+      'generationConfig': {
+        'temperature': 0.7,
+        'maxOutputTokens': 1024,
+        'topP': 0.9,
+      },
+    });
+
+    debugPrint('KM Chatbot → Gemini $_model');
 
     try {
-      final bodyMap = <String, dynamic>{
-        'message': message,
-        'language': language,
-        'history': history,
-      };
-      if (context != null && context.isNotEmpty) {
-        bodyMap['context'] = context;
-      }
-
       final response = await http
-          .post(uri, headers: _headers, body: jsonEncode(bodyMap))
-          .timeout(const Duration(seconds: 60));
+          .post(uri,
+              headers: const {'Content-Type': 'application/json'},
+              body: body)
+          .timeout(const Duration(seconds: 30));
 
       debugPrint('KM Chatbot ← ${response.statusCode}');
-      debugPrint('KM Chatbot body: ${response.body}');
-
       return _parse(response);
     } catch (e) {
-      debugPrint('KM Chatbot exception: $e');
+      debugPrint('KM Chatbot error: $e');
       return _friendlyError(e);
     }
   }
 
-  // ============================================================
-  // RESPONSE PARSING
-  // ============================================================
+  // ── Response parsing ─────────────────────────────────────────────────────────
 
   String _parse(http.Response response) {
     if (response.statusCode == 429) {
@@ -141,13 +127,21 @@ class ChatbotService {
     try {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 200 && data['success'] == true) {
-        final msg = data['message']?.toString().trim() ?? '';
-        if (msg.isNotEmpty) return _clean(msg);
+      if (response.statusCode == 200) {
+        final candidates = data['candidates'] as List?;
+        if (candidates != null && candidates.isNotEmpty) {
+          final content = candidates[0]['content'] as Map<String, dynamic>?;
+          final parts = content?['parts'] as List?;
+          if (parts != null && parts.isNotEmpty) {
+            final text = parts[0]['text']?.toString().trim() ?? '';
+            if (text.isNotEmpty) return text;
+          }
+        }
       }
 
-      final error = data['error']?.toString().trim() ?? '';
-      if (error.isNotEmpty) return error;
+      // Gemini error response
+      final error = data['error']?['message']?.toString().trim();
+      if (error != null && error.isNotEmpty) return 'AI error: $error';
     } catch (e) {
       debugPrint('KM Chatbot parse error: $e');
     }
@@ -155,40 +149,19 @@ class ChatbotService {
     return 'Sorry, I could not generate a response (${response.statusCode}). Please try again.';
   }
 
-  String _clean(String text) {
-    var result = text.trim();
-    // Strip surrounding quotes that some models add
-    if (result.length >= 2 &&
-        result.startsWith('"') &&
-        result.endsWith('"')) {
-      result = result.substring(1, result.length - 1);
-    }
-    // Replace escaped newlines
-    return result.replaceAll(r'\n', '\n').trim();
-  }
-
-  // ============================================================
-  // ERROR MESSAGES
-  // ============================================================
+  // ── Error messages ───────────────────────────────────────────────────────────
 
   String _friendlyError(Object error) {
     final text = error.toString().toLowerCase();
-
     if (text.contains('timeout')) {
-      return 'The request timed out. Please check your connection and try again.';
+      return 'The request timed out. Please check your internet connection and try again.';
     }
-
-    if (text.contains('failed to fetch') ||
-        text.contains('connection refused') ||
-        text.contains('connection failed') ||
-        text.contains('socketexception') ||
+    if (text.contains('socketexception') ||
         text.contains('failed host lookup') ||
+        text.contains('connection refused') ||
         text.contains('network')) {
-      return 'Could not connect to KrishiMithra AI server.\n\n'
-          'Make sure the chatbot backend is running:\n'
-          'cd km_chatbot_backend && npm run dev';
+      return 'No internet connection. Please check your network and try again.';
     }
-
     return 'Sorry, something went wrong. Please try again.';
   }
 }
