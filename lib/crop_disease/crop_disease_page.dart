@@ -378,8 +378,9 @@ class _CropDiseasePageState extends State<CropDiseasePage>
       if (mounted) {
         setState(() {
           _loading = false;
-          disease = 'Detection failed — check your network and try again';
+          disease = 'Detection failed — $e';
         });
+        _fadeCtrl.forward();
       }
     }
   }
@@ -565,9 +566,15 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     ).timeout(const Duration(seconds: 45));
 
     if (res.statusCode != 200) {
+      String errMsg = 'Gemini error ${res.statusCode}';
+      try {
+        final errBody = jsonDecode(res.body) as Map<String, dynamic>;
+        final msg = errBody['error']?['message']?.toString();
+        if (msg != null && msg.isNotEmpty) errMsg = 'AI error: $msg';
+      } catch (_) {}
       setState(() {
         _loading = false;
-        disease = 'Gemini error ${res.statusCode} — check your API key';
+        disease = errMsg;
       });
       return;
     }
