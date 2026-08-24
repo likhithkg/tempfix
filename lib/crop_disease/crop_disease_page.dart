@@ -329,13 +329,14 @@ class _CropDiseasePageState extends State<CropDiseasePage>
 
     final hasPlantId = !(_plantIdKey?.isEmpty ?? true);
     final hasHf      = !(_hfKey?.isEmpty ?? true);
+    final geminiKey  = dotenv.env['GEMINI_API_KEY'] ?? '';
+    final hasGemini  = geminiKey.isNotEmpty;
 
-    if (!hasPlantId && !hasHf) {
+    if (!hasPlantId && !hasHf && !hasGemini) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-                'Add PLANTID_API_KEY (plant.id) or HUGGINGFACE_API_KEY (huggingface.co) to .env'),
+            content: Text('Add GEMINI_API_KEY to .env to enable disease detection'),
             backgroundColor: Color(0xFFD32F2F),
             duration: Duration(seconds: 6),
           ),
@@ -350,8 +351,10 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     try {
       if (hasPlantId) {
         await _analyzeWithPlantId();
-      } else {
+      } else if (hasHf) {
         await _analyzeWithHuggingFace();
+      } else {
+        await _analyzeWithGemini(geminiKey);
       }
 
       if (!mounted) return;
@@ -507,6 +510,97 @@ class _CropDiseasePageState extends State<CropDiseasePage>
           'bactericide based on confirmed diagnosis.';
       prevention = 'Use certified disease-free seeds. Maintain proper plant spacing '
           'and crop rotation. Regular field scouting.';
+    }
+
+    setState(() {});
+  }
+
+  // ─── Gemini Vision provider ──────────────────────────────────────────────────
+
+  Future<void> _analyzeWithGemini(String apiKey) async {
+    const model = 'gemini-3.6-flash';
+    final uri = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey');
+
+    const prompt =
+        'You are an expert agricultural plant pathologist. Analyze this crop/plant image.\n\n'
+        'Respond ONLY with valid JSON (no markdown, no extra text) in this exact format:\n'
+        '{\n'
+        '  "disease_name": "Name of disease, or Healthy Plant if no disease",\n'
+        '  "category": "Fungal Disease | Bacterial Disease | Viral Disease | Pest | Nutritional Deficiency | Healthy",\n'
+        '  "severity": "High | Medium | Low",\n'
+        '  "confidence_percent": 85,\n'
+        '  "symptoms": "Describe the visible symptoms in 2-3 sentences.",\n'
+        '  "treatment": "Specific actionable treatment in 2-3 sentences.",\n'
+        '  "prevention": "Prevention steps in 1-2 sentences."\n'
+        '}\n\n'
+        'If the image is unclear or not a plant, set disease_name to "Unable to analyze" '
+        'and confidence_percent to 0.';
+
+    final b64 = base64Encode(_imageBytes!);
+    final body = jsonEncode({
+      'contents': [
+        {
+          'parts': [
+            {'text': prompt},
+            {
+              'inline_data': {
+                'mime_type': 'image/jpeg',
+                'data': b64,
+              }
+            },
+          ]
+        }
+      ],
+      'generationConfig': {
+        'temperature': 0.2,
+        'maxOutputTokens': 1024,
+      },
+    });
+
+    final res = await http.post(
+      uri,
+      headers: const {'Content-Type': 'application/json'},
+      body: body,
+    ).timeout(const Duration(seconds: 45));
+
+    if (res.statusCode != 200) {
+      setState(() {
+        _loading = false;
+        disease = 'Gemini error ${res.statusCode} — check your API key';
+      });
+      return;
+    }
+
+    try {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final candidates = data['candidates'] as List?;
+      final text = (candidates?.first['content']['parts'] as List?)
+              ?.first['text']
+              ?.toString()
+              .trim() ??
+          '';
+
+      // Strip possible ```json fences
+      final cleaned = text
+          .replaceAll(RegExp(r'^```json\s*', multiLine: true), '')
+          .replaceAll(RegExp(r'^```\s*', multiLine: true), '')
+          .trim();
+
+      final json = jsonDecode(cleaned) as Map<String, dynamic>;
+
+      disease    = (json['disease_name'] ?? '').toString();
+      category   = (json['category'] ?? '').toString();
+      severity   = (json['severity'] ?? '').toString();
+      confidence = '${json['confidence_percent'] ?? 0}%';
+      symptoms   = (json['symptoms'] ?? '').toString();
+      treatment  = (json['treatment'] ?? '').toString();
+      prevention = (json['prevention'] ?? '').toString();
+
+      final isHealthy = disease.toLowerCase().contains('healthy');
+      if (isHealthy) severity = 'Low';
+    } catch (e) {
+      disease = 'Could not parse AI response — try again';
     }
 
     setState(() {});
