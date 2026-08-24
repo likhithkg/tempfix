@@ -349,12 +349,12 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     HapticFeedback.lightImpact();
 
     try {
-      if (hasPlantId) {
+      if (hasGemini) {
+        await _analyzeWithGemini(geminiKey);
+      } else if (hasPlantId) {
         await _analyzeWithPlantId();
       } else if (hasHf) {
         await _analyzeWithHuggingFace();
-      } else {
-        await _analyzeWithGemini(geminiKey);
       }
 
       if (!mounted) return;
