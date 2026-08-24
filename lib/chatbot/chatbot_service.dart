@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'chat_models.dart';
 
 class ChatbotService {
-  static const _model = 'gemini-2.0-flash';
+  static const _model = 'gemini-3.6-flash';
   static const _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
 
