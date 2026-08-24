@@ -582,19 +582,34 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     try {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final candidates = data['candidates'] as List?;
-      final text = (candidates?.first['content']['parts'] as List?)
+
+      if (candidates == null || candidates.isEmpty) {
+        // Blocked or no output — check promptFeedback
+        final reason = data['promptFeedback']?['blockReason']?.toString();
+        disease = reason != null
+            ? 'Image blocked by AI safety filter: $reason'
+            : 'No response from AI — please try a clearer plant photo';
+        setState(() {});
+        return;
+      }
+
+      final text = (candidates.first['content']['parts'] as List?)
               ?.first['text']
               ?.toString()
               .trim() ??
           '';
 
-      // Strip possible ```json fences
-      final cleaned = text
-          .replaceAll(RegExp(r'^```json\s*', multiLine: true), '')
-          .replaceAll(RegExp(r'^```\s*', multiLine: true), '')
-          .trim();
-
-      final json = jsonDecode(cleaned) as Map<String, dynamic>;
+      // Extract the first complete JSON object from the response
+      // (Gemini sometimes adds surrounding text despite instructions)
+      final start = text.indexOf('{');
+      final end   = text.lastIndexOf('}');
+      if (start == -1 || end == -1 || end <= start) {
+        disease = 'Unexpected AI response format — please try again';
+        setState(() {});
+        return;
+      }
+      final jsonStr = text.substring(start, end + 1);
+      final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
       disease    = (json['disease_name'] ?? '').toString();
       category   = (json['category'] ?? '').toString();
@@ -607,7 +622,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
       final isHealthy = disease.toLowerCase().contains('healthy');
       if (isHealthy) severity = 'Low';
     } catch (e) {
-      disease = 'Could not parse AI response — try again';
+      disease = 'Parse error: $e';
     }
 
     setState(() {});
