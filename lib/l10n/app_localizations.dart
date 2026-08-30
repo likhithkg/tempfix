@@ -2292,7 +2292,7 @@ abstract class AppLocalizations {
   /// No description provided for @themePreferenceSaved.
   ///
   /// In en, this message translates to:
-  /// **'Theme preference saved. Restart app to apply immediately.'**
+  /// **'Theme applied.'**
   String get themePreferenceSaved;
 
   /// No description provided for @passwordChangeNotAvailable.
@@ -2382,7 +2382,7 @@ abstract class AppLocalizations {
   /// No description provided for @darkModeSavedLocally.
   ///
   /// In en, this message translates to:
-  /// **'Saved locally. Restart to apply.'**
+  /// **'Changes apply immediately.'**
   String get darkModeSavedLocally;
 
   /// No description provided for @userId.

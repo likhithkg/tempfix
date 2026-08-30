@@ -1107,7 +1107,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get profileSaved => 'ప్రొఫైల్ సేవ్ చేయబడింది';
 
   @override
-  String get themePreferenceSaved => 'థీమ్ ప్రాధాన్యత సేవ్ చేయబడింది. వెంటనే వర్తించడానికి యాప్ రీస్టార్ట్ చేయండి.';
+  String get themePreferenceSaved => 'థీమ్ వర్తించబడింది.';
 
   @override
   String get passwordChangeNotAvailable => 'పాస్‌వర్డ్ మార్పు అందుబాటులో లేదు';
@@ -1152,7 +1152,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get help => 'సహాయం';
 
   @override
-  String get darkModeSavedLocally => 'స్థానికంగా సేవ్ చేయబడింది. వర్తించడానికి రీస్టార్ట్ చేయండి.';
+  String get darkModeSavedLocally => 'మార్పులు వెంటనే వర్తిస్తాయి.';
 
   @override
   String get userId => 'యూజర్ ID';

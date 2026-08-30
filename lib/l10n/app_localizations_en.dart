@@ -1107,7 +1107,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSaved => 'Profile saved';
 
   @override
-  String get themePreferenceSaved => 'Theme preference saved. Restart app to apply immediately.';
+  String get themePreferenceSaved => 'Theme applied.';
 
   @override
   String get passwordChangeNotAvailable => 'Password change not available';
@@ -1152,7 +1152,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get help => 'Help';
 
   @override
-  String get darkModeSavedLocally => 'Saved locally. Restart to apply.';
+  String get darkModeSavedLocally => 'Changes apply immediately.';
 
   @override
   String get userId => 'User ID';

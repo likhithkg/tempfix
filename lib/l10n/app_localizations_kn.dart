@@ -1107,7 +1107,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get profileSaved => 'ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಿದೆ';
 
   @override
-  String get themePreferenceSaved => 'ಥೀಮ್ ಆದ್ಯತೆ ಉಳಿಸಲಾಗಿದೆ. ತಕ್ಷಣ ಅನ್ವಯಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಮರುಪ್ರಾರಂಭಿಸಿ.';
+  String get themePreferenceSaved => 'ಥೀಮ್ ಅನ್ವಯಿಸಲಾಗಿದೆ.';
 
   @override
   String get passwordChangeNotAvailable => 'ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸುವ ಸೌಲಭ್ಯ ಲಭ್ಯವಿಲ್ಲ';
@@ -1152,7 +1152,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get help => 'ಸಹಾಯ';
 
   @override
-  String get darkModeSavedLocally => 'ಸ್ಥಳೀಯವಾಗಿ ಉಳಿಸಲಾಗಿದೆ. ಅನ್ವಯಿಸಲು ಮರುಪ್ರಾರಂಭಿಸಿ.';
+  String get darkModeSavedLocally => 'ಬದಲಾವಣೆಗಳು ತಕ್ಷಣ ಅನ್ವಯವಾಗುತ್ತವೆ.';
 
   @override
   String get userId => 'ಬಳಕೆದಾರ ID';

@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,6 +12,10 @@ import 'profile_service_helpers.dart';
 class ProfileService {
   ProfileService._();
   static final instance = ProfileService._();
+
+  /// Notifier that drives live theme changes across the app.
+  /// Initialised to light; updated by [setDarkMode] and at startup in main().
+  final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
@@ -84,6 +89,7 @@ class ProfileService {
     final key = uid != null ? 'isDarkMode_$uid' : 'isDarkMode';
     final sp = await SharedPreferences.getInstance();
     await sp.setBool(key, isDark);
+    themeModeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
   }
 
   Future<bool> getDarkMode() async {

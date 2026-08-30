@@ -22,6 +22,7 @@ import 'labour_hub/labour_hub_home_page.dart';
 import 'labour_hub/labour_hub_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'profile/profile_page.dart';
+import 'profile/profile_service.dart';
 import 'profile/profile_button.dart'; // <-- ADD THIS
 import 'crop_disease/crop_disease_page.dart';
 import 'package:geolocator/geolocator.dart';
@@ -72,6 +73,8 @@ Future<void> main() async {
   final startupUid = fb.FirebaseAuth.instance.currentUser?.uid;
   final darkKey = startupUid != null ? 'isDarkMode_$startupUid' : 'isDarkMode';
   final isDark = prefs.getBool(darkKey) ?? false;
+  ProfileService.instance.themeModeNotifier.value =
+      isDark ? ThemeMode.dark : ThemeMode.light;
 
   // --- Initialize LocaleService so saved locale is available immediately ---
   await LocaleService.instance.init();
@@ -127,7 +130,7 @@ if (key == null || key.isEmpty) {
       ));
     } else {
       // No early init error — run your normal app
-      runApp(KrishiMithraApp(isDark: isDark));
+      runApp(const KrishiMithraApp());
     }
   }, (error, stack) {
     // Last-resort catcher: print to console (logcat)
@@ -227,20 +230,21 @@ class ErrorScreen extends StatelessWidget {
 
 
 class KrishiMithraApp extends StatelessWidget {
-  final bool isDark;
-  const KrishiMithraApp({super.key, required this.isDark});
+  const KrishiMithraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return OKToast(
-      child: ValueListenableBuilder<Locale?>(
-        valueListenable: LocaleService.instance.localeNotifier,
-        builder: (context, locale, _) {
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: ProfileService.instance.themeModeNotifier,
+        builder: (context, themeMode, _) => ValueListenableBuilder<Locale?>(
+          valueListenable: LocaleService.instance.localeNotifier,
+          builder: (context, locale, _) {
           return MaterialApp(
             title: 'KrishiMithra',
             theme: kmLightTheme,
             darkTheme: kmDarkTheme,
-            themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+            themeMode: themeMode,
             locale: locale,
             supportedLocales: const [
               Locale('en'),
@@ -285,7 +289,8 @@ class KrishiMithraApp extends StatelessWidget {
           );
         },
       ),
-    );
+    ),
+  );
   }
 }
 

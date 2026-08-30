@@ -1107,7 +1107,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get profileSaved => 'പ്രൊഫൈൽ സേവ് ചെയ്തു';
 
   @override
-  String get themePreferenceSaved => 'തീം മുൻഗണന സേവ് ചെയ്തു. പ്രയോഗിക്കാൻ ആപ്പ് പുനരാരംഭിക്കുക.';
+  String get themePreferenceSaved => 'തീം പ്രയോഗിച്ചു.';
 
   @override
   String get passwordChangeNotAvailable => 'പാസ്‌വേഡ് മാറ്റം ലഭ്യമല്ല';
@@ -1152,7 +1152,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get help => 'സഹായം';
 
   @override
-  String get darkModeSavedLocally => 'പ്രാദേശികമായി സേവ് ചെയ്തു. പ്രയോഗിക്കാൻ പുനരാരംഭിക്കുക.';
+  String get darkModeSavedLocally => 'മാറ്റങ്ങൾ ഉടനടി പ്രയോഗിക്കും.';
 
   @override
   String get userId => 'ഉപയോക്തൃ ID';

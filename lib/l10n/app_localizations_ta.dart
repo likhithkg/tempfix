@@ -1107,7 +1107,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get profileSaved => 'சுயவிவரம் சேமிக்கப்பட்டது';
 
   @override
-  String get themePreferenceSaved => 'தீம் விருப்பம் சேமிக்கப்பட்டது. பயன்படுத்த ஆப்பை மீண்டும் துவக்குங்கள்.';
+  String get themePreferenceSaved => 'தீம் பயன்படுத்தப்பட்டது.';
 
   @override
   String get passwordChangeNotAvailable => 'கடவுச்சொல் மாற்றம் இல்லை';
@@ -1152,7 +1152,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get help => 'உதவி';
 
   @override
-  String get darkModeSavedLocally => 'உள்ளூரில் சேமிக்கப்பட்டது. பயன்படுத்த மீண்டும் துவக்குங்கள்.';
+  String get darkModeSavedLocally => 'மாற்றங்கள் உடனடியாக பயன்படுத்தப்படும்.';
 
   @override
   String get userId => 'பயனர் ID';

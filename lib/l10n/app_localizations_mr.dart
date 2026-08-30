@@ -1107,7 +1107,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get profileSaved => 'प्रोफाइल जतन झाला';
 
   @override
-  String get themePreferenceSaved => 'थीम प्राधान्य जतन झाले. लागू करण्यासाठी अ‍ॅप रीस्टार्ट करा.';
+  String get themePreferenceSaved => 'थीम लागू केली.';
 
   @override
   String get passwordChangeNotAvailable => 'पासवर्ड बदल उपलब्ध नाही';
@@ -1152,7 +1152,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get help => 'मदत';
 
   @override
-  String get darkModeSavedLocally => 'स्थानिकपणे जतन केले. लागू करण्यासाठी रीस्टार्ट करा.';
+  String get darkModeSavedLocally => 'बदल लगेच लागू होतात.';
 
   @override
   String get userId => 'वापरकर्ता ID';

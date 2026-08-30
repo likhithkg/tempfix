@@ -1107,7 +1107,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileSaved => 'प्रोफ़ाइल सहेजी गई';
 
   @override
-  String get themePreferenceSaved => 'थीम सेटिंग सहेजी गई। लागू करने के लिए ऐप पुनः प्रारंभ करें।';
+  String get themePreferenceSaved => 'थीम लागू की गई।';
 
   @override
   String get passwordChangeNotAvailable => 'पासवर्ड बदलना उपलब्ध नहीं';
@@ -1152,7 +1152,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get help => 'सहायता';
 
   @override
-  String get darkModeSavedLocally => 'स्थानीय रूप से सहेजा गया। लागू करने के लिए पुनः प्रारंभ करें।';
+  String get darkModeSavedLocally => 'बदलाव तुरंत लागू होते हैं।';
 
   @override
   String get userId => 'उपयोगकर्ता ID';
