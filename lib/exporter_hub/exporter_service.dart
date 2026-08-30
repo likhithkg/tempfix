@@ -39,13 +39,17 @@ class ExporterService {
   Stream<List<ExportProduct>> getF2BProducts() {
     return _productsRef
         .where('listingSource', isEqualTo: 'f2b_mart')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              data['id'] = doc.id;
-              return ExportProduct.fromMap(data);
-            }).toList());
+        .map((snap) {
+          final products = snap.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id;
+            return ExportProduct.fromMap(data);
+          }).toList();
+          products.sort((a, b) =>
+              (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+          return products;
+        });
   }
 
   /// Stream only products owned by the given user (Export Hub only).

@@ -453,6 +453,9 @@ class _F2BHomePageState extends State<F2BHomePage> {
             topPad: topPad,
             cartCount: _cartCount,
             newOrderCount: _newOrderCount,
+            onBack: Navigator.canPop(context)
+                ? () => Navigator.pop(context)
+                : null,
             onWishlist: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const F2BWishlistPage())),
             onCart: () => Navigator.push(context,
@@ -716,6 +719,7 @@ class _GBHeader extends StatelessWidget {
   final int newOrderCount;
   final VoidCallback onWishlist, onCart, onSellerOrders,
       onDashboard, onMap;
+  final VoidCallback? onBack;
   const _GBHeader({
     required this.topPad,
     required this.cartCount,
@@ -725,6 +729,7 @@ class _GBHeader extends StatelessWidget {
     required this.onSellerOrders,
     required this.onDashboard,
     required this.onMap,
+    this.onBack,
   });
 
   Widget _badgeIcon(
@@ -770,6 +775,14 @@ class _GBHeader extends StatelessWidget {
         ),
       ),
       child: Row(children: [
+        if (onBack != null)
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, size: 22),
+            color: Colors.white,
+            tooltip: 'Back',
+            onPressed: onBack,
+            padding: const EdgeInsets.only(right: 4),
+          ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(

@@ -1,1 +1,13 @@
-{"indexes":[],"fieldOverrides":[]}
+{
+  "indexes": [
+    {
+      "collectionGroup": "export_products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "listingSource", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

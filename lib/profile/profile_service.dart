@@ -78,15 +78,19 @@ class ProfileService {
     return doc.data() ?? {};
   }
 
-  // Theme preference
+  // Theme preference — scoped per user so one account's choice doesn't affect another's.
   Future<void> setDarkMode(bool isDark) async {
+    final uid = _auth.currentUser?.uid;
+    final key = uid != null ? 'isDarkMode_$uid' : 'isDarkMode';
     final sp = await SharedPreferences.getInstance();
-    await sp.setBool('isDarkMode', isDark);
+    await sp.setBool(key, isDark);
   }
 
   Future<bool> getDarkMode() async {
+    final uid = _auth.currentUser?.uid;
+    final key = uid != null ? 'isDarkMode_$uid' : 'isDarkMode';
     final sp = await SharedPreferences.getInstance();
-    return sp.getBool('isDarkMode') ?? false;
+    return sp.getBool(key) ?? false;
   }
 
   // ----- New forwarding helpers (fixes undefined_method errors) -----

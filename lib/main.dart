@@ -58,15 +58,26 @@ Future<void> main() async {
   Object? initError;
   StackTrace? initStack;
 
-  // Load persisted theme preference first (so we can show app with right theme even if init fails)
-   // Load persisted theme preference first (so we can show app with right theme even if init fails)
+  // Initialize Firebase first so we can scope theme/prefs to the logged-in user.
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e, st) {
+    initError = e;
+    initStack = st;
+    print('*** Firebase initialization error:\n$e\n$st');
+  }
+
+  // Load dark mode — use a per-user key so each account has its own preference.
   final prefs = await SharedPreferences.getInstance();
-  final isDark = prefs.getBool('isDarkMode') ?? false;
+  final startupUid = fb.FirebaseAuth.instance.currentUser?.uid;
+  final darkKey = startupUid != null ? 'isDarkMode_$startupUid' : 'isDarkMode';
+  final isDark = prefs.getBool(darkKey) ?? false;
 
   // --- Initialize LocaleService so saved locale is available immediately ---
   await LocaleService.instance.init();
 
-  // Try to initialize external services, but catch and store errors instead of crashing.
+  // Try to initialize remaining external services.
+  if (initError == null) {
   try {
     // dotenv (optional — will throw if file missing but we catch it)
    try {
@@ -82,12 +93,6 @@ if (key == null || key.isEmpty) {
 } catch (e, st) {
   print('Warning loading .env: $e\n$st');
 }
-
-
-    // Firebase init
-  await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
-);
     // Supabase init (if you use it)
     await sb.Supabase.initialize(
       url: 'https://ticpdepakqlizhdwgxtz.supabase.co',
@@ -101,6 +106,7 @@ if (key == null || key.isEmpty) {
     // (these prints will appear in logcat when connected or in debug APK)
     print('*** App initialization error:\n$e\n$st');
   }
+  } // end if (initError == null)
 
   // Catch Flutter framework errors and print them
   FlutterError.onError = (FlutterErrorDetails details) {
