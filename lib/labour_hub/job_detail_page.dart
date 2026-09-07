@@ -1,17 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_service.dart';
 import 'job_post_model.dart';
 import 'job_application_model.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kAmber = Color(0xFFFFA000);
-const _kDark = Color(0xFF1A2D1A);
 
 class JobDetailPage extends StatefulWidget {
   final JobPost job;
@@ -125,7 +119,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 4),
           Text('Offered: ₹${widget.job.dailyWage.toStringAsFixed(0)}/day',
-              style: const TextStyle(color: _kOrange, fontWeight: FontWeight.w600)),
+              style: const TextStyle(color: KMColors.rentPrimary, fontWeight: FontWeight.w600)),
           const SizedBox(height: 16),
           TextField(
             controller: _counterCtrl,
@@ -177,7 +171,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 15)),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: _kP2,
+                  backgroundColor: KMColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(
@@ -193,7 +187,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? Colors.red : _kP2,
+      backgroundColor: isError ? Colors.red : KMColors.primary,
     ));
   }
 
@@ -211,7 +205,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white),
@@ -221,7 +215,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -273,7 +267,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2))
                 ],
@@ -282,11 +276,11 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _InfoStat('₹${job.dailyWage.toStringAsFixed(0)}',
-                        'Per Day', _kOrange),
+                        'Per Day', KMColors.rentPrimary),
                     _vDivider(),
-                    _InfoStat('${job.workersRequired}', 'Workers', _kP2),
+                    _InfoStat('${job.workersRequired}', 'Workers', KMColors.primary),
                     _vDivider(),
-                    _InfoStat('${job.durationDays}', 'Days', _kGreen),
+                    _InfoStat('${job.durationDays}', 'Days', KMColors.available),
                     _vDivider(),
                     _InfoStat(
                         '${job.applicantCount}', 'Applied', Colors.purple),
@@ -395,7 +389,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 12,
                       offset: const Offset(0, -4))
                 ],
@@ -404,9 +398,9 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 if (job.farmerPhone.isNotEmpty) ...[
                   IconButton(
                     onPressed: _callFarmer,
-                    icon: const Icon(Icons.phone_rounded, color: _kP2),
+                    icon: const Icon(Icons.phone_rounded, color: KMColors.primary),
                     style: IconButton.styleFrom(
-                        backgroundColor: _kLightGreen,
+                        backgroundColor: KMColors.cardTint,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12))),
                   ),
@@ -415,13 +409,13 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 Expanded(
                   child: _checking
                       ? const Center(
-                          child: CircularProgressIndicator(color: _kP2))
+                          child: CircularProgressIndicator(color: KMColors.primary))
                       : _hasApplied
                           ? Container(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 14),
                               decoration: BoxDecoration(
-                                  color: _kLightGreen,
+                                  color: KMColors.cardTint,
                                   borderRadius:
                                       BorderRadius.circular(12)),
                               child: const Row(
@@ -429,11 +423,11 @@ class _JobDetailPageState extends State<JobDetailPage> {
                                       MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.check_circle_rounded,
-                                        color: _kGreen),
+                                        color: KMColors.available),
                                     SizedBox(width: 8),
                                     Text('Application Sent',
                                         style: TextStyle(
-                                            color: _kP2,
+                                            color: KMColors.primary,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 15)),
                                   ]),
@@ -452,7 +446,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: _kP2,
+                                  backgroundColor: KMColors.primary,
                                   foregroundColor: Colors.white,
                                   minimumSize:
                                       const Size.fromHeight(50),
@@ -509,7 +503,7 @@ class _JCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],
@@ -529,13 +523,13 @@ class _JTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Icon(icon, size: 18, color: _kP2),
+      Icon(icon, size: 18, color: KMColors.primary),
       const SizedBox(width: 8),
       Text(title,
           style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: _kDark)),
+              color: KMColors.textPrimary)),
     ]);
   }
 }
@@ -562,7 +556,7 @@ class _JRow extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: _kDark)),
+                  color: KMColors.textPrimary)),
         ),
       ]),
     );
@@ -579,12 +573,12 @@ class _SkillBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-          color: _kLightGreen,
+          color: KMColors.cardTint,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _kGreen.withOpacity(0.4))),
+          border: Border.all(color: KMColors.available.withValues(alpha: 0.4))),
       child: Text(label,
           style: const TextStyle(
-              fontSize: 12, color: _kP2, fontWeight: FontWeight.w500)),
+              fontSize: 12, color: KMColors.primary, fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -621,7 +615,7 @@ class _ApplicantTile extends StatelessWidget {
       child: Row(children: [
         CircleAvatar(
           radius: 22,
-          backgroundColor: _kLightGreen,
+          backgroundColor: KMColors.cardTint,
           backgroundImage: app.labourPhotoUrl.isNotEmpty
               ? NetworkImage(app.labourPhotoUrl)
               : null,
@@ -631,7 +625,7 @@ class _ApplicantTile extends StatelessWidget {
                       ? app.labourName[0].toUpperCase()
                       : '?',
                   style: const TextStyle(
-                      color: _kP2, fontWeight: FontWeight.bold))
+                      color: KMColors.primary, fontWeight: FontWeight.bold))
               : null,
         ),
         const SizedBox(width: 10),
@@ -646,7 +640,7 @@ class _ApplicantTile extends StatelessWidget {
                   Text(
                       'Counter offer: ₹${app.counterOffer!.toStringAsFixed(0)}/day',
                       style: const TextStyle(
-                          fontSize: 12, color: _kOrange,
+                          fontSize: 12, color: KMColors.rentPrimary,
                           fontWeight: FontWeight.w500)),
                 if (app.message.isNotEmpty)
                   Text(app.message,
@@ -662,7 +656,7 @@ class _ApplicantTile extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20)),
             child: Text(app.status.toUpperCase(),
                 style: TextStyle(
@@ -679,9 +673,9 @@ class _ApplicantTile extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
-                      color: _kLightGreen, shape: BoxShape.circle),
+                      color: KMColors.cardTint, shape: BoxShape.circle),
                   child: const Icon(Icons.check_rounded,
-                      color: _kGreen, size: 16),
+                      color: KMColors.available, size: 16),
                 ),
               ),
               const SizedBox(width: 6),

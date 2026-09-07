@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,14 +6,8 @@ import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'labour_profile_form_page.dart';
 import 'labour_review_model.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kAmber = Color(0xFFFFA000);
-const _kDark = Color(0xFF1A2D1A);
 
 class LabourDetailPage extends StatefulWidget {
   final LabourProfile profile;
@@ -84,7 +78,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Profile link copied to clipboard'),
-        backgroundColor: _kP2,
+        backgroundColor: KMColors.primary,
       ));
     }
   }
@@ -110,7 +104,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
           _reviewCtrl.clear();
         });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Review submitted!'), backgroundColor: _kP2));
+            content: Text('Review submitted!'), backgroundColor: KMColors.primary));
       }
     } catch (_) {
       if (mounted) {
@@ -135,7 +129,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white),
@@ -177,7 +171,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -213,7 +207,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                                   color: Colors.white,
                                   shape: BoxShape.circle),
                               child: const Icon(Icons.verified_rounded,
-                                  color: _kP2, size: 18),
+                                  color: KMColors.primary, size: 18),
                             ),
                         ]),
                         if (p.onlineStatus)
@@ -224,7 +218,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                               width: 14,
                               height: 14,
                               decoration: BoxDecoration(
-                                  color: _kGreen,
+                                  color: KMColors.available,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                       color: Colors.white, width: 2)),
@@ -274,7 +268,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2))
                 ],
@@ -284,7 +278,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                 children: [
                   _Stat(
                       icon: Icons.star_rounded,
-                      color: _kAmber,
+                      color: KMColors.accent,
                       value: p.rating > 0
                           ? p.rating.toStringAsFixed(1)
                           : '–',
@@ -292,19 +286,19 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                   _divider(),
                   _Stat(
                       icon: Icons.work_history_rounded,
-                      color: _kP2,
+                      color: KMColors.primary,
                       value: '${p.completedJobs}',
                       label: 'Jobs Done'),
                   _divider(),
                   _Stat(
                       icon: Icons.timer_rounded,
-                      color: _kOrange,
+                      color: KMColors.rentPrimary,
                       value: '${p.experienceYears}y',
                       label: 'Experience'),
                   _divider(),
                   _Stat(
                       icon: Icons.currency_rupee_rounded,
-                      color: _kGreen,
+                      color: KMColors.available,
                       value: p.wageDisplay,
                       label: 'Wage'),
                 ],
@@ -411,14 +405,14 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                            color: _kLightGreen,
+                            color: KMColors.cardTint,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                                color: _kGreen.withOpacity(0.3))),
+                                color: KMColors.available.withValues(alpha: 0.3))),
                         child: Text(label,
                             style: const TextStyle(
                                 fontSize: 11,
-                                color: _kP2,
+                                color: KMColors.primary,
                                 fontWeight: FontWeight.w500)),
                       );
                     }).toList(),
@@ -535,13 +529,13 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                   const SizedBox(height: 12),
                   Wrap(spacing: 8, runSpacing: 8, children: [
                     if (p.isVerified)
-                      _Badge('✅ Verified Worker', _kGreen),
+                      _Badge('✅ Verified Worker', KMColors.available),
                     if (p.isAadhaarVerified)
-                      _Badge('🪪 Aadhaar Verified', _kP2),
+                      _Badge('🪪 Aadhaar Verified', KMColors.primary),
                     if (p.rating >= 4.5)
-                      _Badge('⭐ Top Rated', _kAmber),
+                      _Badge('⭐ Top Rated', KMColors.accent),
                     if (p.completedJobs >= 10)
-                      _Badge('🏆 Trusted Worker', _kOrange),
+                      _Badge('🏆 Trusted Worker', KMColors.rentPrimary),
                     if (p.experienceYears >= 5)
                       _Badge('💪 Experienced', Colors.purple),
                     if (p.gender == 'Female')
@@ -566,7 +560,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                           () => _showReviewForm = !_showReviewForm),
                       child: Text(
                           _showReviewForm ? 'Cancel' : 'Write Review',
-                          style: const TextStyle(color: _kP2)),
+                          style: const TextStyle(color: KMColors.primary)),
                     ),
                 ]),
                 if (_showReviewForm) ...[
@@ -612,7 +606,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 12,
                       offset: const Offset(0, -4))
                 ],
@@ -625,7 +619,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                     label: const Text('Call',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: _kP2,
+                        backgroundColor: KMColors.primary,
                         foregroundColor: Colors.white,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
@@ -793,8 +787,8 @@ class _AvailPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
           color: isAvail
-              ? Colors.green.shade700.withOpacity(0.3)
-              : Colors.orange.shade700.withOpacity(0.3),
+              ? Colors.green.shade700.withValues(alpha: 0.3)
+              : Colors.orange.shade700.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: isAvail
@@ -832,7 +826,7 @@ class _Stat extends StatelessWidget {
       const SizedBox(height: 4),
       Text(value,
           style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 14, color: _kDark)),
+              fontWeight: FontWeight.bold, fontSize: 14, color: KMColors.textPrimary)),
       Text(label,
           style: const TextStyle(fontSize: 10, color: Colors.grey)),
     ]);
@@ -855,7 +849,7 @@ class _Card extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],
@@ -875,11 +869,11 @@ class _CardTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Icon(icon, size: 18, color: _kP2),
+      Icon(icon, size: 18, color: KMColors.primary),
       const SizedBox(width: 8),
       Text(title,
           style: const TextStyle(
-              fontSize: 15, fontWeight: FontWeight.bold, color: _kDark)),
+              fontSize: 15, fontWeight: FontWeight.bold, color: KMColors.textPrimary)),
     ]);
   }
 }
@@ -906,7 +900,7 @@ class _DetailRow extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: _kDark)),
+                  color: KMColors.textPrimary)),
         ),
       ]),
     );
@@ -923,12 +917,12 @@ class _SkillBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-          color: _kLightGreen,
+          color: KMColors.cardTint,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _kGreen.withOpacity(0.4))),
+          border: Border.all(color: KMColors.available.withValues(alpha: 0.4))),
       child: Text(label,
           style: const TextStyle(
-              fontSize: 12, color: _kP2, fontWeight: FontWeight.w500)),
+              fontSize: 12, color: KMColors.primary, fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -944,9 +938,9 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.4))),
+          border: Border.all(color: color.withValues(alpha: 0.4))),
       child: Text(label,
           style: TextStyle(
               fontSize: 12, color: color, fontWeight: FontWeight.bold)),
@@ -966,13 +960,13 @@ class _ReviewTile extends StatelessWidget {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         CircleAvatar(
           radius: 18,
-          backgroundColor: _kLightGreen,
+          backgroundColor: KMColors.cardTint,
           child: Text(
               review.reviewerName.isNotEmpty
                   ? review.reviewerName[0].toUpperCase()
                   : '?',
               style: const TextStyle(
-                  color: _kP2, fontWeight: FontWeight.bold)),
+                  color: KMColors.primary, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -991,7 +985,7 @@ class _ReviewTile extends StatelessWidget {
                                 ? Icons.star_rounded
                                 : Icons.star_outline_rounded,
                             size: 14,
-                            color: _kAmber,
+                            color: KMColors.accent,
                           )),
                 ]),
                 if (review.comment.isNotEmpty) ...[
@@ -1034,7 +1028,7 @@ class _ReviewForm extends StatelessWidget {
                 i < rating
                     ? Icons.star_rounded
                     : Icons.star_outline_rounded,
-                color: _kAmber,
+                color: KMColors.accent,
                 size: 32),
           );
         }),
@@ -1061,7 +1055,7 @@ class _ReviewForm extends StatelessWidget {
         child: ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
-              backgroundColor: _kP2,
+              backgroundColor: KMColors.primary,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12))),
           child: const Text('Submit Review',

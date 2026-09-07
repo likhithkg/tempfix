@@ -324,7 +324,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     return Scaffold(
       backgroundColor:
-          isDark ? KMColors.backgroundDark : const Color(0xFFF5F5F5),
+          isDark ? KMColors.backgroundDark : KMColors.backgroundLight,
       body: CustomScrollView(
         slivers: [
           // ── Hero Header ────────────────────────────────────────────────
@@ -394,13 +394,7 @@ class _ProfilePageState extends State<ProfilePage>
     final isVerified = _user?.emailVerified == true;
 
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF43A047)],
-        ),
-      ),
+      decoration: const BoxDecoration(gradient: KMGradients.primaryHeader),
       child: SafeArea(
         bottom: false,
         child: Padding(

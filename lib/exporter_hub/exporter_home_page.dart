@@ -1,4 +1,4 @@
-// lib/exporter_hub/exporter_home_page.dart
+﻿// lib/exporter_hub/exporter_home_page.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,12 +23,9 @@ import 'ai_insights_page.dart';
 import 'role_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
+import '../theme.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-const _kGreen1 = Color(0xFF1B5E20);
-const _kGreen2 = Color(0xFF2E7D32);
-const _kTeal   = Color(0xFF00897B);
-const _kGold   = Color(0xFFFFB300);
 
 class ExporterHomePage extends StatefulWidget {
   const ExporterHomePage({super.key});
@@ -94,7 +91,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
               expandedHeight: 220,
               pinned: true,
               stretch: true,
-              backgroundColor: _kGreen1,
+              backgroundColor: KMColors.primaryDark,
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,
@@ -168,7 +165,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: _kGold,
+                                  color: KMColors.accent,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -381,7 +378,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
       floatingActionButton: _isAdmin
           ? null
           : FloatingActionButton(
-              backgroundColor: _kGreen2,
+              backgroundColor: KMColors.primary,
               onPressed: () {
                 if (user == null) {
                   ScaffoldMessenger.of(context)
@@ -434,7 +431,7 @@ class _RoleBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final color = isAdmin ? _kGreen2 : Colors.blue.shade700;
+    final color = isAdmin ? KMColors.primary : Colors.blue.shade700;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -764,7 +761,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    const primaryColor = _kGreen2;
+    const primaryColor = KMColors.primary;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 22, 12, 6),
@@ -1149,7 +1146,7 @@ class _AllListingsViewState extends State<_AllListingsView> {
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search, color: _kGreen2),
+              prefixIcon: const Icon(Icons.search, color: KMColors.primary),
               hintText: l.searchByCropFarmer,
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -1165,7 +1162,7 @@ class _AllListingsViewState extends State<_AllListingsView> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _kGreen2, width: 2),
+                borderSide: const BorderSide(color: KMColors.primary, width: 2),
               ),
             ),
             onChanged: (v) => setState(() => _query = v),
@@ -1189,13 +1186,13 @@ class _AllListingsViewState extends State<_AllListingsView> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isSelected ? _kGreen2 : null,
+                    color: isSelected ? KMColors.primary : null,
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: isSelected,
-                selectedColor: _kGreen2.withValues(alpha: 0.2),
+                selectedColor: KMColors.primary.withValues(alpha: 0.2),
                 shape: const StadiumBorder(),
                 onSelected: (_) => setState(() => _selectedCategory = c),
               );
@@ -1343,7 +1340,7 @@ class _ListingRow extends StatelessWidget {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
-                          color: _kGreen2),
+                          color: KMColors.primary),
                     ),
                     const SizedBox(height: 3),
                     Row(children: [
@@ -1414,15 +1411,15 @@ class _ListingPlaceholder extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _kGreen1.withValues(alpha: 0.3),
-            _kTeal.withValues(alpha: 0.2),
+            KMColors.primaryDark.withValues(alpha: 0.3),
+            KMColors.exportPrimary.withValues(alpha: 0.2),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: const Center(
-        child: Icon(Icons.local_florist, color: _kGreen2, size: 28),
+        child: Icon(Icons.local_florist, color: KMColors.primary, size: 28),
       ),
     );
   }
@@ -1569,7 +1566,7 @@ class ProductDetailPage extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: _kGreen2,
+                            color: KMColors.primary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -1697,7 +1694,7 @@ class ProductDetailPage extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _kGreen2,
+                            backgroundColor: KMColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
@@ -1777,7 +1774,7 @@ class _DetailRow extends StatelessWidget {
           width: 24,
           height: 24,
           margin: const EdgeInsets.only(right: 8),
-          child: Icon(icon, size: 16, color: _kGreen2),
+          child: Icon(icon, size: 16, color: KMColors.primary),
         ),
         SizedBox(
             width: 110,

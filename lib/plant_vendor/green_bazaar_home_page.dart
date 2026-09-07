@@ -1,5 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../theme.dart';
 import 'package:flutter/material.dart';
 
 import 'plant_vendor_model.dart';
@@ -47,13 +48,13 @@ class _Banner {
 
 const _kBanners = [
   _Banner('Fresh from the Nursery', 'Handpicked plants delivered to your door',
-      'Shop Now', [Color(0xFF1B5E20), Color(0xFF388E3C)], '🌿'),
+      'Shop Now', [KMColors.primaryDark, KMColors.primary], '🌿'),
   _Banner('Seasonal Picks', 'Best plants for the current season',
-      'Explore', [Color(0xFF4A148C), Color(0xFF7B1FA2)], '🌸'),
+      'Explore', [KMColors.labourDark, KMColors.labourPrimary], '🌸'),
   _Banner('Organic Collection', 'Certified organic plants & seeds',
-      'View All', [Color(0xFF1565C0), Color(0xFF1976D2)], '🌱'),
+      'View All', [KMColors.weatherDark, KMColors.weatherPrimary], '🌱'),
   _Banner('Flash Deals', 'Up to 20% off on select plants today',
-      'Grab Now', [Color(0xFFBF360C), Color(0xFFE64A19)], '⚡'),
+      'Grab Now', [KMColors.rentDark, KMColors.rentPrimary], '⚡'),
 ];
 
 // ─── Section model ────────────────────────────────────────────────────────────

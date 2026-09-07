@@ -1,4 +1,4 @@
-// lib/splash/splash_screen.dart
+﻿// lib/splash/splash_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
               height: double.infinity,
             ),
             // optional subtle overlay so white text/indicators are visible
-            Container(color: Colors.black.withOpacity(0.18)),
+            Container(color: Colors.black.withValues(alpha: 0.18)),
             // centered content on top of the full-screen image
             Center(
               child: Column(
@@ -89,3 +89,4 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
+

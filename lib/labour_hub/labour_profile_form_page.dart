@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,12 +8,8 @@ import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'location_search_dialog.dart';
 import '../services/image_upload_service.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kDark = Color(0xFF1A2D1A);
 
 class LabourProfileFormPage extends StatefulWidget {
   final LabourProfile? existing;
@@ -252,7 +248,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? Colors.red : _kP2,
+      backgroundColor: isError ? Colors.red : KMColors.primary,
     ));
   }
 
@@ -269,7 +265,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -331,9 +327,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     return ChoiceChip(
                       label: Text(g),
                       selected: _gender == g,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       labelStyle: TextStyle(
-                          color: _gender == g ? Colors.white : _kDark),
+                          color: _gender == g ? Colors.white : KMColors.textPrimary),
                       onSelected: (_) => setState(() => _gender = g),
                     );
                   }).toList(),
@@ -355,7 +351,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: _villageCtrl.text.isNotEmpty
-                            ? _kP2
+                            ? KMColors.primary
                             : Colors.grey.shade300,
                         width: _villageCtrl.text.isNotEmpty ? 2 : 1,
                       ),
@@ -363,7 +359,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     child: Row(children: [
                       Icon(Icons.location_on_rounded,
                           color: _villageCtrl.text.isNotEmpty
-                              ? _kP2
+                              ? KMColors.primary
                               : const Color(0xFFE65100),
                           size: 22),
                       const SizedBox(width: 10),
@@ -381,7 +377,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                           style: TextStyle(
                             fontSize: 14,
                             color: _villageCtrl.text.isNotEmpty
-                                ? _kDark
+                                ? KMColors.textPrimary
                                 : Colors.grey.shade500,
                           ),
                           maxLines: 1,
@@ -404,8 +400,8 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       label: const Text('Search Place',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: _kP2,
-                        side: const BorderSide(color: _kP2),
+                        foregroundColor: KMColors.primary,
+                        side: const BorderSide(color: KMColors.primary),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -440,12 +436,12 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                   const SizedBox(height: 8),
                   Row(children: [
                     const Icon(Icons.check_circle_rounded,
-                        color: _kGreen, size: 16),
+                        color: KMColors.available, size: 16),
                     const SizedBox(width: 6),
                     Text(
                         'GPS: ${_lat.toStringAsFixed(4)}, ${_lon.toStringAsFixed(4)}',
                         style:
-                            const TextStyle(fontSize: 12, color: _kGreen)),
+                            const TextStyle(fontSize: 12, color: KMColors.available)),
                   ]),
                 ],
 
@@ -459,9 +455,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     return ChoiceChip(
                       label: Text('$r km'),
                       selected: sel,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark, fontSize: 12),
+                          color: sel ? Colors.white : KMColors.textPrimary, fontSize: 12),
                       onSelected: (_) =>
                           setState(() => _workingRadiusKm = r),
                     );
@@ -483,10 +479,10 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     return FilterChip(
                       label: Text(s, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark),
+                          color: sel ? Colors.white : KMColors.textPrimary),
                       onSelected: (v) {
                         setState(() {
                           v
@@ -517,9 +513,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       label:
                           Text(e.value, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark),
+                          color: sel ? Colors.white : KMColors.textPrimary),
                       onSelected: (_) =>
                           setState(() => _preferredWageType = e.key),
                     );
@@ -552,7 +548,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                 Wrap(
                   spacing: 8,
                   children: [
-                    ('available', '✅ Available', _kGreen),
+                    ('available', '✅ Available', KMColors.available),
                     ('busy', '⏳ Busy', Colors.orange),
                     ('unavailable', '❌ Unavailable', Colors.red),
                   ].map((e) {
@@ -561,7 +557,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     return ChoiceChip(
                       label: Text(lbl, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: col.withOpacity(0.15),
+                      selectedColor: col.withValues(alpha: 0.15),
                       labelStyle: TextStyle(
                           color: sel ? col : Colors.grey.shade600,
                           fontWeight:
@@ -585,10 +581,10 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       label:
                           Text(e.value, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: _kGreen,
+                      selectedColor: KMColors.available,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark),
+                          color: sel ? Colors.white : KMColors.textPrimary),
                       onSelected: (v) {
                         setState(() {
                           v
@@ -614,10 +610,10 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     return FilterChip(
                       label: Text(l, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark),
+                          color: sel ? Colors.white : KMColors.textPrimary),
                       onSelected: (v) => setState(() {
                         v
                             ? _selectedLangs.add(l)
@@ -653,7 +649,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                            const BorderSide(color: _kP2, width: 2)),
+                            const BorderSide(color: KMColors.primary, width: 2)),
                     contentPadding: const EdgeInsets.all(14),
                   ),
                 ),
@@ -677,7 +673,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16)),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: _kP2,
+                      backgroundColor: KMColors.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
@@ -702,16 +698,16 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
         child: Stack(alignment: Alignment.bottomRight, children: [
           CircleAvatar(
             radius: 52,
-            backgroundColor: _kLightGreen,
+            backgroundColor: KMColors.cardTint,
             backgroundImage:
                 _photoUrl.isNotEmpty ? NetworkImage(_photoUrl) : null,
             child: _photoUrl.isEmpty
-                ? const Icon(Icons.person_rounded, size: 52, color: _kP2)
+                ? const Icon(Icons.person_rounded, size: 52, color: KMColors.primary)
                 : null,
           ),
           Container(
             padding: const EdgeInsets.all(7),
-            decoration: const BoxDecoration(color: _kP2, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: KMColors.primary, shape: BoxShape.circle),
             child: _uploadingPhoto
                 ? const SizedBox(
                     width: 14,
@@ -733,11 +729,11 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   Widget _buildSection(String title, IconData icon, List<Widget> children) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Icon(icon, size: 18, color: _kP2),
+        Icon(icon, size: 18, color: KMColors.primary),
         const SizedBox(width: 8),
         Text(title,
             style: const TextStyle(
-                fontSize: 15, fontWeight: FontWeight.bold, color: _kDark)),
+                fontSize: 15, fontWeight: FontWeight.bold, color: KMColors.textPrimary)),
       ]),
       const SizedBox(height: 16),
       ...children,
@@ -767,7 +763,7 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
               borderSide: BorderSide(color: Colors.grey.shade300)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kP2, width: 2)),
+              borderSide: const BorderSide(color: KMColors.primary, width: 2)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         ),
@@ -803,7 +799,7 @@ class _SliverCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],

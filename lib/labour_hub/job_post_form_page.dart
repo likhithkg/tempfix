@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -7,12 +7,8 @@ import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'job_post_model.dart';
 import 'location_search_dialog.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kDark = Color(0xFF1A2D1A);
 
 class JobPostFormPage extends StatefulWidget {
   final LabourProfile? prefilledWorker;
@@ -95,7 +91,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(
-              primary: _kP2, onPrimary: Colors.white),
+              primary: KMColors.primary, onPrimary: Colors.white),
         ),
         child: child!,
       ),
@@ -193,7 +189,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? Colors.red : _kP2,
+      backgroundColor: isError ? Colors.red : KMColors.primary,
     ));
   }
 
@@ -210,7 +206,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -269,10 +265,10 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                     return FilterChip(
                       label: Text(s, style: const TextStyle(fontSize: 12)),
                       selected: sel,
-                      selectedColor: _kP2,
+                      selectedColor: KMColors.primary,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                          color: sel ? Colors.white : _kDark),
+                          color: sel ? Colors.white : KMColors.textPrimary),
                       onSelected: (v) => setState(() {
                         v
                             ? _requiredSkills.add(s)
@@ -307,12 +303,12 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                             width: 14,
                             height: 14,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _kP2))
-                        : const Icon(Icons.my_location_rounded, color: _kP2),
+                                strokeWidth: 2, color: KMColors.primary))
+                        : const Icon(Icons.my_location_rounded, color: KMColors.primary),
                     label: Text(_locating ? 'Getting GPS…' : 'Use Current GPS'),
                     style: OutlinedButton.styleFrom(
-                        foregroundColor: _kP2,
-                        side: const BorderSide(color: _kP2),
+                        foregroundColor: KMColors.primary,
+                        side: const BorderSide(color: KMColors.primary),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12))),
@@ -346,12 +342,12 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                      color: _kLightGreen,
+                      color: KMColors.cardTint,
                       borderRadius: BorderRadius.circular(10)),
                   child: Text(
                     'Duration: ${_endDate.difference(_startDate).inDays + 1} days',
                     style: const TextStyle(
-                        color: _kP2, fontWeight: FontWeight.w600),
+                        color: KMColors.primary, fontWeight: FontWeight.w600),
                   ),
                 ),
               ]),
@@ -387,7 +383,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                 SwitchListTile(
                   value: _foodIncluded,
                   onChanged: (v) => setState(() => _foodIncluded = v),
-                  activeColor: _kP2,
+                  activeColor: KMColors.primary,
                   title: const Text('🍱  Food Included'),
                   subtitle: const Text('Meals provided during work',
                       style: TextStyle(fontSize: 12)),
@@ -397,7 +393,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                   value: _accommodationIncluded,
                   onChanged: (v) =>
                       setState(() => _accommodationIncluded = v),
-                  activeColor: _kP2,
+                  activeColor: KMColors.primary,
                   title: const Text('🏠  Accommodation Included'),
                   subtitle: const Text('Staying arrangements provided',
                       style: TextStyle(fontSize: 12)),
@@ -423,7 +419,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16)),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: _kOrange,
+                      backgroundColor: KMColors.rentPrimary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
@@ -441,13 +437,13 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
       String title, IconData icon, List<Widget> children) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Icon(icon, size: 18, color: _kP2),
+        Icon(icon, size: 18, color: KMColors.primary),
         const SizedBox(width: 8),
         Text(title,
             style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: _kDark)),
+                color: KMColors.textPrimary)),
       ]),
       const SizedBox(height: 16),
       ...children,
@@ -479,7 +475,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
               borderSide: BorderSide(color: Colors.grey.shade300)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kP2, width: 2)),
+              borderSide: const BorderSide(color: KMColors.primary, width: 2)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         ),
@@ -533,7 +529,7 @@ class _LocationPickerField extends StatelessWidget {
                   color: state.hasError
                       ? Colors.red
                       : controller.text.isNotEmpty
-                          ? _kP2
+                          ? KMColors.primary
                           : Colors.grey.shade300,
                   width: controller.text.isNotEmpty ? 2 : 1,
                 ),
@@ -541,7 +537,7 @@ class _LocationPickerField extends StatelessWidget {
               child: Row(children: [
                 Icon(Icons.location_on_rounded,
                     color: controller.text.isNotEmpty
-                        ? _kP2
+                        ? KMColors.primary
                         : Colors.grey.shade400,
                     size: 20),
                 const SizedBox(width: 10),
@@ -553,7 +549,7 @@ class _LocationPickerField extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       color: controller.text.isNotEmpty
-                          ? _kDark
+                          ? KMColors.textPrimary
                           : Colors.grey.shade500,
                     ),
                   ),
@@ -601,7 +597,7 @@ class _DatePicker extends StatelessWidget {
           const SizedBox(height: 4),
           Row(children: [
             const Icon(Icons.calendar_today_rounded,
-                size: 14, color: _kP2),
+                size: 14, color: KMColors.primary),
             const SizedBox(width: 6),
             Text(
                 '${date.day}/${date.month}/${date.year}',
@@ -630,7 +626,7 @@ class _SCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],

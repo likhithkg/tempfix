@@ -19,7 +19,9 @@ class ProfileService {
 
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  final _supabase = Supabase.instance.client;
+  // Lazy getter — Supabase.instance is only resolved when first used,
+  // which is always after Supabase.initialize() completes in main().
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   // Upload file to Supabase storage and return public URL
   Future<String> uploadProfileImage(File file) async {

@@ -1,11 +1,11 @@
 {
-    "name": "temp_fix",
-    "short_name": "temp_fix",
+    "name": "KrishiMithra",
+    "short_name": "KrishiMithra",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2E7D32",
+    "theme_color": "#2E7D32",
+    "description": "KrishiMithra – Smart Agriculture Assistant",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

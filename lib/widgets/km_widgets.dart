@@ -310,6 +310,323 @@ class KMEmptyState extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KMShimmerBox — unified animated shimmer placeholder
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMShimmerBox extends StatefulWidget {
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  const KMShimmerBox({
+    super.key,
+    this.width = double.infinity,
+    this.height = 16,
+    this.borderRadius = KMRadius.sm,
+  });
+
+  @override
+  State<KMShimmerBox> createState() => _KMShimmerBoxState();
+}
+
+class _KMShimmerBoxState extends State<KMShimmerBox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.25, end: 0.65).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final base = Theme.of(context).colorScheme.surfaceContainerHighest;
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: base.withValues(alpha: _anim.value),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KMShimmerCard — full card-shaped shimmer for list/grid loading
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMShimmerCard extends StatelessWidget {
+  final double width;
+  final double height;
+  final double imageHeight;
+
+  const KMShimmerCard({
+    super.key,
+    this.width = 142,
+    this.height = double.infinity,
+    this.imageHeight = 106,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(KMRadius.card),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          KMShimmerBox(width: width, height: imageHeight, borderRadius: 0),
+          Padding(
+            padding: const EdgeInsets.all(KMSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                KMShimmerBox(width: width * 0.75, height: 12),
+                const SizedBox(height: KMSpacing.xs),
+                KMShimmerBox(width: width * 0.5, height: 10),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KMProfileAvatar — circular avatar with network image + initials fallback
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMProfileAvatar extends StatelessWidget {
+  final String? imageUrl;
+  final String name;
+  final double radius;
+  final Color? backgroundColor;
+  final VoidCallback? onTap;
+
+  const KMProfileAvatar({
+    super.key,
+    this.imageUrl,
+    required this.name,
+    this.radius = 24,
+    this.backgroundColor,
+    this.onTap,
+  });
+
+  String get _initial =>
+      name.isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bg = backgroundColor ?? cs.primaryContainer;
+    Widget avatar = CircleAvatar(
+      radius: radius,
+      backgroundColor: bg,
+      backgroundImage:
+          (imageUrl != null && imageUrl!.isNotEmpty) ? NetworkImage(imageUrl!) : null,
+      child: (imageUrl == null || imageUrl!.isEmpty)
+          ? Text(
+              _initial,
+              style: TextStyle(
+                color: cs.onPrimaryContainer,
+                fontWeight: FontWeight.bold,
+                fontSize: radius * 0.7,
+              ),
+            )
+          : null,
+    );
+
+    if (onTap != null) {
+      avatar = GestureDetector(onTap: onTap, child: avatar);
+    }
+    return avatar;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KMModuleHeader — gradient header reused by Rent, Labour, Exporter, etc.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMModuleHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final LinearGradient gradient;
+  final List<Widget>? actions;
+  final Widget? bottom;
+  final bool showBack;
+
+  const KMModuleHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.gradient,
+    this.actions,
+    this.bottom,
+    this.showBack = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(gradient: gradient),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 8, 0),
+              child: Row(
+                children: [
+                  if (showBack)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: () => Navigator.maybePop(context),
+                    )
+                  else
+                    const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle!,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 13,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (actions != null) ...actions!,
+                ],
+              ),
+            ),
+            if (bottom != null) bottom!,
+            const SizedBox(height: KMSpacing.md),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KMFullWidthButton — full-width primary/secondary button with loading state
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMFullWidthButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool loading;
+  final bool outlined;
+  final IconData? icon;
+  final Color? color;
+
+  const KMFullWidthButton({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.loading = false,
+    this.outlined = false,
+    this.icon,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? Theme.of(context).colorScheme.primary;
+    final child = loading
+        ? const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          )
+        : icon != null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 18),
+                  const SizedBox(width: KMSpacing.sm),
+                  Text(label),
+                ],
+              )
+            : Text(label);
+
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(KMRadius.button),
+    );
+
+    if (outlined) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: loading ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: c,
+            side: BorderSide(color: c, width: 1.5),
+            shape: shape,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: child,
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: c,
+          foregroundColor: Colors.white,
+          shape: shape,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          elevation: 2,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // KMStatusBadge — available / unavailable badge
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -1,10 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../theme.dart';
 
-const _kP2 = Color(0xFF2E7D32);
-const _kOrange = Color(0xFFE65100);
 
 class LocationResult {
   final String displayName;
@@ -129,10 +128,10 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: _kOrange.withValues(alpha: 0.1),
+                    color: KMColors.rentPrimary.withValues(alpha: 0.1),
                     shape: BoxShape.circle),
                 child: const Icon(Icons.location_on_rounded,
-                    color: _kOrange, size: 20),
+                    color: KMColors.rentPrimary, size: 20),
               ),
               const SizedBox(width: 10),
               const Text('Search Location',
@@ -162,7 +161,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: _kP2)))
+                                strokeWidth: 2, color: KMColors.primary)))
                     : null,
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -171,7 +170,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                     borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _kP2, width: 2)),
+                    borderSide: const BorderSide(color: KMColors.primary, width: 2)),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
@@ -222,7 +221,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
           dense: true,
           leading: Icon(
             isRecent ? Icons.history_rounded : Icons.location_on_rounded,
-            color: _kOrange,
+            color: KMColors.rentPrimary,
             size: 20,
           ),
           title: Text(item.displayName,

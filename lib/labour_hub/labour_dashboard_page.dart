@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
@@ -8,13 +9,13 @@ import 'labour_profile_form_page.dart';
 import 'job_post_form_page.dart';
 import 'job_detail_page.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kAmber = Color(0xFFFFA000);
-const _kDark = Color(0xFF1A2D1A);
+
+
+
+
+
+
+
 
 class LabourDashboardPage extends StatefulWidget {
   const LabourDashboardPage({super.key});
@@ -59,7 +60,7 @@ class _LabourDashboardPageState extends State<LabourDashboardPage>
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white),
@@ -69,7 +70,7 @@ class _LabourDashboardPageState extends State<LabourDashboardPage>
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary, Color(0xFF388E3C)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -125,7 +126,7 @@ class _LabourDashboardPageState extends State<LabourDashboardPage>
                                           const SizedBox(width: 6),
                                           DropdownButton<String>(
                                             value: profile.availabilityStatus,
-                                            dropdownColor: _kP1,
+                                            dropdownColor: KMColors.primaryDark,
                                             iconEnabledColor: Colors.white,
                                             underline: const SizedBox(),
                                             style: const TextStyle(
@@ -215,7 +216,7 @@ class _LabourDashboardPageState extends State<LabourDashboardPage>
               MaterialPageRoute(builder: (_) => const JobPostFormPage()));
           setState(() {});
         },
-        backgroundColor: _kOrange,
+        backgroundColor: KMColors.rentPrimary,
         icon: const Icon(Icons.post_add_rounded),
         label: const Text('Post Job',
             style: TextStyle(fontWeight: FontWeight.bold)),
@@ -224,7 +225,7 @@ class _LabourDashboardPageState extends State<LabourDashboardPage>
   }
 }
 
-// ── Applications Tab ──────────────────────────────────────────────────────────
+// â”€â”€ Applications Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ApplicationsTab extends StatefulWidget {
   final LabourHubService service;
@@ -279,7 +280,7 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
       builder: (ctx, snap) {
         if (!snap.hasData) {
           return const Center(
-              child: CircularProgressIndicator(color: _kP2));
+              child: CircularProgressIndicator(color: KMColors.primary));
         }
         final apps = snap.data!;
         if (apps.isEmpty) {
@@ -303,7 +304,7 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 2))
                 ],
@@ -312,7 +313,7 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10)),
                   child:
                       Icon(_statusIcon(a.status), color: color, size: 22),
@@ -329,10 +330,10 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
                         const SizedBox(height: 2),
                         if (a.counterOffer != null)
                           Text(
-                              'Counter: ₹${a.counterOffer!.toStringAsFixed(0)}/day',
+                              'Counter: â‚¹${a.counterOffer!.toStringAsFixed(0)}/day',
                               style: const TextStyle(
                                   fontSize: 12,
-                                  color: _kOrange,
+                                  color: KMColors.rentPrimary,
                                   fontWeight: FontWeight.w500)),
                         Text(
                             'Applied: ${a.appliedAt.day}/${a.appliedAt.month}/${a.appliedAt.year}',
@@ -344,10 +345,10 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: color.withOpacity(0.3))),
+                          color: color.withValues(alpha: 0.3))),
                   child: Text(a.status.toUpperCase(),
                       style: TextStyle(
                           color: color,
@@ -363,7 +364,7 @@ class _ApplicationsTabState extends State<_ApplicationsTab> {
   }
 }
 
-// ── Posted Jobs Tab ───────────────────────────────────────────────────────────
+// â”€â”€ Posted Jobs Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PostedJobsTab extends StatefulWidget {
   final LabourHubService service;
@@ -390,7 +391,7 @@ class _PostedJobsTabState extends State<_PostedJobsTab> {
       builder: (ctx, snap) {
         if (!snap.hasData) {
           return const Center(
-              child: CircularProgressIndicator(color: _kP2));
+              child: CircularProgressIndicator(color: KMColors.primary));
         }
         final jobs = snap.data!;
         if (jobs.isEmpty) {
@@ -419,7 +420,7 @@ class _PostedJobsTabState extends State<_PostedJobsTab> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 6,
                         offset: const Offset(0, 2))
                   ],
@@ -448,10 +449,10 @@ class _PostedJobsTabState extends State<_PostedJobsTab> {
                       const SizedBox(height: 8),
                       Row(children: [
                         _InfoPill(
-                            '₹${j.dailyWage.toStringAsFixed(0)}/day',
-                            _kOrange),
+                            'â‚¹${j.dailyWage.toStringAsFixed(0)}/day',
+                            KMColors.rentPrimary),
                         const SizedBox(width: 6),
-                        _InfoPill('${j.workersRequired} workers', _kP2),
+                        _InfoPill('${j.workersRequired} workers', KMColors.primary),
                         const SizedBox(width: 6),
                         _InfoPill(
                             '${j.applicantCount} applied',
@@ -492,7 +493,7 @@ class _PostedJobsTabState extends State<_PostedJobsTab> {
                                 style: const TextStyle(
                                     fontSize: 12)),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: _kP2,
+                                backgroundColor: KMColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                     borderRadius:
@@ -510,7 +511,7 @@ class _PostedJobsTabState extends State<_PostedJobsTab> {
   }
 }
 
-// ── Shared ────────────────────────────────────────────────────────────────────
+// â”€â”€ Shared â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _StatusDot extends StatelessWidget {
   final String status;
@@ -520,7 +521,7 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = status == 'available'
-        ? _kGreen
+        ? KMColors.available
         : status == 'busy'
             ? Colors.orange
             : Colors.grey;
@@ -539,18 +540,18 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = status == 'open'
-        ? _kGreen
+        ? KMColors.available
         : status == 'in_progress'
             ? Colors.blue
             : status == 'completed'
-                ? _kP2
+                ? KMColors.primary
                 : Colors.grey;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.4))),
+          border: Border.all(color: color.withValues(alpha: 0.4))),
       child: Text(status.toUpperCase(),
           style: TextStyle(
               color: color, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -569,7 +570,7 @@ class _InfoPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8)),
       child: Text(label,
           style: TextStyle(
@@ -602,7 +603,7 @@ class _EmptyState extends StatelessWidget {
               style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: _kDark)),
+                  color: KMColors.textPrimary)),
           const SizedBox(height: 8),
           Text(subtitle,
               textAlign: TextAlign.center,
@@ -613,3 +614,5 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+
+

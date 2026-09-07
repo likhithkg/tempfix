@@ -8,20 +8,8 @@ import 'labour_profile_model.dart';
 import 'labour_detail_page.dart';
 import 'labour_profile_form_page.dart';
 import 'saved_workers_page.dart';
-
-// ── Design tokens ──────────────────────────────────────────────────────────────
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kAmber = Color(0xFFFFA000);
-const _kDark = Color(0xFF1A2D1A);
-const _kGrad = LinearGradient(
-  colors: [_kP1, _kP2, Color(0xFF388E3C)],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
+import '../theme.dart';
+import '../widgets/km_widgets.dart';
 
 // ── Filter state ───────────────────────────────────────────────────────────────
 
@@ -133,7 +121,7 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
     if (FirebaseAuth.instance.currentUser == null) {
       ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
         content: Text('Please sign in to manage your worker card'),
-        backgroundColor: _kOrange,
+        backgroundColor: KMColors.rentPrimary,
       ));
       return;
     }
@@ -166,10 +154,10 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F7F2),
+      backgroundColor: KMColors.backgroundLight,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openMyCard(context),
-        backgroundColor: _kP2,
+        backgroundColor: KMColors.primary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
         label: const Text('My Worker Card',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -180,7 +168,7 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
             expandedHeight: 160,
             pinned: true,
             floating: false,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -203,7 +191,7 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(3),
                         decoration: const BoxDecoration(
-                            color: _kOrange, shape: BoxShape.circle),
+                            color: KMColors.rentPrimary, shape: BoxShape.circle),
                         child: Text('${_filter.activeCount}',
                             style: const TextStyle(
                                 color: Colors.white,
@@ -231,7 +219,7 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(gradient: _kGrad),
+                decoration: const BoxDecoration(gradient: KMGradients.primaryHeader),
                 child: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -244,7 +232,7 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10)),
                             child: const Text('👷',
                                 style: TextStyle(fontSize: 22)),
@@ -307,7 +295,7 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white24)),
       child: TextField(
@@ -454,7 +442,7 @@ class _WorkersTabState extends State<_WorkersTab>
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Retry'),
                     style:
-                        ElevatedButton.styleFrom(backgroundColor: _kP2),
+                        ElevatedButton.styleFrom(backgroundColor: KMColors.primary),
                   ),
                 ]),
           );
@@ -513,13 +501,13 @@ class _WorkersTabState extends State<_WorkersTab>
                       horizontal: 16, vertical: 4),
                   child: Row(children: [
                     const Icon(Icons.filter_list_rounded,
-                        size: 16, color: _kP2),
+                        size: 16, color: KMColors.primary),
                     const SizedBox(width: 6),
                     Text(
                         '${widget.filter.activeCount} filter(s) active',
                         style: const TextStyle(
                             fontSize: 12,
-                            color: _kP2,
+                            color: KMColors.primary,
                             fontWeight: FontWeight.w600)),
                   ]),
                 ),
@@ -533,12 +521,12 @@ class _WorkersTabState extends State<_WorkersTab>
                       horizontal: 16, vertical: 4),
                   child: Row(children: [
                     _StatChip(
-                        label: '${all.length} Workers', color: _kP2),
+                        label: '${all.length} Workers', color: KMColors.primary),
                     const SizedBox(width: 8),
                     _StatChip(
                         label:
                             '${all.where((p) => p.availabilityStatus == 'available').length} Available',
-                        color: _kGreen),
+                        color: KMColors.available),
                     if (filtered.length != all.length) ...[
                       const SizedBox(width: 8),
                       _StatChip(
@@ -553,7 +541,7 @@ class _WorkersTabState extends State<_WorkersTab>
             _SectionHeader(
               title: 'Browse by Skill',
               icon: Icons.category_rounded,
-              iconColor: _kP2,
+              iconColor: KMColors.primary,
             ),
             SliverToBoxAdapter(
               child: _QuickCategories(
@@ -590,7 +578,7 @@ class _WorkersTabState extends State<_WorkersTab>
               _SectionHeader(
                 title: 'Available Today',
                 icon: Icons.today_rounded,
-                iconColor: _kGreen,
+                iconColor: KMColors.available,
               ),
               SliverToBoxAdapter(
                 child: loading
@@ -628,7 +616,7 @@ class _WorkersTabState extends State<_WorkersTab>
             _SectionHeader(
               title: 'Top Rated Workers',
               icon: Icons.star_rounded,
-              iconColor: _kAmber,
+              iconColor: KMColors.accent,
             ),
             SliverToBoxAdapter(
               child: loading
@@ -688,7 +676,7 @@ class _WorkersTabState extends State<_WorkersTab>
               _SectionHeader(
                 title: 'Machine Operators',
                 icon: Icons.agriculture_rounded,
-                iconColor: _kOrange,
+                iconColor: KMColors.rentPrimary,
               ),
               SliverToBoxAdapter(
                 child: loading
@@ -708,7 +696,7 @@ class _WorkersTabState extends State<_WorkersTab>
               _SectionHeader(
                 title: 'Organic Farming Specialists',
                 icon: Icons.eco_rounded,
-                iconColor: _kGreen,
+                iconColor: KMColors.available,
               ),
               SliverToBoxAdapter(
                 child: loading
@@ -727,7 +715,7 @@ class _WorkersTabState extends State<_WorkersTab>
             _SectionHeader(
               title: 'Recently Joined',
               icon: Icons.fiber_new_rounded,
-              iconColor: _kOrange,
+              iconColor: KMColors.rentPrimary,
             ),
             SliverToBoxAdapter(
               child: loading
@@ -746,7 +734,7 @@ class _WorkersTabState extends State<_WorkersTab>
             _SectionHeader(
               title: 'All Workers (${filtered.length})',
               icon: Icons.people_rounded,
-              iconColor: _kP2,
+              iconColor: KMColors.primary,
             ),
             if (loading)
               SliverList(
@@ -817,14 +805,14 @@ class _SkillChips extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: sel ? _kP2 : Colors.white,
+                color: sel ? KMColors.primary : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: sel ? _kP2 : Colors.grey.shade300),
+                    color: sel ? KMColors.primary : Colors.grey.shade300),
                 boxShadow: sel
                     ? [
                         BoxShadow(
-                            color: _kP2.withOpacity(0.3),
+                            color: KMColors.primary.withValues(alpha: 0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2))
                       ]
@@ -882,10 +870,10 @@ class _QuickCategories extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border:
-                        Border.all(color: color.withOpacity(0.3)),
+                        Border.all(color: color.withValues(alpha: 0.3)),
                   ),
                   child: Icon(icon, color: color, size: 26),
                 ),
@@ -940,7 +928,7 @@ class _LocationBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text('Enable location to see nearby workers',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontSize: 12)),
               ]),
         ),
@@ -974,7 +962,7 @@ class _SectionHeader extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: _kDark)),
+                  color: KMColors.textPrimary)),
         ]),
       ),
     );
@@ -1059,7 +1047,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.07),
+                color: Colors.black.withValues(alpha: 0.07),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],
@@ -1082,7 +1070,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
                     decoration: const BoxDecoration(
                         color: Colors.white, shape: BoxShape.circle),
                     child: const Icon(Icons.verified_rounded,
-                        color: _kP2, size: 12),
+                        color: KMColors.primary, size: 12),
                   ),
                 ),
             ]),
@@ -1099,7 +1087,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
             const SizedBox(height: 3),
             if (worker.rating > 0)
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.star_rounded, color: _kAmber, size: 13),
+                const Icon(Icons.star_rounded, color: KMColors.accent, size: 13),
                 Text(' ${worker.rating.toStringAsFixed(1)}',
                     style: const TextStyle(
                         fontSize: 11, color: Colors.grey)),
@@ -1127,7 +1115,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 10,
-                        color: _kP2,
+                        color: KMColors.primary,
                         fontWeight: FontWeight.w500)),
               ),
             const SizedBox(height: 6),
@@ -1136,7 +1124,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                   color: worker.availabilityStatus == 'available'
-                      ? _kLightGreen
+                      ? KMColors.cardTint
                       : Colors.orange.shade50,
                   borderRadius: BorderRadius.circular(20)),
               child: Text(
@@ -1146,7 +1134,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 10,
                     color: worker.availabilityStatus == 'available'
-                        ? _kGreen
+                        ? KMColors.available
                         : Colors.orange,
                     fontWeight: FontWeight.w600),
               ),
@@ -1156,7 +1144,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
-                    color: _kOrange)),
+                    color: KMColors.rentPrimary)),
           ],
         ),
       ),
@@ -1216,7 +1204,7 @@ class _WorkerCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],
@@ -1239,7 +1227,7 @@ class _WorkerCard extends StatelessWidget {
                     decoration: const BoxDecoration(
                         color: Colors.white, shape: BoxShape.circle),
                     child: const Icon(Icons.verified_rounded,
-                        color: _kP2, size: 14),
+                        color: KMColors.primary, size: 14),
                   ),
                 ),
               if (worker.onlineStatus)
@@ -1250,7 +1238,7 @@ class _WorkerCard extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                        color: _kGreen,
+                        color: KMColors.available,
                         shape: BoxShape.circle,
                         border: Border.all(
                             color: Colors.white, width: 1.5)),
@@ -1304,7 +1292,7 @@ class _WorkerCard extends StatelessWidget {
                     Row(children: [
                       if (worker.rating > 0) ...[
                         const Icon(Icons.star_rounded,
-                            color: _kAmber, size: 14),
+                            color: KMColors.accent, size: 14),
                         Text(' ${worker.rating.toStringAsFixed(1)}',
                             style: const TextStyle(
                                 fontSize: 12,
@@ -1325,7 +1313,7 @@ class _WorkerCard extends StatelessWidget {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: _kOrange),
+                            color: KMColors.rentPrimary),
                       ),
                     ]),
                     const SizedBox(height: 10),
@@ -1337,8 +1325,8 @@ class _WorkerCard extends StatelessWidget {
                               size: 15),
                           label: const Text('Call'),
                           style: OutlinedButton.styleFrom(
-                              foregroundColor: _kP2,
-                              side: const BorderSide(color: _kP2),
+                              foregroundColor: KMColors.primary,
+                              side: const BorderSide(color: KMColors.primary),
                               padding: const EdgeInsets.symmetric(
                                   vertical: 8),
                               shape: RoundedRectangleBorder(
@@ -1358,7 +1346,7 @@ class _WorkerCard extends StatelessWidget {
                               size: 15),
                           label: const Text('View Profile'),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: _kP2,
+                              backgroundColor: KMColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                   vertical: 8),
@@ -1434,7 +1422,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             TextButton(
               onPressed: () => setState(() => _local = _local.reset()),
               child: const Text('Reset All',
-                  style: TextStyle(color: _kOrange)),
+                  style: TextStyle(color: KMColors.rentPrimary)),
             ),
           ]),
           const SizedBox(height: 8),
@@ -1443,10 +1431,10 @@ class _FilterSheetState extends State<_FilterSheet> {
             value: _local.verifiedOnly,
             onChanged: (v) =>
                 setState(() => _local = _local.copyWith(verifiedOnly: v)),
-            activeColor: _kP2,
+            activeThumbColor: KMColors.primary,
             contentPadding: EdgeInsets.zero,
             title: const Row(children: [
-              Icon(Icons.verified_rounded, color: _kP2, size: 18),
+              Icon(Icons.verified_rounded, color: KMColors.primary, size: 18),
               SizedBox(width: 8),
               Text('Verified Workers Only',
                   style: TextStyle(fontWeight: FontWeight.w500)),
@@ -1457,10 +1445,10 @@ class _FilterSheetState extends State<_FilterSheet> {
             value: _local.availableToday,
             onChanged: (v) =>
                 setState(() => _local = _local.copyWith(availableToday: v)),
-            activeColor: _kGreen,
+            activeThumbColor: KMColors.available,
             contentPadding: EdgeInsets.zero,
             title: const Row(children: [
-              Icon(Icons.today_rounded, color: _kGreen, size: 18),
+              Icon(Icons.today_rounded, color: KMColors.available, size: 18),
               SizedBox(width: 8),
               Text('Available Today',
                   style: TextStyle(fontWeight: FontWeight.w500)),
@@ -1476,9 +1464,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               return ChoiceChip(
                 label: Text(g),
                 selected: sel,
-                selectedColor: _kP2,
+                selectedColor: KMColors.primary,
                 labelStyle:
-                    TextStyle(color: sel ? Colors.white : _kDark),
+                    TextStyle(color: sel ? Colors.white : KMColors.textPrimary),
                 onSelected: (_) =>
                     setState(() => _local = _local.copyWith(gender: g)),
               );
@@ -1498,9 +1486,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               return ChoiceChip(
                 label: Text(lbl),
                 selected: sel,
-                selectedColor: _kAmber,
+                selectedColor: KMColors.accent,
                 labelStyle:
-                    TextStyle(color: sel ? Colors.white : _kDark),
+                    TextStyle(color: sel ? Colors.white : KMColors.textPrimary),
                 onSelected: (_) =>
                     setState(() => _local = _local.copyWith(minRating: val)),
               );
@@ -1521,9 +1509,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               return ChoiceChip(
                 label: Text(lbl),
                 selected: sel,
-                selectedColor: _kP2,
+                selectedColor: KMColors.primary,
                 labelStyle:
-                    TextStyle(color: sel ? Colors.white : _kDark),
+                    TextStyle(color: sel ? Colors.white : KMColors.textPrimary),
                 onSelected: (_) => setState(
                     () => _local = _local.copyWith(minExperience: val)),
               );
@@ -1547,7 +1535,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   selected: sel,
                   selectedColor: Colors.blue,
                   labelStyle:
-                      TextStyle(color: sel ? Colors.white : _kDark),
+                      TextStyle(color: sel ? Colors.white : KMColors.textPrimary),
                   onSelected: (_) => setState(
                       () => _local = _local.copyWith(maxDistanceKm: val)),
                 );
@@ -1566,9 +1554,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               return ChoiceChip(
                 label: Text(l, style: const TextStyle(fontSize: 12)),
                 selected: sel,
-                selectedColor: _kP2,
+                selectedColor: KMColors.primary,
                 labelStyle:
-                    TextStyle(color: sel ? Colors.white : _kDark),
+                    TextStyle(color: sel ? Colors.white : KMColors.textPrimary),
                 onSelected: (_) =>
                     setState(() => _local = _local.copyWith(language: l)),
               );
@@ -1581,7 +1569,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             child: ElevatedButton(
               onPressed: () => widget.onApply(_local),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: _kP2,
+                  backgroundColor: KMColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(
@@ -1609,13 +1597,13 @@ class _FTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      Icon(icon, size: 16, color: _kP2),
+      Icon(icon, size: 16, color: KMColors.primary),
       const SizedBox(width: 6),
       Text(title,
           style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: _kDark)),
+              color: KMColors.textPrimary)),
     ]);
   }
 }
@@ -1634,7 +1622,7 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: size / 2,
-      backgroundColor: _kLightGreen,
+      backgroundColor: KMColors.cardTint,
       backgroundImage:
           photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
       child: photoUrl.isEmpty
@@ -1642,7 +1630,7 @@ class _Avatar extends StatelessWidget {
               name.isNotEmpty ? name[0].toUpperCase() : '?',
               style: TextStyle(
                   fontSize: size * 0.38,
-                  color: _kP2,
+                  color: KMColors.primary,
                   fontWeight: FontWeight.bold),
             )
           : null,
@@ -1661,13 +1649,13 @@ class _AvailBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: isAvail ? _kLightGreen : Colors.orange.shade50,
+          color: isAvail ? KMColors.cardTint : Colors.orange.shade50,
           borderRadius: BorderRadius.circular(20)),
       child: Text(
         isAvail ? '● Available' : '○ Busy',
         style: TextStyle(
             fontSize: 10,
-            color: isAvail ? _kGreen : Colors.orange.shade700,
+            color: isAvail ? KMColors.available : Colors.orange.shade700,
             fontWeight: FontWeight.w600),
       ),
     );
@@ -1684,12 +1672,12 @@ class _SkillChipSmall extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: _kLightGreen,
+          color: KMColors.cardTint,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _kGreen.withOpacity(0.3))),
+          border: Border.all(color: KMColors.available.withValues(alpha: 0.3))),
       child: Text(label,
           style: const TextStyle(
-              fontSize: 11, color: _kP2, fontWeight: FontWeight.w500)),
+              fontSize: 11, color: KMColors.primary, fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -1705,9 +1693,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3))),
+          border: Border.all(color: color.withValues(alpha: 0.3))),
       child: Text(label,
           style: TextStyle(
               color: color,
@@ -1719,56 +1707,6 @@ class _StatChip extends StatelessWidget {
 
 // ── Shimmer Placeholders ──────────────────────────────────────────────────────
 
-class _ShimmerBox extends StatefulWidget {
-  final double width;
-  final double height;
-  final BorderRadius? radius;
-
-  const _ShimmerBox(
-      {required this.width, required this.height, this.radius});
-
-  @override
-  State<_ShimmerBox> createState() => _ShimmerBoxState();
-}
-
-class _ShimmerBoxState extends State<_ShimmerBox>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<Color?> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat(reverse: true);
-    _anim = ColorTween(
-            begin: Colors.grey.shade200, end: Colors.grey.shade100)
-        .animate(_ctrl);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-            color: _anim.value,
-            borderRadius:
-                widget.radius ?? BorderRadius.circular(8)),
-      ),
-    );
-  }
-}
-
 class _HorizontalShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -1779,10 +1717,8 @@ class _HorizontalShimmer extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemCount: 4,
-        itemBuilder: (_, __) => _ShimmerBox(
-            width: 155,
-            height: 220,
-            radius: BorderRadius.circular(16)),
+        itemBuilder: (_, __) => const KMShimmerBox(
+            width: 155, height: 220, borderRadius: 16),
       ),
     );
   }
@@ -1793,12 +1729,9 @@ class _WorkerCardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: _ShimmerBox(
-          width: double.infinity,
-          height: 130,
-          radius: BorderRadius.circular(16)),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: KMShimmerBox(height: 130, borderRadius: 16),
     );
   }
 }
@@ -1844,7 +1777,7 @@ class _FullEmptyState extends StatelessWidget {
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: _kDark)),
+                    color: KMColors.textPrimary)),
             const SizedBox(height: 8),
             Text(subtitle,
                 textAlign: TextAlign.center,

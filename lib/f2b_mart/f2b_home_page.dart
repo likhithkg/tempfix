@@ -1,4 +1,4 @@
-// lib/f2b_mart/f2b_home_page.dart
+﻿// lib/f2b_mart/f2b_home_page.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -78,14 +78,14 @@ class _F2BHomePageState extends State<F2BHomePage> {
       title: 'Fresh Organic Produce',
       subtitle: 'Farm to table • Verified farmers only',
       tag: '🌿 Organic',
-      color1: Color(0xFF1B5E20), color2: Color(0xFF388E3C),
+      color1: KMColors.primaryDark, color2: KMColors.primary,
       icon: Icons.eco_rounded,
     ),
     _BannerData(
       title: 'Direct from Farmers',
       subtitle: 'No middlemen • Best prices guaranteed',
       tag: '🤝 Fair Trade',
-      color1: Color(0xFF0D47A1), color2: Color(0xFF1565C0),
+      color1: KMColors.weatherDark, color2: KMColors.weatherPrimary,
       icon: Icons.handshake_rounded,
     ),
     _BannerData(
@@ -99,7 +99,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
       title: 'Export Quality Crops',
       subtitle: 'Grade A certified for global markets',
       tag: '⭐ Grade A',
-      color1: Color(0xFF4A148C), color2: Color(0xFF6A1B9A),
+      color1: KMColors.labourDark, color2: KMColors.labourPrimary,
       icon: Icons.verified_rounded,
     ),
     _BannerData(
@@ -114,10 +114,10 @@ class _F2BHomePageState extends State<F2BHomePage> {
   static const _cats = [
     _CatData('vegetables', 'Vegetables', '🥦', Color(0xFF2E7D32), Color(0xFF66BB6A)),
     _CatData('fruits',     'Fruits',     '🍎', Color(0xFFC62828), Color(0xFFEF5350)),
-    _CatData('grains',     'Grains',     '🌾', Color(0xFFE65100), Color(0xFFFF8F00)),
+    _CatData('grains',     'Grains',     '🌾', KMColors.rentPrimary, Color(0xFFFF8F00)),
     _CatData('spices',     'Spices',     '🌶', Color(0xFF880E4F), Color(0xFFAD1457)),
     _CatData('pulses',     'Pulses',     '🫘', Color(0xFF4E342E), Color(0xFF6D4C41)),
-    _CatData('crops',      'Crops',      '🌿', Color(0xFF1565C0), Color(0xFF1976D2)),
+    _CatData('crops',      'Crops',      '🌿', KMColors.weatherPrimary, Color(0xFF1976D2)),
     _CatData('flowers',    'Flowers',    '🌸', Color(0xFF880E4F), Color(0xFFE91E63)),
     _CatData('other',      'Other',      '📦', Color(0xFF37474F), Color(0xFF546E7A)),
   ];
@@ -209,7 +209,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
           content: Text('${p.productName} added to cart'),
-          backgroundColor: const Color(0xFF1B5E20),
+          backgroundColor: KMColors.primaryDark,
           duration: const Duration(seconds: 2),
           action: SnackBarAction(
             label: 'View Cart',
@@ -319,7 +319,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                    color: KMColors.primaryDark.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text('📋', style: TextStyle(fontSize: 22)),
@@ -413,7 +413,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                       : const Icon(Icons.send_rounded),
                   label: const Text('Post Requirement'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
+                    backgroundColor: KMColors.primaryDark,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -593,7 +593,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             title: 'Export Ready',
                             subtitle: 'Grade A certified for global markets',
                             icon: Icons.verified_rounded,
-                            iconColor: const Color(0xFF1565C0),
+                            iconColor: KMColors.weatherPrimary,
                             onSeeAll: () => Navigator.push(ctx,
                                 MaterialPageRoute(
                                     builder: (_) => const F2BSearchPage())),
@@ -627,7 +627,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             title: 'Featured Farmers',
                             subtitle: 'Top verified suppliers',
                             icon: Icons.people_rounded,
-                            iconColor: const Color(0xFFE65100),
+                            iconColor: KMColors.rentPrimary,
                           ),
                         ),
                         SliverToBoxAdapter(
@@ -769,7 +769,7 @@ class _GBHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(16, topPad + 8, 8, 10),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+          colors: [KMColors.primaryDark, Color(0xFF2E7D32)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -861,10 +861,10 @@ class _SearchBarTap extends StatelessWidget {
           const SizedBox(width: 10),
           const Expanded(
             child: Text('Search crops, farmers, location...',
-                style: TextStyle(fontSize: 14, color: Color(0xFF9E9E9E))),
+                style: TextStyle(fontSize: 14, color: KMColors.textSecondary)),
           ),
           Container(width: 1, height: 20,
-              color: const Color(0xFFE0E0E0),
+              color: KMColors.divider,
               margin: const EdgeInsets.symmetric(horizontal: 10)),
           const Icon(Icons.mic_rounded, color: Color(0xFF2E7D32), size: 22),
         ]),
@@ -950,7 +950,7 @@ class _BannerCarousel extends StatelessWidget {
                         child: const Text('Explore Now',
                             style: TextStyle(fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF1B5E20))),
+                                color: KMColors.primaryDark)),
                       ),
                     ],
                   ),
@@ -1178,10 +1178,10 @@ Color _catAccent(String cat) {
   switch (cat.toLowerCase()) {
     case 'fruits':     return const Color(0xFFD84315);
     case 'vegetables': return const Color(0xFF2E7D32);
-    case 'grains':     return const Color(0xFFE65100);
+    case 'grains':     return KMColors.rentPrimary;
     case 'spices':     return const Color(0xFF880E4F);
     case 'pulses':     return const Color(0xFF4E342E);
-    case 'crops':      return const Color(0xFF1565C0);
+    case 'crops':      return KMColors.weatherPrimary;
     case 'flowers':    return const Color(0xFFE91E63);
     default:           return KMColors.primaryDark;
   }
@@ -1275,7 +1275,7 @@ class _PremiumCard extends StatelessWidget {
                             : (isWishlisted ? Icons.favorite : Icons.favorite_border),
                         size: 14,
                         color: isOwner
-                            ? const Color(0xFF1B5E20)
+                            ? KMColors.primaryDark
                             : (isWishlisted ? Colors.red : Colors.grey),
                       ),
                     ),
@@ -1289,7 +1289,7 @@ class _PremiumCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF1B5E20),
+                          color: KMColors.primaryDark,
                           borderRadius: BorderRadius.circular(8)),
                       child: const Text('My Listing',
                           style: TextStyle(color: Colors.white,
@@ -1341,13 +1341,13 @@ class _PremiumCard extends StatelessWidget {
                     const Text('You listed this',
                         style: TextStyle(
                             fontSize: 9,
-                            color: Color(0xFF1B5E20),
+                            color: KMColors.primaryDark,
                             fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Text('₹${product.pricePerUnit}',
                       style: const TextStyle(fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1B5E20))),
+                          color: KMColors.primaryDark)),
                   const SizedBox(height: 2),
                   Row(children: [
                     const Icon(Icons.location_on_outlined,
@@ -1367,10 +1367,10 @@ class _PremiumCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 5),
                       decoration: BoxDecoration(
                         color: isOwner
-                            ? const Color(0xFF1B5E20).withValues(alpha: 0.10)
+                            ? KMColors.primaryDark.withValues(alpha: 0.10)
                             : (isInCart
-                                ? const Color(0xFF1565C0).withValues(alpha: 0.10)
-                                : const Color(0xFF1B5E20)),
+                                ? KMColors.weatherPrimary.withValues(alpha: 0.10)
+                                : KMColors.primaryDark),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -1384,9 +1384,9 @@ class _PremiumCard extends StatelessWidget {
                                     : Icons.add_shopping_cart_rounded),
                             size: 12,
                             color: isOwner
-                                ? const Color(0xFF1B5E20)
+                                ? KMColors.primaryDark
                                 : (isInCart
-                                    ? const Color(0xFF1565C0)
+                                    ? KMColors.weatherPrimary
                                     : Colors.white),
                           ),
                           const SizedBox(width: 4),
@@ -1398,9 +1398,9 @@ class _PremiumCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               color: isOwner
-                                  ? const Color(0xFF1B5E20)
+                                  ? KMColors.primaryDark
                                   : (isInCart
-                                      ? const Color(0xFF1565C0)
+                                      ? KMColors.weatherPrimary
                                       : Colors.white),
                             ),
                           ),
@@ -1437,10 +1437,10 @@ class _PremiumCard extends StatelessWidget {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                  color: KMColors.primaryDark.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.edit_rounded,
-                  color: Color(0xFF1B5E20), size: 18),
+                  color: KMColors.primaryDark, size: 18),
             ),
             title: const Text('Edit Listing',
                 style: TextStyle(fontWeight: FontWeight.w600)),
@@ -1482,13 +1482,13 @@ class _RfqBanner extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF0D47A1), Color(0xFF1565C0)],
+            colors: [KMColors.weatherDark, KMColors.weatherPrimary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [BoxShadow(
-            color: const Color(0xFF1565C0).withValues(alpha: 0.32),
+            color: KMColors.weatherPrimary.withValues(alpha: 0.32),
             blurRadius: 12, offset: const Offset(0, 4),
           )],
         ),
@@ -1519,7 +1519,7 @@ class _RfqBanner extends StatelessWidget {
                 decoration: BoxDecoration(color: Colors.white,
                     borderRadius: BorderRadius.circular(16)),
                 child: const Text('Post Requirement',
-                    style: TextStyle(color: Color(0xFF0D47A1),
+                    style: TextStyle(color: KMColors.weatherDark,
                         fontSize: 11, fontWeight: FontWeight.w800)),
               ),
             ],
@@ -1540,8 +1540,8 @@ class _FarmersList extends StatelessWidget {
   const _FarmersList({required this.farmers});
 
   static const _colors = [
-    Color(0xFF1B5E20), Color(0xFFBF360C), Color(0xFF0D47A1),
-    Color(0xFF4A148C), Color(0xFF006064), Color(0xFF880E4F),
+    KMColors.primaryDark, Color(0xFFBF360C), KMColors.weatherDark,
+    KMColors.labourDark, Color(0xFF006064), Color(0xFF880E4F),
     Color(0xFF4E342E), Color(0xFF37474F),
   ];
 
@@ -1680,7 +1680,7 @@ class _FilterChip extends StatelessWidget {
           color: selected ? color : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: selected ? color : const Color(0xFFE0E0E0)),
+              color: selected ? color : KMColors.divider),
           boxShadow: selected
               ? [BoxShadow(color: color.withValues(alpha: 0.25),
                   blurRadius: 6, offset: const Offset(0, 2))]
@@ -1783,7 +1783,7 @@ class _GridCard extends StatelessWidget {
                             : (isWishlisted ? Icons.favorite : Icons.favorite_border),
                         size: 15,
                         color: isOwner
-                            ? const Color(0xFF1B5E20)
+                            ? KMColors.primaryDark
                             : (isWishlisted ? Colors.red : Colors.grey),
                       ),
                     ),
@@ -1797,7 +1797,7 @@ class _GridCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF1B5E20),
+                          color: KMColors.primaryDark,
                           borderRadius: BorderRadius.circular(8)),
                       child: const Text('My Listing',
                           style: TextStyle(color: Colors.white,
@@ -1850,13 +1850,13 @@ class _GridCard extends StatelessWidget {
                     const Text('You listed this',
                         style: TextStyle(
                             fontSize: 10,
-                            color: Color(0xFF1B5E20),
+                            color: KMColors.primaryDark,
                             fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
                   Text('₹${product.pricePerUnit}',
                       style: const TextStyle(fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1B5E20))),
+                          color: KMColors.primaryDark)),
                   Text(product.quantity,
                       style: const TextStyle(fontSize: 10,
                           color: KMColors.textSecondary)),
@@ -1904,8 +1904,8 @@ class _GridCard extends StatelessWidget {
                         backgroundColor: isOwner
                             ? const Color(0xFF2E7D32)
                             : (isInCart
-                                ? const Color(0xFF1565C0)
-                                : const Color(0xFF1B5E20)),
+                                ? KMColors.weatherPrimary
+                                : KMColors.primaryDark),
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.zero, elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -1942,10 +1942,10 @@ class _GridCard extends StatelessWidget {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: const Color(0xFF1B5E20).withValues(alpha: 0.10),
+                  color: KMColors.primaryDark.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.edit_rounded,
-                  color: Color(0xFF1B5E20), size: 18),
+                  color: KMColors.primaryDark, size: 18),
             ),
             title: const Text('Edit Listing',
                 style: TextStyle(fontWeight: FontWeight.w600)),

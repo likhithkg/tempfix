@@ -18,15 +18,8 @@ import 'rent_list_form_page.dart';
 import 'rent_owner_dashboard_page.dart';
 import 'rent_booking_model.dart';
 import 'rent_farmer_bookings_page.dart';
-// ─── Palette ────────────────────────────────────────────────────────────────
-
-const _kPrimary = Color(0xFFE65100);
-const _kDark = Color(0xFF4E1F00);
-const _kGrad = LinearGradient(
-  colors: [_kDark, _kPrimary],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
+import '../theme.dart';
+import '../widgets/km_widgets.dart';
 
 Color _typeColor(String type) {
   switch (type.toLowerCase()) {
@@ -340,7 +333,7 @@ class _RentHomePageState extends State<RentHomePage>
               if (snap.hasError || (_loadTimedOut && !snap.hasData))
                 SliverToBoxAdapter(child: _buildError())
               else if (!snap.hasData)
-                _RentShimmer(isDark: isDark)
+                _RentShimmer(isDark: isDark) // isDark kept for API compat
               else if (filtered.isEmpty)
                 SliverToBoxAdapter(child: _buildEmpty())
               else ...[
@@ -418,7 +411,7 @@ class _RentHomePageState extends State<RentHomePage>
     final topPad = MediaQuery.of(context).padding.top;
     return Container(
       padding: EdgeInsets.fromLTRB(16, topPad + 12, 16, 16),
-      decoration: const BoxDecoration(gradient: _kGrad),
+      decoration: const BoxDecoration(gradient: KMGradients.rent),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Top row
         Row(children: [
@@ -511,7 +504,7 @@ class _RentHomePageState extends State<RentHomePage>
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(children: [
-            const Icon(Icons.search_rounded, color: _kPrimary, size: 22),
+            const Icon(Icons.search_rounded, color: KMColors.rentPrimary, size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -574,7 +567,7 @@ class _RentHomePageState extends State<RentHomePage>
         height: 40,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1565C0).withValues(alpha: 0.2),
+            color: KMColors.weatherPrimary.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -582,7 +575,7 @@ class _RentHomePageState extends State<RentHomePage>
               width: 16,
               height: 16,
               decoration: BoxDecoration(
-                color: const Color(0xFF1565C0),
+                color: KMColors.weatherPrimary,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2.5),
               ),
@@ -672,7 +665,7 @@ class _RentHomePageState extends State<RentHomePage>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: _kPrimary,
+                  color: KMColors.rentPrimary,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(mainAxisSize: MainAxisSize.min, children: [
@@ -710,16 +703,16 @@ class _RentHomePageState extends State<RentHomePage>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: sel ? (color ?? _kPrimary) : Colors.white,
+                color: sel ? (color ?? KMColors.rentPrimary) : Colors.white,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                     color: sel
-                        ? (color ?? _kPrimary)
+                        ? (color ?? KMColors.rentPrimary)
                         : const Color(0xFFE0E0E0)),
                 boxShadow: sel
                     ? [
                         BoxShadow(
-                            color: (color ?? _kPrimary).withValues(alpha: 0.3),
+                            color: (color ?? KMColors.rentPrimary).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2))
                       ]
@@ -755,14 +748,14 @@ class _RentHomePageState extends State<RentHomePage>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: _kPrimary.withValues(alpha: 0.10),
+            color: KMColors.rentPrimary.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text('$count machines',
               style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: _kPrimary)),
+                  color: KMColors.rentPrimary)),
         ),
         const Spacer(),
         GestureDetector(
@@ -800,10 +793,7 @@ class _RentHomePageState extends State<RentHomePage>
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight),
+        gradient: KMGradients.primaryHeader,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(children: [
@@ -898,7 +888,7 @@ class _RentHomePageState extends State<RentHomePage>
           ElevatedButton(
             onPressed: _retryStream,
             style: ElevatedButton.styleFrom(
-                backgroundColor: _kPrimary, foregroundColor: Colors.white),
+                backgroundColor: KMColors.rentPrimary, foregroundColor: Colors.white),
             child: const Text('Retry'),
           ),
         ]),
@@ -927,7 +917,7 @@ class _RentHomePageState extends State<RentHomePage>
                 _category = 'All';
               }),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: _kPrimary, foregroundColor: Colors.white),
+                  backgroundColor: KMColors.rentPrimary, foregroundColor: Colors.white),
               child: const Text('Clear Filters'),
             ),
         ]),
@@ -1299,12 +1289,12 @@ class _SortSheet extends StatelessWidget {
         ...options.map((o) {
           final sel = current == o.$1;
           return ListTile(
-            leading: Icon(o.$2, color: sel ? _kPrimary : Colors.grey),
+            leading: Icon(o.$2, color: sel ? KMColors.rentPrimary : Colors.grey),
             title: Text(o.$3,
                 style: TextStyle(
                     fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
             trailing: sel
-                ? const Icon(Icons.check_rounded, color: _kPrimary)
+                ? const Icon(Icons.check_rounded, color: KMColors.rentPrimary)
                 : null,
             onTap: () => onSelect(o.$1),
           );
@@ -1556,62 +1546,35 @@ class _CalcRow extends StatelessWidget {
 
 // ─── Shimmer ─────────────────────────────────────────────────────────────────
 
-class _RentShimmer extends StatefulWidget {
+class _RentShimmer extends StatelessWidget {
+  // ignore: unused_element
   final bool isDark;
-  const _RentShimmer({required this.isDark});
-  @override
-  State<_RentShimmer> createState() => _RentShimmerState();
-}
-
-class _RentShimmerState extends State<_RentShimmer>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1100))
-      ..repeat();
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  const _RentShimmer({this.isDark = false});
 
   @override
   Widget build(BuildContext context) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (_, __) => AnimatedBuilder(
-          animation: _anim,
-          builder: (_, __) {
-            final t = _anim.value;
-            final shine = LinearGradient(
-              begin: Alignment(-1.0 + t * 2, 0),
-              end: Alignment(t * 2, 0),
-              colors: widget.isDark
-                  ? [const Color(0xFF2A2A2A), const Color(0xFF3A3A3A),
-                     const Color(0xFF2A2A2A)]
-                  : [const Color(0xFFE8E8E8), const Color(0xFFF5F5F5),
-                     const Color(0xFFE8E8E8)],
-              stops: const [0, 0.5, 1],
-            );
-            return Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              height: 130,
-              decoration: BoxDecoration(
-                  color: widget.isDark
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: shine),
-            );
-          },
+        (_, __) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Row(children: [
+            const KMShimmerBox(width: 110, height: 140, borderRadius: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  KMShimmerBox(height: 16, borderRadius: 8),
+                  SizedBox(height: 8),
+                  KMShimmerBox(width: 120, height: 12, borderRadius: 6),
+                  SizedBox(height: 8),
+                  KMShimmerBox(width: 90, height: 12, borderRadius: 6),
+                  SizedBox(height: 8),
+                  KMShimmerBox(height: 36, borderRadius: 10),
+                ],
+              ),
+            ),
+          ]),
         ),
         childCount: 5,
       ),

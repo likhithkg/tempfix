@@ -1,18 +1,12 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'labour_detail_page.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGreen = Color(0xFF4CAF50);
-const _kLightGreen = Color(0xFFE8F5E9);
-const _kOrange = Color(0xFFE65100);
-const _kAmber = Color(0xFFFFA000);
-const _kDark = Color(0xFF1A2D1A);
 
 class LabourNearbyPage extends StatefulWidget {
   const LabourNearbyPage({super.key});
@@ -167,14 +161,14 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
-                      color: sel ? _kP2 : _kLightGreen,
+                      color: sel ? KMColors.primary : KMColors.cardTint,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: sel ? _kP2 : Colors.grey.shade300),
+                          color: sel ? KMColors.primary : Colors.grey.shade300),
                     ),
                     child: Text('$r km',
                         style: TextStyle(
-                            color: sel ? Colors.white : _kDark,
+                            color: sel ? Colors.white : KMColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 15)),
                   ),
@@ -223,7 +217,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
           SliverAppBar(
             pinned: true,
             expandedHeight: 130,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white),
@@ -240,7 +234,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                      colors: [_kP1, _kP2, Color(0xFF388E3C)],
+                      colors: [KMColors.primaryDark, KMColors.primary],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight),
                 ),
@@ -293,7 +287,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 2))
                         ]),
@@ -319,11 +313,11 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                        color: _kP2,
+                        color: KMColors.primary,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                              color: _kP2.withOpacity(0.3),
+                              color: KMColors.primary.withValues(alpha: 0.3),
                               blurRadius: 6,
                               offset: const Offset(0, 2))
                         ]),
@@ -350,7 +344,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const CircularProgressIndicator(color: _kP2),
+                      const CircularProgressIndicator(color: KMColors.primary),
                       const SizedBox(height: 12),
                       Text('Getting your location…',
                           style: TextStyle(
@@ -386,7 +380,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                           icon: const Icon(Icons.settings_rounded),
                           label: const Text('Open Settings'),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: _kP2,
+                              backgroundColor: KMColors.primary,
                               foregroundColor: Colors.white),
                         ),
                       ]),
@@ -413,7 +407,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                           icon: const Icon(Icons.refresh_rounded),
                           label: const Text('Retry'),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: _kP2,
+                              backgroundColor: KMColors.primary,
                               foregroundColor: Colors.white),
                         ),
                       ]),
@@ -436,7 +430,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                         icon: const Icon(Icons.refresh_rounded),
                         label: const Text('Try Again'),
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: _kP2,
+                            backgroundColor: KMColors.primary,
                             foregroundColor: Colors.white),
                       ),
                     ]),
@@ -458,7 +452,7 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                 if (!snap.hasData) {
                   return const SliverFillRemaining(
                     child: Center(
-                        child: CircularProgressIndicator(color: _kP2)),
+                        child: CircularProgressIndicator(color: KMColors.primary)),
                   );
                 }
 
@@ -493,12 +487,12 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                                 onPressed: _showRadiusPicker,
                                 icon: const Icon(
                                     Icons.add_circle_outline_rounded,
-                                    color: _kP2),
+                                    color: KMColors.primary),
                                 label: const Text('Increase Radius',
-                                    style: TextStyle(color: _kP2)),
+                                    style: TextStyle(color: KMColors.primary)),
                                 style: OutlinedButton.styleFrom(
                                     side: const BorderSide(
-                                        color: _kP2)),
+                                        color: KMColors.primary)),
                               ),
                             ]),
                       ),
@@ -518,13 +512,13 @@ class _LabourNearbyPageState extends State<LabourNearbyPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                  color: _kLightGreen,
+                                  color: KMColors.cardTint,
                                   borderRadius:
                                       BorderRadius.circular(20)),
                               child: Text(
                                   '${workers.length} workers within $_radiusKm km',
                                   style: const TextStyle(
-                                      color: _kP2,
+                                      color: KMColors.primary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 12)),
                             ),
@@ -594,7 +588,7 @@ class _NearbyWorkerCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 8,
                 offset: const Offset(0, 2))
           ],
@@ -607,7 +601,7 @@ class _NearbyWorkerCard extends StatelessWidget {
             Stack(children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: _kLightGreen,
+                backgroundColor: KMColors.cardTint,
                 backgroundImage: p.photoUrl.isNotEmpty
                     ? NetworkImage(p.photoUrl)
                     : null,
@@ -618,7 +612,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                             : '?',
                         style: const TextStyle(
                             fontSize: 24,
-                            color: _kP2,
+                            color: KMColors.primary,
                             fontWeight: FontWeight.bold))
                     : null,
               ),
@@ -630,7 +624,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                        color: _kGreen,
+                        color: KMColors.available,
                         shape: BoxShape.circle,
                         border: Border.all(
                             color: Colors.white, width: 2)),
@@ -651,7 +645,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                       ),
                       if (p.isVerified)
                         const Icon(Icons.verified_rounded,
-                            color: _kP2, size: 16),
+                            color: KMColors.primary, size: 16),
                     ]),
                     const SizedBox(height: 3),
                     // Distance badge
@@ -707,7 +701,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                         decoration: BoxDecoration(
                             color:
                                 p.availabilityStatus == 'available'
-                                    ? _kLightGreen
+                                    ? KMColors.cardTint
                                     : Colors.orange.shade50,
                             borderRadius:
                                 BorderRadius.circular(20)),
@@ -719,7 +713,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                               fontSize: 10,
                               color: p.availabilityStatus ==
                                       'available'
-                                  ? _kGreen
+                                  ? KMColors.available
                                   : Colors.orange,
                               fontWeight: FontWeight.w600),
                         ),
@@ -727,7 +721,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                       if (p.rating > 0) ...[
                         const SizedBox(width: 8),
                         const Icon(Icons.star_rounded,
-                            color: _kAmber, size: 13),
+                            color: KMColors.accent, size: 13),
                         Text(' ${p.rating.toStringAsFixed(1)}',
                             style: const TextStyle(
                                 fontSize: 12,
@@ -738,7 +732,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: _kOrange)),
+                              color: KMColors.rentPrimary)),
                     ]),
                     const SizedBox(height: 10),
                     Row(children: [
@@ -750,7 +744,7 @@ class _NearbyWorkerCard extends StatelessWidget {
                           label: const Text('Call',
                               style: TextStyle(fontSize: 12)),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: _kP2,
+                              backgroundColor: KMColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                   vertical: 8),
@@ -804,8 +798,8 @@ class _NearbyWorkerCard extends StatelessWidget {
                         label: const Text('View Full Profile',
                             style: TextStyle(fontSize: 12)),
                         style: OutlinedButton.styleFrom(
-                            foregroundColor: _kP2,
-                            side: const BorderSide(color: _kP2),
+                            foregroundColor: KMColors.primary,
+                            side: const BorderSide(color: KMColors.primary),
                             padding:
                                 const EdgeInsets.symmetric(vertical: 8),
                             shape: RoundedRectangleBorder(
@@ -832,12 +826,12 @@ class _SmallChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-          color: _kLightGreen,
+          color: KMColors.cardTint,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _kGreen.withOpacity(0.3))),
+          border: Border.all(color: KMColors.available.withValues(alpha: 0.3))),
       child: Text(label,
           style: const TextStyle(
-              fontSize: 10, color: _kP2, fontWeight: FontWeight.w500)),
+              fontSize: 10, color: KMColors.primary, fontWeight: FontWeight.w500)),
     );
   }
 }

@@ -1,15 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'labour_hub_service.dart';
 import 'labour_profile_model.dart';
 import 'labour_detail_page.dart';
+import '../theme.dart';
 
-const _kP1 = Color(0xFF1B5E20);
-const _kP2 = Color(0xFF2E7D32);
-const _kGrad = LinearGradient(
-  colors: [_kP1, _kP2, Color(0xFF388E3C)],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
 
 class SavedWorkersPage extends StatefulWidget {
   const SavedWorkersPage({super.key});
@@ -41,7 +35,7 @@ class _SavedWorkersPageState extends State<SavedWorkersPage> {
           SliverAppBar(
             pinned: true,
             expandedHeight: 110,
-            backgroundColor: _kP1,
+            backgroundColor: KMColors.primaryDark,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white),
@@ -49,7 +43,7 @@ class _SavedWorkersPageState extends State<SavedWorkersPage> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(gradient: _kGrad),
+                decoration: const BoxDecoration(gradient: KMGradients.primaryHeader),
                 child: const SafeArea(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(16, 48, 16, 0),
@@ -85,7 +79,7 @@ class _SavedWorkersPageState extends State<SavedWorkersPage> {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 80),
-                    child: Center(child: CircularProgressIndicator(color: _kP2)),
+                    child: Center(child: CircularProgressIndicator(color: KMColors.primary)),
                   );
                 }
                 if (snap.hasError) {
@@ -161,7 +155,7 @@ class _SavedCard extends StatelessWidget {
           child: Row(children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: _kP2.withOpacity(0.15),
+              backgroundColor: KMColors.primary.withValues(alpha: 0.15),
               backgroundImage: profile.photoUrl.isNotEmpty
                   ? NetworkImage(profile.photoUrl)
                   : null,
@@ -169,7 +163,7 @@ class _SavedCard extends StatelessWidget {
                   ? Text(
                       profile.name.isNotEmpty ? profile.name[0].toUpperCase() : '?',
                       style: const TextStyle(
-                          color: _kP2,
+                          color: KMColors.primary,
                           fontSize: 22,
                           fontWeight: FontWeight.bold))
                   : null,
@@ -228,12 +222,12 @@ class _SavedCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                              color: _kP2.withOpacity(0.1),
+                              color: KMColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20)),
                           child: Text(profile.skills.first,
                               style: const TextStyle(
                                   fontSize: 11,
-                                  color: _kP2,
+                                  color: KMColors.primary,
                                   fontWeight: FontWeight.w500)),
                         ),
                       const Spacer(),
@@ -250,7 +244,7 @@ class _SavedCard extends StatelessWidget {
                       Text('₹${profile.dailyWage.toInt()}/day',
                           style: const TextStyle(
                               fontSize: 12,
-                              color: _kP2,
+                              color: KMColors.primary,
                               fontWeight: FontWeight.bold)),
                     ]),
                   ]),

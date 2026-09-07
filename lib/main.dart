@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
@@ -34,6 +35,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'service/user_service.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'rent/rent_nearby_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'theme.dart'; 
@@ -53,89 +55,95 @@ import 'home/home_page.dart';
 // import 'your_app_file.dart'; // if KrishiMithraApp is in a different file adjust the import
 // If KrishiMithraApp is in the same file, no extra import needed.
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+// ensureInitialized and runApp MUST be in the same zone to avoid zone-mismatch
+// errors from Supabase's async auth listeners on web. The fix: do everything
+// inside a single runZonedGuarded with an async callback.
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  Object? initError;
-  StackTrace? initStack;
+    // Catch Flutter framework errors
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      print('FlutterError caught: ${details.exception}\n${details.stack}');
+    };
 
-  // Initialize Firebase first so we can scope theme/prefs to the logged-in user.
-  try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  } catch (e, st) {
-    initError = e;
-    initStack = st;
-    print('*** Firebase initialization error:\n$e\n$st');
-  }
+    Object? initError;
+    StackTrace? initStack;
 
-  // Load dark mode — use a per-user key so each account has its own preference.
-  final prefs = await SharedPreferences.getInstance();
-  final startupUid = fb.FirebaseAuth.instance.currentUser?.uid;
-  final darkKey = startupUid != null ? 'isDarkMode_$startupUid' : 'isDarkMode';
-  final isDark = prefs.getBool(darkKey) ?? false;
-  ProfileService.instance.themeModeNotifier.value =
-      isDark ? ThemeMode.dark : ThemeMode.light;
+    // 1. Firebase (must be first — scopes theme prefs to UID)
+    try {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    } catch (e, st) {
+      initError = e;
+      initStack = st;
+      print('*** Firebase initialization error:\n$e\n$st');
+    }
 
-  // --- Initialize LocaleService so saved locale is available immediately ---
-  await LocaleService.instance.init();
+    // 2. Load dark mode preference
+    final prefs = await SharedPreferences.getInstance();
+    final startupUid = fb.FirebaseAuth.instance.currentUser?.uid;
+    final darkKey = startupUid != null ? 'isDarkMode_$startupUid' : 'isDarkMode';
+    final isDark = prefs.getBool(darkKey) ?? false;
+    ProfileService.instance.themeModeNotifier.value =
+        isDark ? ThemeMode.dark : ThemeMode.light;
 
-  // Try to initialize remaining external services.
-  if (initError == null) {
-  try {
-    // dotenv (optional — will throw if file missing but we catch it)
-   try {
-  await dotenv.load(fileName: ".env");
+    // 3. Locale
+    await LocaleService.instance.init();
 
-final key = dotenv.env['GEMINI_API_KEY'];
+    // 4. Remaining services (dotenv + Supabase)
+    if (initError == null) {
+      try {
+        try {
+          await dotenv.load(fileName: ".env");
+          final key = dotenv.env['GEMINI_API_KEY'];
+          if (key == null || key.isEmpty) {
+            print("⚠ GEMINI_API_KEY not found in .env");
+          } else {
+            print("✅ Gemini API Key Loaded");
+          }
+        } catch (e, st) {
+          print('Warning loading .env: $e\n$st');
+        }
 
-if (key == null || key.isEmpty) {
-  print("⚠ GEMINI_API_KEY not found in .env");
-} else {
-  print("✅ Gemini API Key Loaded");
-}
-} catch (e, st) {
-  print('Warning loading .env: $e\n$st');
-}
-    // Supabase init (if you use it)
-    await sb.Supabase.initialize(
-      url: 'https://ticpdepakqlizhdwgxtz.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpY3BkZXBha3FsaXpoZHd3Z3h0eiIsInJvbGUiOiJhbmlvbiIsImlhdCI6MTc1MzcxNDI0MywiZXhwIjoyMDY5MjkwMjQzfQ.WdBMFR3z-mugqp7qLhOgWuHVh782ykZv4-mC2FPtKNM',
-    );
-  } catch (e, st) {
-    // store the init error so we can show a helpful UI instead of white screen
-    initError = e;
-    initStack = st;
-    // Print to console for logcat/adb logging
-    // (these prints will appear in logcat when connected or in debug APK)
-    print('*** App initialization error:\n$e\n$st');
-  }
-  } // end if (initError == null)
+        await sb.Supabase.initialize(
+          url: 'https://ticpdepakqlizhdwgxtz.supabase.co',
+          anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpY3BkZXBha3FsaXpoZHd3Z3h0eiIsInJvbGUiOiJhbmlvbiIsImlhdCI6MTc1MzcxNDI0MywiZXhwIjoyMDY5MjkwMjQzfQ.WdBMFR3z-mugqp7qLhOgWuHVh782ykZv4-mC2FPtKNM',
+        );
+      } catch (e, st) {
+        initError = e;
+        initStack = st;
+        print('*** App initialization error:\n$e\n$st');
+      }
+    }
 
-  // Catch Flutter framework errors and print them
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // still use the default handler to show in debug
-    FlutterError.presentError(details);
-    // also print so it's available in logcat
-    print('FlutterError caught: ${details.exception}\n${details.stack}');
-  };
-
-  // Run app within a guarded zone to catch other uncaught async errors
-  runZonedGuarded(() {
-    // If initError happened, start the minimal ErrorApp so we can read the message
+    // 5. runApp — same zone as ensureInitialized above
     if (initError != null) {
-      runApp(ErrorApp(
-        isDark: isDark,
-        error: initError!,
-        stack: initStack,
-      ));
+      runApp(ErrorApp(isDark: isDark, error: initError!, stack: initStack));
     } else {
-      // No early init error — run your normal app
       runApp(const KrishiMithraApp());
     }
   }, (error, stack) {
-    // Last-resort catcher: print to console (logcat)
     print('Uncaught zone error: $error\n$stack');
   });
+}
+
+/// Sends the Firebase ID token to the backend so it can find/create the user
+/// in MongoDB. Non-fatal — Firebase is the auth source of truth.
+Future<void> _syncUserWithBackend(fb.User? user) async {
+  if (user == null) return;
+  try {
+    final token = await user.getIdToken(true);
+    await http.post(
+      Uri.parse('https://km-backend-ug96.onrender.com/api/auth/verify'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    ).timeout(const Duration(seconds: 10));
+  } catch (_) {
+    // Non-fatal — the app still works via Firebase even if backend sync fails.
+  }
 }
 
 /// A tiny MaterialApp that shows a readable error screen.
@@ -381,6 +389,62 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
   final passwordController = TextEditingController();
   bool loading = false;
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => loading = true);
+    try {
+      fb.UserCredential uc;
+
+      if (kIsWeb) {
+        // Web: Firebase Auth handles the OAuth popup directly — no extra package needed
+        final provider = fb.GoogleAuthProvider();
+        uc = await fb.FirebaseAuth.instance.signInWithPopup(provider);
+      } else {
+        // Android / iOS: use the google_sign_in package for native account picker
+        final googleSignIn = GoogleSignIn();
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          if (mounted) setState(() => loading = false);
+          return; // user cancelled the picker
+        }
+        final googleAuth = await googleUser.authentication;
+        final credential = fb.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        uc = await fb.FirebaseAuth.instance.signInWithCredential(credential);
+      }
+
+      await _saveGoogleUserToFirestore(uc.user);
+      await _syncUserWithBackend(uc.user);
+      if (!mounted) return;
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
+    } on fb.FirebaseAuthException catch (e) {
+      showToast("Google sign-in failed: ${e.message ?? e.code}");
+    } catch (e) {
+      showToast("Google sign-in failed: ${e.toString()}");
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _saveGoogleUserToFirestore(fb.User? user) async {
+    if (user == null) return;
+    final doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final snap = await doc.get();
+    if (!snap.exists) {
+      await doc.set({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName,
+        'photoUrl': user.photoURL,
+        'authProvider': 'google',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      await doc.update({'lastLoginAt': FieldValue.serverTimestamp()});
+    }
+  }
+
   Future<void> login() async {
     if (emailController.text.trim().isEmpty || passwordController.text.isEmpty) {
       showToast("Please enter email and password");
@@ -393,17 +457,20 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
-
+      await _syncUserWithBackend(fb.FirebaseAuth.instance.currentUser);
       if (!mounted) return;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
     } on fb.FirebaseAuthException catch (e) {
-      showToast(
-        e.code == 'user-not-found'
-            ? "No user found with that email"
-            : e.code == 'wrong-password'
-                ? "Incorrect password"
-                : "Login failed: ${e.message}",
-      );
+      final msg = switch (e.code) {
+        'user-not-found' => "No user found with that email",
+        'wrong-password' || 'invalid-credential' => "Incorrect password",
+        'invalid-email' => "Invalid email address",
+        'user-disabled' => "This account has been disabled",
+        'too-many-requests' => "Too many failed attempts. Try later",
+        'network-request-failed' => "Network error. Check your connection",
+        _ => "Login failed: ${e.message ?? e.code}",
+      };
+      showToast(msg);
     } catch (e) {
       showToast("Login failed: ${e.toString()}");
     } finally {
@@ -486,6 +553,49 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordPage())),
                   child: Text("Forgot Password?", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.black54)),
                 ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text("OR", style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: loading ? null : _signInWithGoogle,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4285F4),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: const Text(
+                            "G",
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text("Continue with Google"),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -510,34 +620,103 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
   final otpController = TextEditingController();
   bool otpSent = false;
   bool loading = false;
+  int _resendCountdown = 0;
+  Timer? _resendTimer;
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    otpController.dispose();
+    super.dispose();
+  }
+
+  void _startResendTimer() {
+    _resendCountdown = 60;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() => _resendCountdown--);
+      if (_resendCountdown <= 0) timer.cancel();
+    });
+  }
+
+  String _friendlyPhoneError(fb.FirebaseAuthException e) {
+    return switch (e.code) {
+      'invalid-phone-number' => 'Invalid phone number format',
+      'too-many-requests' => 'Too many attempts. Try again later',
+      'network-request-failed' => 'Network error. Check your connection',
+      'captcha-check-failed' => 'Verification failed. Try again',
+      'quota-exceeded' => 'SMS quota exceeded. Try later',
+      'invalid-verification-code' => 'Incorrect OTP. Please try again',
+      'session-expired' => 'OTP expired. Tap Resend OTP',
+      _ => e.message ?? 'Authentication failed',
+    };
+  }
 
   void sendOTP() async {
     if (phone.trim().isEmpty) {
       showToast("Enter phone number");
       return;
     }
-    setState(() => loading = true);
-    await fb.FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (cred) async {
-        await fb.FirebaseAuth.instance.signInWithCredential(cred);
-        await _saveUserToFirestore();
-        if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
-      },
-      verificationFailed: (e) {
-        showToast("Verification failed: ${e.message}");
+    setState(() { loading = true; otpSent = false; });
+    otpController.clear();
+
+    // On Flutter Web, verifyPhoneNumber can throw a FirebaseAuthException directly
+    // (e.g. reCAPTCHA failure, unauthorized domain) instead of calling verificationFailed.
+    // The try-catch here is required on web; on mobile it only handles unexpected errors.
+    try {
+      await fb.FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        verificationCompleted: (cred) async {
+          // Only fires on Android (auto-SMS-retrieval). Not called on web.
+          try {
+            await fb.FirebaseAuth.instance.signInWithCredential(cred);
+            await _saveUserToFirestore();
+            await _syncUserWithBackend(fb.FirebaseAuth.instance.currentUser);
+            if (!mounted) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const KrishiMithraHome()),
+            );
+          } catch (e) {
+            if (mounted) {
+              showToast("Auto sign-in failed: $e");
+              setState(() => loading = false);
+            }
+          }
+        },
+        verificationFailed: (fb.FirebaseAuthException e) {
+          // Show actual Firebase error code so it's diagnosable during development.
+          debugPrint('📱 verificationFailed [${e.code}]: ${e.message}');
+          if (mounted) {
+            showToast('[${e.code}] ${e.message ?? "Verification failed"}');
+            setState(() => loading = false);
+          }
+        },
+        codeSent: (String id, int? resendToken) {
+          verificationId = id;
+          if (mounted) setState(() { otpSent = true; loading = false; });
+          _startResendTimer();
+        },
+        codeAutoRetrievalTimeout: (String id) {
+          verificationId = id;
+        },
+      );
+    } catch (e) {
+      // Catches exceptions thrown directly by verifyPhoneNumber on Flutter Web.
+      debugPrint('📱 sendOTP direct throw: $e');
+      String msg;
+      if (e is fb.FirebaseAuthException) {
+        debugPrint('📱 code=${e.code}  msg=${e.message}');
+        msg = '[${e.code}] ${e.message ?? "Firebase auth failed"}';
+      } else {
+        msg = 'Phone auth error: $e';
+      }
+      if (mounted) {
+        showToast(msg);
         setState(() => loading = false);
-      },
-      codeSent: (id, _) {
-        verificationId = id;
-        setState(() {
-          otpSent = true;
-          loading = false;
-        });
-      },
-      codeAutoRetrievalTimeout: (_) {},
-    );
+      }
+    }
   }
 
   void verifyOTP() async {
@@ -553,10 +732,13 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
       );
       await fb.FirebaseAuth.instance.signInWithCredential(cred);
       await _saveUserToFirestore();
+      await _syncUserWithBackend(fb.FirebaseAuth.instance.currentUser);
       if (!mounted) return;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KrishiMithraHome()));
+    } on fb.FirebaseAuthException catch (e) {
+      showToast(_friendlyPhoneError(e));
     } catch (e) {
-      showToast("Invalid OTP");
+      showToast("Verification failed: ${e.toString()}");
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -567,13 +749,15 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
     if (user != null) {
       final doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
       final snapshot = await doc.get();
-
       if (!snapshot.exists) {
         await doc.set({
           "uid": user.uid,
           "phone": user.phoneNumber,
+          "authProvider": "phone",
           "createdAt": FieldValue.serverTimestamp(),
         });
+      } else {
+        await doc.update({"lastLoginAt": FieldValue.serverTimestamp()});
       }
     }
   }
@@ -611,9 +795,11 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                       TextField(
                         controller: otpController,
                         keyboardType: TextInputType.number,
+                        maxLength: 6,
                         decoration: InputDecoration(
                           labelText: AppLocalizations.of(context)!.enterOtp,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          counterText: '',
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -627,6 +813,20 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: loading ? const CircularProgressIndicator(color: Colors.white) : Text(AppLocalizations.of(context)!.verifyOtp),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: (_resendCountdown > 0 || loading) ? null : sendOTP,
+                        child: Text(
+                          _resendCountdown > 0
+                              ? "Resend OTP in ${_resendCountdown}s"
+                              : "Resend OTP",
+                          style: TextStyle(
+                            color: _resendCountdown > 0
+                                ? Colors.grey
+                                : Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -700,10 +900,12 @@ class _SignUpPageState extends State<SignUpPage> {
             .set({
           'email': user.email,
           'phone': user.phoneNumber,
+          'authProvider': 'email',
           'createdAt': FieldValue.serverTimestamp(),
           'defaultLocation': null,
           'preferences': {},
         });
+        await _syncUserWithBackend(user);
       }
 
       if (!mounted) return;

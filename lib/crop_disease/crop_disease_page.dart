@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../l10n/app_localizations.dart';
 import '../services/libre_translate_service.dart';
+import '../theme.dart';
 
 // ─── Scan beam painter ────────────────────────────────────────────────────────
 
@@ -337,7 +338,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Add GEMINI_API_KEY to .env to enable disease detection'),
-            backgroundColor: Color(0xFFD32F2F),
+            backgroundColor: KMColors.error,
             duration: Duration(seconds: 6),
           ),
         );
@@ -736,13 +737,13 @@ class _CropDiseasePageState extends State<CropDiseasePage>
 
   Color _severityColor() {
     final s = severity.toLowerCase();
-    if (s.contains('high')) return const Color(0xFFD32F2F);
+    if (s.contains('high')) return KMColors.error;
     if (s.contains('medium') || s.contains('moderate')) return const Color(0xFFFF8F00);
     if (s.isEmpty) {
       final d = disease.toLowerCase();
       if (d.contains('blight') || d.contains('rot') || d.contains('wilt') ||
           d.contains('rust') || d.contains('mosaic') || d.contains('canker')) {
-        return const Color(0xFFD32F2F);
+        return KMColors.error;
       }
     }
     return const Color(0xFF2E7D32);

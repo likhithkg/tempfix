@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../theme.dart';
 import '../chatbot/chatbot_page.dart';
 import 'home_search_page.dart';
 import '../crop_disease/crop_disease_page.dart';
@@ -432,11 +433,7 @@ class _HomeTabState extends State<HomeTab> {
     final avatarText = _userName.isNotEmpty ? _userName[0].toUpperCase() : '?';
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [const Color(0xFF1B5E20), cs.primary],
-        ),
+        gradient: KMGradients.primaryHeader,
       ),
       child: SafeArea(
         bottom: false,
@@ -1047,35 +1044,35 @@ class _BannerData {
 
 final _kBanners = [
   _BannerData(
-    gradient: [const Color(0xFF1B5E20), const Color(0xFF43A047)],
+    gradient: [KMColors.primaryDark, KMColors.primary],
     icon: Icons.agriculture_rounded,
     title: (l) => l.sellDirectlyBanner,
     subtitle: (l) => l.connectExportBuyers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
   ),
   _BannerData(
-    gradient: [const Color(0xFF0277BD), const Color(0xFF29B6F6)],
+    gradient: [KMColors.weatherDark, KMColors.weatherPrimary],
     icon: Icons.cloud_outlined,
     title: (l) => l.checkWeatherBanner,
     subtitle: (l) => l.realTimeFarmForecast,
     onTap: (ctx, loc, _) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => WeatherPage(location: loc))),
   ),
   _BannerData(
-    gradient: [const Color(0xFFE65100), const Color(0xFFFF9800)],
+    gradient: [KMColors.rentDark, KMColors.rentPrimary],
     icon: Icons.precision_manufacturing_outlined,
     title: (l) => l.rentEquipmentBanner,
     subtitle: (l) => l.tractorsHarvestersLowCost,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const RentHomePage())),
   ),
   _BannerData(
-    gradient: [const Color(0xFF00695C), const Color(0xFF26A69A)],
+    gradient: [KMColors.exportDark, KMColors.exportPrimary],
     icon: Icons.local_shipping_outlined,
     title: (l) => l.exportBanner,
     subtitle: (l) => l.reachInternationalBuyers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
   ),
   _BannerData(
-    gradient: [const Color(0xFF4A148C), const Color(0xFF9C27B0)],
+    gradient: [KMColors.labourDark, KMColors.labourPrimary],
     icon: Icons.groups_outlined,
     title: (l) => l.hireLabourBanner,
     subtitle: (l) => l.findSkilledFarmWorkers,
@@ -1096,37 +1093,37 @@ class _QuickActionData {
 List<_QuickActionData> _quickActions(BuildContext ctx, AppLocalizations l, String location, LatLng? coords) => [
   _QuickActionData(
     icon: Icons.cloud_outlined,
-    gradient: [const Color(0xFF1565C0), const Color(0xFF42A5F5)],
+    gradient: [KMColors.weatherDark, KMColors.weatherPrimary],
     label: l.weather,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => WeatherPage(location: location))),
   ),
   _QuickActionData(
     icon: Icons.bug_report_outlined,
-    gradient: [const Color(0xFFB71C1C), const Color(0xFFEF5350)],
+    gradient: [KMColors.cropDark, KMColors.cropPrimary],
     label: l.cropDisease,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const CropDiseasePage())),
   ),
   _QuickActionData(
     icon: Icons.agriculture_outlined,
-    gradient: [const Color(0xFF4E342E), const Color(0xFFFF7043)],
+    gradient: [KMColors.rentDark, KMColors.rentPrimary],
     label: l.rentMachine,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const RentHomePage())),
   ),
   _QuickActionData(
     icon: Icons.storefront_outlined,
-    gradient: [const Color(0xFF1B5E20), const Color(0xFF66BB6A)],
+    gradient: [KMColors.primaryDark, KMColors.secondary],
     label: l.greenBazaar,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const F2BHomePage())),
   ),
   _QuickActionData(
     icon: Icons.groups_outlined,
-    gradient: [const Color(0xFF4A148C), const Color(0xFFAB47BC)],
+    gradient: [KMColors.labourDark, KMColors.labourPrimary],
     label: l.labourHub,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
   ),
   _QuickActionData(
     icon: Icons.local_shipping_outlined,
-    gradient: [const Color(0xFF004D40), const Color(0xFF26A69A)],
+    gradient: [KMColors.exportDark, KMColors.exportPrimary],
     label: l.exportHub,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
   ),
@@ -1138,7 +1135,7 @@ List<_QuickActionData> _quickActions(BuildContext ctx, AppLocalizations l, Strin
   ),
   _QuickActionData(
     icon: Icons.local_florist_outlined,
-    gradient: [const Color(0xFF2E7D32), const Color(0xFF81C784)],
+    gradient: [KMColors.primaryDark, KMColors.primary],
     label: l.plantVendors,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const PlantVendorHome())),
   ),

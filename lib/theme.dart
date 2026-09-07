@@ -8,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 class KMColors {
   // Primary palette
   static const Color primary = Color(0xFF4CAF50);
-  static const Color primaryDark = Color(0xFF388E3C);
+  static const Color primaryDark = Color(0xFF1B5E20);
   static const Color secondary = Color(0xFF8BC34A);
   static const Color accent = Color(0xFFFFC107);
 
@@ -35,6 +35,60 @@ class KMColors {
   static const Color warning = Color(0xFFFF9800);
   static const Color available = Color(0xFF4CAF50);
   static const Color unavailable = Color(0xFFE53935);
+
+  // Module-specific accents (used as identity color per section)
+  static const Color rentPrimary    = Color(0xFFE65100);
+  static const Color rentDark       = Color(0xFF4E1F00);
+  static const Color labourPrimary  = Color(0xFF7B1FA2);
+  static const Color labourDark     = Color(0xFF4A148C);
+  static const Color exportPrimary  = Color(0xFF00897B);
+  static const Color exportDark     = Color(0xFF004D40);
+  static const Color weatherPrimary = Color(0xFF1565C0);
+  static const Color weatherDark    = Color(0xFF0D47A1);
+  static const Color cropPrimary    = Color(0xFF558B2F);
+  static const Color cropDark       = Color(0xFF33691E);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Named gradients
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KMGradients {
+  static const LinearGradient primaryHeader = LinearGradient(
+    colors: [KMColors.primaryDark, KMColors.primary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient rent = LinearGradient(
+    colors: [KMColors.rentDark, KMColors.rentPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient labour = LinearGradient(
+    colors: [KMColors.labourDark, KMColors.labourPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient export_ = LinearGradient(
+    colors: [KMColors.exportDark, KMColors.exportPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient weather = LinearGradient(
+    colors: [KMColors.weatherDark, KMColors.weatherPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient crop = LinearGradient(
+    colors: [KMColors.cropDark, KMColors.cropPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class KMSpacing {
