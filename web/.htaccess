@@ -1,0 +1,12 @@
+# Flutter Web — correct MIME types for Hostinger (Apache/LiteSpeed)
+AddType application/wasm .wasm
+AddType font/otf .otf
+AddType font/ttf .ttf
+AddType text/javascript .mjs
+
+# Allow cross-origin font loading (required when assets are cached by CDN)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ttf|otf|woff|woff2)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
