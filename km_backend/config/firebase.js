@@ -3,12 +3,17 @@ const { initializeApp, getApps, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 
 if (!getApps().length) {
-  // Render stores env vars as typed; if the private key was pasted from a JSON
-  // value it may arrive with surrounding quotes or literal \n sequences instead
-  // of real newlines. Strip quotes first, then normalise newlines.
+  // Render env vars are stored as raw text.  Several copy-paste paths produce
+  // different representations of the PEM newlines; normalise all of them:
+  //   1. Strip any surrounding " or ' (pasted with JSON quotes included)
+  //   2. Double-escaped \\n  (3 chars: \ \ n)  → real newline
+  //   3. Single-escaped \n   (2 chars: \ n)    → real newline
+  //   4. Strip \r (CRLF from Windows-origin keys)
   const privateKey = (process.env.FIREBASE_PRIVATE_KEY || '')
     .replace(/^["']|["']$/g, '')
-    .replace(/\\n/g, '\n');
+    .replace(/\\\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r/g, '');
 
   initializeApp({
     credential: cert({
