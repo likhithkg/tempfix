@@ -26,6 +26,9 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true); // mobile / server-to-server
+      // Always allow localhost so Flutter Web works during local development,
+      // regardless of what ALLOWED_ORIGINS is set to in production.
+      if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
       if (allowedOrigins.length === 0) return callback(null, true); // dev mode
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
