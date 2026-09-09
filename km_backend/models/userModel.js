@@ -10,8 +10,9 @@ const userSchema = new mongoose.Schema({
     enum: ['phone', 'google', 'email', 'unknown'],
     default: 'unknown',
   },
-  emailVerified: { type: Boolean, default: false },
-  phoneVerified: { type: Boolean, default: false },
+  emailVerified:  { type: Boolean, default: false },
+  phoneVerified:  { type: Boolean, default: false },
+  profileImageId: { type: mongoose.Schema.Types.ObjectId, default: null },
   createdAt:    { type: Date, default: Date.now },
   lastLoginAt:  { type: Date, default: Date.now },
 });

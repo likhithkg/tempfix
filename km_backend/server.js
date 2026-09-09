@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const uploadRoutes = require("./routes/uploadRoutes");
 const authRoutes = require("./routes/authRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 const { verifyToken } = require("./middleware/auth");
 
 const app = express();
@@ -46,6 +47,10 @@ app.use("/api/auth", authRoutes);
 // AI proxy routes — keys are server-side; no client auth required
 // Must be registered before /api to avoid hitting the verifyToken middleware
 app.use("/api/ai", aiRoutes);
+
+// Profile routes — GET /photo/:id is public; POST /photo applies verifyToken internally.
+// Must be registered before the catch-all /api route below.
+app.use("/api/profile", profileRoutes);
 
 // Upload route — requires valid Firebase ID token
 app.use("/api", verifyToken, uploadRoutes);
