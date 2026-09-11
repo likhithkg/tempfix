@@ -693,14 +693,63 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
     );
   }
 
+  void _showPhotoOptions() {
+    if (_uploadingPhoto) return;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const SizedBox(height: 8),
+          Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.photo_library_rounded,
+                color: KMColors.primary),
+            title: Text(_photoUrl.isNotEmpty
+                ? 'Change Photo'
+                : 'Upload Photo'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickPhoto();
+            },
+          ),
+          if (_photoUrl.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded,
+                  color: Colors.red),
+              title: const Text('Remove Photo',
+                  style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                setState(() => _photoUrl = '');
+              },
+            ),
+          ListTile(
+            leading: const Icon(Icons.close),
+            title: const Text('Cancel'),
+            onTap: () => Navigator.pop(context),
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
+
   Widget _buildPhotoSection() {
     return Column(children: [
       const Text('Profile Photo',
-          style:
-              TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
       const SizedBox(height: 16),
       GestureDetector(
-        onTap: _pickPhoto,
+        behavior: HitTestBehavior.opaque,
+        onTap: _showPhotoOptions,
         child: Stack(alignment: Alignment.bottomRight, children: [
           CircleAvatar(
             radius: 52,
@@ -724,7 +773,8 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
           ),
           Container(
             padding: const EdgeInsets.all(7),
-            decoration: const BoxDecoration(color: KMColors.primary, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: KMColors.primary, shape: BoxShape.circle),
             child: _uploadingPhoto
                 ? const SizedBox(
                     width: 14,
@@ -737,9 +787,14 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
         ]),
       ),
       const SizedBox(height: 8),
-      Text('Tap to upload photo',
-          style:
-              TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+      Text(
+        _uploadingPhoto
+            ? 'Uploading…'
+            : _photoUrl.isNotEmpty
+                ? 'Tap to change or remove'
+                : 'Tap to upload photo',
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+      ),
     ]);
   }
 
