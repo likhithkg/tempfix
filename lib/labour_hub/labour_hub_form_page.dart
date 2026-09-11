@@ -1,7 +1,5 @@
 // lib/labour_hub/labour_hub_form_page.dart
 
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -71,7 +69,7 @@ class _LabourHubFormPageState
   // IMAGE VARIABLES
   // ==========================
 
-  File? _selectedImage;
+  XFile? _selectedImage;
 
   String? _uploadedImageUrl;
 
@@ -246,7 +244,10 @@ class _LabourHubFormPageState
         return;
       }
 
-      setState(() => _uploadingImage = true);
+      setState(() {
+        _selectedImage = pickedFile;
+        _uploadingImage = true;
+      });
 
       final imageUrl =
           await ImageUploadService
@@ -811,9 +812,13 @@ class _LabourHubFormPageState
                                       BorderRadius.circular(
                                           16),
                                   child:
-                                      Image.file(
-                                    _selectedImage!,
+                                      Image.network(
+                                    _selectedImage!.path,
                                     fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _uploadedImageUrl != null
+                                            ? Image.network(_uploadedImageUrl!, fit: BoxFit.cover)
+                                            : const Icon(Icons.broken_image, size: 60, color: Colors.grey),
                                   ),
                                 )
                               : (_uploadedImageUrl !=
