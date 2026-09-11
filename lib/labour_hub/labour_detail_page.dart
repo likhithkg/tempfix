@@ -186,19 +186,32 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                           CircleAvatar(
                             radius: 52,
                             backgroundColor: Colors.white24,
-                            backgroundImage: p.photoUrl.isNotEmpty
-                                ? NetworkImage(p.photoUrl)
-                                : null,
-                            child: p.photoUrl.isEmpty
-                                ? Text(
-                                    p.name.isNotEmpty
-                                        ? p.name[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                        fontSize: 40,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold))
-                                : null,
+                            child: ClipOval(
+                              child: p.photoUrl.isNotEmpty
+                                  ? Image.network(
+                                      p.photoUrl,
+                                      width: 104,
+                                      height: 104,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Text(
+                                        p.name.isNotEmpty
+                                            ? p.name[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(
+                                            fontSize: 40,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    )
+                                  : Text(
+                                      p.name.isNotEmpty
+                                          ? p.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                          fontSize: 40,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                            ),
                           ),
                           if (p.isVerified)
                             Container(
@@ -722,53 +735,6 @@ class _GalleryViewerState extends State<_GalleryViewer> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ── Action Button ─────────────────────────────────────────────────────────────
-
-class _ActionBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool outlined;
-  final VoidCallback onTap;
-
-  const _ActionBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.outlined,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (outlined) {
-      return OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 16),
-        label: Text(label, style: const TextStyle(fontSize: 12)),
-        style: OutlinedButton.styleFrom(
-            foregroundColor: color,
-            side: BorderSide(color: color),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12))),
-      );
-    }
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 13),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12))),
     );
   }
 }

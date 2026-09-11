@@ -1,5 +1,4 @@
-﻿import 'dart:io';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -131,10 +130,17 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
     if (picked == null) return;
     setState(() => _uploadingPhoto = true);
     try {
-      final url = await ImageUploadService.uploadImage(File(picked.path));
-      if (url != null && mounted) setState(() => _photoUrl = url);
-    } catch (_) {
-      _snack('Photo upload failed', isError: true);
+      // uploadImageFromXFile works on all platforms (Android, iOS, Web).
+      final url = await ImageUploadService.uploadImageFromXFile(picked);
+      if (!mounted) return;
+      if (url != null) {
+        setState(() => _photoUrl = url);
+        _snack('Photo uploaded successfully!');
+      } else {
+        _snack('Photo upload failed. Please try again.', isError: true);
+      }
+    } catch (e) {
+      if (mounted) _snack('Photo upload failed: unable to reach server.', isError: true);
     } finally {
       if (mounted) setState(() => _uploadingPhoto = false);
     }
@@ -699,11 +705,22 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
           CircleAvatar(
             radius: 52,
             backgroundColor: KMColors.cardTint,
-            backgroundImage:
-                _photoUrl.isNotEmpty ? NetworkImage(_photoUrl) : null,
-            child: _photoUrl.isEmpty
-                ? const Icon(Icons.person_rounded, size: 52, color: KMColors.primary)
-                : null,
+            child: ClipOval(
+              child: _photoUrl.isNotEmpty
+                  ? Image.network(
+                      _photoUrl,
+                      width: 104,
+                      height: 104,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person_rounded,
+                        size: 52,
+                        color: KMColors.primary,
+                      ),
+                    )
+                  : const Icon(Icons.person_rounded,
+                      size: 52, color: KMColors.primary),
+            ),
           ),
           Container(
             padding: const EdgeInsets.all(7),

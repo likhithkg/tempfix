@@ -1,16 +1,15 @@
+const fs = require("fs");
 const cloudinary = require("../config/cloudinary");
 const Image = require("../models/imageModel");
 
 const uploadImage = async (req, res) => {
+  const tempPath = req.file?.path;
   try {
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No image uploaded",
-      });
+      return res.status(400).json({ success: false, message: "No image uploaded" });
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    const result = await cloudinary.uploader.upload(tempPath, {
       folder: "km-app",
     });
 
@@ -25,15 +24,20 @@ const uploadImage = async (req, res) => {
       data: savedImage,
     });
   } catch (error) {
-    console.log(error);
+    console.error("[uploadController]", error.message);
 
-    res.status(500).json({
-      success: false,
-      message: "Image upload failed",
-    });
+    // Handle multer errors
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ success: false, message: "File too large. Maximum size is 5 MB." });
+    }
+
+    res.status(500).json({ success: false, message: "Image upload failed" });
+  } finally {
+    // Always remove the temp file so the disk doesn't fill up
+    if (tempPath) {
+      fs.unlink(tempPath, () => {});
+    }
   }
 };
 
-module.exports = {
-  uploadImage,
-};
+module.exports = { uploadImage };

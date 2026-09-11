@@ -356,7 +356,8 @@ class _WorkersTabState extends State<_WorkersTab>
 
     if (widget.filter.skill != 'All') {
       list = list
-          .where((p) => p.skills.contains(widget.filter.skill))
+          .where((p) => p.skills.any(
+              (s) => s.toLowerCase() == widget.filter.skill.toLowerCase()))
           .toList();
     }
     if (widget.filter.verifiedOnly) {
@@ -402,11 +403,30 @@ class _WorkersTabState extends State<_WorkersTab>
               p.name.toLowerCase().contains(q) ||
               p.skills.any((s) => s.toLowerCase().contains(q)) ||
               p.village.toLowerCase().contains(q) ||
-              p.district.toLowerCase().contains(q))
+              p.district.toLowerCase().contains(q) ||
+              p.taluk.toLowerCase().contains(q))
           .toList();
     }
 
     return list;
+  }
+
+  // Sort nearest-first when user location is available.
+  // Workers without a GPS location are pushed to the end.
+  List<LabourProfile> _sortedByDistance(List<LabourProfile> list) {
+    if (widget.userLat == null || widget.userLng == null) {
+      // No location: stable order (already sorted by Firestore / stream merge).
+      return list;
+    }
+    return [...list]..sort((a, b) {
+        final da = a.hasLocation
+            ? _dist(widget.userLat!, widget.userLng!, a.latitude, a.longitude)
+            : double.infinity;
+        final db = b.hasLocation
+            ? _dist(widget.userLat!, widget.userLng!, b.latitude, b.longitude)
+            : double.infinity;
+        return da.compareTo(db);
+      });
   }
 
   double _dist(double lat1, double lon1, double lat2, double lon2) {
@@ -451,6 +471,8 @@ class _WorkersTabState extends State<_WorkersTab>
         final loading = !snap.hasData;
         final all = snap.data ?? [];
         final filtered = _applyFilter(all);
+        // All Workers list: nearest-first when location is available.
+        final sortedFiltered = _sortedByDistance(filtered);
 
         final availableToday =
             filtered.where((p) => p.isAvailableToday).toList();
@@ -460,21 +482,6 @@ class _WorkersTabState extends State<_WorkersTab>
         final topRated = ([...filtered]
               ..sort((a, b) => b.rating.compareTo(a.rating)))
             .take(10)
-            .toList();
-        final highlyExp =
-            filtered.where((p) => p.experienceYears >= 5).toList();
-        final women =
-            filtered.where((p) => p.gender == 'Female').toList();
-        final machineOps = filtered
-            .where((p) => p.skills.any((s) => [
-                  'Tractor Driver',
-                  'Harvester Operator',
-                  'JCB Operator',
-                  'Machine Operator'
-                ].contains(s)))
-            .toList();
-        final organic = filtered
-            .where((p) => p.skills.contains('Organic Farming'))
             .toList();
         final recent = ([...filtered]
               ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
@@ -537,9 +544,9 @@ class _WorkersTabState extends State<_WorkersTab>
                 ),
               ),
 
-            // Quick Categories
+            // Quick filter categories
             _SectionHeader(
-              title: 'Browse by Skill',
+              title: 'Filter by Work Type',
               icon: Icons.category_rounded,
               iconColor: KMColors.primary,
             ),
@@ -560,7 +567,7 @@ class _WorkersTabState extends State<_WorkersTab>
                     ? _HorizontalShimmer()
                     : nearby.isEmpty
                         ? const _EmptyHorizontal(
-                            message: 'No workers found nearby')
+                            message: 'No workers with location found nearby')
                         : _HorizontalWorkerList(
                             workers: nearby,
                             service: widget.service,
@@ -594,117 +601,39 @@ class _WorkersTabState extends State<_WorkersTab>
             ],
 
             // Featured / Verified
-            _SectionHeader(
-              title: 'Verified & Top Workers',
-              icon: Icons.verified_rounded,
-              iconColor: Colors.blue,
-            ),
-            SliverToBoxAdapter(
-              child: loading
-                  ? _HorizontalShimmer()
-                  : featured.isEmpty
-                      ? const _EmptyHorizontal(
-                          message: 'No featured workers yet')
-                      : _HorizontalWorkerList(
-                          workers: featured,
-                          service: widget.service,
-                          userLat: widget.userLat,
-                          userLng: widget.userLng),
-            ),
+            if (featured.isNotEmpty || loading) ...[
+              _SectionHeader(
+                title: 'Verified & Top Rated',
+                icon: Icons.verified_rounded,
+                iconColor: Colors.blue,
+              ),
+              SliverToBoxAdapter(
+                child: loading
+                    ? _HorizontalShimmer()
+                    : featured.isEmpty
+                        ? const SizedBox()
+                        : _HorizontalWorkerList(
+                            workers: featured,
+                            service: widget.service,
+                            userLat: widget.userLat,
+                            userLng: widget.userLng),
+              ),
+            ],
 
             // Top Rated
-            _SectionHeader(
-              title: 'Top Rated Workers',
-              icon: Icons.star_rounded,
-              iconColor: KMColors.accent,
-            ),
-            SliverToBoxAdapter(
-              child: loading
-                  ? _HorizontalShimmer()
-                  : topRated.isEmpty
-                      ? const _EmptyHorizontal(
-                          message: 'No rated workers yet')
-                      : _HorizontalWorkerList(
-                          workers: topRated,
-                          service: widget.service,
-                          userLat: widget.userLat,
-                          userLng: widget.userLng),
-            ),
-
-            // Highly Experienced
-            if (highlyExp.isNotEmpty || loading) ...[
+            if (topRated.isNotEmpty || loading) ...[
               _SectionHeader(
-                title: 'Highly Experienced (5+ yrs)',
-                icon: Icons.workspace_premium_rounded,
-                iconColor: Colors.purple,
+                title: 'Highest Rated',
+                icon: Icons.star_rounded,
+                iconColor: KMColors.accent,
               ),
               SliverToBoxAdapter(
                 child: loading
                     ? _HorizontalShimmer()
-                    : highlyExp.isEmpty
+                    : topRated.isEmpty
                         ? const SizedBox()
                         : _HorizontalWorkerList(
-                            workers: highlyExp,
-                            service: widget.service,
-                            userLat: widget.userLat,
-                            userLng: widget.userLng),
-              ),
-            ],
-
-            // Women Workers
-            if (women.isNotEmpty || loading) ...[
-              _SectionHeader(
-                title: 'Women Workers',
-                icon: Icons.female_rounded,
-                iconColor: Colors.pink.shade400,
-              ),
-              SliverToBoxAdapter(
-                child: loading
-                    ? _HorizontalShimmer()
-                    : women.isEmpty
-                        ? const SizedBox()
-                        : _HorizontalWorkerList(
-                            workers: women,
-                            service: widget.service,
-                            userLat: widget.userLat,
-                            userLng: widget.userLng),
-              ),
-            ],
-
-            // Machine Operators
-            if (machineOps.isNotEmpty || loading) ...[
-              _SectionHeader(
-                title: 'Machine Operators',
-                icon: Icons.agriculture_rounded,
-                iconColor: KMColors.rentPrimary,
-              ),
-              SliverToBoxAdapter(
-                child: loading
-                    ? _HorizontalShimmer()
-                    : machineOps.isEmpty
-                        ? const SizedBox()
-                        : _HorizontalWorkerList(
-                            workers: machineOps,
-                            service: widget.service,
-                            userLat: widget.userLat,
-                            userLng: widget.userLng),
-              ),
-            ],
-
-            // Organic Farming
-            if (organic.isNotEmpty || loading) ...[
-              _SectionHeader(
-                title: 'Organic Farming Specialists',
-                icon: Icons.eco_rounded,
-                iconColor: KMColors.available,
-              ),
-              SliverToBoxAdapter(
-                child: loading
-                    ? _HorizontalShimmer()
-                    : organic.isEmpty
-                        ? const SizedBox()
-                        : _HorizontalWorkerList(
-                            workers: organic,
+                            workers: topRated,
                             service: widget.service,
                             userLat: widget.userLat,
                             userLng: widget.userLng),
@@ -712,27 +641,30 @@ class _WorkersTabState extends State<_WorkersTab>
             ],
 
             // Recently Joined
-            _SectionHeader(
-              title: 'Recently Joined',
-              icon: Icons.fiber_new_rounded,
-              iconColor: KMColors.rentPrimary,
-            ),
-            SliverToBoxAdapter(
-              child: loading
-                  ? _HorizontalShimmer()
-                  : recent.isEmpty
-                      ? const _EmptyHorizontal(
-                          message: 'No recent workers')
-                      : _HorizontalWorkerList(
-                          workers: recent,
-                          service: widget.service,
-                          userLat: widget.userLat,
-                          userLng: widget.userLng),
-            ),
+            if (recent.isNotEmpty || loading) ...[
+              _SectionHeader(
+                title: 'Recently Joined',
+                icon: Icons.fiber_new_rounded,
+                iconColor: KMColors.rentPrimary,
+              ),
+              SliverToBoxAdapter(
+                child: loading
+                    ? _HorizontalShimmer()
+                    : recent.isEmpty
+                        ? const SizedBox()
+                        : _HorizontalWorkerList(
+                            workers: recent,
+                            service: widget.service,
+                            userLat: widget.userLat,
+                            userLng: widget.userLng),
+              ),
+            ],
 
-            // All Workers list
+            // All Workers list — sorted nearest-first when location is available
             _SectionHeader(
-              title: 'All Workers (${filtered.length})',
+              title: widget.userLat != null
+                  ? 'All Workers — Nearest First (${sortedFiltered.length})'
+                  : 'All Workers (${sortedFiltered.length})',
               icon: Icons.people_rounded,
               iconColor: KMColors.primary,
             ),
@@ -743,23 +675,23 @@ class _WorkersTabState extends State<_WorkersTab>
                   childCount: 6,
                 ),
               )
-            else if (filtered.isEmpty)
+            else if (sortedFiltered.isEmpty)
               const SliverToBoxAdapter(
                 child: _FullEmptyState(
                   icon: Icons.person_search_rounded,
                   title: 'No workers found',
-                  subtitle: 'Try changing filters or search terms',
+                  subtitle: 'Try different search terms or clear filters',
                 ),
               )
             else
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (_, i) => _WorkerCard(
-                      worker: filtered[i],
+                      worker: sortedFiltered[i],
                       service: widget.service,
                       userLat: widget.userLat,
                       userLng: widget.userLng),
-                  childCount: filtered.length,
+                  childCount: sortedFiltered.length,
                 ),
               ),
 
@@ -767,67 +699,6 @@ class _WorkersTabState extends State<_WorkersTab>
           ],
         );
       },
-    );
-  }
-}
-
-// ── Skill Chips ───────────────────────────────────────────────────────────────
-
-class _SkillChips extends StatelessWidget {
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  const _SkillChips({required this.selected, required this.onSelect});
-
-  static const _skills = [
-    'All', 'Harvesting', 'Planting', 'Weeding', 'Spraying',
-    'Drip Irrigation', 'Organic Farming', 'Tractor Driver',
-    'Harvester Operator', 'JCB Operator', 'Coconut Tree Climber',
-    'Dairy Farm Worker', 'Greenhouse Work', 'Machine Operator',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 52,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemCount: _skills.length,
-        itemBuilder: (_, i) {
-          final s = _skills[i];
-          final sel = s == selected;
-          return GestureDetector(
-            onTap: () => onSelect(s),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: sel ? KMColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: sel ? KMColors.primary : Colors.grey.shade300),
-                boxShadow: sel
-                    ? [
-                        BoxShadow(
-                            color: KMColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2))
-                      ]
-                    : [],
-              ),
-              child: Text(s,
-                  style: TextStyle(
-                      color: sel ? Colors.white : Colors.grey.shade700,
-                      fontWeight:
-                          sel ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13)),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -1618,22 +1489,35 @@ class _Avatar extends StatelessWidget {
   const _Avatar(
       {required this.photoUrl, required this.name, required this.size});
 
+  Widget _initial() => Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: TextStyle(
+            fontSize: size * 0.38,
+            color: KMColors.primary,
+            fontWeight: FontWeight.bold),
+      );
+
   @override
   Widget build(BuildContext context) {
+    if (photoUrl.isEmpty) {
+      return CircleAvatar(
+        radius: size / 2,
+        backgroundColor: KMColors.cardTint,
+        child: _initial(),
+      );
+    }
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: KMColors.cardTint,
-      backgroundImage:
-          photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-      child: photoUrl.isEmpty
-          ? Text(
-              name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: TextStyle(
-                  fontSize: size * 0.38,
-                  color: KMColors.primary,
-                  fontWeight: FontWeight.bold),
-            )
-          : null,
+      child: ClipOval(
+        child: Image.network(
+          photoUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Center(child: _initial()),
+        ),
+      ),
     );
   }
 }

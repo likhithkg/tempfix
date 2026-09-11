@@ -318,7 +318,10 @@ service cloud.firestore {
                        uid() in resource.data.get('sellerUids', []) &&
                        request.resource.data.diff(resource.data)
                          .affectedKeys().hasOnly(['status', 'updatedAt']));
-      allow delete: if false;
+      allow delete: if isAdmin() ||
+                      (isSignedIn() &&
+                       resource.data.get('userId', '') == uid() &&
+                       resource.data.get('status', '') in ['cancelled', 'collected', 'delivered']);
     }
 
     // ── F2B Mart Cart ─────────────────────────────────────────────────────────
@@ -341,7 +344,10 @@ service cloud.firestore {
                        uid() in resource.data.get('sellerUids', []) &&
                        request.resource.data.diff(resource.data)
                          .affectedKeys().hasOnly(['status', 'updatedAt']));
-      allow delete: if false;
+      allow delete: if isAdmin() ||
+                      (isSignedIn() &&
+                       resource.data.get('userId', '') == uid() &&
+                       resource.data.get('status', '') in ['cancelled', 'collected', 'delivered']);
     }
 
     match /{document=**} {

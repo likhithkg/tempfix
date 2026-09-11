@@ -246,18 +246,11 @@ class _LabourHubFormPageState
         return;
       }
 
-      setState(() {
-        _selectedImage =
-            File(pickedFile.path);
-
-        _uploadingImage = true;
-      });
+      setState(() => _uploadingImage = true);
 
       final imageUrl =
           await ImageUploadService
-              .uploadImage(
-        _selectedImage!,
-      );
+              .uploadImageFromXFile(pickedFile);
 
       if (imageUrl != null) {
         setState(() {
