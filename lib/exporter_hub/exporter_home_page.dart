@@ -400,7 +400,7 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => _AllProductsSheet(service: _service, user: user),
+      builder: (_) => _AllProductsSheet(service: _service, user: user, isAdmin: _isAdmin),
     );
   }
 
@@ -1228,6 +1228,7 @@ class _AllListingsViewState extends State<_AllListingsView> {
                   .map((p) => _ListingRow(
                         product: p,
                         user: widget.user,
+                        isAdmin: widget.isAdmin,
                         onTap: () => widget.onTap(p),
                         onEdit: () => Navigator.push(
                             context,
@@ -1277,6 +1278,7 @@ class _AllListingsViewState extends State<_AllListingsView> {
 class _ListingRow extends StatelessWidget {
   final ExportProduct product;
   final User? user;
+  final bool isAdmin;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -1284,6 +1286,7 @@ class _ListingRow extends StatelessWidget {
   const _ListingRow({
     required this.product,
     required this.user,
+    this.isAdmin = false,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -1296,6 +1299,7 @@ class _ListingRow extends StatelessWidget {
     final name = ContentTranslationService.translateCropName(product.productName, langCode);
     final loc = ContentTranslationService.translateLocation(product.location, langCode);
     final isOwner = user != null && product.sellerUid == user!.uid;
+    final canManage = isOwner || isAdmin;
     final hasImage = product.primaryImage.isNotEmpty;
 
     return Card(
@@ -1371,7 +1375,7 @@ class _ListingRow extends StatelessWidget {
                 ),
               ),
               // Actions
-              if (isOwner)
+              if (canManage)
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1451,7 +1455,9 @@ class _QuantityChip extends StatelessWidget {
 class _AllProductsSheet extends StatelessWidget {
   final ExporterService service;
   final User? user;
-  const _AllProductsSheet({required this.service, required this.user});
+  final bool isAdmin;
+  const _AllProductsSheet(
+      {required this.service, required this.user, this.isAdmin = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1469,7 +1475,8 @@ class _AllProductsSheet extends StatelessWidget {
             decoration: BoxDecoration(
                 color: Colors.grey[400], borderRadius: BorderRadius.circular(2))),
         const SizedBox(height: 12),
-        Text(l.cropsTab, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(l.cropsTab,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const Divider(),
         Expanded(
           child: StreamBuilder<List<ExportProduct>>(
@@ -1483,13 +1490,53 @@ class _AllProductsSheet extends StatelessWidget {
               return ListView.builder(
                 controller: controller,
                 itemCount: products.length,
-                itemBuilder: (_, i) => _ListingRow(
-                  product: products[i],
-                  user: user,
-                  onTap: () {},
-                  onEdit: () {},
-                  onDelete: () {},
-                ),
+                itemBuilder: (_, i) {
+                  final p = products[i];
+                  return _ListingRow(
+                    product: p,
+                    user: user,
+                    isAdmin: isAdmin,
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ProductDetailPage(
+                                  product: p,
+                                  translatedName: p.productName,
+                                  translatedLocation: p.location,
+                                  isOwner: user != null && p.sellerUid == user!.uid,
+                                  service: service,
+                                ))),
+                    onEdit: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ExporterFormPage(existingProduct: p))),
+                    onDelete: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(l.deleteListingTitle),
+                          content: Text(l.areYouSureDeleteProduct),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(l.cancel)),
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: Text(l.delete,
+                                    style: const TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      );
+                      if (confirm == true && context.mounted) {
+                        await service.deleteExportProduct(p.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(l.productDeletedSuccessfully)));
+                        }
+                      }
+                    },
+                  );
+                },
               );
             },
           ),

@@ -98,40 +98,58 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
     );
   }
 
-  Widget _statusBadge(String status) {
-    final s = status.toLowerCase();
+  Widget _statusBadge(String rawStatus) {
+    final s = rawStatus.toLowerCase();
     Color color;
     switch (s) {
+      case 'exported':            color = Colors.green.shade700; break;
+      case 'ready_for_export':    color = Colors.teal; break;
+      case 'qc_approved':
       case 'completed':
-        color = Colors.green;
-        break;
-      case 'accepted':
-        color = Colors.green.shade700;
-        break;
-      case 'confirmed':
-        color = Colors.blue;
-        break;
-      case 'rejected':
-        color = Colors.red;
-        break;
-      case 'issued':
-        color = Colors.orange;
-        break;
-      default:
-        color = Colors.grey;
+      case 'accepted':            color = Colors.green; break;
+      case 'qc_rejected':
+      case 'rejected':            color = Colors.red; break;
+      case 'cancelled':           color = Colors.red.shade300; break;
+      case 'farmer_accepted':
+      case 'collection_scheduled':
+      case 'collected':
+      case 'confirmed':           color = Colors.blue; break;
+      case 'qc_pending':          color = Colors.purple; break;
+      case 'po_issued':
+      case 'issued':              color = Colors.indigo; break;
+      case 'price_negotiation':   color = Colors.orange; break;
+      case 'under_review':        color = Colors.amber.shade700; break;
+      case 'listed':
+      case 'pending':             color = Colors.teal.shade400; break;
+      case 'draft':               color = Colors.grey; break;
+      default:                    color = Colors.grey;
     }
     return Builder(builder: (ctx) {
-      String label;
       final l = AppLocalizations.of(ctx)!;
-      switch (status.toLowerCase()) {
-        case 'approved': label = l.statusApproved; break;
-        case 'pending': label = l.statusPending; break;
-        case 'rejected': label = l.statusRejected; break;
-        case 'accepted': label = l.statusAccepted; break;
-        case 'confirmed': label = l.statusConfirmed; break;
-        case 'completed': label = l.statusCompleted; break;
-        case 'issued': label = l.statusIssued; break;
-        default: label = status;
+      String label;
+      switch (s) {
+        case 'draft':                label = l.statusDraft; break;
+        case 'listed':
+        case 'pending':              label = l.statusListed; break;
+        case 'under_review':         label = l.statusUnderReview; break;
+        case 'price_negotiation':    label = l.statusPriceNegotiation; break;
+        case 'po_issued':
+        case 'issued':               label = l.statusPoIssued; break;
+        case 'farmer_accepted':
+        case 'accepted':             label = l.statusFarmerAccepted; break;
+        case 'collection_scheduled': label = l.statusCollectionScheduled; break;
+        case 'collected':
+        case 'confirmed':            label = l.statusCollected; break;
+        case 'qc_pending':           label = l.statusQcPending; break;
+        case 'qc_approved':
+        case 'approved':
+        case 'completed':            label = l.statusQcApproved; break;
+        case 'qc_rejected':          label = l.statusQcRejected; break;
+        case 'ready_for_export':     label = l.statusReadyForExport; break;
+        case 'exported':             label = l.statusExported; break;
+        case 'rejected':             label = l.statusRejected; break;
+        case 'cancelled':            label = l.statusCancelled; break;
+        default:                     label = rawStatus;
       }
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -203,24 +221,6 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                     final createdAt = po['createdAt'];
                     final when = _formatDate(createdAt);
 
-                    Color statusColor;
-                    switch (status.toLowerCase()) {
-                      case 'completed':
-                        statusColor = Colors.green;
-                        break;
-                      case 'confirmed':
-                        statusColor = Colors.blue;
-                        break;
-                      case 'accepted':
-                        statusColor = Colors.green.shade700;
-                        break;
-                      case 'rejected':
-                        statusColor = Colors.red;
-                        break;
-                      default:
-                        statusColor = Colors.orange;
-                    }
-
                     // Stream for the latest buyer response for this PO.
                     final responsesStream = FirebaseFirestore.instance
                         .collection('purchase_orders')
@@ -238,7 +238,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                       builder: (context, rs) {
                         Widget trailing = TextButton(
                           onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id)));
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id, isAdmin: widget.isAdmin)));
                           },
                           child: Text(AppLocalizations.of(context)!.viewDetails),
                         );
@@ -377,10 +377,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
     return CircleAvatar(
       radius: 28,
 
-      backgroundColor:
-          statusColor.withValues(alpha:
-        0.12,
-      ),
+      backgroundColor: Colors.green.withValues(alpha: 0.12),
 
       backgroundImage:
           imageProvider,
@@ -396,7 +393,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                             subtitle: Padding(padding: const EdgeInsets.only(top: 6.0), child: subtitleWidget),
                             isThreeLine: true,
                             trailing: trailing,
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id))),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PODetailPage(poId: id, isAdmin: widget.isAdmin))),
                           ),
                         );
                       },

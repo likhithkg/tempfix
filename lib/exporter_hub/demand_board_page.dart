@@ -1,6 +1,4 @@
 // lib/exporter_hub/demand_board_page.dart
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -125,7 +123,7 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
   DateTime? _deliveryDeadline;
   bool _isSubmitting = false;
 
-  File? _imageFile;
+  XFile? _imageFile;
   bool _isUploadingImage = false;
 
   @override
@@ -157,7 +155,7 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
     );
     if (source == null) return;
     final picked = await _picker.pickImage(source: source, imageQuality: 80, maxWidth: 1200);
-    if (picked != null && mounted) setState(() => _imageFile = File(picked.path));
+    if (picked != null && mounted) setState(() => _imageFile = picked);
   }
 
   Future<void> _submit() async {
@@ -170,7 +168,7 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
       String? imageUrl;
       if (_imageFile != null) {
         setState(() => _isUploadingImage = true);
-        imageUrl = await ImageUploadService.uploadImage(_imageFile!);
+        imageUrl = await ImageUploadService.uploadImageFromXFile(_imageFile!);
         if (mounted) setState(() => _isUploadingImage = false);
       }
 
@@ -243,7 +241,7 @@ class _CreateDemandSheetState extends State<_CreateDemandSheet> {
                   child: _imageFile != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(9),
-                          child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity),
+                          child: Image.network(_imageFile!.path, fit: BoxFit.cover, width: double.infinity),
                         )
                       : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                           Icon(Icons.add_photo_alternate_outlined, size: 38, color: Colors.grey.shade400),
@@ -389,7 +387,7 @@ class _DemandCardState extends State<_DemandCard> {
     final quantityCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
 
-    File? productPhoto;
+    XFile? productPhoto;
     bool isSubmitting = false;
     bool isLocating = false;
 
@@ -555,7 +553,7 @@ class _DemandCardState extends State<_DemandCard> {
                     );
                     if (src == null) return;
                     final picked = await ImagePicker().pickImage(source: src, imageQuality: 80, maxWidth: 1200);
-                    if (picked != null) setSheet(() => productPhoto = File(picked.path));
+                    if (picked != null) setSheet(() => productPhoto = picked);
                   },
                   child: Container(
                     width: double.infinity,
@@ -568,7 +566,7 @@ class _DemandCardState extends State<_DemandCard> {
                     child: productPhoto != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(9),
-                            child: Image.file(productPhoto!, fit: BoxFit.cover, width: double.infinity),
+                            child: Image.network(productPhoto!.path, fit: BoxFit.cover, width: double.infinity),
                           )
                         : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Icon(Icons.add_photo_alternate_outlined, size: 36, color: Colors.grey.shade400),
@@ -589,7 +587,7 @@ class _DemandCardState extends State<_DemandCard> {
                       try {
                         String? photoUrl;
                         if (productPhoto != null) {
-                          photoUrl = await ImageUploadService.uploadImage(productPhoto!);
+                          photoUrl = await ImageUploadService.uploadImageFromXFile(productPhoto!);
                         }
                         await widget.db.collection('export_demand').doc(widget.demandId).update({
                           'responses': FieldValue.arrayUnion([

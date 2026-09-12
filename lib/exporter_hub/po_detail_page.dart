@@ -88,9 +88,10 @@ Color _statusColor(String status) {
 
 class PODetailPage extends StatelessWidget {
   final String poId;
+  final bool isAdmin;
   final ExporterService svc = ExporterService();
 
-  PODetailPage({super.key, required this.poId});
+  PODetailPage({super.key, required this.poId, this.isAdmin = false});
 
   String _formatTimestamp(dynamic ts) {
     try {
@@ -292,6 +293,70 @@ class PODetailPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.failedToRejectPO)));
+      }
+    }
+  }
+
+  static List<String> _nextStatuses(String currentStatus) {
+    switch (_normalizeStatus(currentStatus)) {
+      case 'draft':               return ['listed'];
+      case 'listed':              return ['under_review', 'cancelled'];
+      case 'under_review':        return ['price_negotiation', 'rejected'];
+      case 'price_negotiation':   return ['po_issued', 'cancelled'];
+      case 'po_issued':           return ['farmer_accepted', 'cancelled'];
+      case 'farmer_accepted':     return ['collection_scheduled', 'cancelled'];
+      case 'collection_scheduled': return ['collected', 'cancelled'];
+      case 'collected':           return ['qc_pending'];
+      case 'qc_pending':          return ['qc_approved', 'qc_rejected'];
+      case 'qc_approved':         return ['ready_for_export'];
+      case 'ready_for_export':    return ['exported'];
+      default:                    return [];
+    }
+  }
+
+  Future<void> _adminAdvanceStatus(
+      BuildContext context, String currentStatus, String adminUid) async {
+    final nexts = _nextStatuses(currentStatus);
+    if (nexts.isEmpty) return;
+    final l = AppLocalizations.of(context)!;
+    String? picked;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Advance Order Status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: nexts.map((s) => ListTile(
+            dense: true,
+            leading: CircleAvatar(
+              radius: 10,
+              backgroundColor: _statusColor(s).withValues(alpha: 0.2),
+              child: Icon(Icons.circle, color: _statusColor(s), size: 8),
+            ),
+            title: Text(_localizedPoStatus(l, s),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () { picked = s; Navigator.pop(ctx); },
+          )).toList(),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+        ],
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+    try {
+      await svc.updatePOStatus(poId, picked!, adminUid, note: 'Admin advanced status');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Status → ${_localizedPoStatus(AppLocalizations.of(context)!, picked!)}'),
+          backgroundColor: Colors.green,
+        ));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update status'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -507,6 +572,78 @@ class PODetailPage extends StatelessWidget {
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ),
+
+                // ── Admin Controls ────────────────────────────────────────────
+                if (isAdmin) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber.shade400),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          const Icon(Icons.admin_panel_settings_rounded,
+                              size: 18, color: Colors.amber),
+                          const SizedBox(width: 8),
+                          const Text('Admin Controls',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                        ]),
+                        const SizedBox(height: 6),
+                        Text(
+                          poFinalized
+                              ? 'This order is finalized (${_localizedPoStatus(AppLocalizations.of(context)!, status)}).'
+                              : 'Advance this order through the procurement workflow.',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        if (!poFinalized) ...[
+                          const SizedBox(height: 12),
+                          Wrap(spacing: 8, runSpacing: 8, children: [
+                            ElevatedButton.icon(
+                              onPressed: currentUser != null
+                                  ? () => _adminAdvanceStatus(
+                                      context, status, currentUser.uid)
+                                  : null,
+                              icon: const Icon(Icons.arrow_circle_right_outlined),
+                              label: const Text('Advance Status'),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade700,
+                                  foregroundColor: Colors.white),
+                            ),
+                            if (!_rejectionStatuses.contains(_normalizeStatus(status)) &&
+                                _normalizeStatus(status) != 'cancelled')
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  if (currentUser == null) return;
+                                  final ok = await _confirmDialog(
+                                      context,
+                                      'Cancel Order?',
+                                      'Are you sure you want to cancel this purchase order?');
+                                  if (ok == true && context.mounted) {
+                                    await svc.updatePOStatus(poId, 'cancelled',
+                                        currentUser.uid,
+                                        note: 'Cancelled by admin');
+                                  }
+                                },
+                                icon: const Icon(Icons.cancel_outlined,
+                                    color: Colors.red),
+                                label: const Text('Cancel Order',
+                                    style: TextStyle(color: Colors.red)),
+                                style: OutlinedButton.styleFrom(
+                                    side:
+                                        const BorderSide(color: Colors.red)),
+                              ),
+                          ]),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 16),
                 const Divider(),
