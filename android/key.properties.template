@@ -1,0 +1,14 @@
+# Android release signing configuration template.
+# Copy this file to android/key.properties and fill in the values.
+# NEVER commit key.properties to git — it is already in .gitignore.
+#
+# HOW TO CREATE A KEYSTORE:
+#   keytool -genkey -v -keystore ~/krishimithra-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias krishimithra
+#
+# Keep the generated .jks file in a secure location (NOT inside the repo).
+
+storeFile=/absolute/path/to/krishimithra-release.jks
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyAlias=krishimithra
+keyPassword=YOUR_KEY_PASSWORD

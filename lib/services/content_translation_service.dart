@@ -401,7 +401,55 @@ class ContentTranslationService {
     },
   };
 
+  // ── WEATHER DESCRIPTIONS ─────────────────────────────────────────────────
+  static const Map<String, Map<String, String>> _weatherDescriptions = {
+    'clear': {
+      'hi': 'साफ मौसम', 'kn': 'ಶುಭ್ರ ಆಕಾಶ', 'ta': 'தெளிவான வானிலை',
+      'te': 'స్వచ్ఛమైన వాతావరణం', 'mr': 'स्वच्छ हवामान', 'ml': 'തെളിഞ്ഞ കാലാവസ്ഥ',
+    },
+    'cloudy': {
+      'hi': 'बादल छाए', 'kn': 'ಮೋಡ ಕವಿದ', 'ta': 'மேகமூட்டம்',
+      'te': 'మేఘావృతం', 'mr': 'ढगाळ हवामान', 'ml': 'മേഘാവൃതം',
+    },
+    'fog': {
+      'hi': 'कोहरा', 'kn': 'ಮಂಜು', 'ta': 'மூடுபனி',
+      'te': 'పొగమంచు', 'mr': 'धुके', 'ml': 'മൂടൽ',
+    },
+    'drizzle': {
+      'hi': 'बूंदाबांदी', 'kn': 'ಜಿನುಗು ಮಳೆ', 'ta': 'தூறல்',
+      'te': 'జల్లు', 'mr': 'रिमझिम पाऊस', 'ml': 'ചിറക്കൽ',
+    },
+    'rain': {
+      'hi': 'बारिश', 'kn': 'ಮಳೆ', 'ta': 'மழை',
+      'te': 'వర్షం', 'mr': 'पाऊस', 'ml': 'മഴ',
+    },
+    'snow': {
+      'hi': 'बर्फबारी', 'kn': 'ಹಿಮಪಾತ', 'ta': 'பனிபொழிவு',
+      'te': 'హిమపాతం', 'mr': 'हिमवर्षाव', 'ml': 'ഹിമം',
+    },
+    'showers': {
+      'hi': 'झमाझम बारिश', 'kn': 'ಸ್ವಲ್ಪ ಮಳೆ', 'ta': 'மழை வீழ்ச்சி',
+      'te': 'వర్షపు జల్లులు', 'mr': 'सरी', 'ml': 'ഷവർ',
+    },
+    'thunderstorm': {
+      'hi': 'आंधी-तूफान', 'kn': 'ಗುಡುಗು ಮಳೆ', 'ta': 'இடியுடன் மழை',
+      'te': 'ఉరుముల వర్షం', 'mr': 'वादळी हवामान', 'ml': 'ഇടിമിന്നൽ',
+    },
+    'thunderstorm with hail': {
+      'hi': 'ओलावृष्टि के साथ तूफान', 'kn': 'ಆಲಿಕಲ್ಲು ಮಳೆ', 'ta': 'ஆலங்கட்டி மழை',
+      'te': 'వడగళ్ళ వర్షం', 'mr': 'गारपीट', 'ml': 'ആലിപ്പഴ മഴ',
+    },
+    'unknown': {
+      'hi': 'अज्ञात', 'kn': 'ಅಜ್ಞಾತ', 'ta': 'தெரியாத',
+      'te': 'తెలియదు', 'mr': 'अज्ञात', 'ml': 'അജ്ഞാതം',
+    },
+  };
+
   // ── PUBLIC API ────────────────────────────────────────────────────────────
+
+  /// Translate a weather description (e.g. 'Clear', 'Rain').
+  static String translateWeatherDescription(String value, String langCode) =>
+      _lookup(_weatherDescriptions, value, langCode);
 
   /// Translate a machine type field value.
   static String translateMachineType(String value, String langCode) =>

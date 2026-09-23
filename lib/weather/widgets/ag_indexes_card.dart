@@ -79,18 +79,18 @@ class AgIndexesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.agriculturalIndexes, emoji: '📊'),
+          GlassSectionHeader(title: l.agriculturalIndexes, emoji: Icons.bar_chart_rounded),
           Row(
             children: [
               Expanded(child: _IndexTile(
-                icon: '🌿',
+                icon: Icons.eco_rounded,
                 label: l.spraying,
                 value: _sprayValue(indexes.spraying, l),
                 color: _sprayColor(indexes.spraying),
               )),
               const SizedBox(width: 8),
               Expanded(child: _IndexTile(
-                icon: '🌾',
+                icon: Icons.grass_rounded,
                 label: l.harvest,
                 value: _harvestValue(indexes.harvest, l),
                 color: _harvestColor(indexes.harvest),
@@ -101,14 +101,14 @@ class AgIndexesCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: _IndexTile(
-                icon: '💧',
+                icon: Icons.water_drop,
                 label: l.irrigationLabel,
                 value: _irrigValue(indexes.irrigation, l),
                 color: _irrigColor(indexes.irrigation),
               )),
               const SizedBox(width: 8),
               Expanded(child: _IndexTile(
-                icon: '🚜',
+                icon: Icons.agriculture_outlined,
                 label: l.fieldWork,
                 value: _fieldValue(indexes.fieldWork, l),
                 color: _fieldColor(indexes.fieldWork),
@@ -122,7 +122,7 @@ class AgIndexesCard extends StatelessWidget {
 }
 
 class _IndexTile extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final String value;
   final Color color;
@@ -148,7 +148,7 @@ class _IndexTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 16)),
+              Icon(icon, size: 16, color: Colors.white70),
               const SizedBox(width: 4),
               Text(label, style: const TextStyle(fontSize: 11, color: Colors.white60)),
             ],

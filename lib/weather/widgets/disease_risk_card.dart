@@ -15,7 +15,7 @@ class DiseaseRiskCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.cropDiseaseRiskTitle, emoji: '🔬'),
+          GlassSectionHeader(title: l.cropDiseaseRiskTitle, emoji: Icons.biotech_outlined),
           ...risks.map((r) => _RiskRow(risk: r)),
         ],
       ),
@@ -50,7 +50,7 @@ class _RiskRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Text(risk.icon, style: const TextStyle(fontSize: 20)),
+          Icon(risk.icon, size: 20, color: Colors.white),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

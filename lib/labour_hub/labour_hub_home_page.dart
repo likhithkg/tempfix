@@ -8,6 +8,7 @@ import 'labour_profile_model.dart';
 import 'labour_detail_page.dart';
 import 'labour_profile_form_page.dart';
 import 'saved_workers_page.dart';
+import '../config/km_images.dart';
 import '../theme.dart';
 import '../widgets/km_widgets.dart';
 
@@ -218,52 +219,71 @@ class _LabourHubHomePageState extends State<LabourHubHomePage> {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(gradient: KMGradients.primaryHeader),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 44),
-                        Row(children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: const Text('👷',
-                                style: TextStyle(fontSize: 22)),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('WorkForce Hub',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3)),
-                              Text(
-                                  _userLat != null
-                                      ? 'Showing workers near you'
-                                      : 'Find skilled agricultural workers',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 12)),
-                            ],
-                          ),
-                        ]),
-                        const SizedBox(height: 14),
-                        _SearchBar(
-                            controller: _searchCtrl,
-                            onChanged: (_) => setState(() {})),
-                      ],
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    KMImages.heroLabour,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          KMColors.primaryDark.withValues(alpha: 0.88),
+                          KMColors.primary.withValues(alpha: 0.70),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   ),
-                ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 44),
+                          Row(children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: const Icon(Icons.groups_rounded,
+                                  size: 22, color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('WorkForce Hub',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3)),
+                                Text(
+                                    _userLat != null
+                                        ? 'Showing workers near you'
+                                        : 'Find skilled agricultural workers',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 12)),
+                              ],
+                            ),
+                          ]),
+                          const SizedBox(height: 14),
+                          _SearchBar(
+                              controller: _searchCtrl,
+                              onChanged: (_) => setState(() {})),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -295,18 +315,17 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white24)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12)),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: const TextStyle(color: Colors.black87, fontSize: 14),
         decoration: const InputDecoration(
           hintText: 'Search workers, skills, location…',
-          hintStyle: TextStyle(color: Colors.white60, fontSize: 13),
+          hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
           prefixIcon:
-              Icon(Icons.search_rounded, color: Colors.white70, size: 20),
+              Icon(Icons.search_rounded, color: Colors.grey, size: 20),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 12),
         ),
@@ -723,12 +742,17 @@ class _QuickCategories extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 96,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.85,
+        ),
         itemCount: _cats.length,
         itemBuilder: (_, i) {
           final (label, icon, color) = _cats[i];
@@ -738,28 +762,24 @@ class _QuickCategories extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: color.withValues(alpha: 0.3)),
+                    color: color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: color.withValues(alpha: 0.25)),
                   ),
-                  child: Icon(icon, color: color, size: 26),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: 68,
-                  child: Text(label,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500)),
-                ),
+                const SizedBox(height: 5),
+                Text(label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 9.5,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500)),
               ],
             ),
           );
@@ -874,7 +894,7 @@ class _HorizontalWorkerList extends StatelessWidget {
   }
 }
 
-class _WorkerCardHorizontal extends StatelessWidget {
+class _WorkerCardHorizontal extends StatefulWidget {
   final LabourProfile worker;
   final LabourHubService service;
   final double? userLat;
@@ -887,16 +907,36 @@ class _WorkerCardHorizontal extends StatelessWidget {
     this.userLng,
   });
 
+  @override
+  State<_WorkerCardHorizontal> createState() => _WorkerCardHorizontalState();
+}
+
+class _WorkerCardHorizontalState extends State<_WorkerCardHorizontal> {
+  bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.service.getFavourites().then((ids) {
+      if (mounted) setState(() => _isSaved = ids.contains(widget.worker.id));
+    });
+  }
+
+  Future<void> _toggleSave() async {
+    await widget.service.toggleFavourite(widget.worker.id);
+    if (mounted) setState(() => _isSaved = !_isSaved);
+  }
+
   String? _distanceText() {
-    if (userLat == null || userLng == null || !worker.hasLocation) {
+    if (widget.userLat == null || widget.userLng == null || !widget.worker.hasLocation) {
       return null;
     }
     const R = 6371.0;
-    final dLat = (worker.latitude - userLat!) * pi / 180;
-    final dLon = (worker.longitude - userLng!) * pi / 180;
+    final dLat = (widget.worker.latitude - widget.userLat!) * pi / 180;
+    final dLon = (widget.worker.longitude - widget.userLng!) * pi / 180;
     final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(userLat! * pi / 180) *
-            cos(worker.latitude * pi / 180) *
+        cos(widget.userLat! * pi / 180) *
+            cos(widget.worker.latitude * pi / 180) *
             sin(dLon / 2) *
             sin(dLon / 2);
     final d = R * 2 * atan2(sqrt(a), sqrt(1 - a));
@@ -906,118 +946,132 @@ class _WorkerCardHorizontal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dist = _distanceText();
+    final worker = widget.worker;
     return GestureDetector(
       onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
               builder: (_) => LabourDetailPage(profile: worker))),
-      child: Container(
-        width: 155,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.07),
-                blurRadius: 8,
-                offset: const Offset(0, 2))
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 14),
-            Stack(alignment: Alignment.bottomRight, children: [
-              _Avatar(
-                  photoUrl: worker.photoUrl,
-                  name: worker.name,
-                  size: 58),
-              if (worker.isVerified)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                        color: Colors.white, shape: BoxShape.circle),
-                    child: const Icon(Icons.verified_rounded,
-                        color: KMColors.primary, size: 12),
-                  ),
+      child: Stack(
+        children: [
+          Container(
+            width: 155,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.07),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2))
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 14),
+                Stack(alignment: Alignment.bottomRight, children: [
+                  _Avatar(
+                      photoUrl: worker.photoUrl,
+                      name: worker.name,
+                      size: 58),
+                  if (worker.isVerified)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                            color: Colors.white, shape: BoxShape.circle),
+                        child: const Icon(Icons.verified_rounded,
+                            color: KMColors.primary, size: 12),
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(worker.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
-            ]),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(worker.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
-            const SizedBox(height: 3),
-            if (worker.rating > 0)
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.star_rounded, color: KMColors.accent, size: 13),
-                Text(' ${worker.rating.toStringAsFixed(1)}',
+                const SizedBox(height: 3),
+                if (worker.rating > 0)
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    const Icon(Icons.star_rounded, color: KMColors.accent, size: 13),
+                    Text(' ${worker.rating.toStringAsFixed(1)}',
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.grey)),
+                  ]),
+                if (dist != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.near_me_rounded,
+                              size: 11, color: Colors.blue),
+                          Text(' $dist',
+                              style: const TextStyle(
+                                  fontSize: 11, color: Colors.blue)),
+                        ]),
+                  ),
+                const SizedBox(height: 4),
+                if (worker.skills.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(worker.skills.first,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 10,
+                            color: KMColors.primary,
+                            fontWeight: FontWeight.w500)),
+                  ),
+                const SizedBox(height: 6),
+                _AvailBadge(status: worker.availabilityStatus),
+                const SizedBox(height: 6),
+                Text(worker.wageDisplay,
                     style: const TextStyle(
-                        fontSize: 11, color: Colors.grey)),
-              ]),
-            if (dist != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.near_me_rounded,
-                          size: 11, color: Colors.blue),
-                      Text(' $dist',
-                          style: const TextStyle(
-                              fontSize: 11, color: Colors.blue)),
-                    ]),
-              ),
-            const SizedBox(height: 4),
-            if (worker.skills.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(worker.skills.first,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 10,
-                        color: KMColors.primary,
-                        fontWeight: FontWeight.w500)),
-              ),
-            const SizedBox(height: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                  color: worker.availabilityStatus == 'available'
-                      ? KMColors.cardTint
-                      : Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20)),
-              child: Text(
-                worker.availabilityStatus == 'available'
-                    ? '● Available'
-                    : '○ Busy',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: worker.availabilityStatus == 'available'
-                        ? KMColors.available
-                        : Colors.orange,
-                    fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: KMColors.rentPrimary)),
+              ],
+            ),
+          ),
+          // Heart / wishlist button
+          Positioned(
+            top: 6,
+            right: 6,
+            child: GestureDetector(
+              onTap: _toggleSave,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1))
+                  ],
+                ),
+                child: Icon(
+                  _isSaved
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: _isSaved ? Colors.red : Colors.grey.shade400,
+                  size: 16,
+                ),
               ),
             ),
-            const SizedBox(height: 6),
-            Text(worker.wageDisplay,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: KMColors.rentPrimary)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1025,7 +1079,7 @@ class _WorkerCardHorizontal extends StatelessWidget {
 
 // ── Worker Card (vertical list) ───────────────────────────────────────────────
 
-class _WorkerCard extends StatelessWidget {
+class _WorkerCard extends StatefulWidget {
   final LabourProfile worker;
   final LabourHubService service;
   final double? userLat;
@@ -1038,22 +1092,42 @@ class _WorkerCard extends StatelessWidget {
     this.userLng,
   });
 
+  @override
+  State<_WorkerCard> createState() => _WorkerCardState();
+}
+
+class _WorkerCardState extends State<_WorkerCard> {
+  bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.service.getFavourites().then((ids) {
+      if (mounted) setState(() => _isSaved = ids.contains(widget.worker.id));
+    });
+  }
+
+  Future<void> _toggleSave() async {
+    await widget.service.toggleFavourite(widget.worker.id);
+    if (mounted) setState(() => _isSaved = !_isSaved);
+  }
+
   void _call(BuildContext ctx) async {
-    if (worker.phone.isEmpty) return;
-    final uri = Uri.parse('tel:${worker.phone}');
+    if (widget.worker.phone.isEmpty) return;
+    final uri = Uri.parse('tel:${widget.worker.phone}');
     if (await canLaunchUrl(uri)) launchUrl(uri);
   }
 
   String? _distanceText() {
-    if (userLat == null || userLng == null || !worker.hasLocation) {
+    if (widget.userLat == null || widget.userLng == null || !widget.worker.hasLocation) {
       return null;
     }
     const R = 6371.0;
-    final dLat = (worker.latitude - userLat!) * pi / 180;
-    final dLon = (worker.longitude - userLng!) * pi / 180;
+    final dLat = (widget.worker.latitude - widget.userLat!) * pi / 180;
+    final dLon = (widget.worker.longitude - widget.userLng!) * pi / 180;
     final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(userLat! * pi / 180) *
-            cos(worker.latitude * pi / 180) *
+        cos(widget.userLat! * pi / 180) *
+            cos(widget.worker.latitude * pi / 180) *
             sin(dLon / 2) *
             sin(dLon / 2);
     final d = R * 2 * atan2(sqrt(a), sqrt(1 - a));
@@ -1062,6 +1136,7 @@ class _WorkerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final worker = widget.worker;
     final dist = _distanceText();
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -1129,6 +1204,17 @@ class _WorkerCard extends StatelessWidget {
                                 fontSize: 15)),
                       ),
                       _AvailBadge(status: worker.availabilityStatus),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _toggleSave,
+                        child: Icon(
+                          _isSaved
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: _isSaved ? Colors.red : Colors.grey.shade400,
+                          size: 20,
+                        ),
+                      ),
                     ]),
                     const SizedBox(height: 3),
                     Row(children: [
@@ -1499,25 +1585,14 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (photoUrl.isEmpty) {
-      return CircleAvatar(
-        radius: size / 2,
-        backgroundColor: KMColors.cardTint,
-        child: _initial(),
-      );
-    }
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: KMColors.cardTint,
-      child: ClipOval(
-        child: Image.network(
-          photoUrl,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(child: _initial()),
-        ),
-      ),
+      foregroundImage:
+          photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+      onForegroundImageError:
+          photoUrl.isNotEmpty ? (_, __) {} : null,
+      child: _initial(),
     );
   }
 }
@@ -1530,18 +1605,24 @@ class _AvailBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAvail = status == 'available';
+    final dotColor = isAvail ? KMColors.available : Colors.orange.shade700;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
           color: isAvail ? KMColors.cardTint : Colors.orange.shade50,
           borderRadius: BorderRadius.circular(20)),
-      child: Text(
-        isAvail ? '● Available' : '○ Busy',
-        style: TextStyle(
-            fontSize: 10,
-            color: isAvail ? KMColors.available : Colors.orange.shade700,
-            fontWeight: FontWeight.w600),
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 7, height: 7,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          isAvail ? 'Available' : 'Busy',
+          style: TextStyle(
+              fontSize: 10, color: dotColor, fontWeight: FontWeight.w600),
+        ),
+      ]),
     );
   }
 }

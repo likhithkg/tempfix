@@ -72,6 +72,41 @@ class ImageUploadService {
     }
   }
 
+  // ── Accept raw bytes directly (used by crop-disease history) ────────────
+  static Future<String?> uploadImageFromBytes(
+    Uint8List bytes, {
+    String filename = 'scan.jpg',
+    String mimeType = 'image/jpeg',
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+
+      final request = http.MultipartRequest('POST', Uri.parse(baseUrl));
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: filename,
+          contentType: MediaType.parse(mimeType),
+        ),
+      );
+
+      final streamed = await request.send().timeout(_timeout);
+      final body = await streamed.stream.bytesToString();
+
+      if (streamed.statusCode == 200) {
+        final data = jsonDecode(body) as Map<String, dynamic>;
+        return (data['data'] as Map<String, dynamic>?)?['imageUrl'] as String?;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static String? _mimeFromName(String name) {
     final ext = name.split('.').last.toLowerCase();
     switch (ext) {

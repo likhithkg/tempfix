@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 
 const connectDB = require("./config/db");
 const uploadRoutes = require("./routes/uploadRoutes");
@@ -11,6 +12,34 @@ const profileRoutes = require("./routes/profileRoutes");
 const { verifyToken } = require("./middleware/auth");
 
 const app = express();
+
+// Rate limiters — keyed by client IP.
+// Auth routes: tight limit to block brute-force attacks.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again later." },
+});
+
+// Upload routes: prevent abuse of the Cloudinary pipeline.
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Upload rate limit exceeded. Please slow down." },
+});
+
+// AI routes: chatbot/crop-detection — generous but bounded.
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "AI request rate limit exceeded. Please slow down." },
+});
 
 connectDB();
 
@@ -45,18 +74,18 @@ app.use(express.json({ limit: "15mb" }));
 app.get("/", (req, res) => res.send("KM Backend Running"));
 
 // Auth routes (Firebase token → find/create MongoDB user)
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 
 // AI proxy routes — keys are server-side; no client auth required
 // Must be registered before /api to avoid hitting the verifyToken middleware
-app.use("/api/ai", aiRoutes);
+app.use("/api/ai", aiLimiter, aiRoutes);
 
 // Profile routes — GET /photo/:id is public; POST /photo applies verifyToken internally.
 // Must be registered before the catch-all /api route below.
 app.use("/api/profile", profileRoutes);
 
 // Upload route — requires valid Firebase ID token
-app.use("/api", verifyToken, uploadRoutes);
+app.use("/api", uploadLimiter, verifyToken, uploadRoutes);
 
 const PORT = process.env.PORT || 10000;
 

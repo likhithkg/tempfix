@@ -12,6 +12,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get appName => 'கிருஷிமித்ரா';
 
   @override
+  String get appTagline => 'ஒவ்வொரு விவசாயிக்கும் ஸ்மார்ட் வேளாண்மை';
+
+  @override
   String get login => 'உள்நுழை';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get tryAgain => 'மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get lcTitle => 'லேண்ட் கனெக்ட்';
+
+  @override
+  String get lcSubtitle => 'பயிரிட நிலம் தேடுங்கள் அல்லது உங்கள் நிலத்தை பட்டியலிடுங்கள்';
+
+  @override
+  String get lcHaveLand => 'என்னிடம் நிலம் உள்ளது';
+
+  @override
+  String get lcHaveLandSub => 'உங்கள் பயன்படாத நிலத்தை பட்டியலிட்டு விவசாயிகளை கண்டறியுங்கள்';
+
+  @override
+  String get lcFindLand => 'நிலம் தேடுங்கள்';
+
+  @override
+  String get lcFindLandSub => 'அருகிலுள்ள கிடைக்கும் நிலங்களை பாருங்கள்';
+
+  @override
+  String get lcMyListings => 'என் நில பட்டியல்கள்';
+
+  @override
+  String get lcMyListingsSub => 'உங்கள் நில பட்டியல்களை நிர்வகிக்கவும்';
+
+  @override
+  String get lcCultivationRequests => 'சாகுபடி கோரிக்கைகள்';
+
+  @override
+  String get lcCultivationRequestsSub => 'உங்கள் நிலத்தில் கோரிக்கைகளை பாருங்கள்';
+
+  @override
+  String get lcMyRequests => 'என் சாகுபடி கோரிக்கைகள்';
+
+  @override
+  String get lcMyRequestsSub => 'நில உரிமையாளர்களுக்கு அனுப்பிய கோரிக்கைகளை கண்காணிக்கவும்';
+
+  @override
+  String get lcHowItWorks => 'இது எப்படி செயல்படுகிறது';
+
+  @override
+  String get lcDiscoveryTitle => 'அருகிலுள்ள நிலம் தேடுங்கள்';
+
+  @override
+  String get lcSearchHint => 'இடம், பயிர் அல்லது நில வகை மூலம் தேடுங்கள்...';
+
+  @override
+  String get lcEnableLocation => 'இருப்பிடத்தை இயக்கவும்';
+
+  @override
+  String get lcRequestCultivate => 'சாகுபடிக்கு கோரிக்கை விடுங்கள்';
+
+  @override
+  String get lcRequestAlreadySent => 'கோரிக்கை ஏற்கனவே அனுப்பப்பட்டது';
+
+  @override
+  String get lcSendRequest => 'சாகுபடி கோரிக்கை அனுப்பவும்';
+
+  @override
+  String get lcSubmitRequest => 'கோரிக்கை சமர்ப்பிக்கவும்';
+
+  @override
+  String get lcWithdrawRequest => 'கோரிக்கையை திரும்பப் பெறவும்';
+
+  @override
+  String get lcPendingTab => 'நிலுவையில் உள்ளது';
+
+  @override
+  String get lcAcceptedTab => 'ஏற்றுக்கொள்ளப்பட்டது';
+
+  @override
+  String get lcRejectedTab => 'நிராகரிக்கப்பட்டது';
+
+  @override
+  String get lcActiveTab => 'செயலில் உள்ளது';
+
+  @override
+  String get lcPausedTab => 'இடைநிறுத்தப்பட்டது';
+
+  @override
+  String get lcAddListing => 'புதிய பட்டியல் சேர்க்கவும்';
+
+  @override
+  String get lcListingFormTitle => 'உங்கள் நிலத்தை பட்டியலிடவும்';
+
+  @override
+  String get lcPrivacyNotice => 'உங்கள் சரியான இருப்பிடம் தனிப்பட்டதாக வைக்கப்படுகிறது. கோரிக்கை ஏற்றுக்கொள்ளப்படும் வரை கிராமம் மற்றும் மாவட்டம் மட்டுமே காட்டப்படும்.';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra தொடர்பை எளிதாக்குகிறது. நில குத்தகை ஒப்பந்தத்தை தனியாக செய்யவும்.';
+
+  @override
+  String get lcRequestWithdrawn => 'கோரிக்கை திரும்பப் பெறப்பட்டது';
+
+  @override
+  String get lcRequestAcceptedMsg => 'கோரிக்கை ஏற்றுக்கொள்ளப்பட்டது!';
+
+  @override
+  String get lcContactLandowner => 'ஒப்பந்த விவரங்களை விவாதிக்க நில உரிமையாளரை தொடர்பு கொள்ளவும்.';
 }

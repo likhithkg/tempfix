@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'KrishiMithra';
 
   @override
+  String get appTagline => 'Smart Agriculture for Every Farmer';
+
+  @override
   String get login => 'Login';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tryAgain => 'Try Again';
+
+  @override
+  String get lcTitle => 'Land Connect';
+
+  @override
+  String get lcSubtitle => 'Find land to cultivate or list your land';
+
+  @override
+  String get lcHaveLand => 'I Have Land';
+
+  @override
+  String get lcHaveLandSub => 'List your unused land and find cultivators';
+
+  @override
+  String get lcFindLand => 'Find Land';
+
+  @override
+  String get lcFindLandSub => 'Browse available land near you';
+
+  @override
+  String get lcMyListings => 'My Land Listings';
+
+  @override
+  String get lcMyListingsSub => 'Manage your land listings';
+
+  @override
+  String get lcCultivationRequests => 'Cultivation Requests';
+
+  @override
+  String get lcCultivationRequestsSub => 'View requests on your land';
+
+  @override
+  String get lcMyRequests => 'My Cultivation Requests';
+
+  @override
+  String get lcMyRequestsSub => 'Track your requests to landowners';
+
+  @override
+  String get lcHowItWorks => 'How It Works';
+
+  @override
+  String get lcDiscoveryTitle => 'Find Land Near You';
+
+  @override
+  String get lcSearchHint => 'Search by location, crop, or land type...';
+
+  @override
+  String get lcEnableLocation => 'Enable Location';
+
+  @override
+  String get lcRequestCultivate => 'Request to Cultivate';
+
+  @override
+  String get lcRequestAlreadySent => 'Request Already Sent';
+
+  @override
+  String get lcSendRequest => 'Send Cultivation Request';
+
+  @override
+  String get lcSubmitRequest => 'Submit Request';
+
+  @override
+  String get lcWithdrawRequest => 'Withdraw Request';
+
+  @override
+  String get lcPendingTab => 'Pending';
+
+  @override
+  String get lcAcceptedTab => 'Accepted';
+
+  @override
+  String get lcRejectedTab => 'Rejected';
+
+  @override
+  String get lcActiveTab => 'Active';
+
+  @override
+  String get lcPausedTab => 'Paused';
+
+  @override
+  String get lcAddListing => 'Add New Listing';
+
+  @override
+  String get lcListingFormTitle => 'List Your Land';
+
+  @override
+  String get lcPrivacyNotice => 'Your exact location is kept private. Only village and district are shown to cultivators until a request is accepted.';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra facilitates the connection. Please execute any land lease agreement separately.';
+
+  @override
+  String get lcRequestWithdrawn => 'Request withdrawn';
+
+  @override
+  String get lcRequestAcceptedMsg => 'Request Accepted!';
+
+  @override
+  String get lcContactLandowner => 'Contact the landowner to discuss the agreement details and proceed.';
 }

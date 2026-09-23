@@ -21,6 +21,7 @@ import 'notifications_page.dart';
 import 'create_purchase_order_page.dart';
 import 'ai_insights_page.dart';
 import 'role_service.dart';
+import '../config/km_images.dart';
 import '../l10n/app_localizations.dart';
 import '../services/content_translation_service.dart';
 import '../theme.dart';
@@ -96,18 +97,22 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Gradient background
+                    // Photo background
+                    Image.network(
+                      KMImages.heroExport,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(),
+                    ),
+                    // Gradient overlay
                     Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Color(0xFF1B5E20),
-                            Color(0xFF00796B),
-                            Color(0xFF004D40),
+                            KMColors.exportDark.withValues(alpha: 0.88),
+                            KMColors.exportPrimary.withValues(alpha: 0.68),
                           ],
-                          stops: [0.0, 0.6, 1.0],
                         ),
                       ),
                     ),
@@ -189,9 +194,9 @@ class _ExporterHomePageState extends State<ExporterHomePage> {
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          Text(
-                            l.procurementDashboard,
-                            style: const TextStyle(
+                          const Text(
+                            'Buy directly from farmers',
+                            style: TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
                             ),
@@ -488,7 +493,7 @@ class _OperationsHub extends StatelessWidget {
     final tiles = <_OpTileData>[
       _OpTileData(
         icon: Icons.pending_actions_outlined,
-        label: isAdmin ? 'All Orders' : 'Purchase Orders',
+        label: isAdmin ? 'All Orders' : 'My Orders',
         color: Colors.orange,
         onTap: () {
           if (user == null) {
@@ -673,7 +678,7 @@ class _AnalyticsRow extends StatelessWidget {
     final cards = [
       (l.totalFarmers, stats['totalFarmers'] ?? 0, Icons.people_alt_outlined, Colors.teal),
       (l.activeListings, stats['activeListings'] ?? 0, Icons.inventory_outlined, Colors.indigo),
-      (l.pendingPOs, stats['pendingPOs'] ?? 0, Icons.pending_actions_outlined, Colors.orange),
+      ('Pending Orders', stats['pendingPOs'] ?? 0, Icons.pending_actions_outlined, Colors.orange),
       (l.exportReadyCount, stats['exportReady'] ?? 0, Icons.verified_outlined, Colors.green),
     ];
 
@@ -1762,7 +1767,7 @@ class ProductDetailPage extends StatelessWidget {
                             );
                           },
                           icon: const Icon(Icons.shopping_cart_checkout),
-                          label: const Text('Place Order',
+                          label: const Text('Buy Now',
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                         ),

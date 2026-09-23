@@ -5,13 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../exporter_hub/exporter_model.dart';
+import '../services/distance_service.dart';
 import '../exporter_hub/exporter_service.dart';
 import '../exporter_hub/exporter_form_page.dart';
 import '../exporter_hub/nearby_farmers_map_page.dart';
 import 'f2b_farmer_dashboard.dart';
 import '../l10n/app_localizations.dart';
+import '../config/km_images.dart';
 import '../theme.dart';
 import '../services/content_translation_service.dart';
 import 'f2b_product_detail_page.dart';
@@ -23,6 +24,7 @@ import 'f2b_models.dart';
 import 'f2b_cart_service.dart';
 import 'f2b_cart_page.dart';
 import 'f2b_seller_orders_page.dart';
+import 'f2b_buyer_orders_page.dart';
 
 // ─── Data classes ──────────────────────────────────────────────────────────
 
@@ -30,16 +32,19 @@ class _BannerData {
   final String title, subtitle, tag;
   final Color color1, color2;
   final IconData icon;
+  final String? imageUrl;
   const _BannerData({
     required this.title, required this.subtitle, required this.tag,
     required this.color1, required this.color2, required this.icon,
+    this.imageUrl,
   });
 }
 
 class _CatData {
-  final String key, label, emoji;
+  final String key, label;
+  final IconData icon;
   final Color color1, color2;
-  const _CatData(this.key, this.label, this.emoji, this.color1, this.color2);
+  const _CatData(this.key, this.label, this.icon, this.color1, this.color2);
 }
 
 class _FarmerData {
@@ -65,61 +70,66 @@ class _F2BHomePageState extends State<F2BHomePage> {
   String _selectedCategory = 'all';
   int _currentBanner = 0;
   Timer? _bannerTimer;
+  double? _userLat;
+  double? _userLon;
   Set<String> _wishlistIds = {};
   Set<String> _cartProductIds = {};
   int _cartCount = 0;
   int _newOrderCount = 0;
-  StreamSubscription<Set<String>>? _wishlistSub;
-  StreamSubscription<List<F2BCartItem>>? _cartSub;
   StreamSubscription<List<F2BOrder>>? _sellerOrderSub;
 
   static const _banners = [
     _BannerData(
       title: 'Fresh Organic Produce',
       subtitle: 'Farm to table • Verified farmers only',
-      tag: '🌿 Organic',
+      tag: 'Organic',
       color1: KMColors.primaryDark, color2: KMColors.primary,
       icon: Icons.eco_rounded,
+      imageUrl: KMImages.heroMarket,
     ),
     _BannerData(
       title: 'Direct from Farmers',
       subtitle: 'No middlemen • Best prices guaranteed',
-      tag: '🤝 Fair Trade',
+      tag: 'Fair Trade',
       color1: KMColors.weatherDark, color2: KMColors.weatherPrimary,
       icon: Icons.handshake_rounded,
+      imageUrl: KMImages.heroExport,
     ),
     _BannerData(
       title: 'Seasonal Harvest',
       subtitle: 'Best produce at peak freshness',
-      tag: '🌾 Seasonal',
+      tag: 'Seasonal',
       color1: Color(0xFFBF360C), color2: Color(0xFFE64A19),
       icon: Icons.wb_sunny_rounded,
+      imageUrl: KMImages.heroWeather,
     ),
     _BannerData(
       title: 'Export Quality Crops',
       subtitle: 'Grade A certified for global markets',
-      tag: '⭐ Grade A',
+      tag: 'Grade A',
       color1: KMColors.labourDark, color2: KMColors.labourPrimary,
       icon: Icons.verified_rounded,
+      imageUrl: KMImages.heroLand,
     ),
     _BannerData(
       title: 'Nearby Farm Fresh',
       subtitle: 'Products from farmers near you',
-      tag: '📍 Nearby',
+      tag: 'Nearby',
       color1: Color(0xFF006064), color2: Color(0xFF00838F),
       icon: Icons.location_on_rounded,
+      imageUrl: KMImages.heroLabour,
     ),
   ];
 
   static const _cats = [
-    _CatData('vegetables', 'Vegetables', '🥦', Color(0xFF2E7D32), Color(0xFF66BB6A)),
-    _CatData('fruits',     'Fruits',     '🍎', Color(0xFFC62828), Color(0xFFEF5350)),
-    _CatData('grains',     'Grains',     '🌾', KMColors.rentPrimary, Color(0xFFFF8F00)),
-    _CatData('spices',     'Spices',     '🌶', Color(0xFF880E4F), Color(0xFFAD1457)),
-    _CatData('pulses',     'Pulses',     '🫘', Color(0xFF4E342E), Color(0xFF6D4C41)),
-    _CatData('crops',      'Crops',      '🌿', KMColors.weatherPrimary, Color(0xFF1976D2)),
-    _CatData('flowers',    'Flowers',    '🌸', Color(0xFF880E4F), Color(0xFFE91E63)),
-    _CatData('other',      'Other',      '📦', Color(0xFF37474F), Color(0xFF546E7A)),
+    _CatData('vegetables', 'Vegetables', Icons.eco_rounded,           Color(0xFF2E7D32), Color(0xFF66BB6A)),
+    _CatData('fruits',     'Fruits',     Icons.local_florist_rounded,  Color(0xFFC62828), Color(0xFFEF5350)),
+    _CatData('grains',     'Grains',     Icons.grass_rounded,          KMColors.rentPrimary, Color(0xFFFF8F00)),
+    _CatData('spices',     'Spices',     Icons.spa_rounded,            Color(0xFF880E4F), Color(0xFFAD1457)),
+    _CatData('pulses',     'Pulses',     Icons.grain_rounded,          Color(0xFF4E342E), Color(0xFF6D4C41)),
+    _CatData('crops',      'Crops',      Icons.agriculture_outlined,   KMColors.weatherPrimary, Color(0xFF1976D2)),
+    _CatData('flowers',    'Flowers',    Icons.local_florist_outlined, Color(0xFF880E4F), Color(0xFFE91E63)),
+    _CatData('other',      'Other',      Icons.inventory_2_outlined,   Color(0xFF37474F), Color(0xFF546E7A)),
   ];
 
   @override
@@ -133,15 +143,9 @@ class _F2BHomePageState extends State<F2BHomePage> {
         curve: Curves.easeInOut,
       );
     });
-    _startWishlistListener();
-    _cartSub = _cartSvc.streamCart().listen((items) {
-      if (mounted) {
-        setState(() {
-          _cartProductIds = items.map((i) => i.productId).toSet();
-          _cartCount = items.length;
-        });
-      }
-    });
+    _fetchLocation();
+    _loadWishlistIds();
+    _loadCartState();
     _sellerOrderSub = _cartSvc.streamSellerOrders().listen((orders) {
       if (mounted) {
         setState(() {
@@ -152,27 +156,67 @@ class _F2BHomePageState extends State<F2BHomePage> {
     });
   }
 
-  void _startWishlistListener() {
+  Future<void> _loadWishlistIds() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    _wishlistSub = WishlistService.stream(uid)
-        .listen((ids) { if (mounted) setState(() => _wishlistIds = ids); });
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('wishlist').doc(uid).collection('items').get();
+      if (mounted) setState(() => _wishlistIds = snap.docs.map((d) => d.id).toSet());
+    } catch (_) {}
+  }
+
+  Future<void> _loadCartState() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('f2b_cart').doc(uid).collection('items').get();
+      if (mounted) setState(() {
+        _cartProductIds = snap.docs.map((d) => d.id).toSet();
+        _cartCount = snap.docs.length;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _fetchLocation() async {
+    final pos = await DistanceService.getUserLocation();
+    if (pos != null && mounted) {
+      setState(() {
+        _userLat = pos.latitude;
+        _userLon = pos.longitude;
+      });
+    }
   }
 
   @override
   void dispose() {
     _bannerTimer?.cancel();
     _bannerCtrl.dispose();
-    _wishlistSub?.cancel();
-    _cartSub?.cancel();
     _sellerOrderSub?.cancel();
     super.dispose();
   }
 
   List<ExportProduct> _filter(List<ExportProduct> all) {
-    if (_selectedCategory == 'all') return all;
-    return all.where(
-        (p) => p.category.toLowerCase() == _selectedCategory).toList();
+    var result = _selectedCategory == 'all'
+        ? List<ExportProduct>.of(all)
+        : all.where((p) => p.category.toLowerCase() == _selectedCategory).toList();
+    if (_userLat != null && _userLon != null) {
+      result = DistanceService.sortByDistance(
+        items: result,
+        userLat: _userLat!,
+        userLon: _userLon!,
+        getLat: (p) => p.locationLat,
+        getLon: (p) => p.locationLon,
+      );
+    }
+    return result;
+  }
+
+  double? _distanceFor(ExportProduct p) {
+    if (_userLat == null || _userLon == null) return null;
+    if (!DistanceService.isValid(p.locationLat, p.locationLon)) return null;
+    return DistanceService.haversine(_userLat!, _userLon!, p.locationLat!, p.locationLon!);
   }
 
   List<_FarmerData> _deriveFarmers(List<ExportProduct> all) {
@@ -200,12 +244,26 @@ class _F2BHomePageState extends State<F2BHomePage> {
           const SnackBar(content: Text('Sign in to save products')));
       return;
     }
-    await WishlistService.toggle(uid, productId);
+    try {
+      final added = await WishlistService.toggle(uid, productId);
+      if (mounted) {
+        setState(() {
+          if (added) _wishlistIds.add(productId);
+          else _wishlistIds.remove(productId);
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _addToCart(BuildContext ctx, ExportProduct p) async {
     try {
       await _cartSvc.addToCart(p);
+      if (mounted) {
+        setState(() {
+          _cartProductIds.add(p.id);
+          _cartCount = _cartProductIds.length;
+        });
+      }
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
           content: Text('${p.productName} added to cart'),
@@ -222,7 +280,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
     } catch (e) {
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-          content: Text('Failed to add to cart: $e'),
+          content: Text('Could not add to cart. Please try again.'),
           backgroundColor: Colors.red,
         ));
       }
@@ -322,7 +380,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                     color: KMColors.primaryDark.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('📋', style: TextStyle(fontSize: 22)),
+                  child: const Icon(Icons.assignment_outlined, size: 22, color: KMColors.primaryDark),
                 ),
                 const SizedBox(width: 12),
                 const Column(
@@ -463,6 +521,9 @@ class _F2BHomePageState extends State<F2BHomePage> {
             onSellerOrders: () => Navigator.push(context,
                 MaterialPageRoute(
                     builder: (_) => const F2BSellerOrdersPage())),
+            onBuyerOrders: () => Navigator.push(context,
+                MaterialPageRoute(
+                    builder: (_) => const F2BBuyerOrdersPage())),
             onDashboard: () => Navigator.push(context,
                 MaterialPageRoute(
                     builder: (_) => const F2BFarmerDashboard())),
@@ -506,6 +567,15 @@ class _F2BHomePageState extends State<F2BHomePage> {
                     .toList();
                 final farmers  = _deriveFarmers(all);
                 final filtered = _filter(all);
+                final nearby = (_userLat != null && _userLon != null)
+                    ? (DistanceService.sortByDistance(
+                        items: all.where((p) => DistanceService.isValid(p.locationLat, p.locationLon)).toList(),
+                        userLat: _userLat!,
+                        userLon: _userLon!,
+                        getLat: (p) => p.locationLat,
+                        getLon: (p) => p.locationLon,
+                      ).take(12).toList())
+                    : <ExportProduct>[];
 
                 return RefreshIndicator(
                   color: KMColors.primary,
@@ -547,6 +617,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             wishlistIds: _wishlistIds,
                             cartProductIds: _cartProductIds,
                             currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                            userLat: _userLat, userLon: _userLon,
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
@@ -576,6 +647,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             wishlistIds: _wishlistIds,
                             cartProductIds: _cartProductIds,
                             currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                            userLat: _userLat, userLon: _userLon,
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
@@ -605,6 +677,37 @@ class _F2BHomePageState extends State<F2BHomePage> {
                             wishlistIds: _wishlistIds,
                             cartProductIds: _cartProductIds,
                             currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                            userLat: _userLat, userLon: _userLon,
+                            onTap: (p) => Navigator.push(ctx,
+                                MaterialPageRoute(builder: (_) =>
+                                    F2BProductDetailPage(product: p))),
+                            onWishlist: (p) => _toggleWishlist(ctx, p.id),
+                            onAddToCart: (p) => _addToCart(ctx, p),
+                            onEdit: (p) => _editProduct(ctx, p),
+                            onDelete: (p) => _deleteProduct(ctx, p),
+                          ),
+                        ),
+                      ],
+                      // Nearby Farm Fresh
+                      if (nearby.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: _SectionHeader(
+                            title: 'Nearest to You',
+                            subtitle: 'Farm fresh produce closest to your location',
+                            icon: Icons.location_on_rounded,
+                            iconColor: const Color(0xFF006064),
+                            onSeeAll: () => Navigator.push(ctx,
+                                MaterialPageRoute(builder: (_) => const F2BSearchPage())),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: _HScrollSection(
+                            items: nearby, langCode: langCode,
+                            wishlistIds: _wishlistIds,
+                            cartProductIds: _cartProductIds,
+                            currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                            userLat: _userLat,
+                            userLon: _userLon,
                             onTap: (p) => Navigator.push(ctx,
                                 MaterialPageRoute(builder: (_) =>
                                     F2BProductDetailPage(product: p))),
@@ -622,7 +725,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                       ),
                       // Featured Farmers
                       if (farmers.isNotEmpty) ...[
-                        SliverToBoxAdapter(
+                        const SliverToBoxAdapter(
                           child: _SectionHeader(
                             title: 'Featured Farmers',
                             subtitle: 'Top verified suppliers',
@@ -674,7 +777,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              childAspectRatio: 0.56,
+                              childAspectRatio: 0.62,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (ctx, i) {
@@ -686,6 +789,7 @@ class _F2BHomePageState extends State<F2BHomePage> {
                                   isWishlisted: _wishlistIds.contains(p.id),
                                   isInCart: _cartProductIds.contains(p.id),
                                   isOwner: isOwner,
+                                  distanceKm: _distanceFor(p),
                                   onTap: () => Navigator.push(ctx,
                                       MaterialPageRoute(builder: (_) =>
                                           F2BProductDetailPage(product: p))),
@@ -718,7 +822,7 @@ class _GBHeader extends StatelessWidget {
   final int cartCount;
   final int newOrderCount;
   final VoidCallback onWishlist, onCart, onSellerOrders,
-      onDashboard, onMap;
+      onBuyerOrders, onDashboard, onMap;
   final VoidCallback? onBack;
   const _GBHeader({
     required this.topPad,
@@ -727,6 +831,7 @@ class _GBHeader extends StatelessWidget {
     required this.onWishlist,
     required this.onCart,
     required this.onSellerOrders,
+    required this.onBuyerOrders,
     required this.onDashboard,
     required this.onMap,
     this.onBack,
@@ -790,7 +895,7 @@ class _GBHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Text('🌿', style: TextStyle(fontSize: 18)),
+            Icon(Icons.eco_rounded, color: Colors.white, size: 18),
             SizedBox(width: 6),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,6 +913,12 @@ class _GBHeader extends StatelessWidget {
           ]),
         ),
         const Spacer(),
+        // Buyer orders (shopping bag)
+        IconButton(
+            icon: const Icon(Icons.shopping_bag_outlined, size: 22),
+            color: Colors.white,
+            tooltip: 'My Purchases',
+            onPressed: onBuyerOrders),
         // Seller orders badge (receipt icon)
         _badgeIcon(
             icon: Icons.receipt_long_rounded,
@@ -896,66 +1007,89 @@ class _BannerCarousel extends StatelessWidget {
             final b = banners[i];
             return Container(
               margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              decoration: BoxDecoration(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                    colors: [b.color1, b.color2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight),
-              ),
-              child: Stack(children: [
-                Positioned(right: -20, bottom: -20,
-                    child: Icon(b.icon, size: 130,
-                        color: Colors.white.withValues(alpha: 0.09))),
-                Positioned(top: -30, right: 60,
-                    child: Container(width: 100, height: 100,
-                        decoration: BoxDecoration(shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.06)))),
-                Positioned(bottom: -10, left: 40,
-                    child: Container(width: 60, height: 60,
-                        decoration: BoxDecoration(shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.06)))),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 90, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(20),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Photography background
+                    if (b.imageUrl != null)
+                      Image.network(b.imageUrl!, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [b.color1, b.color2],
+                              begin: Alignment.topLeft, end: Alignment.bottomRight),
+                          ),
                         ),
-                        child: Text(b.tag,
-                            style: const TextStyle(color: Colors.white,
-                                fontSize: 11, fontWeight: FontWeight.w700)),
-                      ),
-                      const SizedBox(height: 9),
-                      Text(b.title,
-                          style: const TextStyle(color: Colors.white,
-                              fontSize: 21, fontWeight: FontWeight.w900,
-                              height: 1.1)),
-                      const SizedBox(height: 5),
-                      Text(b.subtitle,
-                          style: const TextStyle(color: Colors.white70,
-                              fontSize: 12)),
-                      const SizedBox(height: 11),
+                      )
+                    else
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(color: Colors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: const Text('Explore Now',
-                            style: TextStyle(fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: KMColors.primaryDark)),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [b.color1, b.color2],
+                            begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        ),
                       ),
-                    ],
-                  ),
+                    // Left-heavy gradient overlay for text readability
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            b.color1.withValues(alpha: 0.86),
+                            b.color2.withValues(alpha: 0.50),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                    ),
+                    // Decorative elements
+                    Positioned(right: -20, bottom: -20,
+                        child: Icon(b.icon, size: 130,
+                            color: Colors.white.withValues(alpha: 0.10))),
+                    // Text content
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 18, 90, 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.22),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(b.tag,
+                                style: const TextStyle(color: Colors.white,
+                                    fontSize: 11, fontWeight: FontWeight.w700)),
+                          ),
+                          const SizedBox(height: 9),
+                          Text(b.title,
+                              style: const TextStyle(color: Colors.white,
+                                  fontSize: 21, fontWeight: FontWeight.w900,
+                                  height: 1.1)),
+                          const SizedBox(height: 5),
+                          Text(b.subtitle,
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.88),
+                                  fontSize: 12)),
+                          const SizedBox(height: 11),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(color: Colors.white,
+                                borderRadius: BorderRadius.circular(20)),
+                            child: const Text('Explore Now',
+                                style: TextStyle(fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: KMColors.primaryDark)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             );
           },
         ),
@@ -1041,7 +1175,7 @@ class _CategoryGrid extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(c.emoji, style: const TextStyle(fontSize: 22)),
+                    Icon(c.icon, size: 22, color: sel ? Colors.white : c.color1),
                     const SizedBox(height: 4),
                     Text(c.label,
                         style: TextStyle(fontSize: 9.5,
@@ -1104,7 +1238,7 @@ class _SectionHeader extends StatelessWidget {
         if (onSeeAll != null)
           GestureDetector(
             onTap: onSeeAll,
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
+            child: const Row(mainAxisSize: MainAxisSize.min, children: [
               Text('See All',
                   style: TextStyle(fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1126,6 +1260,8 @@ class _HScrollSection extends StatelessWidget {
   final Set<String> wishlistIds;
   final Set<String> cartProductIds;
   final String currentUid;
+  final double? userLat;
+  final double? userLon;
   final ValueChanged<ExportProduct> onTap;
   final ValueChanged<ExportProduct> onWishlist;
   final ValueChanged<ExportProduct> onAddToCart;
@@ -1142,7 +1278,15 @@ class _HScrollSection extends StatelessWidget {
     required this.onAddToCart,
     required this.onEdit,
     required this.onDelete,
+    this.userLat,
+    this.userLon,
   });
+
+  double? _dist(ExportProduct p) {
+    if (userLat == null || userLon == null) return null;
+    if (!DistanceService.isValid(p.locationLat, p.locationLon)) return null;
+    return DistanceService.haversine(userLat!, userLon!, p.locationLat!, p.locationLon!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1160,6 +1304,7 @@ class _HScrollSection extends StatelessWidget {
             isWishlisted: wishlistIds.contains(p.id),
             isInCart: cartProductIds.contains(p.id),
             isOwner: isOwner,
+            distanceKm: _dist(p),
             onTap: () => onTap(p),
             onWishlist: () => onWishlist(p),
             onAddToCart: () => onAddToCart(p),
@@ -1201,6 +1346,7 @@ class _PremiumCard extends StatelessWidget {
   final bool isWishlisted;
   final bool isInCart;
   final bool isOwner;
+  final double? distanceKm;
   final VoidCallback onTap;
   final VoidCallback onWishlist;
   final VoidCallback onAddToCart;
@@ -1211,6 +1357,7 @@ class _PremiumCard extends StatelessWidget {
     required this.isWishlisted, required this.isInCart, required this.isOwner,
     required this.onTap, required this.onWishlist,
     required this.onAddToCart, required this.onEdit, required this.onDelete,
+    this.distanceKm,
   });
 
   @override
@@ -1305,7 +1452,7 @@ class _PremiumCard extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: const Color(0xFF2E7D32),
                           borderRadius: BorderRadius.circular(8)),
-                      child: const Text('🌿 Organic',
+                      child: const Text('Organic',
                           style: TextStyle(color: Colors.white,
                               fontSize: 8, fontWeight: FontWeight.w700)),
                     ),
@@ -1319,7 +1466,7 @@ class _PremiumCard extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: const Color(0xFFFF8F00),
                           borderRadius: BorderRadius.circular(6)),
-                      child: const Text('⭐ Grade A',
+                      child: const Text('Grade A',
                           style: TextStyle(color: Colors.white,
                               fontSize: 8, fontWeight: FontWeight.w700)),
                     ),
@@ -1358,56 +1505,61 @@ class _PremiumCard extends StatelessWidget {
                             color: KMColors.textSecondary),
                         maxLines: 1, overflow: TextOverflow.ellipsis)),
                   ]),
-                  // Add to cart / edit button
-                  const SizedBox(height: 6),
-                  GestureDetector(
-                    onTap: isOwner ? onEdit : onAddToCart,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isOwner
-                            ? KMColors.primaryDark.withValues(alpha: 0.10)
-                            : (isInCart
-                                ? KMColors.weatherPrimary.withValues(alpha: 0.10)
-                                : KMColors.primaryDark),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isOwner
-                                ? Icons.edit_rounded
-                                : (isInCart
-                                    ? Icons.shopping_cart_rounded
-                                    : Icons.add_shopping_cart_rounded),
-                            size: 12,
-                            color: isOwner
-                                ? KMColors.primaryDark
-                                : (isInCart
-                                    ? KMColors.weatherPrimary
-                                    : Colors.white),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isOwner
-                                ? 'Edit'
-                                : (isInCart ? 'In Cart' : 'Add'),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: isOwner
-                                  ? KMColors.primaryDark
-                                  : (isInCart
-                                      ? KMColors.weatherPrimary
-                                      : Colors.white),
+                  if (distanceKm != null) ...[
+                    const SizedBox(height: 2),
+                    Row(children: [
+                      const Icon(Icons.near_me_rounded,
+                          size: 10, color: Color(0xFF006064)),
+                      const SizedBox(width: 2),
+                      Text(DistanceService.format(distanceKm!),
+                          style: const TextStyle(
+                              fontSize: 9.5,
+                              color: Color(0xFF006064),
+                              fontWeight: FontWeight.w600)),
+                    ]),
+                  ],
+                  // Add to cart button (owners use the 3-dot menu instead)
+                  if (!isOwner) ...[
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: onAddToCart,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isInCart
+                              ? KMColors.weatherPrimary.withValues(alpha: 0.10)
+                              : KMColors.primaryDark,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isInCart
+                                  ? Icons.shopping_cart_rounded
+                                  : Icons.add_shopping_cart_rounded,
+                              size: 12,
+                              color: isInCart
+                                  ? KMColors.weatherPrimary
+                                  : Colors.white,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              isInCart ? 'In Cart' : 'Add',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: isInCart
+                                    ? KMColors.weatherPrimary
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -1499,7 +1651,7 @@ class _RfqBanner extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Text('📋', style: TextStyle(fontSize: 26)),
+            child: const Icon(Icons.assignment_outlined, size: 26, color: Colors.white),
           ),
           const SizedBox(width: 14),
           Expanded(child: Column(
@@ -1702,6 +1854,7 @@ class _GridCard extends StatelessWidget {
   final bool isWishlisted;
   final bool isInCart;
   final bool isOwner;
+  final double? distanceKm;
   final VoidCallback onTap;
   final VoidCallback onWishlist;
   final VoidCallback onAddToCart;
@@ -1712,6 +1865,7 @@ class _GridCard extends StatelessWidget {
     required this.isWishlisted, required this.isInCart, required this.isOwner,
     required this.onTap, required this.onWishlist,
     required this.onAddToCart, required this.onEdit, required this.onDelete,
+    this.distanceKm,
   });
 
   @override
@@ -1813,7 +1967,7 @@ class _GridCard extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: const Color(0xFF2E7D32),
                           borderRadius: BorderRadius.circular(8)),
-                      child: const Text('🌿 Organic',
+                      child: const Text('Organic',
                           style: TextStyle(color: Colors.white,
                               fontSize: 8, fontWeight: FontWeight.w800)),
                     ),
@@ -1827,7 +1981,7 @@ class _GridCard extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: const Color(0xFFFF8F00),
                           borderRadius: BorderRadius.circular(6)),
-                      child: const Text('⭐ A',
+                      child: const Text('Grade A',
                           style: TextStyle(color: Colors.white,
                               fontSize: 8, fontWeight: FontWeight.w800)),
                     ),
@@ -1835,77 +1989,69 @@ class _GridCard extends StatelessWidget {
               ]),
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                      style: const TextStyle(fontSize: 13,
-                          fontWeight: FontWeight.w700, height: 1.2,
-                          color: KMColors.textPrimary),
-                      maxLines: 2, overflow: TextOverflow.ellipsis),
-                  if (isOwner)
-                    const Text('You listed this',
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: KMColors.primaryDark,
-                            fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(fontSize: 13,
+                        fontWeight: FontWeight.w700, height: 1.2,
+                        color: KMColors.textPrimary),
+                    maxLines: 2, overflow: TextOverflow.ellipsis),
+                if (isOwner)
+                  const Text('Your listing',
+                      style: TextStyle(fontSize: 9,
+                          color: KMColors.primaryDark,
+                          fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   Text('₹${product.pricePerUnit}',
-                      style: const TextStyle(fontSize: 16,
+                      style: const TextStyle(fontSize: 15,
                           fontWeight: FontWeight.w900,
                           color: KMColors.primaryDark)),
-                  Text(product.quantity,
-                      style: const TextStyle(fontSize: 10,
-                          color: KMColors.textSecondary)),
-                  const Spacer(),
-                  Row(children: [
-                    const Icon(Icons.person_outline_rounded,
-                        size: 10, color: KMColors.textSecondary),
-                    const SizedBox(width: 3),
-                    Expanded(child: Text(product.farmerName,
+                  const SizedBox(width: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Text(product.quantity,
                         style: const TextStyle(fontSize: 10,
-                            color: KMColors.textSecondary),
-                        maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  ]),
-                  const SizedBox(height: 2),
-                  Row(children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 10, color: KMColors.textSecondary),
-                    const SizedBox(width: 3),
-                    Expanded(child: Text(loc,
-                        style: const TextStyle(fontSize: 10,
-                            color: KMColors.textSecondary),
-                        maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  ]),
+                            color: KMColors.textSecondary)),
+                  ),
+                ]),
+                const SizedBox(height: 4),
+                Row(children: [
+                  const Icon(Icons.location_on_outlined,
+                      size: 10, color: KMColors.textSecondary),
+                  const SizedBox(width: 2),
+                  Expanded(child: Text(
+                    distanceKm != null
+                        ? '${DistanceService.format(distanceKm!)} · $loc'
+                        : loc,
+                    style: const TextStyle(fontSize: 10,
+                        color: KMColors.textSecondary),
+                    maxLines: 1, overflow: TextOverflow.ellipsis)),
+                ]),
+                if (!isOwner) ...[
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity, height: 30,
                     child: ElevatedButton.icon(
-                      onPressed: isOwner ? onEdit : onAddToCart,
+                      onPressed: onAddToCart,
                       icon: Icon(
-                        isOwner
-                            ? Icons.edit_rounded
-                            : (isInCart
-                                ? Icons.shopping_cart_rounded
-                                : Icons.add_shopping_cart_rounded),
+                        isInCart
+                            ? Icons.shopping_cart_rounded
+                            : Icons.add_shopping_cart_rounded,
                         size: 13,
                       ),
                       label: Text(
-                        isOwner
-                            ? 'Edit'
-                            : (isInCart ? 'In Cart' : 'Add to Cart'),
+                        isInCart ? 'In Cart' : 'Add to Cart',
                         style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w800),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOwner
-                            ? const Color(0xFF2E7D32)
-                            : (isInCart
-                                ? KMColors.weatherPrimary
-                                : KMColors.primaryDark),
+                        backgroundColor: isInCart
+                            ? KMColors.weatherPrimary
+                            : KMColors.primaryDark,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.zero, elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -1914,7 +2060,7 @@ class _GridCard extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
         ]),

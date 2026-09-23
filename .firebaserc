@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "krishimithra-650c2"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

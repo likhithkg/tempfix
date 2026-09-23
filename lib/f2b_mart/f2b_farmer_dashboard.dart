@@ -39,7 +39,7 @@ class _F2BFarmerDashboardState extends State<F2BFarmerDashboard>
     _tab = TabController(length: 2, vsync: this);
     final uid = _uid;
     if (uid != null) {
-      _listingsSub = _svc.getMyExportProducts(uid).listen((list) {
+      _listingsSub = _svc.getMyF2BListings(uid).listen((list) {
         if (mounted) setState(() => _myListings = list);
       });
       _ordersSub = _svc.streamPOsForFarmer(uid).listen((orders) {

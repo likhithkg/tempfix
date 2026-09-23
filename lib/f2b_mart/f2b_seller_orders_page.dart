@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'f2b_models.dart';
 import 'f2b_cart_service.dart';
 
@@ -94,7 +96,7 @@ class _OrderList extends StatelessWidget {
     if (orders.isEmpty) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(_emptyEmoji(status), style: const TextStyle(fontSize: 56)),
+          Icon(_emptyIcon(status), size: 56, color: const Color(0xFF9E9E9E)),
           const SizedBox(height: 14),
           Text(_emptyLabel(status),
               style: const TextStyle(
@@ -113,12 +115,12 @@ class _OrderList extends StatelessWidget {
     );
   }
 
-  String _emptyEmoji(String s) {
+  IconData _emptyIcon(String s) {
     switch (s) {
-      case 'placed':    return '📭';
-      case 'confirmed': return '⏳';
-      case 'ready':     return '📦';
-      default:          return '✅';
+      case 'placed':    return Icons.inbox_rounded;
+      case 'confirmed': return Icons.schedule_rounded;
+      case 'ready':     return Icons.inventory_2_outlined;
+      default:          return Icons.check_circle_rounded;
     }
   }
 
@@ -197,7 +199,7 @@ class _OrderCardState extends State<_OrderCard> {
                 const BorderRadius.vertical(top: Radius.circular(18)),
           ),
           child: Row(children: [
-            const Text('🏪', style: TextStyle(fontSize: 18)),
+            const Icon(Icons.store_rounded, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -291,6 +293,14 @@ class _OrderCardState extends State<_OrderCard> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 14),
           child: Divider(height: 20),
+        ),
+
+        // ── Buyer contact ─────────────────────────────────────────────
+        _BuyerContactSection(
+          buyerId: order.userId,
+          buyerName: order.userName,
+          embeddedPhone: order.buyerPhone,
+          embeddedEmail: order.buyerEmail,
         ),
 
         // Total + action
@@ -397,5 +407,127 @@ class _OrderCardState extends State<_OrderCard> {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${dt.day}/${dt.month}/${dt.year}';
+  }
+}
+
+// ─── Buyer contact card ───────────────────────────────────────────────────────
+
+class _BuyerContactSection extends StatelessWidget {
+  final String buyerId;
+  final String buyerName;
+  final String? embeddedPhone;
+  final String? embeddedEmail;
+  const _BuyerContactSection({
+    required this.buyerId,
+    required this.buyerName,
+    this.embeddedPhone,
+    this.embeddedEmail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // If contact info is already embedded in the order, show immediately
+    if (embeddedPhone != null || embeddedEmail != null) {
+      return _contactCard(context, embeddedPhone, embeddedEmail, loading: false);
+    }
+    // Fallback: fetch from users collection (new rule allows this)
+    return FutureBuilder<DocumentSnapshot>(
+      future: buyerId.isNotEmpty
+          ? FirebaseFirestore.instance.collection('users').doc(buyerId).get()
+          : null,
+      builder: (context, snap) {
+        String? phone;
+        String? email;
+        if (snap.hasData && snap.data != null && (snap.data as DocumentSnapshot).exists) {
+          final data = (snap.data as DocumentSnapshot).data() as Map<String, dynamic>;
+          phone = (data['phone'] as String? ?? '').trim();
+          email = (data['email'] as String? ?? '').trim();
+          if (phone.isEmpty) phone = null;
+          if (email.isEmpty) email = null;
+        }
+        return _contactCard(
+          context, phone, email,
+          loading: snap.connectionState == ConnectionState.waiting,
+        );
+      },
+    );
+  }
+
+  Widget _contactCard(BuildContext context, String? phone, String? email,
+      {required bool loading}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFF39C12).withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(children: [
+              Icon(Icons.person_rounded, size: 14, color: Color(0xFFF39C12)),
+              SizedBox(width: 6),
+              Text('Buyer Details',
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFE65100))),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.badge_outlined, size: 14, color: Color(0xFF555555)),
+              const SizedBox(width: 6),
+              Text(buyerName.isNotEmpty ? buyerName : 'Customer',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            ]),
+            if (loading)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: SizedBox(
+                    height: 14, width: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF39C12))),
+              ),
+            if (email != null) ...[
+              const SizedBox(height: 6),
+              Row(children: [
+                const Icon(Icons.email_outlined, size: 14, color: Color(0xFF555555)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(email,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF444444)),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ]),
+            ],
+            if (phone != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => launchUrl(Uri.parse('tel:$phone')),
+                  icon: const Icon(Icons.call_rounded, size: 15),
+                  label: Text(phone,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFE65100),
+                    side: const BorderSide(color: Color(0xFFF39C12), width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+            ],
+            if (!loading && phone == null && email == null)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text('Buyer has not added contact info yet',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

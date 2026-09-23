@@ -1,11 +1,12 @@
 // lib/profile/profile_page.dart
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../chatbot/chatbot_page.dart';
+import '../config/km_images.dart';
 import '../exporter_hub/exporter_home_page.dart';
 import '../plant_vendor/plant_vendor_home.dart';
 import '../rent/rent_home_page.dart';
@@ -133,8 +134,11 @@ class _ProfilePageState extends State<ProfilePage>
     if (picked == null) return;
     setState(() => _uploadingImage = true);
     try {
-      final url =
-          await ProfileService.instance.uploadProfileImage(File(picked.path));
+      // readAsBytes() works on all platforms including Flutter Web.
+      // Do NOT use File(picked.path) — dart:io is not available on web.
+      final Uint8List bytes = await picked.readAsBytes();
+      final String mime = picked.mimeType ?? 'image/jpeg';
+      final url = await ProfileService.instance.uploadProfileImage(bytes, mime);
       await ProfileService.instance.updateFirebasePhotoUrl(url);
       await FirebaseAuth.instance.currentUser?.reload();
       _user = FirebaseAuth.instance.currentUser;
@@ -143,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage>
         _snack(AppLocalizations.of(context)!.profilePhotoUpdated);
       }
     } catch (e) {
-      if (mounted) _snack('Upload failed: $e', isError: true);
+      if (mounted) _snack('$e', isError: true);
     } finally {
       if (mounted) setState(() => _uploadingImage = false);
     }
@@ -393,11 +397,33 @@ class _ProfilePageState extends State<ProfilePage>
     final contact = email.isNotEmpty ? email : (phone.isNotEmpty ? phone : '—');
     final isVerified = _user?.emailVerified == true;
 
-    return Container(
-      decoration: const BoxDecoration(gradient: KMGradients.primaryHeader),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
+    return ClipRect(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.network(
+              KMImages.heroLand,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox(),
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    KMColors.primaryDark.withValues(alpha: 0.88),
+                    KMColors.primary.withValues(alpha: 0.70),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Column(children: [
             // Top row: back button + title + more options
@@ -576,6 +602,8 @@ class _ProfilePageState extends State<ProfilePage>
             ]),
           ]),
         ),
+      ),
+        ],
       ),
     );
   }

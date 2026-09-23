@@ -43,9 +43,6 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   // Work info
   final _expCtrl = TextEditingController();
   final _dailyWageCtrl = TextEditingController();
-  final _hourlyWageCtrl = TextEditingController();
-  final _monthlyWageCtrl = TextEditingController();
-  String _preferredWageType = 'daily';
   String _availability = 'available';
   final Set<String> _availabilityTypes = {};
   int _workingRadiusKm = 20;
@@ -86,11 +83,6 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
       _expCtrl.text = p.experienceYears.toString();
       _dailyWageCtrl.text =
           p.dailyWage > 0 ? p.dailyWage.toStringAsFixed(0) : '';
-      _hourlyWageCtrl.text =
-          p.hourlyWage > 0 ? p.hourlyWage.toStringAsFixed(0) : '';
-      _monthlyWageCtrl.text =
-          p.monthlyWage > 0 ? p.monthlyWage.toStringAsFixed(0) : '';
-      _preferredWageType = p.preferredWageType;
       _availability = p.availabilityStatus;
       _availabilityTypes.addAll(p.availabilityTypes);
       _workingRadiusKm = p.workingRadiusKm;
@@ -117,8 +109,6 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
     _pincodeCtrl.dispose();
     _expCtrl.dispose();
     _dailyWageCtrl.dispose();
-    _hourlyWageCtrl.dispose();
-    _monthlyWageCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
   }
@@ -168,7 +158,10 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
   Future<void> _getGPS() async {
     setState(() => _locating = true);
     try {
-      final perm = await Geolocator.requestPermission();
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
       if (perm == LocationPermission.denied ||
           perm == LocationPermission.deniedForever) {
         _snack('Location permission denied', isError: true);
@@ -176,22 +169,32 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
       }
       final pos = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.medium);
-      final places =
-          await placemarkFromCoordinates(pos.latitude, pos.longitude);
-      if (places.isNotEmpty && mounted) {
-        final pl = places.first;
-        setState(() {
-          _lat = pos.latitude;
-          _lon = pos.longitude;
-          _villageCtrl.text = pl.subLocality ?? pl.locality ?? '';
-          _talukCtrl.text = pl.subAdministrativeArea ?? '';
-          _districtCtrl.text = pl.administrativeArea ?? '';
-          _stateCtrl.text = pl.administrativeArea ?? '';
-          _pincodeCtrl.text = pl.postalCode ?? '';
-        });
+      if (!mounted) return;
+      setState(() {
+        _lat = pos.latitude;
+        _lon = pos.longitude;
+      });
+      try {
+        final places =
+            await placemarkFromCoordinates(pos.latitude, pos.longitude);
+        if (places.isNotEmpty && mounted) {
+          final pl = places.first;
+          setState(() {
+            _villageCtrl.text = pl.subLocality?.isNotEmpty == true
+                ? pl.subLocality!
+                : (pl.locality ?? '');
+            _talukCtrl.text = pl.subAdministrativeArea ?? '';
+            _districtCtrl.text = pl.subAdministrativeArea ?? '';
+            _stateCtrl.text = pl.administrativeArea ?? '';
+            _pincodeCtrl.text = pl.postalCode ?? '';
+          });
+        }
+      } catch (_) {
+        // Reverse geocoding failed (common on web) — coordinates already saved
+        if (mounted) _snack('Location found. Please fill address fields manually.');
       }
     } catch (_) {
-      _snack('Could not get location', isError: true);
+      _snack('Could not get location. Check browser/device permissions.', isError: true);
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -224,9 +227,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
         longitude: _lon,
         experienceYears: int.tryParse(_expCtrl.text) ?? 0,
         dailyWage: double.tryParse(_dailyWageCtrl.text) ?? 0,
-        hourlyWage: double.tryParse(_hourlyWageCtrl.text) ?? 0,
-        monthlyWage: double.tryParse(_monthlyWageCtrl.text) ?? 0,
-        preferredWageType: _preferredWageType,
+        hourlyWage: 0,
+        monthlyWage: 0,
+        preferredWageType: 'daily',
         availabilityStatus: _availability,
         availabilityTypes: _availabilityTypes.toList(),
         workingRadiusKm: _workingRadiusKm,
@@ -509,39 +512,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                 _field('Years of Experience', _expCtrl,
                     keyboardType: TextInputType.number,
                     hint: 'e.g. 3'),
-                _label('Preferred Wage Type'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: kWageTypeLabels.entries.map((e) {
-                    final sel = _preferredWageType == e.key;
-                    return ChoiceChip(
-                      label:
-                          Text(e.value, style: const TextStyle(fontSize: 12)),
-                      selected: sel,
-                      selectedColor: KMColors.primary,
-                      labelStyle: TextStyle(
-                          color: sel ? Colors.white : KMColors.textPrimary),
-                      onSelected: (_) =>
-                          setState(() => _preferredWageType = e.key),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 14),
-                Row(children: [
-                  Expanded(
-                      child: _field('Daily Wage (₹)', _dailyWageCtrl,
-                          keyboardType: TextInputType.number,
-                          hint: 'e.g. 500')),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: _field('Hourly Wage (₹)', _hourlyWageCtrl,
-                          keyboardType: TextInputType.number,
-                          hint: 'e.g. 80')),
-                ]),
-                _field('Monthly Wage (₹)', _monthlyWageCtrl,
+                _field('Daily Wage (₹)', _dailyWageCtrl,
                     keyboardType: TextInputType.number,
-                    hint: 'e.g. 12000'),
+                    hint: 'e.g. 500'),
               ]),
             ),
 
@@ -554,9 +527,9 @@ class _LabourProfileFormPageState extends State<LabourProfileFormPage> {
                 Wrap(
                   spacing: 8,
                   children: [
-                    ('available', '✅ Available', KMColors.available),
-                    ('busy', '⏳ Busy', Colors.orange),
-                    ('unavailable', '❌ Unavailable', Colors.red),
+                    ('available', 'Available', KMColors.available),
+                    ('busy', 'Busy', Colors.orange),
+                    ('unavailable', 'Unavailable', Colors.red),
                   ].map((e) {
                     final (val, lbl, col) = e;
                     final sel = _availability == val;

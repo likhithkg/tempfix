@@ -1,290 +1,511 @@
+// lib/exporter_hub/create_purchase_order_page.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'exporter_model.dart';
 import 'exporter_service.dart';
 import 'notifications_page.dart';
 import 'purchase_order_list_page.dart';
-import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 class CreatePurchaseOrderPage extends StatefulWidget {
   final ExportProduct listingData;
-  const CreatePurchaseOrderPage({Key? key, required this.listingData})
-      : super(key: key);
+  const CreatePurchaseOrderPage({super.key, required this.listingData});
 
   @override
-  State<CreatePurchaseOrderPage> createState() =>
-      _CreatePurchaseOrderPageState();
+  State<CreatePurchaseOrderPage> createState() => _CreatePurchaseOrderPageState();
 }
 
 class _CreatePurchaseOrderPageState extends State<CreatePurchaseOrderPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _qtyCtrl = TextEditingController();
-  final _contactCtrl = TextEditingController();
-  final _buyerNameCtrl = TextEditingController();
-  final svc = ExporterService();
+  final _svc = ExporterService();
+  final _deliveryCtrl = TextEditingController();
   bool _isSubmitting = false;
-  double _calculatedTotal = 0.0;
+  double _quantity = 1.0;
 
   @override
-  void initState() {
-    super.initState();
-    _prefillBuyer();
-    _qtyCtrl.addListener(_updateTotal);
+  void dispose() {
+    _deliveryCtrl.dispose();
+    super.dispose();
   }
 
-  void _prefillBuyer() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _buyerNameCtrl.text = user.displayName ?? '';
-      _contactCtrl.text = user.phoneNumber ?? '';
-    }
+  ExportProduct get p => widget.listingData;
+
+  String get _unit {
+    final q = p.quantity.toLowerCase();
+    if (q.contains('kg')) return 'kg';
+    if (q.contains('piece') || q.contains('pcs')) return 'pieces';
+    if (q.contains('tonne') || q.contains('ton')) return 'tonnes';
+    if (q.contains('quintal')) return 'quintals';
+    if (q.contains('litre') || q.contains('ltr')) return 'litres';
+    return 'units';
   }
 
-  void _updateTotal() {
-    final qty = _cleanNumber(_qtyCtrl.text);
-    final price = _cleanNumber(widget.listingData.pricePerUnit);
-    setState(() => _calculatedTotal = qty * price);
+  double get _pricePerUnit =>
+      double.tryParse(p.pricePerUnit.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+
+  double get _total => _quantity * _pricePerUnit;
+
+  void _increment() => setState(() => _quantity += 1);
+  void _decrement() {
+    if (_quantity > 1) setState(() => _quantity -= 1);
   }
 
-  double _cleanNumber(String input) {
-    final cleaned = input.replaceAll(RegExp(r'[^0-9.]'), '');
-    return double.tryParse(cleaned) ?? 0.0;
-  }
-
-  Future<void> _submit() async {
-    // validate form
-    if (!_formKey.currentState!.validate()) return;
-
+  Future<void> _confirmOrder() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // not signed in — navigate to login
-      Navigator.pushNamed(context, '/login');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to place an order')),
+      );
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     try {
-      // parse inputs safely
-      final qty = _cleanNumber(_qtyCtrl.text.trim());
-      if (qty <= 0) {
-        throw Exception('Enter a valid quantity');
-      }
+      final buyerName = user.displayName ?? user.email ?? 'Buyer';
+      final buyerPhone = user.phoneNumber ?? '';
 
-      final buyerName = _buyerNameCtrl.text.trim();
-      final buyerContact = _contactCtrl.text.trim();
-      final price = _cleanNumber(widget.listingData.pricePerUnit);
-      if (price <= 0) {
-        throw Exception('Invalid listing price');
-      }
-      final total = qty * price;
-
-      // items: include product name so seller dashboard can display it
-      final items = [
-        {
-          'listingId': widget.listingData.id,
-          'productName': widget.listingData.productName,
-          'qtyKg': qty,
-          'pricePerKg': price,
-          'createdAt': Timestamp.now(),
-        }
-      ];
-
-      // --- IMPORTANT: use createPOForListing so farmerId is resolved automatically ---
-      final docRef = await svc.createPOForListing(
-        listingId: widget.listingData.id,
+      final docRef = await _svc.createDirectOrder(
+        listingId: p.id,
         buyerId: user.uid,
         buyerName: buyerName,
-        buyerContact: buyerContact,
-        items: items,
-        totalAmount: total,
-        paymentTerms: {'advancePercent': 0},
+        buyerPhone: buyerPhone,
+        quantity: _quantity,
+        unit: _unit,
+        pricePerUnit: _pricePerUnit,
+        totalAmount: _total,
+        deliveryAddress: _deliveryCtrl.text.trim().isEmpty ? null : _deliveryCtrl.text.trim(),
+        productName: p.productName,
+        productImage: p.primaryImage,
       );
 
-      // Notify the seller about the new PO
-      final sellerId = widget.listingData.sellerUid;
-      if (sellerId.isNotEmpty) {
+      if (p.sellerUid.isNotEmpty) {
         NotificationService.send(
-          userId: sellerId,
-          type: 'new_purchase_order',
-          title: 'New Order Request',
+          userId: p.sellerUid,
+          type: 'new_order',
+          title: 'New Order Received',
           body:
-              '${buyerName.isNotEmpty ? buyerName : 'A buyer'} has placed an order for ${widget.listingData.productName}.',
+              '${buyerName.isNotEmpty ? buyerName : 'A buyer'} ordered ${_quantity.toStringAsFixed(0)} $_unit of ${p.productName}.',
           referenceId: docRef.id,
-          referenceType: 'purchase_order',
-        ).catchError((_) {}); // fire-and-forget; don't block the UX
+          referenceType: 'order',
+        ).catchError((_) {});
       }
 
       if (!mounted) return;
       setState(() => _isSubmitting = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order request sent! The seller has been notified.')),
-      );
-
-      // Navigate to the buyer's PO list
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => PurchaseOrderListPage(buyerId: user.uid)),
-      );
-    } on FirebaseException catch (fe) {
-      if (mounted) setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create PO: ${fe.message ?? fe.code}')),
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle, color: Colors.green, size: 40),
+              ),
+              const SizedBox(height: 16),
+              const Text('Order Placed!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(
+                'Your order for ${p.productName} has been sent to the farmer.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KMColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => PurchaseOrderListPage(buyerId: user.uid)),
+                  );
+                },
+                child: const Text('View My Orders'),
+              ),
+            ),
+          ],
+        ),
       );
     } catch (e) {
-      if (mounted) setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create PO: ${e.toString()}')),
-      );
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to place order: $e')),
+        );
+      }
     }
   }
 
   @override
-  void dispose() {
-    _qtyCtrl.removeListener(_updateTotal);
-    _qtyCtrl.dispose();
-    _contactCtrl.dispose();
-    _buyerNameCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final product = widget.listingData;
+    final hasImage = p.primaryImage.isNotEmpty;
 
-    // prepare seller display lines: include mobile if available
-    final sellerMobile = product.farmerMobile ?? '';
-    final sellerIdOrMobile = sellerMobile.isNotEmpty ? ' • $sellerMobile' : '';
-    final sellerLine = 'Seller: ${product.farmerName}$sellerIdOrMobile';
-
-    final l = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FBF7),
       appBar: AppBar(
-        title: Text(l.purchaseOrderTitle),
-        backgroundColor: Colors.green.shade700,
+        title: const Text('Buy Now'),
+        backgroundColor: KMColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-               Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    CircleAvatar(
-      radius: 35,
-
-      backgroundImage:
-          product.imageUrl != null &&
-                  product.imageUrl!.isNotEmpty
-              ? NetworkImage(product.imageUrl!)
-              : const AssetImage(
-                      'assets/farmer_logo.png')
-                  as ImageProvider,
-
-      onBackgroundImageError: (_, __) {},
-    ),
-
-    const SizedBox(width: 14),
-
-    Expanded(
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Text(
-            product.productName,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          
-        ],
-      ),
-    ),
-  ],
-),
-                const SizedBox(height: 8),
-                Text(sellerLine, style: const TextStyle(color: Colors.grey)),
-                const Divider(height: 24),
-
-                TextFormField(
-                  controller: _qtyCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: l.quantityLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (val) {
-                    final parsed = _cleanNumber(val ?? '');
-                    if (parsed <= 0) {
-                      return 'Enter a valid quantity';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _buyerNameCtrl,
-                  decoration: InputDecoration(
-                    labelText: l.yourNameLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (val) =>
-                      val == null || val.trim().isEmpty ? 'Enter your name' : null,
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _contactCtrl,
-                  decoration: InputDecoration(
-                    labelText: l.contactNumberLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (val) =>
-                      val == null || val.trim().isEmpty ? 'Enter contact number' : null,
-                ),
-                const SizedBox(height: 16),
-
-                Text(
-                  'Total: ₹${_calculatedTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600, color: Colors.green),
-                ),
-                const SizedBox(height: 24),
-
-                Center(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Product Card ──
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: hasImage
+                            ? Image.network(p.primaryImage,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const _ProductFallback())
+                            : const _ProductFallback(),
                       ),
-                      onPressed: _isSubmitting ? null : _submit,
-                      child: _isSubmitting
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text(l.placeOrder,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(p.productName,
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Row(children: [
+                            const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(p.farmerName,
+                                style:
+                                    const TextStyle(color: Colors.grey, fontSize: 13)),
+                          ]),
+                          const SizedBox(height: 3),
+                          Row(children: [
+                            const Icon(Icons.location_on_outlined,
+                                size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                p.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style:
+                                    const TextStyle(color: Colors.grey, fontSize: 13),
+                              ),
+                            ),
+                          ]),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Price Banner ──
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: KMColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: KMColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.currency_rupee, color: KMColors.primary, size: 22),
+                  Text(
+                    '${p.pricePerUnit} / $_unit',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: KMColors.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text('Available: ${p.quantity}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Quantity Selector ──
+            const Text('Quantity',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _QtyButton(icon: Icons.remove, onTap: _decrement),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _quantity.toStringAsFixed(0),
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _QtyButton(icon: Icons.add, onTap: _increment),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Text(
+                    _unit,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey),
                   ),
                 ),
               ],
             ),
-          ),
+
+            const SizedBox(height: 24),
+
+            // ── Delivery Address ──
+            const Text('Delivery Address',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _deliveryCtrl,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: 'Enter delivery address (optional)',
+                prefixIcon:
+                    const Icon(Icons.location_on_outlined, color: KMColors.primary),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300)),
+                focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide:
+                        BorderSide(color: KMColors.primary, width: 2)),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Order Summary ──
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Order Summary',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 12),
+                  _SummaryRow(
+                    label: p.productName,
+                    value:
+                        '₹${_pricePerUnit.toStringAsFixed(0)} × ${_quantity.toStringAsFixed(0)} $_unit',
+                  ),
+                  const Divider(height: 20),
+                  _SummaryRow(
+                    label: 'Subtotal',
+                    value: '₹${_total.toStringAsFixed(0)}',
+                    bold: true,
+                  ),
+                  const _SummaryRow(
+                    label: 'Delivery',
+                    value: 'To be arranged',
+                    valueColor: Colors.grey,
+                  ),
+                  const Divider(height: 20),
+                  _SummaryRow(
+                    label: 'Total',
+                    value: '₹${_total.toStringAsFixed(0)}',
+                    bold: true,
+                    large: true,
+                    valueColor: KMColors.primary,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ── Confirm Button ──
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KMColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 2,
+                ),
+                onPressed: _isSubmitting ? null : _confirmOrder,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.5),
+                      )
+                    : const Text('Confirm Order',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold)),
+              ),
+            ),
+
+            const SizedBox(height: 40),
+          ],
         ),
       ),
+    );
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+class _QtyButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _QtyButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: KMColors.primary,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+  final bool large;
+  final Color? valueColor;
+
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+    this.large = false,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: large ? 16 : 14,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              color: bold ? Colors.black87 : Colors.grey.shade600,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: large ? 18 : 14,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              color: valueColor ?? (bold ? Colors.black87 : Colors.grey.shade600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductFallback extends StatelessWidget {
+  const _ProductFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF00897B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+          child: Icon(Icons.grain, color: Colors.white54, size: 30)),
     );
   }
 }

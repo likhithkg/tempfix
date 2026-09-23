@@ -484,7 +484,7 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                         : p.languages.join(', ')),
                 if (p.isAadhaarVerified)
                   _DetailRow(Icons.verified_user_rounded, 'Aadhaar',
-                      '✅ Verified'),
+                      'Verified'),
               ],
             ),
           ),
@@ -542,17 +542,17 @@ class _LabourDetailPageState extends State<LabourDetailPage> {
                   const SizedBox(height: 12),
                   Wrap(spacing: 8, runSpacing: 8, children: [
                     if (p.isVerified)
-                      _Badge('✅ Verified Worker', KMColors.available),
+                      _Badge('Verified Worker', KMColors.available),
                     if (p.isAadhaarVerified)
-                      _Badge('🪪 Aadhaar Verified', KMColors.primary),
+                      _Badge('Aadhaar Verified', KMColors.primary),
                     if (p.rating >= 4.5)
-                      _Badge('⭐ Top Rated', KMColors.accent),
+                      _Badge('Top Rated', KMColors.accent),
                     if (p.completedJobs >= 10)
-                      _Badge('🏆 Trusted Worker', KMColors.rentPrimary),
+                      _Badge('Trusted Worker', KMColors.rentPrimary),
                     if (p.experienceYears >= 5)
-                      _Badge('💪 Experienced', Colors.purple),
+                      _Badge('Experienced', Colors.purple),
                     if (p.gender == 'Female')
-                      _Badge('👩 Women Worker', Colors.pink),
+                      _Badge('Women Worker', Colors.pink),
                   ]),
                 ],
               ),

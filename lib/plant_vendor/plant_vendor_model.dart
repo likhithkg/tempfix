@@ -17,6 +17,8 @@ class PlantVendor {
   final String ownerId; // owner fallback / compatibility
   final String description; // textual description
   final String? imageUrl;
+  // 'krishimithra' for company/admin products, 'vendor' for farmer/seller products
+  final String productSource;
 
   PlantVendor({
     required this.id,
@@ -35,6 +37,7 @@ class PlantVendor {
     required this.ownerId,
     required this.description,
     this.imageUrl,
+    this.productSource = 'vendor',
   });
 
   // Helper to safely parse numeric values (int/double/string)
@@ -113,6 +116,7 @@ class PlantVendor {
 
     final description = (map['description'] ?? map['desc'] ?? '').toString();
     final imageUrl = map['imageUrl'] != null ? map['imageUrl'].toString() : null;
+    final productSource = (map['productSource'] ?? 'vendor').toString();
 
     return PlantVendor(
       id: docId,
@@ -131,6 +135,7 @@ class PlantVendor {
       ownerId: ownerId,
       description: description,
       imageUrl: imageUrl,
+      productSource: productSource,
     );
   }
 
@@ -142,18 +147,20 @@ class PlantVendor {
       'quantity': quantity,
       'vendorName': vendorName,
       'phone': phone,
-      'location': location,
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
-      // Add GeoPoint 'location' for map-friendly queries if coords exist
-      if (latitude != 0.0 || longitude != 0.0) 'location': GeoPoint(latitude, longitude),
+      // Store GeoPoint when coords available, otherwise store the string location
+      'location': (latitude != 0.0 || longitude != 0.0)
+          ? GeoPoint(latitude, longitude)
+          : location,
       // note: prefer server timestamp when writing from client; callers may override
       'timestamp': Timestamp.fromDate(timestamp),
       'createdBy': createdBy,
       'ownerId': ownerId,
       'description': description,
       'imageUrl': imageUrl,
+      'productSource': productSource,
     };
   }
 
@@ -174,6 +181,7 @@ class PlantVendor {
     String? ownerId,
     String? description,
     String? imageUrl,
+    String? productSource,
   }) {
     return PlantVendor(
       id: id ?? this.id,
@@ -192,6 +200,7 @@ class PlantVendor {
       ownerId: ownerId ?? this.ownerId,
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
+      productSource: productSource ?? this.productSource,
     );
   }
 }

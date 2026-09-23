@@ -384,7 +384,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                   value: _foodIncluded,
                   onChanged: (v) => setState(() => _foodIncluded = v),
                   activeColor: KMColors.primary,
-                  title: const Text('🍱  Food Included'),
+                  title: const Text('Food Included'),
                   subtitle: const Text('Meals provided during work',
                       style: TextStyle(fontSize: 12)),
                   contentPadding: EdgeInsets.zero,
@@ -394,7 +394,7 @@ class _JobPostFormPageState extends State<JobPostFormPage> {
                   onChanged: (v) =>
                       setState(() => _accommodationIncluded = v),
                   activeColor: KMColors.primary,
-                  title: const Text('🏠  Accommodation Included'),
+                  title: const Text('Accommodation Included'),
                   subtitle: const Text('Staying arrangements provided',
                       style: TextStyle(fontSize: 12)),
                   contentPadding: EdgeInsets.zero,

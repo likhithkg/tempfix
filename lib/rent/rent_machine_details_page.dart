@@ -25,17 +25,17 @@ Color _typeColor(String type) {
   }
 }
 
-String _typeEmoji(String type) {
+IconData _typeIcon(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor':    return '🚜';
-    case 'harvester':  return '🌾';
-    case 'rotavator':  return '⚙️';
-    case 'cultivator': return '🌿';
-    case 'seeder':     return '🌱';
-    case 'hitachi':    return '⛏️';
-    case 'jcb':        return '🏗️';
-    case 'lorry':      return '🚚';
-    default:           return '🔧';
+    case 'tractor':    return Icons.agriculture_rounded;
+    case 'harvester':  return Icons.grass_rounded;
+    case 'rotavator':  return Icons.settings_rounded;
+    case 'cultivator': return Icons.eco_rounded;
+    case 'seeder':     return Icons.spa_rounded;
+    case 'hitachi':    return Icons.construction_rounded;
+    case 'jcb':        return Icons.construction_rounded;
+    case 'lorry':      return Icons.local_shipping_rounded;
+    default:           return Icons.build_rounded;
   }
 }
 
@@ -212,7 +212,7 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final color = _typeColor(_machine.type);
-    final emoji = _typeEmoji(_machine.type);
+    final icon = _typeIcon(_machine.type);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF5F5F5);
 
@@ -282,14 +282,13 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
                       errorBuilder: (_, __, ___) => Container(
                             color: color.withValues(alpha: 0.15),
                             child: Center(
-                                child: Text(emoji,
-                                    style: const TextStyle(fontSize: 80))),
+                                child: Icon(icon, size: 80, color: color)),
                           ))
                   : Container(
                       color: color.withValues(alpha: 0.15),
                       child: Center(
                           child:
-                              Text(emoji, style: const TextStyle(fontSize: 80))),
+                              Icon(icon, size: 80, color: color)),
                     ),
               const DecoratedBox(
                   decoration: BoxDecoration(
@@ -319,11 +318,15 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
                               decoration: BoxDecoration(
                                   color: color,
                                   borderRadius: BorderRadius.circular(8)),
-                              child: Text('$emoji ${_machine.type}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700)),
+                              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                Icon(icon, size: 11, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(_machine.type,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700)),
+                              ]),
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -420,7 +423,7 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _whatsApp,
-              icon: const Text('📱', style: TextStyle(fontSize: 16)),
+              icon: const Icon(Icons.phone_android_rounded, size: 16),
               label: const Text('WhatsApp',
                   style: TextStyle(fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
@@ -463,13 +466,13 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
 
   Widget _buildStatsRow() {
     return Row(children: [
-      _StatChip('⭐', _machine.rating.toStringAsFixed(1), 'Rating'),
+      _StatChip(Icons.star_rounded, _machine.rating.toStringAsFixed(1), 'Rating'),
       const SizedBox(width: 12),
-      _StatChip('📦', '${_machine.completedJobs}', 'Jobs Done'),
+      _StatChip(Icons.work_rounded, '${_machine.completedJobs}', 'Jobs Done'),
       const SizedBox(width: 12),
-      _StatChip('🔧', '${_machine.yearsInService}yr', 'In Service'),
+      _StatChip(Icons.build_rounded, '${_machine.yearsInService}yr', 'In Service'),
       const SizedBox(width: 12),
-      _StatChip('✅',
+      _StatChip(Icons.check_circle_rounded,
           '${(_machine.acceptanceRate * 100).toStringAsFixed(0)}%', 'Accept Rate'),
     ]);
   }
@@ -486,11 +489,15 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFFBC02D)),
           ),
-          child: Text('${b.emoji}  ${b.label}',
-              style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF795548))),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(b.icon, size: 12, color: const Color(0xFF795548)),
+            const SizedBox(width: 4),
+            Text(b.label,
+                style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF795548))),
+          ]),
         );
       }).toList(),
     );
@@ -662,24 +669,6 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
               ]),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(children: [
-                Text('₹${_machine.pricePerDay.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.w900,
-                        color: Color(0xFF424242))),
-                const Text('/day',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
-              ]),
-            ),
-          ),
         ]),
         const SizedBox(height: 12),
         Container(
@@ -743,7 +732,8 @@ class _RentMachineDetailsPageState extends State<RentMachineDetailsPage> {
 // ─── Supporting widgets ───────────────────────────────────────────────────────
 
 class _StatChip extends StatelessWidget {
-  final String icon, label, sub;
+  final IconData icon;
+  final String label, sub;
   const _StatChip(this.icon, this.label, this.sub);
 
   @override
@@ -760,7 +750,7 @@ class _StatChip extends StatelessWidget {
           ],
         ),
         child: Column(children: [
-          Text(icon, style: const TextStyle(fontSize: 18)),
+          Icon(icon, size: 18, color: const Color(0xFF616161)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
+import 'order_detail_page.dart';
 
 class SellerOrdersPage extends StatefulWidget {
   const SellerOrdersPage({super.key});
@@ -95,8 +96,7 @@ class _OrderList extends StatelessWidget {
     if (orders.isEmpty) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(_emptyEmoji(status),
-              style: const TextStyle(fontSize: 56)),
+          Icon(_emptyIcon(status), size: 56, color: const Color(0xFF9E9E9E)),
           const SizedBox(height: 14),
           Text(_emptyLabel(status),
               style: const TextStyle(
@@ -116,12 +116,12 @@ class _OrderList extends StatelessWidget {
     );
   }
 
-  String _emptyEmoji(String s) {
+  IconData _emptyIcon(String s) {
     switch (s) {
-      case 'placed':    return '📭';
-      case 'confirmed': return '⏳';
-      case 'ready':     return '📦';
-      default:          return '✅';
+      case 'placed':    return Icons.inbox_rounded;
+      case 'confirmed': return Icons.schedule_rounded;
+      case 'ready':     return Icons.inventory_2_outlined;
+      default:          return Icons.check_circle_rounded;
     }
   }
 
@@ -179,7 +179,13 @@ class _OrderCardState extends State<_OrderCard> {
     final statusColor = _statusColor(order.status);
     final createdStr = _formatDate(order.createdAt);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => OrderDetailPage(order: order)),
+      ),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -203,7 +209,7 @@ class _OrderCardState extends State<_OrderCard> {
                   const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             child: Row(children: [
-              Text('🏪', style: const TextStyle(fontSize: 18)),
+              const Icon(Icons.store_rounded, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -271,7 +277,7 @@ class _OrderCardState extends State<_OrderCard> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '${item.plantName}',
+                        item.plantName,
                         style: const TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w600),
                         maxLines: 1,
@@ -367,6 +373,7 @@ class _OrderCardState extends State<_OrderCard> {
           ),
         ],
       ),
+    ),
     );
   }
 

@@ -28,7 +28,6 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
 
   bool _loading = true;
   String? _error;
-  Position? _currentPosition;
   List<_NearbyFarmer> _nearby = [];
 
   late final AnimationController _animController;
@@ -50,7 +49,6 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
   Future<void> _initAndLoad() async {
     try {
       final pos = await _determinePosition();
-      _currentPosition = pos;
       await _loadNearbyFarmers(pos.latitude, pos.longitude);
       _animController.forward(from: 0);
     } catch (e) {
@@ -93,14 +91,16 @@ class _NearbyFarmersPageState extends State<NearbyFarmersPage>
         limit: 2000,
       );
       for (final e in svcRes) {
-        if (e is Map) collected.add(Map<String, dynamic>.from(e));
+        collected.add(e);
       }
     } catch (_) {}
 
     try {
       final snap = await _firestore.collection('export_products').get();
       for (final d in snap.docs) {
-        collected.add({...d.data(), '_docId': d.id, '_col': 'export_products'});
+        final data = d.data();
+        if ((data['listingSource'] ?? '') == 'f2b_mart') continue;
+        collected.add({...data, '_docId': d.id, '_col': 'export_products'});
       }
     } catch (_) {}
 

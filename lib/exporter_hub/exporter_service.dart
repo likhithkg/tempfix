@@ -52,6 +52,23 @@ class ExporterService {
         });
   }
 
+  /// Stream only GreenBazaar (f2b_mart) listings owned by the given user.
+  /// Used by F2BFarmerDashboard to show the seller their own F2B listings.
+  Stream<List<ExportProduct>> getMyF2BListings(String uid) {
+    return _productsRef
+        .where('ownerId', isEqualTo: uid)
+        .where('listingSource', isEqualTo: 'f2b_mart')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              data['id'] = doc.id;
+              return ExportProduct.fromMap(data);
+            })
+            .toList());
+  }
+
   /// Stream only products owned by the given user (Export Hub only).
   Stream<List<ExportProduct>> getMyExportProducts(String uid) {
     return _productsRef
@@ -452,11 +469,14 @@ class ExporterService {
   /// Stream analytics stats: totalFarmers, activeListings, pendingPOs, exportReady
   Stream<Map<String, int>> streamDashboardStats() {
     return _productsRef.snapshots().asyncMap((snap) async {
-      final products = snap.docs.map((d) {
-        final data = d.data() as Map<String, dynamic>;
-        data['id'] = d.id;
-        return data;
-      }).toList();
+      final products = snap.docs
+          .map((d) {
+            final data = d.data() as Map<String, dynamic>;
+            data['id'] = d.id;
+            return data;
+          })
+          .where((p) => (p['listingSource'] ?? '') != 'f2b_mart')
+          .toList();
 
       final farmerIds = products
           .map((p) => p['farmerId']?.toString() ?? '')
@@ -490,13 +510,16 @@ class ExporterService {
   Stream<List<ExportProduct>> streamRecentListings({int limit = 10}) {
     return _productsRef
         .orderBy('createdAt', descending: true)
-        .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
+        .map((snap) => snap.docs
+            .map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               data['id'] = doc.id;
               return ExportProduct.fromMap(data);
-            }).toList());
+            })
+            .where((p) => p.listingSource != 'f2b_mart')
+            .take(limit)
+            .toList());
   }
 
   /// Export-ready listings: grade A or organic
@@ -514,5 +537,126 @@ class ExporterService {
         ..sort((a, b) => b.quantityNum.compareTo(a.quantityNum));
       return sorted.length > limit ? sorted.sublist(0, limit) : sorted;
     });
+  }
+
+  // --------------------------------------------------------------------------
+  // Direct Orders (simplified marketplace flow)
+  // --------------------------------------------------------------------------
+
+  /// Create a direct marketplace order. Saves to purchase_orders with orderType='direct'.
+  Future<DocumentReference> createDirectOrder({
+    required String listingId,
+    required String buyerId,
+    required String buyerName,
+    required String buyerPhone,
+    required double quantity,
+    required String unit,
+    required double pricePerUnit,
+    required double totalAmount,
+    String? deliveryAddress,
+    String? productName,
+    String? productImage,
+  }) async {
+    final farmerId = await _resolveOwnerForListing(listingId);
+    if (farmerId == null || farmerId.isEmpty) {
+      throw Exception('Could not find farmer for this listing');
+    }
+
+    String? farmerName;
+    String? farmerPhone;
+    try {
+      final pSnap = await _productsRef.doc(listingId).get();
+      if (pSnap.exists) {
+        final pd = pSnap.data() as Map<String, dynamic>;
+        farmerName = (pd['farmerName'] ?? pd['ownerName'])?.toString();
+        farmerPhone = (pd['farmerMobile'] ?? pd['ownerPhone'])?.toString();
+      }
+    } catch (_) {}
+
+    final now = Timestamp.now();
+    final data = <String, dynamic>{
+      'orderType': 'direct',
+      'listingId': listingId,
+      'buyerId': buyerId,
+      'buyerName': buyerName,
+      'buyerContact': buyerPhone,
+      'buyerPhone': buyerPhone,
+      'farmerId': farmerId,
+      if (farmerName != null && farmerName.isNotEmpty) 'farmerName': farmerName,
+      if (farmerPhone != null && farmerPhone.isNotEmpty) 'farmerPhone': farmerPhone,
+      'productName': productName ?? '',
+      'productImage': productImage ?? '',
+      'quantity': quantity,
+      'unit': unit,
+      'pricePerUnit': pricePerUnit,
+      'totalAmount': totalAmount,
+      if (deliveryAddress != null && deliveryAddress.isNotEmpty) 'deliveryAddress': deliveryAddress,
+      'items': [
+        {
+          'listingId': listingId,
+          'productName': productName ?? '',
+          'productImage': productImage ?? '',
+          'qtyKg': quantity,
+          'unit': unit,
+          'pricePerKg': pricePerUnit,
+          'createdAt': now,
+        }
+      ],
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'history': [
+        {'status': 'pending', 'by': buyerId, 'note': 'Order placed', 'ts': now}
+      ],
+    };
+
+    return poRef.add(data);
+  }
+
+  /// Stream direct orders placed by a buyer.
+  Stream<List<Map<String, dynamic>>> streamBuyerOrders(String buyerId) {
+    return poRef
+        .where('buyerId', isEqualTo: buyerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .where((d) => (d.data() as Map<String, dynamic>)['orderType'] == 'direct')
+            .map((d) {
+              final m = d.data() as Map<String, dynamic>;
+              m['id'] = d.id;
+              return m;
+            })
+            .toList());
+  }
+
+  /// Stream direct orders received by a farmer.
+  Stream<List<Map<String, dynamic>>> streamFarmerOrders(String farmerId) {
+    return poRef
+        .where('farmerId', isEqualTo: farmerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .where((d) => (d.data() as Map<String, dynamic>)['orderType'] == 'direct')
+            .map((d) {
+              final m = d.data() as Map<String, dynamic>;
+              m['id'] = d.id;
+              return m;
+            })
+            .toList());
+  }
+
+  /// Stream all direct orders (admin view).
+  Stream<List<Map<String, dynamic>>> streamAllDirectOrders() {
+    return poRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .where((d) => (d.data() as Map<String, dynamic>)['orderType'] == 'direct')
+            .map((d) {
+              final m = d.data() as Map<String, dynamic>;
+              m['id'] = d.id;
+              return m;
+            })
+            .toList());
   }
 }

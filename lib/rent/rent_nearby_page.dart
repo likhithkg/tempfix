@@ -387,8 +387,8 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                                       style: const TextStyle(fontWeight: FontWeight.w700)),
                                   subtitle: Text(
                                     '${l.machineTypeLabel}: ${ContentTranslationService.translateMachineType(m.type, langCode)} • ${_formatDistance(dist)}'
-                                    '\n📍 ${l.locationLabel}: ${m.location != null ? ContentTranslationService.translateLocation(m.location!, langCode) : l.locationNotAvailable}'
-                                    '\n👤 ${l.ownerLabel} ${m.ownerName}',
+                                    '\n${l.locationLabel}: ${m.location != null ? ContentTranslationService.translateLocation(m.location!, langCode) : l.locationNotAvailable}'
+                                    '\n${l.ownerLabel} ${m.ownerName}',
                                     style: theme.textTheme.bodySmall,
                                   ),
                                   trailing: IconButton(
@@ -428,7 +428,7 @@ class _RentNearbyPageState extends State<RentNearbyPage> {
                 final loc = m.location != null
                     ? ContentTranslationService.translateLocation(m.location!, lc2)
                     : lc.locationNotAvailable;
-                return Text('📍 ${lc.locationLabel}: $loc\n${lc.ownerLabel} ${m.ownerName}');
+                return Text('${lc.locationLabel}: $loc\n${lc.ownerLabel} ${m.ownerName}');
               }),
             ),
             Row(children: [

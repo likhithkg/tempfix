@@ -45,7 +45,7 @@ class _DailyForecastState extends State<DailyForecast> {
                           ),
                         ),
                       ),
-                      Text(day.emoji, style: const TextStyle(fontSize: 22)),
+                      Icon(day.emoji, size: 22, color: Colors.white),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -87,9 +87,9 @@ class _DailyForecastState extends State<DailyForecast> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _DetailStat(icon: '💨', label: 'Wind', value: '${day.windSpeed.toStringAsFixed(0)} m/s'),
-                        _DetailStat(icon: '☀️', label: 'UV Index', value: '${day.uvIndex.toStringAsFixed(1)} (${WeatherService.uvLabel(day.uvIndex)})'),
-                        _DetailStat(icon: '🌧️', label: 'Precip', value: '${day.precipitationSum.toStringAsFixed(1)} mm'),
+                        _DetailStat(icon: Icons.air_rounded, label: 'Wind', value: '${day.windSpeed.toStringAsFixed(0)} m/s'),
+                        _DetailStat(icon: Icons.wb_sunny_rounded, label: 'UV Index', value: '${day.uvIndex.toStringAsFixed(1)} (${WeatherService.uvLabel(day.uvIndex)})'),
+                        _DetailStat(icon: Icons.water_drop_rounded, label: 'Precip', value: '${day.precipitationSum.toStringAsFixed(1)} mm'),
                       ],
                     ),
                     if (day.sunrise != null && day.sunset != null) ...[
@@ -98,12 +98,12 @@ class _DailyForecastState extends State<DailyForecast> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _DetailStat(
-                            icon: '🌅',
+                            icon: Icons.wb_twilight_rounded,
                             label: 'Sunrise',
                             value: DateFormat('h:mm a').format(day.sunrise!),
                           ),
                           _DetailStat(
-                            icon: '🌇',
+                            icon: Icons.wb_twilight_rounded,
                             label: 'Sunset',
                             value: DateFormat('h:mm a').format(day.sunset!),
                           ),
@@ -147,7 +147,7 @@ class _RainChip extends StatelessWidget {
 }
 
 class _DetailStat extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final String value;
   const _DetailStat({required this.icon, required this.label, required this.value});
@@ -156,7 +156,7 @@ class _DetailStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 18)),
+        Icon(icon, size: 18, color: Colors.white70),
         const SizedBox(height: 2),
         Text(value, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.white54)),

@@ -1,5 +1,6 @@
 {
   "appName": "ಕೃಷಿಮಿತ್ರ",
+  "appTagline": "ಪ್ರತಿ ರೈತನಿಗೆ ಸ್ಮಾರ್ಟ್ ಕೃಷಿ",
 
   "login": "ಲಾಗಿನ್",
   "signup": "ಸೈನ್ ಅಪ್",
@@ -861,6 +862,40 @@
   "sunset": "ಸೂರ್ಯಾಸ್ತ",
   "dayLength": "ಹಗಲಿನ ಅವಧಿ",
   "uvIndex": "UV ಸೂಚ್ಯಂಕ",
-  "tryAgain": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
+  "tryAgain": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+
+  "lcTitle": "ಲ್ಯಾಂಡ್ ಕನೆಕ್ಟ್",
+  "lcSubtitle": "ಕೃಷಿಗಾಗಿ ಜಮೀನು ಹುಡುಕಿ ಅಥವಾ ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ",
+  "lcHaveLand": "ನನ್ನ ಬಳಿ ಜಮೀನು ಇದೆ",
+  "lcHaveLandSub": "ನಿಮ್ಮ ಖಾಲಿ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ ಮತ್ತು ರೈತರನ್ನು ಹುಡುಕಿ",
+  "lcFindLand": "ಜಮೀನು ಹುಡುಕಿ",
+  "lcFindLandSub": "ಸಮೀಪದ ಲಭ್ಯ ಜಮೀನನ್ನು ನೋಡಿ",
+  "lcMyListings": "ನನ್ನ ಜಮೀನು ಪಟ್ಟಿಗಳು",
+  "lcMyListingsSub": "ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+  "lcCultivationRequests": "ಕೃಷಿ ವಿನಂತಿಗಳು",
+  "lcCultivationRequestsSub": "ನಿಮ್ಮ ಜಮೀನಿನ ವಿನಂತಿಗಳನ್ನು ನೋಡಿ",
+  "lcMyRequests": "ನನ್ನ ಕೃಷಿ ವಿನಂತಿಗಳು",
+  "lcMyRequestsSub": "ಜಮೀನು ಮಾಲೀಕರಿಗೆ ಕಳುಹಿಸಿದ ವಿನಂತಿಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+  "lcHowItWorks": "ಇದು ಹೇಗೆ ಕಾರ್ಯ ನಿರ್ವಹಿಸುತ್ತದೆ",
+  "lcDiscoveryTitle": "ಸಮೀಪದ ಜಮೀನು ಹುಡುಕಿ",
+  "lcSearchHint": "ಸ್ಥಳ, ಬೆಳೆ ಅಥವಾ ಜಮೀನು ಪ್ರಕಾರದಿಂದ ಹುಡುಕಿ...",
+  "lcEnableLocation": "ಸ್ಥಳ ಸಕ್ರಿಯಗೊಳಿಸಿ",
+  "lcRequestCultivate": "ಕೃಷಿ ವಿನಂತಿ ಮಾಡಿ",
+  "lcRequestAlreadySent": "ವಿನಂತಿ ಈಗಾಗಲೇ ಕಳುಹಿಸಲಾಗಿದೆ",
+  "lcSendRequest": "ಕೃಷಿ ವಿನಂತಿ ಕಳುಹಿಸಿ",
+  "lcSubmitRequest": "ವಿನಂತಿ ಸಲ್ಲಿಸಿ",
+  "lcWithdrawRequest": "ವಿನಂತಿ ಹಿಂಪಡೆಯಿರಿ",
+  "lcPendingTab": "ಬಾಕಿ ಇರುವ",
+  "lcAcceptedTab": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+  "lcRejectedTab": "ತಿರಸ್ಕರಿಸಲಾಗಿದೆ",
+  "lcActiveTab": "ಸಕ್ರಿಯ",
+  "lcPausedTab": "ನಿಲ್ಲಿಸಲಾಗಿದೆ",
+  "lcAddListing": "ಹೊಸ ಪಟ್ಟಿ ಸೇರಿಸಿ",
+  "lcListingFormTitle": "ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ",
+  "lcPrivacyNotice": "ನಿಮ್ಮ ನಿಖರ ಸ್ಥಳ ಖಾಸಗಿಯಾಗಿ ಇರಿಸಲಾಗಿದೆ. ವಿನಂತಿ ಸ್ವೀಕರಿಸುವವರೆಗೆ ಕೇವಲ ಗ್ರಾಮ ಮತ್ತು ಜಿಲ್ಲೆ ತೋರಿಸಲಾಗುತ್ತದೆ.",
+  "lcDisclaimerText": "KrishiMithra ಸಂಪರ್ಕವನ್ನು ಸುಲಭಗೊಳಿಸುತ್ತದೆ. ದಯವಿಟ್ಟು ಭೂಮಿ ಗುತ್ತಿಗೆ ಒಪ್ಪಂದವನ್ನು ಪ್ರತ್ಯೇಕವಾಗಿ ಮಾಡಿ.",
+  "lcRequestWithdrawn": "ವಿನಂತಿ ಹಿಂಪಡೆಯಲಾಗಿದೆ",
+  "lcRequestAcceptedMsg": "ವಿನಂತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ!",
+  "lcContactLandowner": "ಒಪ್ಪಂದದ ವಿವರಗಳನ್ನು ಚರ್ಚಿಸಲು ಜಮೀನು ಮಾಲೀಕರನ್ನು ಸಂಪರ್ಕಿಸಿ."
 }
 

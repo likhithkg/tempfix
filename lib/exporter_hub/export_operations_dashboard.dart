@@ -78,7 +78,9 @@ class _DashboardBodyState extends State<_DashboardBody> {
                   return StreamBuilder<QuerySnapshot>(
                     stream: _db.collection('purchase_orders').snapshots(),
                     builder: (context, poSnap) {
-                      final products = prodSnap.data?.docs ?? [];
+                      final products = (prodSnap.data?.docs ?? [])
+                          .where((d) => ((d.data() as Map<String, dynamic>)['listingSource'] ?? '') != 'f2b_mart')
+                          .toList();
                       final pos = poSnap.data?.docs ?? [];
 
                       final farmerIds = products
@@ -152,7 +154,9 @@ class _DashboardBodyState extends State<_DashboardBody> {
                 stream: _db.collection('export_products').snapshots(),
                 builder: (context, snap) {
                   if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-                  final docs = snap.data!.docs;
+                  final docs = snap.data!.docs.where(
+                    (d) => ((d.data() as Map<String, dynamic>)['listingSource'] ?? '') != 'f2b_mart',
+                  ).toList();
 
                   // Count by category
                   final Map<String, int> catCounts = {};
@@ -199,7 +203,9 @@ class _DashboardBodyState extends State<_DashboardBody> {
                 stream: _db.collection('export_products').snapshots(),
                 builder: (context, snap) {
                   if (!snap.hasData) return const SizedBox.shrink();
-                  final docs = snap.data!.docs;
+                  final docs = snap.data!.docs.where(
+                    (d) => ((d.data() as Map<String, dynamic>)['listingSource'] ?? '') != 'f2b_mart',
+                  ).toList();
                   final langCode = Localizations.localeOf(context).languageCode;
 
                   final Map<String, int> districtCounts = {};

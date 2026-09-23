@@ -74,8 +74,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(children: [
-              const Text('🌱',
-                  style: TextStyle(fontSize: 40)),
+              const Icon(Icons.eco_rounded, size: 40, color: Colors.white),
               const SizedBox(height: 8),
               Text(
                 isCancelled ? 'Order Cancelled' : 'Order Placed!',
@@ -174,8 +173,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Center(
-                          child: Text('🌿',
-                              style: TextStyle(fontSize: 18))),
+                          child: Icon(Icons.eco_rounded, size: 18, color: Color(0xFF2E7D32))),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

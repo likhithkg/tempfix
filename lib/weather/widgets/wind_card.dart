@@ -32,7 +32,7 @@ class WindCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.wind.toUpperCase(), emoji: '🌬️'),
+          GlassSectionHeader(title: l.wind.toUpperCase(), emoji: Icons.air_rounded),
           Row(
             children: [
               _CompassWidget(direction: windDirection),
@@ -64,8 +64,8 @@ class WindCard extends StatelessWidget {
                         ),
                         child: Text(
                           windSpeed > 12
-                              ? '⚠️ Very strong winds — avoid spraying and tall crop work.'
-                              : '⚠️ Moderate winds — spray early morning for best results.',
+                              ? 'Very strong winds — avoid spraying and tall crop work.'
+                              : 'Moderate winds — spray early morning for best results.',
                           style: const TextStyle(fontSize: 12, color: Colors.orange),
                         ),
                       ),

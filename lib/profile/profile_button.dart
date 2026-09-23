@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'profile_page.dart';
 
 class ProfileButton extends StatelessWidget {
-  const ProfileButton({Key? key}) : super(key: key);
+  const ProfileButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +23,13 @@ class ProfileButton extends StatelessWidget {
           .take(2)
           .join();
       avatarChild = CircleAvatar(
-        child: Text(initials.toUpperCase()),
         radius: 18,
+        child: Text(initials.toUpperCase()),
       );
     } else {
       avatarChild = const CircleAvatar(
-        child: Icon(Icons.person),
         radius: 18,
+        child: Icon(Icons.person),
       );
     }
 

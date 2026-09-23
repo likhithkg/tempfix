@@ -18,20 +18,21 @@ import '../l10n/app_localizations.dart';
 // ─── Category data ─────────────────────────────────────────────────────────
 
 class _CatData {
-  final String key, label, emoji;
+  final String key, label;
+  final IconData icon;
   final Color color;
-  const _CatData(this.key, this.label, this.emoji, this.color);
+  const _CatData(this.key, this.label, this.icon, this.color);
 }
 
 const _kCats = [
-  _CatData('All',                 'All Workers',       '👷', Color(0xFF388E3C)),
-  _CatData('Farm Labour',         'Farm Labour',        '🌾', Color(0xFF2E7D32)),
-  _CatData('Tractor Driver',      'Tractor Driver',     '🚜', Color(0xFFE65100)),
-  _CatData('Plantation Worker',   'Plantation',         '🌱', Color(0xFF00695C)),
-  _CatData('Sprayer Operator',    'Sprayer',            '💧', Color(0xFF1565C0)),
-  _CatData('Harvester Operator',  'Harvester',          '⚙️', Color(0xFF4A148C)),
-  _CatData('Machine Technician',  'Technician',         '🔧', Color(0xFF37474F)),
-  _CatData('Dairy Worker',        'Dairy',              '🐄', Color(0xFF880E4F)),
+  _CatData('All',                'All Workers',   Icons.people_rounded,        Color(0xFF388E3C)),
+  _CatData('Farm Labour',        'Farm Labour',   Icons.agriculture_outlined,  Color(0xFF2E7D32)),
+  _CatData('Tractor Driver',     'Tractor Driver', Icons.agriculture,          Color(0xFFE65100)),
+  _CatData('Plantation Worker',  'Plantation',    Icons.eco_rounded,           Color(0xFF00695C)),
+  _CatData('Sprayer Operator',   'Sprayer',       Icons.water_drop,            Color(0xFF1565C0)),
+  _CatData('Harvester Operator', 'Harvester',     Icons.settings_rounded,      Color(0xFF4A148C)),
+  _CatData('Machine Technician', 'Technician',    Icons.build_rounded,         Color(0xFF37474F)),
+  _CatData('Dairy Worker',       'Dairy',         Icons.pets,                  Color(0xFF880E4F)),
 ];
 
 // ─── Page ──────────────────────────────────────────────────────────────────
@@ -286,7 +287,7 @@ class _LabourHubListingPageState extends State<LabourHubListingPage> {
               if (filtered.isEmpty) {
                 return Center(child: Column(mainAxisSize: MainAxisSize.min,
                     children: [
-                  const Text('👷', style: TextStyle(fontSize: 52)),
+                  const Icon(Icons.construction, size: 52, color: KMColors.textSecondary),
                   const SizedBox(height: 12),
                   Text(l.noLabourFound,
                       style: const TextStyle(fontSize: 15,
@@ -389,7 +390,7 @@ class _LHHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                Text('👷', style: TextStyle(fontSize: 18)),
+                Icon(Icons.construction, size: 18, color: Colors.white),
                 SizedBox(width: 6),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,7 +518,7 @@ class _CategoryRow extends StatelessWidget {
                     : null,
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(c.emoji, style: const TextStyle(fontSize: 14)),
+                Icon(c.icon, size: 14, color: sel ? Colors.white : c.color),
                 const SizedBox(width: 5),
                 Text(c.label,
                     style: TextStyle(fontSize: 12,

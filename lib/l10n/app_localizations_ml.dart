@@ -12,6 +12,9 @@ class AppLocalizationsMl extends AppLocalizations {
   String get appName => 'കൃഷിമിത്ര';
 
   @override
+  String get appTagline => 'ഓരോ കർഷകനും സ്മാർട്ട് കൃഷി';
+
+  @override
   String get login => 'ലോഗിൻ';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get tryAgain => 'വീണ്ടും ശ്രമിക്കൂ';
+
+  @override
+  String get lcTitle => 'ലാൻഡ് കണക്ട്';
+
+  @override
+  String get lcSubtitle => 'കൃഷി ചെയ്യാൻ ഭൂമി തേടുക അല്ലെങ്കിൽ നിങ്ങളുടെ ഭൂമി ലിസ്റ്റ് ചെയ്യുക';
+
+  @override
+  String get lcHaveLand => 'എന്റെ പക്കൽ ഭൂമി ഉണ്ട്';
+
+  @override
+  String get lcHaveLandSub => 'നിങ്ങളുടെ ഉപയോഗിക്കാത്ത ഭൂമി ലിസ്റ്റ് ചെയ്ത് കർഷകരെ കണ്ടെത്തുക';
+
+  @override
+  String get lcFindLand => 'ഭൂമി തേടുക';
+
+  @override
+  String get lcFindLandSub => 'അടുത്തുള്ള ലഭ്യമായ ഭൂമി കാണുക';
+
+  @override
+  String get lcMyListings => 'എന്റെ ഭൂമി ലിസ്റ്റുകൾ';
+
+  @override
+  String get lcMyListingsSub => 'നിങ്ങളുടെ ഭൂമി ലിസ്റ്റുകൾ നിയന്ത്രിക്കുക';
+
+  @override
+  String get lcCultivationRequests => 'കൃഷി അഭ്യർത്ഥനകൾ';
+
+  @override
+  String get lcCultivationRequestsSub => 'നിങ്ങളുടെ ഭൂമിയിലെ അഭ്യർത്ഥനകൾ കാണുക';
+
+  @override
+  String get lcMyRequests => 'എന്റെ കൃഷി അഭ്യർത്ഥനകൾ';
+
+  @override
+  String get lcMyRequestsSub => 'ഭൂ ഉടമകൾക്ക് അയച്ച അഭ്യർത്ഥനകൾ ട്രാക്ക് ചെയ്യുക';
+
+  @override
+  String get lcHowItWorks => 'ഇത് എങ്ങനെ പ്രവർത്തിക്കുന്നു';
+
+  @override
+  String get lcDiscoveryTitle => 'അടുത്തുള്ള ഭൂമി തേടുക';
+
+  @override
+  String get lcSearchHint => 'സ്ഥലം, വിള അല്ലെങ്കിൽ ഭൂമി തരം ഉപയോഗിച്ച് തേടുക...';
+
+  @override
+  String get lcEnableLocation => 'ലൊക്കേഷൻ പ്രവർത്തനക്ഷമമാക്കുക';
+
+  @override
+  String get lcRequestCultivate => 'കൃഷി ചെയ്യാൻ അഭ്യർത്ഥിക്കുക';
+
+  @override
+  String get lcRequestAlreadySent => 'അഭ്യർത്ഥന ഇതിനകം അയച്ചു';
+
+  @override
+  String get lcSendRequest => 'കൃഷി അഭ്യർത്ഥന അയക്കുക';
+
+  @override
+  String get lcSubmitRequest => 'അഭ്യർത്ഥന സമർപ്പിക്കുക';
+
+  @override
+  String get lcWithdrawRequest => 'അഭ്യർത്ഥന പിൻവലിക്കുക';
+
+  @override
+  String get lcPendingTab => 'കാത്തിരിക്കുന്നു';
+
+  @override
+  String get lcAcceptedTab => 'സ്വീകരിച്ചു';
+
+  @override
+  String get lcRejectedTab => 'നിരസിച്ചു';
+
+  @override
+  String get lcActiveTab => 'സജീവം';
+
+  @override
+  String get lcPausedTab => 'നിർത്തിവച്ചു';
+
+  @override
+  String get lcAddListing => 'പുതിയ ലിസ്റ്റ് ചേർക്കുക';
+
+  @override
+  String get lcListingFormTitle => 'നിങ്ങളുടെ ഭൂമി ലിസ്റ്റ് ചെയ്യുക';
+
+  @override
+  String get lcPrivacyNotice => 'നിങ്ങളുടെ കൃത്യമായ ലൊക്കേഷൻ സ്വകാര്യമായി സൂക്ഷിക്കുന്നു. അഭ്യർത്ഥന സ്വീകരിക്കുന്നതുവരെ ഗ്രാമവും ജില്ലയും മാത്രം കാണിക്കും.';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra ബന്ധം സുഗമമാക്കുന്നു. ഭൂ പാട്ടക്കരാർ പ്രത്യേകം നടപ്പിലാക്കുക.';
+
+  @override
+  String get lcRequestWithdrawn => 'അഭ്യർത്ഥന പിൻവലിച്ചു';
+
+  @override
+  String get lcRequestAcceptedMsg => 'അഭ്യർത്ഥന സ്വീകരിച്ചു!';
+
+  @override
+  String get lcContactLandowner => 'കരാർ വിശദാംശങ്ങൾ ചർച്ച ചെയ്യാൻ ഭൂ ഉടമയെ ബന്ധപ്പെടുക.';
 }

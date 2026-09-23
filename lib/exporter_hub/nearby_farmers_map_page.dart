@@ -163,6 +163,7 @@ class _NearbyFarmersMapPageState extends State<NearbyFarmersMapPage> {
 
         for (final d in snap.docs) {
           final m = d.data();
+          if ((m['listingSource'] ?? '') == 'f2b_mart') continue;
           final lat = _toDouble(m['lat'] ?? m['latitude']);
           final lon = _toDouble(m['lon'] ?? m['longitude']);
           if (lat == null || lon == null) continue;
@@ -299,7 +300,7 @@ class _NearbyFarmersMapPageState extends State<NearbyFarmersMapPage> {
           height: 48,
           child: GestureDetector(
             onTap: () => _showFarmerSheet(f),
-            child: const Text('👨‍🌾', style: TextStyle(fontSize: 30)),
+            child: const Icon(Icons.person_rounded, size: 30, color: Colors.green),
           ),
         );
       }),

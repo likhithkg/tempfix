@@ -89,7 +89,7 @@ class PlantVendorService {
       }
     } on FirebaseException catch (e) {
       throw FirebaseException(
-        plugin: e.plugin ?? 'firestore',
+        plugin: e.plugin,
         code: e.code,
         message: 'Failed to add vendor: ${e.message ?? e.code}',
       );
@@ -233,7 +233,7 @@ class PlantVendorService {
       await docRef.delete();
     } on FirebaseException catch (e) {
       throw FirebaseException(
-        plugin: e.plugin ?? 'firestore',
+        plugin: e.plugin,
         code: e.code,
         message: 'Failed to delete vendor: ${e.message ?? e.code}',
       );

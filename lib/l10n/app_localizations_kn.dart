@@ -12,6 +12,9 @@ class AppLocalizationsKn extends AppLocalizations {
   String get appName => 'ಕೃಷಿಮಿತ್ರ';
 
   @override
+  String get appTagline => 'ಪ್ರತಿ ರೈತನಿಗೆ ಸ್ಮಾರ್ಟ್ ಕೃಷಿ';
+
+  @override
   String get login => 'ಲಾಗಿನ್';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get tryAgain => 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ';
+
+  @override
+  String get lcTitle => 'ಲ್ಯಾಂಡ್ ಕನೆಕ್ಟ್';
+
+  @override
+  String get lcSubtitle => 'ಕೃಷಿಗಾಗಿ ಜಮೀನು ಹುಡುಕಿ ಅಥವಾ ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ';
+
+  @override
+  String get lcHaveLand => 'ನನ್ನ ಬಳಿ ಜಮೀನು ಇದೆ';
+
+  @override
+  String get lcHaveLandSub => 'ನಿಮ್ಮ ಖಾಲಿ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ ಮತ್ತು ರೈತರನ್ನು ಹುಡುಕಿ';
+
+  @override
+  String get lcFindLand => 'ಜಮೀನು ಹುಡುಕಿ';
+
+  @override
+  String get lcFindLandSub => 'ಸಮೀಪದ ಲಭ್ಯ ಜಮೀನನ್ನು ನೋಡಿ';
+
+  @override
+  String get lcMyListings => 'ನನ್ನ ಜಮೀನು ಪಟ್ಟಿಗಳು';
+
+  @override
+  String get lcMyListingsSub => 'ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ';
+
+  @override
+  String get lcCultivationRequests => 'ಕೃಷಿ ವಿನಂತಿಗಳು';
+
+  @override
+  String get lcCultivationRequestsSub => 'ನಿಮ್ಮ ಜಮೀನಿನ ವಿನಂತಿಗಳನ್ನು ನೋಡಿ';
+
+  @override
+  String get lcMyRequests => 'ನನ್ನ ಕೃಷಿ ವಿನಂತಿಗಳು';
+
+  @override
+  String get lcMyRequestsSub => 'ಜಮೀನು ಮಾಲೀಕರಿಗೆ ಕಳುಹಿಸಿದ ವಿನಂತಿಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ';
+
+  @override
+  String get lcHowItWorks => 'ಇದು ಹೇಗೆ ಕಾರ್ಯ ನಿರ್ವಹಿಸುತ್ತದೆ';
+
+  @override
+  String get lcDiscoveryTitle => 'ಸಮೀಪದ ಜಮೀನು ಹುಡುಕಿ';
+
+  @override
+  String get lcSearchHint => 'ಸ್ಥಳ, ಬೆಳೆ ಅಥವಾ ಜಮೀನು ಪ್ರಕಾರದಿಂದ ಹುಡುಕಿ...';
+
+  @override
+  String get lcEnableLocation => 'ಸ್ಥಳ ಸಕ್ರಿಯಗೊಳಿಸಿ';
+
+  @override
+  String get lcRequestCultivate => 'ಕೃಷಿ ವಿನಂತಿ ಮಾಡಿ';
+
+  @override
+  String get lcRequestAlreadySent => 'ವಿನಂತಿ ಈಗಾಗಲೇ ಕಳುಹಿಸಲಾಗಿದೆ';
+
+  @override
+  String get lcSendRequest => 'ಕೃಷಿ ವಿನಂತಿ ಕಳುಹಿಸಿ';
+
+  @override
+  String get lcSubmitRequest => 'ವಿನಂತಿ ಸಲ್ಲಿಸಿ';
+
+  @override
+  String get lcWithdrawRequest => 'ವಿನಂತಿ ಹಿಂಪಡೆಯಿರಿ';
+
+  @override
+  String get lcPendingTab => 'ಬಾಕಿ ಇರುವ';
+
+  @override
+  String get lcAcceptedTab => 'ಸ್ವೀಕರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get lcRejectedTab => 'ತಿರಸ್ಕರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get lcActiveTab => 'ಸಕ್ರಿಯ';
+
+  @override
+  String get lcPausedTab => 'ನಿಲ್ಲಿಸಲಾಗಿದೆ';
+
+  @override
+  String get lcAddListing => 'ಹೊಸ ಪಟ್ಟಿ ಸೇರಿಸಿ';
+
+  @override
+  String get lcListingFormTitle => 'ನಿಮ್ಮ ಜಮೀನು ಪಟ್ಟಿ ಮಾಡಿ';
+
+  @override
+  String get lcPrivacyNotice => 'ನಿಮ್ಮ ನಿಖರ ಸ್ಥಳ ಖಾಸಗಿಯಾಗಿ ಇರಿಸಲಾಗಿದೆ. ವಿನಂತಿ ಸ್ವೀಕರಿಸುವವರೆಗೆ ಕೇವಲ ಗ್ರಾಮ ಮತ್ತು ಜಿಲ್ಲೆ ತೋರಿಸಲಾಗುತ್ತದೆ.';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra ಸಂಪರ್ಕವನ್ನು ಸುಲಭಗೊಳಿಸುತ್ತದೆ. ದಯವಿಟ್ಟು ಭೂಮಿ ಗುತ್ತಿಗೆ ಒಪ್ಪಂದವನ್ನು ಪ್ರತ್ಯೇಕವಾಗಿ ಮಾಡಿ.';
+
+  @override
+  String get lcRequestWithdrawn => 'ವಿನಂತಿ ಹಿಂಪಡೆಯಲಾಗಿದೆ';
+
+  @override
+  String get lcRequestAcceptedMsg => 'ವಿನಂತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ!';
+
+  @override
+  String get lcContactLandowner => 'ಒಪ್ಪಂದದ ವಿವರಗಳನ್ನು ಚರ್ಚಿಸಲು ಜಮೀನು ಮಾಲೀಕರನ್ನು ಸಂಪರ್ಕಿಸಿ.';
 }

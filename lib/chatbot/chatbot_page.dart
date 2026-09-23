@@ -19,22 +19,22 @@ class _Lang {
 }
 
 const _kLangs = [
-  _Lang('en', 'English', '🇬🇧'),
-  _Lang('hi', 'हिंदी', '🇮🇳'),
-  _Lang('kn', 'ಕನ್ನಡ', '🇮🇳'),
-  _Lang('ta', 'தமிழ்', '🇮🇳'),
-  _Lang('te', 'తెలుగు', '🇮🇳'),
+  _Lang('en', 'English', 'EN'),
+  _Lang('hi', 'हिंदी', 'HI'),
+  _Lang('kn', 'ಕನ್ನಡ', 'KN'),
+  _Lang('ta', 'தமிழ்', 'TA'),
+  _Lang('te', 'తెలుగు', 'TE'),
 ];
 
 // ── Quick suggestion prompts ──────────────────────────────────────────────────
 
 const _kSuggestions = [
-  '🌾 How to grow rice?',
-  '🌽 Maize fertilizer schedule',
-  '🦠 Rice blast disease control',
-  '🚜 Best time to sow wheat?',
-  '🌱 Sugarcane pest management',
-  '💧 Drip irrigation for vegetables',
+  'How to grow rice?',
+  'Maize fertilizer schedule',
+  'Rice blast disease control',
+  'Best time to sow wheat?',
+  'Sugarcane pest management',
+  'Drip irrigation for vegetables',
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -87,8 +87,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
   Future<void> _loadKnowledgeBase() async {
     final entries = <KnowledgeEntry>[];
     for (final (path, emoji, cat) in [
-      ('assets/knowledge_base/crops.json', '🌾', 'Crops'),
-      ('assets/knowledge_base/crop_diseases.json', '🦠', 'Crop Diseases'),
+      ('assets/knowledge_base/crops.json', '', 'Crops'),
+      ('assets/knowledge_base/crop_diseases.json', '', 'Crop Diseases'),
     ]) {
       try {
         final raw = await rootBundle.loadString(path);
@@ -122,7 +122,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     final greeting = ChatMessage(
       id: _uuid.v4(),
       content:
-          'Hello! 👋 I am KrishiMithra AI.\n\n'
+          'Hello! I am KrishiMithra AI.\n\n'
           'I can help you with:\n'
           '• Crop cultivation & best practices\n'
           '• Disease & pest identification\n'

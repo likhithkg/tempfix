@@ -47,6 +47,9 @@ class KMColors {
   static const Color weatherDark    = Color(0xFF0D47A1);
   static const Color cropPrimary    = Color(0xFF558B2F);
   static const Color cropDark       = Color(0xFF33691E);
+  // Land Connect — earth / soil brown palette
+  static const Color landPrimary    = Color(0xFF6D4C41);
+  static const Color landDark       = Color(0xFF3E2723);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +89,12 @@ class KMGradients {
 
   static const LinearGradient crop = LinearGradient(
     colors: [KMColors.cropDark, KMColors.cropPrimary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient land = LinearGradient(
+    colors: [KMColors.landDark, KMColors.landPrimary],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

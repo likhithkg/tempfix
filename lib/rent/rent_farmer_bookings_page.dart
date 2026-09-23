@@ -18,15 +18,15 @@ Color _statusColor(BookingStatus s) {
   }
 }
 
-String _statusEmoji(BookingStatus s) {
+IconData _statusIcon(BookingStatus s) {
   switch (s) {
-    case BookingStatus.requested:  return '📋';
-    case BookingStatus.accepted:   return '✅';
-    case BookingStatus.onTheWay:   return '🚗';
-    case BookingStatus.arrived:    return '📍';
-    case BookingStatus.working:    return '⚙️';
-    case BookingStatus.completed:  return '🎉';
-    case BookingStatus.rejected:   return '❌';
+    case BookingStatus.requested:  return Icons.pending_outlined;
+    case BookingStatus.accepted:   return Icons.check_circle_outline;
+    case BookingStatus.onTheWay:   return Icons.directions_car_outlined;
+    case BookingStatus.arrived:    return Icons.location_on_outlined;
+    case BookingStatus.working:    return Icons.settings_outlined;
+    case BookingStatus.completed:  return Icons.task_alt_rounded;
+    case BookingStatus.rejected:   return Icons.cancel_outlined;
   }
 }
 
@@ -119,13 +119,13 @@ class _RentFarmerBookingsPageState extends State<RentFarmerBookingsPage>
             children: [
               _BookingList(
                 bookings: active,
-                emptyIcon: '🕐',
+                emptyIcon: Icons.schedule_rounded,
                 emptyTitle: 'No active bookings',
                 emptySubtitle: 'Your pending and ongoing bookings appear here',
               ),
               _BookingList(
                 bookings: history,
-                emptyIcon: '📋',
+                emptyIcon: Icons.assignment_outlined,
                 emptyTitle: 'No history yet',
                 emptySubtitle: 'Completed and rejected bookings appear here',
               ),
@@ -139,7 +139,8 @@ class _RentFarmerBookingsPageState extends State<RentFarmerBookingsPage>
 
 class _BookingList extends StatelessWidget {
   final List<RentBooking> bookings;
-  final String emptyIcon, emptyTitle, emptySubtitle;
+  final IconData emptyIcon;
+  final String emptyTitle, emptySubtitle;
 
   const _BookingList({
     required this.bookings,
@@ -153,7 +154,7 @@ class _BookingList extends StatelessWidget {
     if (bookings.isEmpty) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(emptyIcon, style: const TextStyle(fontSize: 52)),
+          Icon(emptyIcon, size: 52, color: Colors.grey.shade300),
           const SizedBox(height: 12),
           Text(emptyTitle,
               style: const TextStyle(
@@ -220,8 +221,7 @@ class _BookingCard extends StatelessWidget {
                   top: Radius.circular(18)),
             ),
             child: Row(children: [
-              Text(_statusEmoji(b.status),
-                  style: const TextStyle(fontSize: 20)),
+              Icon(_statusIcon(b.status), size: 20, color: color),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -267,8 +267,7 @@ class _BookingCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.1),
                 ),
                 child: Center(
-                  child: Text(_machineEmoji(b.machineType),
-                      style: const TextStyle(fontSize: 20)),
+                  child: Icon(_machineIcon(b.machineType), size: 20, color: color),
                 ),
               ),
               const SizedBox(width: 12),
@@ -312,17 +311,17 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  String _machineEmoji(String type) {
+  IconData _machineIcon(String type) {
     switch (type.toLowerCase()) {
-      case 'tractor':    return '🚜';
-      case 'harvester':  return '🌾';
-      case 'rotavator':  return '⚙️';
-      case 'cultivator': return '🌿';
-      case 'seeder':     return '🌱';
-      case 'hitachi':    return '⛏️';
-      case 'jcb':        return '🏗️';
-      case 'lorry':      return '🚚';
-      default:           return '🔧';
+      case 'tractor':    return Icons.agriculture_outlined;
+      case 'harvester':  return Icons.grass_rounded;
+      case 'rotavator':  return Icons.settings_rounded;
+      case 'cultivator': return Icons.eco_rounded;
+      case 'seeder':     return Icons.grain_rounded;
+      case 'hitachi':    return Icons.construction;
+      case 'jcb':        return Icons.construction;
+      case 'lorry':      return Icons.local_shipping_outlined;
+      default:           return Icons.build_rounded;
     }
   }
 }

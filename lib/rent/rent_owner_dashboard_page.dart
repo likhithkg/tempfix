@@ -20,15 +20,15 @@ Color _statusColor(BookingStatus s) {
   }
 }
 
-String _statusEmoji(BookingStatus s) {
+IconData _statusIcon(BookingStatus s) {
   switch (s) {
-    case BookingStatus.requested:  return '📋';
-    case BookingStatus.accepted:   return '✅';
-    case BookingStatus.onTheWay:   return '🚗';
-    case BookingStatus.arrived:    return '📍';
-    case BookingStatus.working:    return '⚙️';
-    case BookingStatus.completed:  return '🎉';
-    case BookingStatus.rejected:   return '❌';
+    case BookingStatus.requested:  return Icons.pending_outlined;
+    case BookingStatus.accepted:   return Icons.check_circle_outline;
+    case BookingStatus.onTheWay:   return Icons.directions_car_outlined;
+    case BookingStatus.arrived:    return Icons.location_on_outlined;
+    case BookingStatus.working:    return Icons.settings_outlined;
+    case BookingStatus.completed:  return Icons.task_alt_rounded;
+    case BookingStatus.rejected:   return Icons.cancel_outlined;
   }
 }
 
@@ -67,7 +67,7 @@ class _RentOwnerDashboardPageState extends State<RentOwnerDashboardPage>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Booking accepted! Farmer has been notified.'),
+          content: const Text('Booking accepted! Farmer has been notified.'),
           backgroundColor: Color(0xFF2E7D32),
         ),
       );
@@ -107,7 +107,7 @@ class _RentOwnerDashboardPageState extends State<RentOwnerDashboardPage>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${_statusEmoji(next)} Status updated: ${next.label}'),
+          content: Text('Status updated: ${next.label}'),
           backgroundColor: _statusColor(next),
         ),
       );
@@ -278,10 +278,10 @@ class _EarningsStrip extends StatelessWidget {
       color: const Color(0xFF1B1B2F),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       child: Row(children: [
-        _EarningsTile('💰', '₹${totalEarnings.toStringAsFixed(0)}',
+        _EarningsTile(Icons.currency_rupee, '₹${totalEarnings.toStringAsFixed(0)}',
             'Total Earnings'),
         const SizedBox(width: 16),
-        _EarningsTile('✅', '$completed', 'Jobs Done'),
+        _EarningsTile(Icons.task_alt_rounded, '$completed', 'Jobs Done'),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -307,14 +307,15 @@ class _EarningsStrip extends StatelessWidget {
 }
 
 class _EarningsTile extends StatelessWidget {
-  final String emoji, value, label;
-  const _EarningsTile(this.emoji, this.value, this.label);
+  final IconData icon;
+  final String value, label;
+  const _EarningsTile(this.icon, this.value, this.label);
 
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Text(emoji, style: const TextStyle(fontSize: 14)),
+        Icon(icon, size: 14, color: Colors.white70),
         const SizedBox(width: 4),
         Text(value,
             style: const TextStyle(
@@ -346,7 +347,7 @@ class _RequestsTab extends StatelessWidget {
     if (bookings.isEmpty) {
       return const Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('🕐', style: TextStyle(fontSize: 56)),
+          Icon(Icons.schedule_rounded, size: 56, color: Color(0xFFBDBDBD)),
           SizedBox(height: 12),
           Text('No pending requests',
               style: TextStyle(
@@ -443,8 +444,8 @@ class _RequestCardState extends State<_RequestCard>
                   color: const Color(0xFFFF9800).withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Text('🔔',
-                    style: TextStyle(fontSize: 22)),
+                child: const Icon(Icons.notifications_rounded,
+                    size: 22, color: Color(0xFFFF9800)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -546,7 +547,7 @@ class _RequestCardState extends State<_RequestCard>
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14))),
-                  child: const Text('✗  Reject',
+                  child: const Text('Reject',
                       style: TextStyle(
                           fontSize: 14, fontWeight: FontWeight.w800)),
                 ),
@@ -576,7 +577,7 @@ class _RequestCardState extends State<_RequestCard>
                           width: 20, height: 20,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Text('✓  Accept Booking',
+                      : const Text('Accept Booking',
                           style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900)),
@@ -610,7 +611,7 @@ class _ActiveTab extends StatelessWidget {
     if (bookings.isEmpty) {
       return const Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('🚜', style: TextStyle(fontSize: 56)),
+          Icon(Icons.agriculture_outlined, size: 56, color: Color(0xFFBDBDBD)),
           SizedBox(height: 12),
           Text('No active bookings',
               style: TextStyle(
@@ -667,10 +668,10 @@ class _ActiveBookingCardState extends State<_ActiveBookingCard> {
 
   String _nextLabel(BookingStatus current) {
     switch (current) {
-      case BookingStatus.accepted:   return '🚗  I\'m Heading There';
-      case BookingStatus.onTheWay:   return '📍  I\'ve Arrived';
-      case BookingStatus.arrived:    return '⚙️  Work Started';
-      case BookingStatus.working:    return '🎉  Mark Completed';
+      case BookingStatus.accepted:   return 'I\'m Heading There';
+      case BookingStatus.onTheWay:   return 'I\'ve Arrived';
+      case BookingStatus.arrived:    return 'Work Started';
+      case BookingStatus.working:    return 'Mark Completed';
       default: return '';
     }
   }
@@ -704,8 +705,7 @@ class _ActiveBookingCardState extends State<_ActiveBookingCard> {
                 top: Radius.circular(18)),
           ),
           child: Row(children: [
-            Text(_statusEmoji(b.status),
-                style: const TextStyle(fontSize: 22)),
+            Icon(_statusIcon(b.status), size: 22, color: color),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -862,7 +862,7 @@ class _HistoryTab extends StatelessWidget {
     if (bookings.isEmpty) {
       return const Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('📋', style: TextStyle(fontSize: 56)),
+          Icon(Icons.assignment_outlined, size: 56, color: Color(0xFFBDBDBD)),
           SizedBox(height: 12),
           Text('No history yet',
               style: TextStyle(
@@ -897,8 +897,7 @@ class _HistoryTab extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: color.withValues(alpha: 0.12)),
               child: Center(
-                  child: Text(_statusEmoji(b.status),
-                      style: const TextStyle(fontSize: 18))),
+                  child: Icon(_statusIcon(b.status), size: 18, color: color)),
             ),
             const SizedBox(width: 12),
             Expanded(

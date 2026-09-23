@@ -1,5 +1,6 @@
 {
   "appName": "కృషిమిత్ర",
+  "appTagline": "ప్రతి రైతుకు స్మార్ట్ వ్యవసాయం",
 
   "login": "లాగిన్",
   "signup": "సైన్ అప్",
@@ -861,6 +862,40 @@
   "sunset": "సూర్యాస్తమయం",
   "dayLength": "పగటి సేపు",
   "uvIndex": "UV సూచిక",
-  "tryAgain": "మళ్ళీ ప్రయత్నించు"
+  "tryAgain": "మళ్ళీ ప్రయత్నించు",
+
+  "lcTitle": "లాండ్ కనెక్ట్",
+  "lcSubtitle": "సాగు చేయడానికి భూమి వెతకండి లేదా మీ భూమిని జాబితా చేయండి",
+  "lcHaveLand": "నా దగ్గర భూమి ఉంది",
+  "lcHaveLandSub": "మీ అందుబాటులో లేని భూమిని జాబితా చేసి రైతులను కనుగొనండి",
+  "lcFindLand": "భూమి వెతకండి",
+  "lcFindLandSub": "సమీపంలో అందుబాటులో ఉన్న భూమిని చూడండి",
+  "lcMyListings": "నా భూమి జాబితాలు",
+  "lcMyListingsSub": "మీ భూమి జాబితాలను నిర్వహించండి",
+  "lcCultivationRequests": "సాగు అభ్యర్థనలు",
+  "lcCultivationRequestsSub": "మీ భూమిపై అభ్యర్థనలు చూడండి",
+  "lcMyRequests": "నా సాగు అభ్యర్థనలు",
+  "lcMyRequestsSub": "భూ యజమానులకు పంపిన అభ్యర్థనలను ట్రాక్ చేయండి",
+  "lcHowItWorks": "ఇది ఎలా పని చేస్తుంది",
+  "lcDiscoveryTitle": "సమీపంలో భూమి వెతకండి",
+  "lcSearchHint": "స్థానం, పంట లేదా భూమి రకం ద్వారా వెతకండి...",
+  "lcEnableLocation": "స్థానం ప్రారంభించండి",
+  "lcRequestCultivate": "సాగుకు అభ్యర్థన చేయండి",
+  "lcRequestAlreadySent": "అభ్యర్థన ఇప్పటికే పంపబడింది",
+  "lcSendRequest": "సాగు అభ్యర్థన పంపండి",
+  "lcSubmitRequest": "అభ్యర్థన సమర్పించండి",
+  "lcWithdrawRequest": "అభ్యర్థన వెనక్కి తీసుకోండి",
+  "lcPendingTab": "పెండింగ్",
+  "lcAcceptedTab": "స్వీకరించబడింది",
+  "lcRejectedTab": "తిరస్కరించబడింది",
+  "lcActiveTab": "చురుకుగా ఉంది",
+  "lcPausedTab": "నిలిపివేయబడింది",
+  "lcAddListing": "కొత్త జాబితా జోడించండి",
+  "lcListingFormTitle": "మీ భూమిని జాబితా చేయండి",
+  "lcPrivacyNotice": "మీ ఖచ్చితమైన స్థానం ప్రైవేట్‌గా ఉంచబడుతుంది. అభ్యర్థన స్వీకరించబడే వరకు గ్రామం మరియు జిల్లా మాత్రమే చూపబడతాయి.",
+  "lcDisclaimerText": "KrishiMithra సంబంధాన్ని సులభతరం చేస్తుంది. భూమి లీజు ఒప్పందాన్ని ప్రత్యేకంగా అమలు చేయండి.",
+  "lcRequestWithdrawn": "అభ్యర్థన వెనక్కి తీసుకోబడింది",
+  "lcRequestAcceptedMsg": "అభ్యర్థన స్వీకరించబడింది!",
+  "lcContactLandowner": "ఒప్పంద వివరాలను చర్చించడానికి భూ యజమానిని సంప్రదించండి."
 }
 

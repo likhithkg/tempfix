@@ -59,7 +59,7 @@ class ProfileServiceHelpers {
     final Map<String, dynamic> export = {};
 
     // Helper to fetch list of docs matching ownerId
-    Future<List<Map<String, dynamic>>> _fetchByOwner(String collection) async {
+    Future<List<Map<String, dynamic>>> fetchByOwner(String collection) async {
       try {
         final q = await firestore.collection(collection).where('ownerId', isEqualTo: uid).get();
         return q.docs.map((d) => {'id': d.id, 'data': d.data()}).toList();
@@ -85,7 +85,7 @@ class ProfileServiceHelpers {
     ];
 
     for (final col in collectionsToExport) {
-      export[col] = await _fetchByOwner(col);
+      export[col] = await fetchByOwner(col);
     }
 
     // Convert to pretty JSON

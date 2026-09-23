@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../labour_hub/labour_model.dart';
 import '../labour_hub/labour_hub_detail_page.dart';
+import '../labour_hub/labour_hub_home_page.dart';
 import '../plant_vendor/plant_vendor_model.dart';
 import '../plant_vendor/plant_detail_page.dart';
+import '../plant_vendor/plant_vendor_home.dart';
 import '../rent/rent_model.dart';
 import '../rent/rent_home_page.dart';
 import '../theme.dart';
@@ -49,19 +51,20 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
   String _query = '';
   bool _loading = false;
   List<_SearchResult> _results = [];
+  _ResultType? _activeFilter;
 
   // ── quick‑search categories shown before typing ───────────────────────────
-  static const _categories = [
-    ('🌾', 'Rice'),
-    ('🌽', 'Maize'),
-    ('🍅', 'Tomato'),
-    ('🧅', 'Onion'),
-    ('🚜', 'Tractor'),
-    ('🌿', 'Plants'),
-    ('👷', 'Labour'),
-    ('🌱', 'Seeds'),
-    ('🍌', 'Banana'),
-    ('🌶', 'Chilli'),
+  static const _categories = <(IconData, String)>[
+    (Icons.grain,                  'Rice'),
+    (Icons.grass,                  'Maize'),
+    (Icons.spa,                    'Tomato'),
+    (Icons.eco,                    'Onion'),
+    (Icons.agriculture,            'Tractor'),
+    (Icons.local_florist,          'Plants'),
+    (Icons.construction,           'Labour'),
+    (Icons.eco,                    'Seeds'),
+    (Icons.spa,                    'Banana'),
+    (Icons.local_fire_department,  'Chilli'),
   ];
 
   @override
@@ -252,6 +255,7 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
                         setState(() {
                           _query = '';
                           _results = [];
+                          _activeFilter = null;
                         });
                       },
                     )
@@ -308,7 +312,7 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
                   ],
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(c.$1, style: const TextStyle(fontSize: 16)),
+                  Icon(c.$1, size: 18, color: KMColors.primary),
                   const SizedBox(width: 6),
                   Text(c.$2,
                       style: TextStyle(
@@ -321,35 +325,38 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
           }).toList(),
         ),
         const SizedBox(height: 24),
-        _buildSection('🌿 Plants & Seeds', cs),
-        _buildSection('🚜 Machinery for Rent', cs),
-        _buildSection('👷 Labour', cs),
+        _buildSection('Plants & Seeds', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome())), cs),
+        _buildSection('Machinery for Rent', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage())), cs),
+        _buildSection('Labour Hub', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourHubHomePage())), cs),
       ]),
     );
   }
 
-  Widget _buildSection(String title, ColorScheme cs) {
+  Widget _buildSection(String title, VoidCallback onTap, ColorScheme cs) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 4)
-          ],
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4)
+            ],
+          ),
+          child: Row(children: [
+            Expanded(
+                child: Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14))),
+            Icon(Icons.chevron_right_rounded, color: cs.primary),
+          ]),
         ),
-        child: Row(children: [
-          Expanded(
-              child: Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14))),
-          Icon(Icons.chevron_right_rounded, color: cs.primary),
-        ]),
       ),
     );
   }
@@ -357,7 +364,7 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
   Widget _buildEmpty() {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('🔍', style: TextStyle(fontSize: 52)),
+        const Icon(Icons.search_rounded, size: 52, color: Color(0xFF9E9E9E)),
         const SizedBox(height: 12),
         Text('No results for "$_query"',
             style: const TextStyle(
@@ -372,34 +379,98 @@ class _HomeSearchPageState extends State<HomeSearchPage> {
   }
 
   Widget _buildResults(bool isDark) {
-    // Group by type
-    final plants = _results.where((r) => r.type == _ResultType.plant).toList();
-    final labour = _results.where((r) => r.type == _ResultType.labour).toList();
-    final machines = _results.where((r) => r.type == _ResultType.machine).toList();
+    final displayed = _activeFilter == null
+        ? _results
+        : _results.where((r) => r.type == _activeFilter).toList();
+
+    final plants = displayed.where((r) => r.type == _ResultType.plant).toList();
+    final labour = displayed.where((r) => r.type == _ResultType.labour).toList();
+    final machines = displayed.where((r) => r.type == _ResultType.machine).toList();
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
-        Text('  ${_results.length} result${_results.length == 1 ? '' : 's'} for "$_query"',
+        // Filter chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(children: [
+            _filterChip('All', null),
+            const SizedBox(width: 8),
+            _filterChip('Plants', _ResultType.plant),
+            const SizedBox(width: 8),
+            _filterChip('Machinery', _ResultType.machine),
+            const SizedBox(width: 8),
+            _filterChip('Labour', _ResultType.labour),
+          ]),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            '${displayed.length} result${displayed.length == 1 ? '' : 's'} for "$_query"',
             style: const TextStyle(
                 fontSize: 12,
                 color: KMColors.textSecondary,
-                fontWeight: FontWeight.w500)),
+                fontWeight: FontWeight.w500),
+          ),
+        ),
         const SizedBox(height: 4),
         if (plants.isNotEmpty) ...[
-          _sectionHeader('🌿 Plants & Products', plants.length),
+          _sectionHeader('Plants & Products', plants.length),
           ...plants.map((r) => _ResultTile(result: r, onTap: () => _openResult(r), isDark: isDark)),
         ],
         if (machines.isNotEmpty) ...[
-          _sectionHeader('🚜 Machinery', machines.length),
+          _sectionHeader('Machinery', machines.length),
           ...machines.map((r) => _ResultTile(result: r, onTap: () => _openResult(r), isDark: isDark)),
         ],
         if (labour.isNotEmpty) ...[
-          _sectionHeader('👷 Labour', labour.length),
+          _sectionHeader('Labour', labour.length),
           ...labour.map((r) => _ResultTile(result: r, onTap: () => _openResult(r), isDark: isDark)),
         ],
+        if (displayed.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 40),
+            child: Center(
+              child: Text(
+                'No ${_activeFilter?.name ?? ''} results for "$_query"',
+                style: const TextStyle(
+                    fontSize: 14, color: KMColors.textSecondary),
+              ),
+            ),
+          ),
         const SizedBox(height: 80),
       ],
+    );
+  }
+
+  Widget _filterChip(String label, _ResultType? type) {
+    final active = _activeFilter == type;
+    return GestureDetector(
+      onTap: () => setState(() => _activeFilter = type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? KMColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: active ? KMColors.primary : Colors.grey.shade300),
+          boxShadow: active
+              ? [BoxShadow(
+                  color: KMColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2))]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: active ? Colors.white : KMColors.textSecondary),
+        ),
+      ),
     );
   }
 

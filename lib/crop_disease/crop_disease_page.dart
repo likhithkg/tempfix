@@ -3,13 +3,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../l10n/app_localizations.dart';
-import '../services/libre_translate_service.dart';
+import '../services/ai_proxy_service.dart';
+import '../services/image_upload_service.dart';
 import '../theme.dart';
 
 // ─── Scan beam painter ────────────────────────────────────────────────────────
@@ -104,136 +103,6 @@ class _LeafGlowPainter extends CustomPainter {
   bool shouldRepaint(_LeafGlowPainter o) => o.pulse != pulse;
 }
 
-// ─── Embedded disease knowledge base (PlantVillage 38-class dataset) ──────────
-
-class _DInfo {
-  final String cat, sym, treat, prev;
-  const _DInfo(this.cat, this.sym, this.treat, this.prev);
-}
-
-// Keys match the lowercase label returned by the HuggingFace model
-const Map<String, _DInfo> _kDiseaseDb = {
-  // ── Apple ──────────────────────────────────────────────────────────────────
-  'apple___apple_scab': _DInfo('Fungal Disease',
-      'Olive-green to brown lesions on leaves and fruit. Lesions coalesce causing leaf drop and deformed fruit.',
-      'Apply fungicides (captan, mancozeb) at 10-day intervals from bud break. Remove fallen leaves.',
-      'Plant resistant varieties. Rake and destroy fallen leaves. Avoid overhead irrigation.'),
-  'apple___black_rot': _DInfo('Fungal Disease',
-      '"Frogeye" leaf spots with purple border, brown-to-black circular lesions on fruit, cankers on limbs.',
-      'Prune and destroy infected wood. Apply fungicides (captan, thiophanate-methyl). Remove mummified fruit.',
-      'Prune dead wood, improve air circulation, remove mummified fruit from trees and ground.'),
-  'apple___cedar_apple_rust': _DInfo('Fungal Disease',
-      'Bright orange-yellow spots on upper leaf surface. Tube-like structures on undersides in spring.',
-      'Apply fungicides (myclobutanil, mancozeb) starting at pink bud stage through petal fall.',
-      'Remove nearby cedar/juniper trees. Plant resistant apple varieties. Monitor in spring.'),
-
-  // ── Corn / Maize ───────────────────────────────────────────────────────────
-  'corn_(maize)___cercospora_leaf_spot gray_leaf_spot': _DInfo('Fungal Disease',
-      'Rectangular gray-to-tan lesions bounded by leaf veins. Lesions merge causing large blighted areas.',
-      'Apply foliar fungicides (strobilurin or triazole group). Remove infected crop debris after harvest.',
-      'Use resistant hybrids. Practice 2-year crop rotation. Reduce leaf wetness through row orientation.'),
-  'corn_(maize)___common_rust_': _DInfo('Fungal Disease',
-      'Small, round golden-to-dark-brown pustules on both leaf surfaces releasing rust-coloured spores.',
-      'Apply fungicides when pustules first appear. Early-season control is most effective.',
-      'Plant resistant hybrids. Early planting to avoid conditions favouring rust development.'),
-  'corn_(maize)___northern_leaf_blight': _DInfo('Fungal Disease',
-      'Long (2.5–15 cm) elliptical gray-green to tan lesions on leaves. Turn tan with irregular borders.',
-      'Apply fungicides (azoxystrobin, propiconazole) at VT growth stage. Remove crop debris.',
-      'Use resistant hybrids. Rotate with non-host crops. Bury debris by tillage to reduce inoculum.'),
-
-  // ── Grape ──────────────────────────────────────────────────────────────────
-  'grape___black_rot': _DInfo('Fungal Disease',
-      'Circular tan leaf lesions with dark borders. Infected berries shrivel and turn into black mummies.',
-      'Apply fungicides (myclobutanil, captan) from bud break through bunch closure. Remove mummified berries.',
-      'Remove mummified fruit and infected tendrils in winter. Improve air circulation by proper pruning.'),
-  'grape___esca_(black_measles)': _DInfo('Fungal Disease',
-      '"Tiger stripe" interveinal leaf discoloration, dark sunken berry lesions, bleached interior wood.',
-      'No fully effective chemical control. Remove infected wood. Apply trunk wound protectants promptly.',
-      'Avoid large pruning wounds. Make clean cuts and seal immediately. Remove infected wood promptly.'),
-  'grape___leaf_blight_(isariopsis_leaf_spot)': _DInfo('Fungal Disease',
-      'Angular dark-brown lesions bounded by leaf veins. Lesions coalesce causing premature leaf drop.',
-      'Apply copper-based fungicides or mancozeb during the growing season after infection periods.',
-      'Improve air circulation. Remove fallen leaves. Apply protective sprays before wet weather.'),
-
-  // ── Orange ─────────────────────────────────────────────────────────────────
-  'orange___haunglongbing_(citrus_greening)': _DInfo('Bacterial Disease',
-      'Asymmetric blotchy yellowing of leaves, small lopsided bitter fruit, twig dieback, corky veins.',
-      'No cure. Remove infected trees immediately. Control Asian citrus psyllid vector with insecticides.',
-      'Use certified disease-free budwood. Control psyllid vector with regular spraying. Scout frequently.'),
-
-  // ── Peach ──────────────────────────────────────────────────────────────────
-  'peach___bacterial_spot': _DInfo('Bacterial Disease',
-      'Small water-soaked spots on leaves turning purple-brown with yellow halos. Pitted, cracked fruit spots.',
-      'Apply copper-based bactericides starting at bud swell. Oxytetracycline sprays during the season.',
-      'Plant resistant varieties. Avoid overhead irrigation. Reduce leaf wetness duration.'),
-
-  // ── Pepper ─────────────────────────────────────────────────────────────────
-  'pepper,_bell___bacterial_spot': _DInfo('Bacterial Disease',
-      'Small water-soaked circular leaf and fruit spots enlarging to brown with yellow halos.',
-      'Apply copper-based bactericides preventively. Avoid working in field when foliage is wet.',
-      'Use pathogen-free seed and transplants. Avoid overhead irrigation. Practise crop rotation.'),
-
-  // ── Potato ─────────────────────────────────────────────────────────────────
-  'potato___early_blight': _DInfo('Fungal Disease',
-      'Dark brown-to-black lesions with concentric rings (bull\'s-eye pattern) on older leaves first.',
-      'Apply fungicides (chlorothalonil, mancozeb, azoxystrobin) preventively. Remove infected leaves.',
-      'Use certified seed tubers. Maintain adequate nitrogen nutrition. Rotate crops on a 3–4 year cycle.'),
-  'potato___late_blight': _DInfo('Fungal Disease',
-      'Water-soaked pale-green lesions turning dark brown-black. White mycelium on undersides in humid weather. Brown rot in tubers.',
-      'Apply metalaxyl or cymoxanil immediately. Remove and destroy infected plants and tubers without delay.',
-      'Use certified disease-free seed. Plant resistant varieties. Destroy volunteer plants. Improve soil drainage.'),
-
-  // ── Squash ─────────────────────────────────────────────────────────────────
-  'squash___powdery_mildew': _DInfo('Fungal Disease',
-      'White-to-gray powdery coating on leaf surfaces and stems. Leaves yellow and die prematurely.',
-      'Apply potassium bicarbonate, sulfur, or triazole fungicides. Remove heavily infected leaves.',
-      'Plant resistant varieties. Ensure good air circulation. Avoid excess nitrogen fertilisation.'),
-
-  // ── Strawberry ─────────────────────────────────────────────────────────────
-  'strawberry___leaf_scorch': _DInfo('Fungal Disease',
-      'Small purple-to-dark-brown spots coalescing across leaves. Severely infected leaves turn brown and die.',
-      'Apply fungicides (captan, thiram) starting at early bloom. Remove infected leaves promptly.',
-      'Plant disease-free runners. Renovate beds by mowing and thinning after harvest. Avoid overhead irrigation.'),
-
-  // ── Tomato ─────────────────────────────────────────────────────────────────
-  'tomato___bacterial_spot': _DInfo('Bacterial Disease',
-      'Small water-soaked leaf, stem, and fruit spots turning brown with yellow halos. Raised scab-like fruit spots.',
-      'Apply copper-based bactericides preventively. Remove infected parts. Avoid working in wet fields.',
-      'Use certified disease-free seed. Practise crop rotation. Avoid overhead irrigation. Stake plants.'),
-  'tomato___early_blight': _DInfo('Fungal Disease',
-      'Dark brown spots with concentric rings (bull\'s-eye) on lower leaves first. Yellow tissue surrounds lesions.',
-      'Apply fungicides (chlorothalonil, mancozeb) when disease appears. Remove lower infected leaves. Stake plants.',
-      'Rotate crops 3 years. Remove debris. Mulch to prevent soil splash. Use resistant varieties where available.'),
-  'tomato___late_blight': _DInfo('Fungal Disease',
-      'Water-soaked pale-green lesions turning dark brown-black on leaves and stems. White fuzzy growth in humidity. Greasy dark fruit patches.',
-      'Apply metalaxyl or cymoxanil immediately. Remove and destroy infected plants without delay.',
-      'Plant resistant varieties. Avoid overhead irrigation. Improve air circulation. Destroy volunteer plants.'),
-  'tomato___leaf_mold': _DInfo('Fungal Disease',
-      'Pale green-to-yellow spots on upper leaf surface. Olive-green-to-gray velvety mold on undersides.',
-      'Apply fungicides (chlorothalonil, mancozeb). Improve greenhouse ventilation. Reduce relative humidity below 85%.',
-      'Use resistant varieties. Improve air circulation. Reduce leaf wetness. Avoid overcrowding plants.'),
-  'tomato___septoria_leaf_spot': _DInfo('Fungal Disease',
-      'Small circular spots with dark border and gray-white center containing tiny black dots. Starts on lower leaves. Rapid defoliation.',
-      'Apply fungicides (chlorothalonil, copper). Remove infected lower leaves. Stake plants for airflow.',
-      'Rotate crops 2–3 years. Remove crop debris. Avoid overhead irrigation. Mulch around plant base.'),
-  'tomato___spider_mites two-spotted_spider_mite': _DInfo('Pest (Mite)',
-      'Fine stippling or bronzing on leaves. Fine webbing on leaf undersides. Leaves yellow and drop. Worse in hot, dry conditions.',
-      'Apply acaricides (abamectin, bifenazate) to leaf undersides. Introduce predatory mites for biological control.',
-      'Avoid excess nitrogen. Maintain plant moisture. Avoid broad-spectrum pesticides that kill natural enemies.'),
-  'tomato___target_spot': _DInfo('Fungal Disease',
-      'Round-to-irregular brown spots with concentric rings on leaves, stems, and fruit. Premature defoliation.',
-      'Apply fungicides (azoxystrobin, boscalid). Remove infected plant material. Improve air circulation.',
-      'Crop rotation. Avoid overhead irrigation. Remove plant debris. Use mulch to prevent soil splash.'),
-  'tomato___tomato_yellow_leaf_curl_virus': _DInfo('Viral Disease',
-      'Upward curling and yellowing of young leaves. Stunted plant growth. Dramatically reduced fruit set.',
-      'No cure — remove and destroy infected plants immediately to stop spread. Control whitefly vector.',
-      'Use resistant varieties. Control whitefly with insecticides and reflective mulch. Install insect screens.'),
-  'tomato___tomato_mosaic_virus': _DInfo('Viral Disease',
-      'Mosaic pattern of light and dark green on leaves. Leaf distortion, mottling, and fern-leaf symptoms.',
-      'No cure — remove and destroy infected plants. Sterilise tools with bleach. Control aphid vectors.',
-      'Use disease-free seeds. Wash hands before handling plants. Avoid tobacco products near plants. Control aphids.'),
-};
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 class CropDiseasePage extends StatefulWidget {
@@ -260,11 +129,6 @@ class _CropDiseasePageState extends State<CropDiseasePage>
   String _language = 'EN';
 
   final _picker = ImagePicker();
-  final String? _plantIdKey = dotenv.env['PLANTID_API_KEY'];
-  final String? _hfKey      = dotenv.env['HUGGINGFACE_API_KEY'];
-  static const _plantIdUrl  = 'https://plant.id/api/v3/health_assessment';
-  static const _hfModel     =
-      'linkanjarad/plant-disease-classification-mobilenet_v2_0.35_224';
 
   late AnimationController _fadeCtrl;
   late AnimationController _scanCtrl;
@@ -328,48 +192,14 @@ class _CropDiseasePageState extends State<CropDiseasePage>
   Future<void> _analyze() async {
     if (_imageBytes == null) return;
 
-    final hasPlantId = !(_plantIdKey?.isEmpty ?? true);
-    final hasHf      = !(_hfKey?.isEmpty ?? true);
-    final geminiKey  = dotenv.env['GEMINI_API_KEY'] ?? '';
-    final hasGemini  = geminiKey.isNotEmpty;
-
-    if (!hasPlantId && !hasHf && !hasGemini) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Add GEMINI_API_KEY to .env to enable disease detection'),
-            backgroundColor: KMColors.error,
-            duration: Duration(seconds: 6),
-          ),
-        );
-      }
-      return;
-    }
-
     setState(() => _loading = true);
     HapticFeedback.lightImpact();
 
     try {
-      if (hasGemini) {
-        await _analyzeWithGemini(geminiKey);
-      } else if (hasPlantId) {
-        await _analyzeWithPlantId();
-      } else if (hasHf) {
-        await _analyzeWithHuggingFace();
-      }
+      // Always use Gemini via the secure backend proxy
+      await _analyzeWithGemini();
 
       if (!mounted) return;
-
-      if (_language != 'EN' && disease.isNotEmpty && !disease.startsWith('API') &&
-          !disease.startsWith('Detection') && !disease.startsWith('No API')) {
-        final langCode = _language == 'KN' ? 'kn' : 'hi';
-        disease    = await _translate(disease,    langCode);
-        category   = await _translate(category,   langCode);
-        severity   = await _translate(severity,   langCode);
-        symptoms   = await _translate(symptoms,   langCode);
-        treatment  = await _translate(treatment,  langCode);
-        prevention = await _translate(prevention, langCode);
-      }
 
       await _saveReport();
       if (mounted) setState(() => _loading = false);
@@ -386,144 +216,9 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     }
   }
 
-  // ─── Plant.id provider ───────────────────────────────────────────────────────
+  // ─── Gemini Vision provider (via backend proxy) ──────────────────────────────
 
-  Future<void> _analyzeWithPlantId() async {
-    final b64 = 'data:image/jpeg;base64,${base64Encode(_imageBytes!)}';
-
-    final res = await http.post(
-      Uri.parse('$_plantIdUrl?details=description,treatment,cause&language=en'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Api-Key': _plantIdKey!,
-      },
-      body: jsonEncode({'images': [b64], 'health': 'all'}),
-    );
-
-    if (res.statusCode != 200 && res.statusCode != 201) {
-      setState(() {
-        _loading = false;
-        disease = 'Plant.id error ${res.statusCode} — check your API key at plant.id';
-      });
-      return;
-    }
-
-    _parsePlantIdResponse(jsonDecode(res.body) as Map<String, dynamic>);
-  }
-
-  // ─── HuggingFace provider ─────────────────────────────────────────────────────
-
-  Future<void> _analyzeWithHuggingFace() async {
-    final url = Uri.parse(
-        'https://api-inference.huggingface.co/models/$_hfModel');
-
-    var res = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $_hfKey',
-        'Content-Type': 'application/octet-stream',
-        'X-Wait-For-Model': 'true',
-      },
-      body: _imageBytes,
-    );
-
-    // Model may be loading on first call — retry once
-    if (res.statusCode == 503) {
-      await Future.delayed(const Duration(seconds: 20));
-      res = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $_hfKey',
-          'Content-Type': 'application/octet-stream',
-          'X-Wait-For-Model': 'true',
-        },
-        body: _imageBytes,
-      );
-    }
-
-    if (res.statusCode != 200) {
-      setState(() {
-        _loading = false;
-        disease = 'HuggingFace error ${res.statusCode} — check your token';
-      });
-      return;
-    }
-
-    final body = jsonDecode(res.body);
-    if (body is Map && body.containsKey('error')) {
-      setState(() {
-        _loading = false;
-        disease = 'Model error: ${body['error']}';
-      });
-      return;
-    }
-
-    _parseHfResponse(body as List);
-  }
-
-  void _parseHfResponse(List results) {
-    if (results.isEmpty) {
-      disease = 'Could not classify the image — try a clearer photo';
-      setState(() {});
-      return;
-    }
-
-    final top   = results[0] as Map<String, dynamic>;
-    final label = (top['label'] as String?) ?? '';
-    final score = ((top['score']) as num?)?.toDouble() ?? 0.0;
-
-    // Label format: "Tomato___Late_blight"
-    final parts      = label.split('___');
-    final cropPart   = parts[0].replaceAll('_', ' ');
-    final diseasePart = parts.length > 1
-        ? parts[1].replaceAll('_', ' ')
-        : label.replaceAll('_', ' ');
-    final isHealthy = diseasePart.toLowerCase().contains('healthy');
-
-    confidence = '${(score * 100).toStringAsFixed(0)}%';
-
-    if (isHealthy) {
-      disease    = 'No disease detected';
-      category   = 'Healthy';
-      severity   = 'Low';
-      symptoms   = 'The $cropPart plant appears healthy with no visible disease symptoms.';
-      treatment  = 'No treatment required. Continue regular care and monitoring.';
-      prevention = 'Maintain proper watering, fertilisation, and regular crop inspection.';
-      setState(() {});
-      return;
-    }
-
-    disease  = '$cropPart — $diseasePart';
-    severity = score >= 0.75 ? 'High' : score >= 0.45 ? 'Medium' : 'Low';
-
-    final info = _kDiseaseDb[label.toLowerCase()];
-    if (info != null) {
-      category   = info.cat;
-      symptoms   = info.sym;
-      treatment  = info.treat;
-      prevention = info.prev;
-    } else {
-      // Crop not in PlantVillage dataset (e.g., rice, wheat)
-      category   = _inferCategory(diseasePart);
-      symptoms   = 'Visual signs consistent with $diseasePart detected in $cropPart. '
-          'Confidence is $confidence — consider Plant.id for higher accuracy on '
-          'crops like rice, wheat, or cotton.';
-      treatment  = 'Consult a local agronomist. Apply appropriate fungicide or '
-          'bactericide based on confirmed diagnosis.';
-      prevention = 'Use certified disease-free seeds. Maintain proper plant spacing '
-          'and crop rotation. Regular field scouting.';
-    }
-
-    setState(() {});
-  }
-
-  // ─── Gemini Vision provider ──────────────────────────────────────────────────
-
-  Future<void> _analyzeWithGemini(String apiKey) async {
-    const model = 'gemini-3.6-flash';
-    final uri = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey');
-
+  Future<void> _analyzeWithGemini() async {
     const prompt =
         'You are an expert agricultural plant pathologist. Analyze this crop/plant image.\n\n'
         'Respond ONLY with valid JSON (no markdown, no extra text) in this exact format:\n'
@@ -540,65 +235,34 @@ class _CropDiseasePageState extends State<CropDiseasePage>
         'and confidence_percent to 0.';
 
     final b64 = base64Encode(_imageBytes!);
-    final body = jsonEncode({
-      'contents': [
-        {
-          'parts': [
-            {'text': prompt},
-            {
-              'inline_data': {
-                'mime_type': 'image/jpeg',
-                'data': b64,
-              }
-            },
-          ]
-        }
-      ],
-      'generationConfig': {
-        'temperature': 0.2,
-        'maxOutputTokens': 1024,
-      },
-    });
 
-    final res = await http.post(
-      uri,
-      headers: const {'Content-Type': 'application/json'},
-      body: body,
-    ).timeout(const Duration(seconds: 45));
-
-    if (res.statusCode != 200) {
-      String errMsg = 'Gemini error ${res.statusCode}';
-      try {
-        final errBody = jsonDecode(res.body) as Map<String, dynamic>;
-        final msg = errBody['error']?['message']?.toString();
-        if (msg != null && msg.isNotEmpty) errMsg = 'AI error: $msg';
-      } catch (_) {}
+    Map<String, dynamic> data;
+    try {
+      data = await AiProxyService.analyzeImage(
+        imageBase64: b64,
+        prompt: prompt,
+        model: 'gemini-3.6-flash',
+        generationConfig: {'temperature': 0.2, 'maxOutputTokens': 1024},
+      );
+    } catch (e) {
       setState(() {
         _loading = false;
-        disease = errMsg;
+        disease = 'AI error: $e';
       });
       return;
     }
 
     try {
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      final candidates = data['candidates'] as List?;
+      final blockReason = data['blockReason']?.toString();
+      final text = data['text']?.toString().trim() ?? '';
 
-      if (candidates == null || candidates.isEmpty) {
-        // Blocked or no output — check promptFeedback
-        final reason = data['promptFeedback']?['blockReason']?.toString();
-        disease = reason != null
-            ? 'Image blocked by AI safety filter: $reason'
+      if (text.isEmpty) {
+        disease = blockReason != null
+            ? 'Image blocked by AI safety filter: $blockReason'
             : 'No response from AI — please try a clearer plant photo';
         setState(() {});
         return;
       }
-
-      final text = (candidates.first['content']['parts'] as List?)
-              ?.first['text']
-              ?.toString()
-              .trim() ??
-          '';
 
       // Extract the first complete JSON object from the response
       // (Gemini sometimes adds surrounding text despite instructions)
@@ -629,96 +293,13 @@ class _CropDiseasePageState extends State<CropDiseasePage>
     setState(() {});
   }
 
-  void _parsePlantIdResponse(Map<String, dynamic> data) {
-    final result = data['result'] as Map<String, dynamic>?;
-    if (result == null) {
-      disease = 'Could not read API response';
-      setState(() {});
-      return;
-    }
-
-    final healthyProb =
-        ((result['is_healthy']?['probability']) as num?)?.toDouble() ?? 0.0;
-
-    if (healthyProb > 0.85) {
-      disease    = 'No disease detected';
-      category   = 'Healthy';
-      severity   = 'Low';
-      symptoms   = 'The plant appears healthy with no visible disease symptoms.';
-      treatment  = 'No treatment required. Continue regular care and monitoring.';
-      prevention = 'Maintain proper watering, fertilisation, and regular inspection.';
-      confidence = '${(healthyProb * 100).toStringAsFixed(0)}%';
-      setState(() {});
-      return;
-    }
-
-    final suggestions =
-        (result['disease']?['suggestions'] as List?) ?? [];
-    if (suggestions.isEmpty) {
-      disease   = 'Unable to identify disease';
-      symptoms  = 'Try retaking the photo with better lighting and focus.';
-      setState(() {});
-      return;
-    }
-
-    final top     = suggestions[0] as Map<String, dynamic>;
-    final prob    = ((top['probability']) as num?)?.toDouble() ?? 0.0;
-    final details = (top['details'] as Map<String, dynamic>?) ?? {};
-
-    disease    = top['name']?.toString() ?? 'Unknown Disease';
-    category   = _inferCategory(disease);
-    confidence = '${(prob * 100).toStringAsFixed(0)}%';
-    severity   = prob >= 0.75 ? 'High' : prob >= 0.45 ? 'Medium' : 'Low';
-
-    // cause → prepended to description for symptoms field
-    final cause       = details['cause']?.toString() ?? '';
-    final description = details['description']?.toString() ?? '';
-    symptoms = [if (cause.isNotEmpty) 'Cause: $cause', description]
-        .where((s) => s.isNotEmpty)
-        .join('\n\n');
-
-    final treatObj = details['treatment'] as Map<String, dynamic>?;
-    if (treatObj != null) {
-      treatment = [
-        treatObj['chemical']?.toString() ?? '',
-        treatObj['biological']?.toString() ?? '',
-      ].where((s) => s.isNotEmpty).join(' ');
-      prevention = treatObj['prevention']?.toString() ?? '';
-    }
-
-    setState(() {});
-  }
-
-  String _inferCategory(String name) {
-    final d = name.toLowerCase();
-    if (d.contains('blight') || d.contains('rot') || d.contains('spot') ||
-        d.contains('scab') || d.contains('mildew') || d.contains('rust') ||
-        d.contains('smut') || d.contains('anthracnose')) {
-      return 'Fungal Disease';
-    }
-    if (d.contains('bacterial') || d.contains('canker') ||
-        d.contains('wilt') || d.contains('fire')) {
-      return 'Bacterial Disease';
-    }
-    if (d.contains('mosaic') || d.contains('virus') ||
-        d.contains('leaf curl') || d.contains('yellowing')) {
-      return 'Viral Disease';
-    }
-    if (d.contains('deficiency') || d.contains('chlorosis')) {
-      return 'Nutritional';
-    }
-    return 'Plant Disease';
-  }
-
-  Future<String> _translate(String text, String langCode) async {
-    if (text.trim().isEmpty) return text;
-    return LibreTranslateService.translateText(
-        text: text, targetLanguage: langCode);
-  }
-
   Future<void> _saveReport() async {
     final user = FirebaseAuth.instance.currentUser;
     try {
+      String? imageUrl;
+      if (_imageBytes != null) {
+        imageUrl = await ImageUploadService.uploadImageFromBytes(_imageBytes!);
+      }
       await FirebaseFirestore.instance.collection('disease_reports').add({
         'userId': user?.uid,
         'disease': disease,
@@ -728,6 +309,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
         'treatment': treatment,
         'prevention': prevention,
         'confidence': confidence,
+        if (imageUrl != null) 'imageUrl': imageUrl,
         'timestamp': Timestamp.now(),
       });
     } catch (_) {}
@@ -846,7 +428,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
               ),
             ),
           const SizedBox(width: 12),
-          const Text('🌿', style: TextStyle(fontSize: 22)),
+          const Icon(Icons.eco_rounded, color: Color(0xFF69F0AE), size: 22),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -870,7 +452,135 @@ class _CropDiseasePageState extends State<CropDiseasePage>
               ],
             ),
           ),
+          GestureDetector(
+            onTap: _showHistory,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18)),
+                  ),
+                  child: const Icon(Icons.history_rounded,
+                      color: Color(0xFF69F0AE), size: 20),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  // ─── History bottom sheet ────────────────────────────────────────────────────
+
+  void _showHistory() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.4,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF0D2410),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(color: Color(0xFF69F0AE), width: 1),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.history_rounded,
+                        color: Color(0xFF69F0AE), size: 20),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Scan History',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.white12, height: 1),
+              // List
+              Expanded(
+                child: uid == null
+                    ? const Center(
+                        child: Text('Sign in to view history',
+                            style: TextStyle(color: Colors.white54)))
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('disease_reports')
+                            .where('userId', isEqualTo: uid)
+                            .orderBy('timestamp', descending: true)
+                            .limit(50)
+                            .snapshots(),
+                        builder: (_, snap) {
+                          if (snap.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator(
+                                    color: Color(0xFF69F0AE)));
+                          }
+                          final docs = snap.data?.docs ?? [];
+                          if (docs.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.eco_outlined,
+                                      color: Colors.white24, size: 52),
+                                  const SizedBox(height: 12),
+                                  const Text('No scans yet',
+                                      style: TextStyle(
+                                          color: Colors.white38, fontSize: 15)),
+                                ],
+                              ),
+                            );
+                          }
+                          return ListView.separated(
+                            controller: scrollCtrl,
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+                            itemCount: docs.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (_, i) =>
+                                _HistoryCard(data: docs[i].data()! as Map<String, dynamic>),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -972,9 +682,9 @@ class _CropDiseasePageState extends State<CropDiseasePage>
                       painter: _LeafGlowPainter(_pulseAnim.value),
                     ),
                   ),
-                  Text('🌿',
-                      style: TextStyle(
-                          fontSize: 48 + _pulseAnim.value * 4)),
+                  Icon(Icons.eco_rounded,
+                      color: const Color(0xFF69F0AE),
+                      size: 48 + _pulseAnim.value * 4),
                 ],
               ),
             ),
@@ -1096,11 +806,10 @@ class _CropDiseasePageState extends State<CropDiseasePage>
           ),
           child: Row(
             children: [
-              Text(
-                '🌐',
-                style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.6)),
+              Icon(
+                Icons.language_rounded,
+                size: 14,
+                color: Colors.white.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 8),
               Text(
@@ -1252,7 +961,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isHealthy ? '✅ Healthy' : '🦠 $disease',
+                            isHealthy ? 'Plant is Healthy' : disease,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -1347,7 +1056,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
           // ── Detail cards ──────────────────────────────────────────────────
           if (symptoms.isNotEmpty)
             _resultSection(
-              emoji: '🔬',
+              icon: Icons.biotech_outlined,
               title: l.symptomsResult,
               value: symptoms,
               accentColor: const Color(0xFFFF8F00),
@@ -1356,7 +1065,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
           if (treatment.isNotEmpty) ...[
             const SizedBox(height: 10),
             _resultSection(
-              emoji: '💊',
+              icon: Icons.healing_rounded,
               title: l.treatmentResult,
               value: treatment,
               accentColor: const Color(0xFF69F0AE),
@@ -1366,7 +1075,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
           if (prevention.isNotEmpty) ...[
             const SizedBox(height: 10),
             _resultSection(
-              emoji: '🛡️',
+              icon: Icons.shield_outlined,
               title: l.preventionResult,
               value: prevention,
               accentColor: const Color(0xFF40C4FF),
@@ -1415,7 +1124,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
   }
 
   Widget _resultSection({
-    required String emoji,
+    required IconData icon,
     required String title,
     required String value,
     required Color accentColor,
@@ -1445,7 +1154,7 @@ class _CropDiseasePageState extends State<CropDiseasePage>
                 ),
                 child: Row(
                   children: [
-                    Text(emoji, style: const TextStyle(fontSize: 15)),
+                    Icon(icon, size: 15, color: accentColor),
                     const SizedBox(width: 8),
                     Text(
                       title,
@@ -1473,6 +1182,284 @@ class _CropDiseasePageState extends State<CropDiseasePage>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── History card ─────────────────────────────────────────────────────────────
+
+class _HistoryCard extends StatefulWidget {
+  final Map<String, dynamic> data;
+  const _HistoryCard({required this.data});
+
+  @override
+  State<_HistoryCard> createState() => _HistoryCardState();
+}
+
+class _HistoryCardState extends State<_HistoryCard> {
+  bool _expanded = false;
+
+  Color _sevColor(String sev) {
+    final s = sev.toLowerCase();
+    if (s.contains('high')) return const Color(0xFFEF5350);
+    if (s.contains('medium') || s.contains('moderate')) return const Color(0xFFFF8F00);
+    return const Color(0xFF2E7D32);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = widget.data;
+    final disease    = d['disease']    as String? ?? '';
+    final category   = d['category']   as String? ?? '';
+    final severity   = d['severity']   as String? ?? '';
+    final confidence = d['confidence'] as String? ?? '';
+    final symptoms   = d['symptoms']   as String? ?? '';
+    final treatment  = d['treatment']  as String? ?? '';
+    final prevention = d['prevention'] as String? ?? '';
+    final imageUrl   = d['imageUrl']   as String? ?? '';
+    final ts = d['timestamp'];
+    String dateStr = '';
+    if (ts is Timestamp) {
+      final dt = ts.toDate();
+      dateStr = '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+    }
+
+    final sevColor = _sevColor(severity);
+    final isHealthy = disease.toLowerCase().contains('healthy');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Column(
+        children: [
+          // Disease photo thumbnail
+          if (imageUrl.isNotEmpty)
+            SizedBox(
+              height: 160,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      child: const Icon(Icons.broken_image_outlined,
+                          color: Colors.white24, size: 40),
+                    ),
+                  ),
+                  // Gradient overlay so disease name badge stays readable
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(12, 24, 12, 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.65),
+                          ],
+                        ),
+                      ),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(
+                            isHealthy ? 'Plant is Healthy' : disease,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (severity.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: sevColor.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                  color: sevColor.withValues(alpha: 0.6)),
+                            ),
+                            child: Text(
+                              severity.toUpperCase(),
+                              style: TextStyle(
+                                  color: sevColor,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5),
+                            ),
+                          ),
+                        ],
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Header row — always visible
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: (isHealthy
+                              ? const Color(0xFF2E7D32)
+                              : sevColor)
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      isHealthy ? Icons.check_circle_outline : Icons.bug_report_outlined,
+                      color: isHealthy ? const Color(0xFF69F0AE) : sevColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isHealthy ? 'Plant is Healthy' : disease,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            if (category.isNotEmpty)
+                              Text(category,
+                                  style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.5),
+                                      fontSize: 11)),
+                            if (category.isNotEmpty && confidence.isNotEmpty)
+                              Text(' · ',
+                                  style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.3),
+                                      fontSize: 11)),
+                            if (confidence.isNotEmpty)
+                              Text(confidence,
+                                  style: const TextStyle(
+                                      color: Color(0xFF69F0AE), fontSize: 11)),
+                          ],
+                        ),
+                        if (dateStr.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(dateStr,
+                                style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                    fontSize: 10)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (severity.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: sevColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: sevColor.withValues(alpha: 0.5)),
+                          ),
+                          child: Text(
+                            severity.toUpperCase(),
+                            style: TextStyle(
+                                color: sevColor,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Icon(
+                        _expanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: Colors.white38,
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded detail sections
+          if (_expanded) ...[
+            const Divider(color: Colors.white12, height: 1),
+            if (symptoms.isNotEmpty)
+              _detailRow(Icons.biotech_outlined, 'Symptoms',
+                  symptoms, const Color(0xFFFF8F00)),
+            if (treatment.isNotEmpty)
+              _detailRow(Icons.healing_rounded, 'Treatment',
+                  treatment, const Color(0xFF69F0AE)),
+            if (prevention.isNotEmpty)
+              _detailRow(Icons.shield_outlined, 'Prevention',
+                  prevention, const Color(0xFF40C4FF)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String title, String value, Color accent) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: accent),
+              const SizedBox(width: 6),
+              Text(title,
+                  style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5)),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white70, fontSize: 13, height: 1.5)),
+          const SizedBox(height: 6),
+          Divider(color: Colors.white.withValues(alpha: 0.07), height: 1),
+        ],
       ),
     );
   }
@@ -1526,7 +1513,7 @@ class _DotsLabelState extends State<_DotsLabel>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('🤖', style: TextStyle(fontSize: 14)),
+                  const Icon(Icons.auto_awesome_rounded, color: Color(0xFF69F0AE), size: 14),
                   const SizedBox(width: 8),
                   Text(
                     'AI analyzing$dots',

@@ -77,7 +77,7 @@ class _WishlistPageState extends State<WishlistPage> {
           if (items.isEmpty) {
             return Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('💚', style: TextStyle(fontSize: 64)),
+                const Icon(Icons.favorite_border_rounded, size: 64, color: Color(0xFF9E9E9E)),
                 const SizedBox(height: 16),
                 const Text('Your wishlist is empty',
                     style: TextStyle(

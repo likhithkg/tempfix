@@ -47,7 +47,7 @@ class HourlyForecast extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(h.emoji, style: const TextStyle(fontSize: 24)),
+                  Icon(h.emoji, size: 24, color: Colors.white),
                   const SizedBox(height: 2),
                   Text(
                     '${h.temp.toStringAsFixed(0)}°',

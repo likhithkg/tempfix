@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class AnimatedWeatherIcon extends StatefulWidget {
-  final String emoji;
+  final IconData emoji;
   final String description;
   final bool isDay;
 
@@ -180,8 +180,8 @@ class _AnimatedWeatherIconState extends State<AnimatedWeatherIcon>
                   ),
                 ),
 
-              // The emoji itself
-              Text(widget.emoji, style: const TextStyle(fontSize: 86)),
+              // The weather icon
+              Icon(widget.emoji, size: 86, color: _glowColor),
             ],
           ),
         );

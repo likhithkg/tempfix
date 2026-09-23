@@ -21,11 +21,11 @@ class IrrigationCard extends StatelessWidget {
     }
   }
 
-  String get _icon {
+  IconData get _icon {
     switch (need) {
-      case IrrigationNeed.required_: return '🚿';
-      case IrrigationNeed.optional_: return '💧';
-      case IrrigationNeed.notRequired: return '✅';
+      case IrrigationNeed.required_: return Icons.water_drop_rounded;
+      case IrrigationNeed.optional_: return Icons.water_drop;
+      case IrrigationNeed.notRequired: return Icons.check_circle_rounded;
     }
   }
 
@@ -44,10 +44,10 @@ class IrrigationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.irrigationTitle, emoji: '💧'),
+          GlassSectionHeader(title: l.irrigationTitle, emoji: Icons.water_drop),
           Row(
             children: [
-              Text(_icon, style: const TextStyle(fontSize: 32)),
+              Icon(_icon, size: 32, color: _color),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

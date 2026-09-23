@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'weather_model.dart';
 
@@ -176,39 +177,39 @@ class WeatherService {
     final list = <FarmAdvisory>[];
 
     if (temp > 40) {
-      list.add(const FarmAdvisory(message: 'Extreme heat — protect livestock and irrigate urgently.', icon: '🌡️', level: AlertLevel.high));
+      list.add(const FarmAdvisory(message: 'Extreme heat — protect livestock and irrigate urgently.', icon: Icons.thermostat_rounded, level: AlertLevel.high));
     } else if (temp > 35) {
-      list.add(const FarmAdvisory(message: 'High temperature — irrigate crops, especially in afternoon.', icon: '🌡️', level: AlertLevel.medium));
+      list.add(const FarmAdvisory(message: 'High temperature — irrigate crops, especially in afternoon.', icon: Icons.thermostat_rounded, level: AlertLevel.medium));
     }
 
     if (rainProb > 70) {
-      list.add(const FarmAdvisory(message: 'Heavy rain likely today — postpone field operations.', icon: '🌧️', level: AlertLevel.high));
+      list.add(const FarmAdvisory(message: 'Heavy rain likely today — postpone field operations.', icon: Icons.water_drop_rounded, level: AlertLevel.high));
     } else if (rainProb > 40) {
-      list.add(const FarmAdvisory(message: 'Rain expected today — plan indoor tasks.', icon: '🌦️', level: AlertLevel.medium));
+      list.add(const FarmAdvisory(message: 'Rain expected today — plan indoor tasks.', icon: Icons.grain_rounded, level: AlertLevel.medium));
     }
 
     if (windSpeed > 10) {
-      list.add(const FarmAdvisory(message: 'Strong winds — avoid pesticide spraying today.', icon: '🌬️', level: AlertLevel.high));
+      list.add(const FarmAdvisory(message: 'Strong winds — avoid pesticide spraying today.', icon: Icons.air_rounded, level: AlertLevel.high));
     } else if (windSpeed > 6) {
-      list.add(const FarmAdvisory(message: 'Moderate winds — spray early morning for best results.', icon: '🌬️', level: AlertLevel.medium));
+      list.add(const FarmAdvisory(message: 'Moderate winds — spray early morning for best results.', icon: Icons.air_rounded, level: AlertLevel.medium));
     } else if (rainProb < 20 && windSpeed < 4) {
-      list.add(const FarmAdvisory(message: 'Excellent conditions for pesticide spraying.', icon: '✅', level: AlertLevel.low));
+      list.add(const FarmAdvisory(message: 'Excellent conditions for pesticide spraying.', icon: Icons.check_circle_rounded, level: AlertLevel.low));
     }
 
     if (daily.length > 1 && daily[1].rainProbability > 60) {
-      list.add(const FarmAdvisory(message: 'Rain expected tomorrow — harvest crops today if possible.', icon: '⚠️', level: AlertLevel.high));
+      list.add(const FarmAdvisory(message: 'Rain expected tomorrow — harvest crops today if possible.', icon: Icons.warning_amber_rounded, level: AlertLevel.high));
     }
 
     if (humidity > 85) {
-      list.add(const FarmAdvisory(message: 'High humidity — fungal disease risk elevated. Monitor crops.', icon: '🍄', level: AlertLevel.medium));
+      list.add(const FarmAdvisory(message: 'High humidity — fungal disease risk elevated. Monitor crops.', icon: Icons.eco_rounded, level: AlertLevel.medium));
     }
 
     if (rainIntel.rainExpected && rainIntel.hoursUntilRain <= 3) {
-      list.add(const FarmAdvisory(message: 'Rain arriving soon — delay irrigation and outdoor spraying.', icon: '💧', level: AlertLevel.medium));
+      list.add(const FarmAdvisory(message: 'Rain arriving soon — delay irrigation and outdoor spraying.', icon: Icons.water_drop, level: AlertLevel.medium));
     }
 
     if (list.isEmpty) {
-      list.add(const FarmAdvisory(message: 'Good farming conditions today. Proceed with planned activities.', icon: '✅', level: AlertLevel.low));
+      list.add(const FarmAdvisory(message: 'Good farming conditions today. Proceed with planned activities.', icon: Icons.check_circle_rounded, level: AlertLevel.low));
     }
 
     return list;
@@ -222,7 +223,7 @@ class WeatherService {
     return [
       DiseaseRisk(
         name: 'Leaf Spot',
-        icon: '🍃',
+        icon: Icons.eco_rounded,
         level: (humidity > 80 && temp > 15 && temp < 32 && rainProb > 40)
             ? AlertLevel.high
             : (humidity > 70 && rainProb > 20)
@@ -231,7 +232,7 @@ class WeatherService {
       ),
       DiseaseRisk(
         name: 'Fungal Disease',
-        icon: '🍄',
+        icon: Icons.biotech_outlined,
         level: (humidity > 85 && rainProb > 50)
             ? AlertLevel.high
             : (humidity > 75 && rainProb > 30)
@@ -240,7 +241,7 @@ class WeatherService {
       ),
       DiseaseRisk(
         name: 'Powdery Mildew',
-        icon: '🌿',
+        icon: Icons.local_florist_rounded,
         level: (humidity > 80 && temp > 10 && temp < 27)
             ? AlertLevel.high
             : (humidity > 65 && temp > 8 && temp < 30)
@@ -379,18 +380,18 @@ class WeatherService {
     return 'Unknown';
   }
 
-  String _emoji(int code, {required bool isDay}) {
-    if (code == 0) return isDay ? '☀️' : '🌙';
-    if (code <= 2) return isDay ? '⛅' : '🌥️';
-    if (code == 3) return '☁️';
-    if (code <= 48) return '🌫️';
-    if (code <= 55) return '🌦️';
-    if (code <= 65) return isDay ? '🌧️' : '🌧️';
-    if (code <= 75) return '❄️';
-    if (code <= 82) return '🌦️';
-    if (code == 95) return '⛈️';
-    if (code >= 96) return '⛈️';
-    return '🌈';
+  IconData _emoji(int code, {required bool isDay}) {
+    if (code == 0) return isDay ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded;
+    if (code <= 2) return Icons.cloud_rounded;
+    if (code == 3) return Icons.cloud_rounded;
+    if (code <= 48) return Icons.foggy;
+    if (code <= 55) return Icons.grain_rounded;
+    if (code <= 65) return Icons.water_drop_rounded;
+    if (code <= 75) return Icons.ac_unit_rounded;
+    if (code <= 82) return Icons.grain_rounded;
+    if (code == 95) return Icons.thunderstorm_rounded;
+    if (code >= 96) return Icons.thunderstorm_rounded;
+    return Icons.cloud_rounded;
   }
 
   static String windDirection(int degrees) {
@@ -410,8 +411,8 @@ class WeatherService {
   List<String> getRainSprayAdvisory(List<HourlyWeather> hourly) {
     final intel = _rainIntelligence(hourly);
     if (intel.rainExpected && intel.hoursUntilRain <= 3) {
-      return ['🌧 Rain expected in next 3 hours.', '🚫 Avoid pesticide spraying.'];
+      return ['Rain expected in next 3 hours.', 'Avoid pesticide spraying.'];
     }
-    return ['✅ No rain expected in next 3 hours.', '🌾 Safe time for pesticide spraying.'];
+    return ['No rain expected in next 3 hours.', 'Safe time for pesticide spraying.'];
   }
 }

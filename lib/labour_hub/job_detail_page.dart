@@ -306,10 +306,10 @@ class _JobDetailPageState extends State<JobDetailPage> {
                       '${job.spotsLeft} of ${job.workersRequired}'),
                   if (job.foodIncluded)
                     _JRow(Icons.restaurant_rounded, 'Food',
-                        '✅ Included'),
+                        'Included'),
                   if (job.accommodationIncluded)
                     _JRow(Icons.hotel_rounded, 'Accommodation',
-                        '✅ Included'),
+                        'Included'),
                 ]),
           ),
 

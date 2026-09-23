@@ -1,5 +1,6 @@
 // lib/rent/rent_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 enum MachineAvailability {
   available,
@@ -32,12 +33,12 @@ enum MachineBadge {
     }
   }
 
-  String get emoji {
+  IconData get icon {
     switch (this) {
-      case MachineBadge.trustedOwner: return '🛡';
-      case MachineBadge.topRated: return '⭐';
-      case MachineBadge.fastResponse: return '⚡';
-      case MachineBadge.newFeature: return '🆕';
+      case MachineBadge.trustedOwner: return Icons.verified_user_rounded;
+      case MachineBadge.topRated: return Icons.star_rounded;
+      case MachineBadge.fastResponse: return Icons.bolt_rounded;
+      case MachineBadge.newFeature: return Icons.fiber_new_rounded;
     }
   }
 }

@@ -41,7 +41,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read:   if isSignedIn() && (uid() == userId || isAdmin());
+      allow read:   if isSignedIn();
       allow create: if isSignedIn() && uid() == userId;
       allow update: if isSignedIn() && (uid() == userId || isAdmin());
       allow delete: if isSignedIn() && (uid() == userId || isAdmin());
@@ -348,6 +348,42 @@ service cloud.firestore {
                       (isSignedIn() &&
                        resource.data.get('userId', '') == uid() &&
                        resource.data.get('status', '') in ['cancelled', 'collected', 'delivered']);
+    }
+
+    // ── Land Connect ─────────────────────────────────────────────────────────
+
+    match /land_listings/{listingId} {
+      // Any signed-in user can browse active listings; owner sees all their own
+      allow read: if isSignedIn() && (
+                    resource.data.get('status', '') == 'active' ||
+                    resource.data.get('ownerId', '') == uid()
+                  );
+      allow create: if isSignedIn() && request.resource.data.get('ownerId', '') == uid();
+      allow update: if isSignedIn() && (resource.data.get('ownerId', '') == uid() || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.get('ownerId', '') == uid() || isAdmin());
+    }
+
+    match /land_connect_requests/{reqId} {
+      // Cultivator reads their own; landowner reads requests on their listings
+      allow read: if isSignedIn() && (
+                    resource.data.get('cultivatorId', '') == uid() ||
+                    resource.data.get('ownerId', '') == uid() ||
+                    isAdmin()
+                  );
+      allow create: if isSignedIn() && request.resource.data.get('cultivatorId', '') == uid();
+      // Owner can accept/reject; cultivator can withdraw (status field only)
+      allow update: if isSignedIn() && (
+                    resource.data.get('ownerId', '') == uid() ||
+                    (resource.data.get('cultivatorId', '') == uid() &&
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+                    isAdmin()
+                  );
+      allow delete: if isAdmin();
+    }
+
+    match /land_connect_reports/{reportId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
     }
 
     match /{document=**} {

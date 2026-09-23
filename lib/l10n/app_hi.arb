@@ -1,5 +1,6 @@
 {
   "appName": "कृषिमित्र",
+  "appTagline": "हर किसान के लिए स्मार्ट कृषि",
 
   "login": "लॉगिन",
   "signup": "साइन अप",
@@ -871,6 +872,40 @@
   "sunset": "सूर्यास्त",
   "dayLength": "दिन की अवधि",
   "uvIndex": "UV सूचकांक",
-  "tryAgain": "पुनः प्रयास करें"
+  "tryAgain": "पुनः प्रयास करें",
+
+  "lcTitle": "लैंड कनेक्ट",
+  "lcSubtitle": "खेती के लिए जमीन खोजें या अपनी जमीन सूचीबद्ध करें",
+  "lcHaveLand": "मेरे पास जमीन है",
+  "lcHaveLandSub": "अपनी खाली जमीन सूचीबद्ध करें और किसान खोजें",
+  "lcFindLand": "जमीन खोजें",
+  "lcFindLandSub": "नजदीकी उपलब्ध जमीन देखें",
+  "lcMyListings": "मेरी जमीन सूचियाँ",
+  "lcMyListingsSub": "अपनी जमीन सूचियाँ प्रबंधित करें",
+  "lcCultivationRequests": "खेती के अनुरोध",
+  "lcCultivationRequestsSub": "अपनी जमीन पर अनुरोध देखें",
+  "lcMyRequests": "मेरे खेती के अनुरोध",
+  "lcMyRequestsSub": "जमीन मालिकों को भेजे अनुरोध ट्रैक करें",
+  "lcHowItWorks": "यह कैसे काम करता है",
+  "lcDiscoveryTitle": "नजदीकी जमीन खोजें",
+  "lcSearchHint": "स्थान, फसल या जमीन के प्रकार से खोजें...",
+  "lcEnableLocation": "स्थान सक्षम करें",
+  "lcRequestCultivate": "खेती का अनुरोध करें",
+  "lcRequestAlreadySent": "अनुरोध पहले से भेजा गया",
+  "lcSendRequest": "खेती का अनुरोध भेजें",
+  "lcSubmitRequest": "अनुरोध जमा करें",
+  "lcWithdrawRequest": "अनुरोध वापस लें",
+  "lcPendingTab": "प्रतीक्षारत",
+  "lcAcceptedTab": "स्वीकृत",
+  "lcRejectedTab": "अस्वीकृत",
+  "lcActiveTab": "सक्रिय",
+  "lcPausedTab": "रोका गया",
+  "lcAddListing": "नई सूची जोड़ें",
+  "lcListingFormTitle": "अपनी जमीन सूचीबद्ध करें",
+  "lcPrivacyNotice": "आपका सटीक स्थान निजी रखा जाता है। अनुरोध स्वीकृत होने तक केवल गाँव और जिला दिखाया जाता है।",
+  "lcDisclaimerText": "KrishiMithra केवल संपर्क की सुविधा देता है। कृपया भूमि लीज समझौता अलग से करें।",
+  "lcRequestWithdrawn": "अनुरोध वापस लिया गया",
+  "lcRequestAcceptedMsg": "अनुरोध स्वीकृत!",
+  "lcContactLandowner": "समझौते के विवरण पर चर्चा के लिए जमीन मालिक से संपर्क करें।"
 }
 

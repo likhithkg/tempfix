@@ -146,16 +146,20 @@ class GreenBazaarService {
   // ─── Orders ───────────────────────────────────────────────────────────────
 
   Stream<List<PlantOrder>> streamMyOrders() {
-    final uid = _uid;
-    if (uid == null) return const Stream.empty();
-    return _db
-        .collection('gb_orders')
-        .where('userId', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((s) => s.docs
+    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
+      if (user == null) return const Stream.empty();
+      return _db
+          .collection('gb_orders')
+          .where('userId', isEqualTo: user.uid)
+          .snapshots()
+          .map((s) {
+        final orders = s.docs
             .map((d) => PlantOrder.fromMap(d.data(), d.id))
-            .toList());
+            .toList();
+        orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return orders;
+      });
+    });
   }
 
   Future<PlantOrder?> getOrder(String orderId) async {
@@ -179,6 +183,8 @@ class GreenBazaarService {
   Future<String> placeTakeAwayOrder({
     required List<CartItem> items,
     required String buyerName,
+    String? buyerPhone,
+    String? buyerLocation,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('Not signed in');
@@ -186,10 +192,10 @@ class GreenBazaarService {
     final total =
         items.fold(0.0, (s, i) => s + i.price * i.orderQty);
 
-    // Create order document
-    final orderRef = _db.collection('gb_orders').doc();
-    // Look up each unique seller first
+    // Look up each unique seller and capture contact info from first listing found
     final sellerUids = <String>{};
+    String? sellerPhone;
+    String? sellerLocation;
     for (final item in items) {
       try {
         final plantDoc =
@@ -203,13 +209,37 @@ class GreenBazaarService {
           if (sellerUid.isNotEmpty && sellerUid != uid) {
             sellerUids.add(sellerUid);
           }
+          if (sellerPhone == null) {
+            final ph = (d['phone'] as String? ?? '').trim();
+            final loc = (d['location'] as String? ?? '').trim();
+            if (ph.isNotEmpty) sellerPhone = ph;
+            if (loc.isNotEmpty) sellerLocation = loc;
+          }
         }
       } catch (_) {}
     }
 
+    // Fetch buyer email
+    String? buyerEmail;
+    try {
+      final userDoc = await _db.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        final d = userDoc.data() as Map<String, dynamic>;
+        final email = (d['email'] as String? ?? '').trim();
+        if (email.isNotEmpty) buyerEmail = email;
+      }
+    } catch (_) {}
+
+    final orderRef = _db.collection('gb_orders').doc();
+
     await orderRef.set({
       'userId': uid,
       'userName': buyerName,
+      if (buyerPhone != null && buyerPhone.isNotEmpty) 'buyerPhone': buyerPhone,
+      if (buyerEmail != null) 'buyerEmail': buyerEmail,
+      if (buyerLocation != null && buyerLocation.isNotEmpty) 'buyerLocation': buyerLocation,
+      if (sellerPhone != null) 'sellerPhone': sellerPhone,
+      if (sellerLocation != null) 'sellerLocation': sellerLocation,
       'items': items
           .map((c) => {
                 'vendorId': c.vendorId,
@@ -245,7 +275,7 @@ class GreenBazaarService {
           final notifRef = _db.collection('km_notifications').doc();
           batch.set(notifRef, {
             'userId': sellerUid,
-            'title': '🌿 New Takeaway Order!',
+            'title': 'New Takeaway Order!',
             'body': 'Pickup order received: $plantNames',
             'type': 'takeaway_order',
             'orderId': orderRef.id,
@@ -287,5 +317,43 @@ class GreenBazaarService {
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // Cancel a placed order (buyer action — changes status to 'cancelled').
+  // Only allowed when status is 'placed' and caller is the buyer.
+  Future<void> cancelOrder(String orderId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in');
+    final snap = await _db.collection('gb_orders').doc(orderId).get();
+    if (!snap.exists) throw Exception('Order not found');
+    final data = snap.data()!;
+    if ((data['userId'] as String? ?? '') != uid) {
+      throw Exception('Not authorised to cancel this order');
+    }
+    if ((data['status'] as String? ?? '') != 'placed') {
+      throw Exception('Only orders in "placed" status can be cancelled');
+    }
+    await _db.collection('gb_orders').doc(orderId).update({
+      'status': 'cancelled',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Delete a completed/cancelled order from the buyer's history.
+  // Only allowed when status is 'cancelled', 'collected', or 'delivered'.
+  Future<void> deleteOrder(String orderId) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in');
+    final snap = await _db.collection('gb_orders').doc(orderId).get();
+    if (!snap.exists) throw Exception('Order not found');
+    final data = snap.data()!;
+    if ((data['userId'] as String? ?? '') != uid) {
+      throw Exception('Not authorised to delete this order');
+    }
+    const removable = {'cancelled', 'collected', 'delivered'};
+    if (!removable.contains(data['status'] as String? ?? '')) {
+      throw Exception('Active orders cannot be deleted. Cancel the order first.');
+    }
+    await _db.collection('gb_orders').doc(orderId).delete();
   }
 }

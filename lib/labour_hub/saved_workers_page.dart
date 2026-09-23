@@ -104,7 +104,7 @@ class _SavedWorkersPageState extends State<SavedWorkersPage> {
                               fontWeight: FontWeight.bold,
                               color: Colors.grey.shade500)),
                       const SizedBox(height: 8),
-                      Text('Tap ♥ on a worker profile to save them here',
+                      Text('Tap the save icon on a worker profile to save them here',
                           style: TextStyle(
                               fontSize: 13, color: Colors.grey.shade400)),
                     ]),
@@ -212,7 +212,7 @@ class _SavedCard extends StatelessWidget {
                     ]),
                     const SizedBox(height: 4),
                     if (profile.locationDisplay.isNotEmpty)
-                      Text('📍 ${profile.locationDisplay}',
+                      Text(profile.locationDisplay,
                           style: TextStyle(
                               fontSize: 12, color: Colors.grey.shade600)),
                     const SizedBox(height: 6),

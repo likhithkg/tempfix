@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -22,14 +22,14 @@ const String LOCATIONIQ_API_KEY =
 
 // Variety options — keys must match home page _kCategories keys
 const _kVarieties = [
-  ('fruit',      'Fruit',       '🍎', Color(0xFFE67E22)),
-  ('flower',     'Flower',      '🌸', Color(0xFFE91E8C)),
-  ('vegetable',  'Vegetable',   '🥦', Color(0xFF27AE60)),
-  ('medicinal',  'Medicinal',   '💊', Color(0xFF16A085)),
-  ('ornamental', 'Ornamental',  '🪴', Color(0xFF8E44AD)),
-  ('timber',     'Timber',      '🌳', Color(0xFF795548)),
-  ('aromatic',   'Aromatic',    '🌿', Color(0xFF00897B)),
-  ('seeds',      'Seeds',       '🌾', Color(0xFFF39C12)),
+  ('fruit',      'Fruit',       Icons.eco_rounded,              Color(0xFFE67E22)),
+  ('flower',     'Flower',      Icons.local_florist_rounded,    Color(0xFFE91E8C)),
+  ('vegetable',  'Vegetable',   Icons.grass_rounded,            Color(0xFF27AE60)),
+  ('medicinal',  'Medicinal',   Icons.medical_services_rounded, Color(0xFF16A085)),
+  ('ornamental', 'Ornamental',  Icons.spa_rounded,              Color(0xFF8E44AD)),
+  ('timber',     'Timber',      Icons.park_rounded,             Color(0xFF795548)),
+  ('aromatic',   'Aromatic',    Icons.air_rounded,              Color(0xFF00897B)),
+  ('seeds',      'Seeds',       Icons.grain_rounded,            Color(0xFFF39C12)),
 ];
 
 class PlantListFormPage extends StatefulWidget {
@@ -84,7 +84,7 @@ class _PlantListFormPageState
   // IMAGE VARIABLES
   // =========================
 
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
 
   String? _uploadedImageUrl;
 
@@ -183,17 +183,17 @@ class _PlantListFormPageState
 
       if (pickedFile == null) return;
 
-      setState(() {
-        _selectedImage =
-            File(pickedFile.path);
+      final bytes = await pickedFile.readAsBytes();
 
+      setState(() {
+        _selectedImageBytes = bytes;
         _uploadingImage = true;
       });
 
       final imageUrl =
           await ImageUploadService
-              .uploadImage(
-        _selectedImage!,
+              .uploadImageFromXFile(
+        pickedFile,
       );
 
       if (imageUrl != null) {
@@ -383,7 +383,7 @@ class _PlantListFormPageState
             childAspectRatio: 0.9,
           ),
           itemBuilder: (_, i) {
-            final (key, label, emoji, color) = _kVarieties[i];
+            final (key, label, icon, color) = _kVarieties[i];
             final selected = _selectedVariety == key;
             return GestureDetector(
               onTap: () => setState(() => _selectedVariety = key),
@@ -402,8 +402,8 @@ class _PlantListFormPageState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(emoji,
-                        style: const TextStyle(fontSize: 22)),
+                    Icon(icon, size: 22,
+                        color: selected ? color : const Color(0xFF616161)),
                     const SizedBox(height: 4),
                     Text(
                       label,
@@ -557,6 +557,11 @@ class _PlantListFormPageState
                       .existingVendor!
                       .imageUrl
                   : null),
+
+      // Preserve existing productSource on edit; new listings are always 'vendor'
+      productSource: isEdit
+          ? (widget.existingVendor!.productSource)
+          : 'vendor',
     );
 
     try {
@@ -733,15 +738,15 @@ class _PlantListFormPageState
                                         child:
                                             CircularProgressIndicator(),
                                       )
-                                    : _selectedImage !=
+                                    : _selectedImageBytes !=
                                             null
                                         ? ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(
                                                     16),
                                             child:
-                                                Image.file(
-                                              _selectedImage!,
+                                                Image.memory(
+                                              _selectedImageBytes!,
                                               fit: BoxFit.cover,
                                             ),
                                           )

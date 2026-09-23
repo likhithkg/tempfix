@@ -37,17 +37,16 @@ dependencies:
 
   # HTTP & Utils
   http: ^1.6.0
+  http_parser: ^4.0.0
   logging: ^1.2.0
-  flutter_dotenv: ^5.1.0
 
   # 📍 Location & Maps
-  geolocator: any
+  geolocator: ^13.0.2
   geocoding: ^4.0.0
   url_launcher: ^6.2.6
   google_maps_flutter: ^2.5.0
   flutter_map: ^8.1.1
   latlong2: ^0.9.0
-  google_mlkit_translation: ^0.13.0
   # Supabase
   supabase_flutter: ^2.0.6
   mime: ^1.0.4
@@ -58,7 +57,6 @@ dependencies:
 
   # Utilities
   uuid: ^4.0.0
-  translator: ^1.0.3+1
   # Image & File Pickers
   image_picker: ^1.0.4
   image_picker_for_web: ^3.0.1
@@ -87,7 +85,6 @@ flutter:
     - assets/leaves.png
     - assets/farmer_logo.png
     - assets/knowledge_base/
-    - .env
 
 flutter_launcher_icons:
   android: true

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -21,16 +21,16 @@ const _kGrad    = LinearGradient(
 );
 
 // ─── Machine types ────────────────────────────────────────────────────────────
-const _kTypes = <(String, String)>[
-  ('Tractor',    '🚜'),
-  ('Harvester',  '🌾'),
-  ('Rotavator',  '⚙️'),
-  ('Cultivator', '🌿'),
-  ('Seeder',     '🌱'),
-  ('Hitachi',    '⛏️'),
-  ('JCB',        '🏗️'),
-  ('Lorry',      '🚚'),
-  ('Other',      '🔧'),
+const _kTypes = <(String, IconData)>[
+  ('Tractor',    Icons.agriculture_outlined),
+  ('Harvester',  Icons.grass_rounded),
+  ('Rotavator',  Icons.settings_rounded),
+  ('Cultivator', Icons.eco_rounded),
+  ('Seeder',     Icons.grain_rounded),
+  ('Hitachi',    Icons.construction),
+  ('JCB',        Icons.construction),
+  ('Lorry',      Icons.local_shipping_outlined),
+  ('Other',      Icons.build_rounded),
 ];
 
 class RentListFormPage extends StatefulWidget {
@@ -54,8 +54,9 @@ class _RentListFormPageState extends State<RentListFormPage> {
   String? _type;
   double? _lat;
   double? _lng;
-  String? _imageUrl;
-  XFile?  _picked;
+  String?   _imageUrl;
+  XFile?    _picked;
+  Uint8List? _pickedBytes; // preview bytes — avoids dart:io File on web
   bool    _uploading  = false;
   bool    _submitting = false;
 
@@ -65,8 +66,9 @@ class _RentListFormPageState extends State<RentListFormPage> {
     final m = widget.existingMachine;
     if (m != null) {
       _name.text  = m.name;
-      _price.text = m.pricePerDay.toString();
-      if (m.pricePerHour > 0) _priceHr.text = m.pricePerHour.toString();
+      _priceHr.text = m.pricePerHour > 0
+          ? m.pricePerHour.toString()
+          : m.pricePerDay.toString();
       _owner.text = m.ownerName;
       _phone.text = m.phone;
       _type       = m.type;
@@ -102,7 +104,14 @@ class _RentListFormPageState extends State<RentListFormPage> {
   Future<void> _pickImage() async {
     final f = await ImagePicker().pickImage(
         source: ImageSource.gallery, imageQuality: 85);
-    if (f != null) setState(() => _picked = f);
+    if (f != null) {
+      // Read bytes immediately for web-safe preview (no dart:io File required).
+      final bytes = await f.readAsBytes();
+      setState(() {
+        _picked = f;
+        _pickedBytes = bytes;
+      });
+    }
   }
 
   Future<void> _uploadImage() async {
@@ -112,10 +121,11 @@ class _RentListFormPageState extends State<RentListFormPage> {
     }
     try {
       setState(() => _uploading = true);
-      final url = await ImageUploadService.uploadImage(File(_picked!.path));
+      // uploadImageFromXFile uses readAsBytes() — works on Flutter Web and mobile.
+      final url = await ImageUploadService.uploadImageFromXFile(_picked!);
       if (url != null) {
         setState(() => _imageUrl = url);
-        _snack('Image uploaded ✅', color: const Color(0xFF4CAF50));
+        _snack('Image uploaded', color: const Color(0xFF4CAF50));
       } else {
         _snack('Upload failed — try again', color: Colors.red);
       }
@@ -191,37 +201,42 @@ class _RentListFormPageState extends State<RentListFormPage> {
       _snack('Set the machine location first');
       return;
     }
-    final price = double.tryParse(_price.text.trim());
-    if (price == null) {
-      _snack('Enter a valid price');
+    final price = double.tryParse(_priceHr.text.trim());
+    if (price == null || price <= 0) {
+      _snack('Enter a valid hourly price');
       return;
     }
 
     setState(() => _submitting = true);
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final uid = currentUser?.uid ?? '';
       final m = RentMachine(
-        id:          widget.existingMachine?.id ?? '',
-        name:        _name.text.trim(),
-        type:        _type!,
-        pricePerDay: price,
-        pricePerHour: double.tryParse(_priceHr.text.trim()) ?? 0,
-        ownerName:   _owner.text.trim(),
-        ownerId:     widget.existingMachine?.ownerId ?? uid,
-        phone:       _phone.text.trim(),
-        latitude:    _lat!,
-        longitude:   _lng!,
-        imageUrl:    _imageUrl ?? '',
-        createdAt:   widget.existingMachine?.createdAt ?? DateTime.now(),
-        location:    _locCtrl.text.trim(),
+        id:           widget.existingMachine?.id ?? '',
+        name:         _name.text.trim(),
+        type:         _type!,
+        pricePerDay:  0,
+        pricePerHour: price,
+        ownerName:    _owner.text.trim(),
+        ownerId:      widget.existingMachine?.ownerId ?? uid,
+        phone:        _phone.text.trim(),
+        latitude:     _lat!,
+        longitude:    _lng!,
+        imageUrl:     _imageUrl ?? '',
+        createdAt:    widget.existingMachine?.createdAt ?? DateTime.now(),
+        location:     _locCtrl.text.trim(),
+        // Persist the owner's profile photo so machine-detail cards can display it.
+        // photoURL is set after a profile-picture upload via the main Profile page.
+        ownerPhotoUrl: widget.existingMachine?.ownerPhotoUrl
+            ?? currentUser?.photoURL,
       );
 
       if (widget.existingMachine == null) {
         await RentMachineService.instance.addMachine(m);
-        _snack('Machine listed successfully! 🎉', color: const Color(0xFF4CAF50));
+        _snack('Machine listed successfully!', color: const Color(0xFF4CAF50));
       } else {
         await RentMachineService.instance.updateMachine(m.id, m);
-        _snack('Listing updated ✅', color: const Color(0xFF4CAF50));
+        _snack('Listing updated', color: const Color(0xFF4CAF50));
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -284,7 +299,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SizedBox(height: 4),
             Text(
-              isEdit ? '✏️  Edit Machine' : '🚜  List Your Machine',
+              isEdit ? 'Edit Machine' : 'List Your Machine',
               style: const TextStyle(
                   color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
             ),
@@ -309,7 +324,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
     return _card(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(children: [
-        _cardHeader('📸', 'Machine Photo', 'A good photo attracts more bookings'),
+        _cardHeader(Icons.camera_alt_rounded, 'Machine Photo', 'A good photo attracts more bookings'),
         const SizedBox(height: 14),
         GestureDetector(
           onTap: _uploading ? null : _pickImage,
@@ -330,7 +345,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
                     )
                   : hasPick
                       ? Stack(fit: StackFit.expand, children: [
-                          Image.file(File(_picked!.path), fit: BoxFit.cover),
+                          Image.memory(_pickedBytes!, fit: BoxFit.cover),
                           if (!isUploaded)
                             Positioned(
                               bottom: 0, left: 0, right: 0,
@@ -411,7 +426,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
   Widget _buildMachineCard() {
     return _card(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _cardHeader('🚜', 'Machine Details', null),
+        _cardHeader(Icons.agriculture_outlined, 'Machine Details', null),
         const SizedBox(height: 16),
         _field(
           controller: _name,
@@ -454,7 +469,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
                       : [],
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(t.$2, style: const TextStyle(fontSize: 15)),
+                  Icon(t.$2, size: 15, color: sel ? Colors.white : _kPrimary),
                   const SizedBox(width: 6),
                   Text(t.$1,
                       style: TextStyle(
@@ -481,32 +496,18 @@ class _RentListFormPageState extends State<RentListFormPage> {
   Widget _buildPricingCard() {
     return _card(
       child: Column(children: [
-        _cardHeader('💰', 'Pricing', null),
+        _cardHeader(Icons.currency_rupee, 'Pricing', null),
         const SizedBox(height: 16),
-        Row(children: [
-          Expanded(
-            child: _field(
-              controller: _price,
-              label: 'Per Day (₹)',
-              hint: 'e.g. 2500',
-              icon: Icons.calendar_today_rounded,
-              keyboardType: TextInputType.number,
-              validator: (v) => (v == null || double.tryParse(v) == null)
-                  ? 'Enter price'
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _field(
-              controller: _priceHr,
-              label: 'Per Hour (₹)',
-              hint: 'Optional',
-              icon: Icons.access_time_rounded,
-              keyboardType: TextInputType.number,
-            ),
-          ),
-        ]),
+        _field(
+          controller: _priceHr,
+          label: 'Per Hour (₹) *',
+          hint: 'e.g. 350',
+          icon: Icons.access_time_rounded,
+          keyboardType: TextInputType.number,
+          validator: (v) => (v == null || double.tryParse(v) == null || double.tryParse(v)! <= 0)
+              ? 'Enter hourly price'
+              : null,
+        ),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(10),
@@ -536,7 +537,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
     return _card(
       child: Column(children: [
         _cardHeader(
-            '👤', 'Your Contact Details', 'Shared with farmers after booking'),
+            Icons.person_rounded, 'Your Contact Details', 'Shared with farmers after booking'),
         const SizedBox(height: 16),
         _field(
           controller: _owner,
@@ -584,7 +585,7 @@ class _RentListFormPageState extends State<RentListFormPage> {
     final hasLoc = _lat != null && _lng != null;
     return _card(
       child: Column(children: [
-        _cardHeader('📍', 'Machine Location', 'Where is your machine based?'),
+        _cardHeader(Icons.location_on_rounded, 'Machine Location', 'Where is your machine based?'),
         const SizedBox(height: 16),
         GestureDetector(
           onTap: _searchLocation,
@@ -726,9 +727,9 @@ class _RentListFormPageState extends State<RentListFormPage> {
     );
   }
 
-  Widget _cardHeader(String emoji, String title, String? sub) {
+  Widget _cardHeader(IconData icon, String title, String? sub) {
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(emoji, style: const TextStyle(fontSize: 18)),
+      Icon(icon, size: 18, color: _kPrimary),
       const SizedBox(width: 8),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title,

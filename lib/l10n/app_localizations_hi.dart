@@ -12,6 +12,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appName => 'कृषिमित्र';
 
   @override
+  String get appTagline => 'हर किसान के लिए स्मार्ट कृषि';
+
+  @override
   String get login => 'लॉगिन';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tryAgain => 'पुनः प्रयास करें';
+
+  @override
+  String get lcTitle => 'लैंड कनेक्ट';
+
+  @override
+  String get lcSubtitle => 'खेती के लिए जमीन खोजें या अपनी जमीन सूचीबद्ध करें';
+
+  @override
+  String get lcHaveLand => 'मेरे पास जमीन है';
+
+  @override
+  String get lcHaveLandSub => 'अपनी खाली जमीन सूचीबद्ध करें और किसान खोजें';
+
+  @override
+  String get lcFindLand => 'जमीन खोजें';
+
+  @override
+  String get lcFindLandSub => 'नजदीकी उपलब्ध जमीन देखें';
+
+  @override
+  String get lcMyListings => 'मेरी जमीन सूचियाँ';
+
+  @override
+  String get lcMyListingsSub => 'अपनी जमीन सूचियाँ प्रबंधित करें';
+
+  @override
+  String get lcCultivationRequests => 'खेती के अनुरोध';
+
+  @override
+  String get lcCultivationRequestsSub => 'अपनी जमीन पर अनुरोध देखें';
+
+  @override
+  String get lcMyRequests => 'मेरे खेती के अनुरोध';
+
+  @override
+  String get lcMyRequestsSub => 'जमीन मालिकों को भेजे अनुरोध ट्रैक करें';
+
+  @override
+  String get lcHowItWorks => 'यह कैसे काम करता है';
+
+  @override
+  String get lcDiscoveryTitle => 'नजदीकी जमीन खोजें';
+
+  @override
+  String get lcSearchHint => 'स्थान, फसल या जमीन के प्रकार से खोजें...';
+
+  @override
+  String get lcEnableLocation => 'स्थान सक्षम करें';
+
+  @override
+  String get lcRequestCultivate => 'खेती का अनुरोध करें';
+
+  @override
+  String get lcRequestAlreadySent => 'अनुरोध पहले से भेजा गया';
+
+  @override
+  String get lcSendRequest => 'खेती का अनुरोध भेजें';
+
+  @override
+  String get lcSubmitRequest => 'अनुरोध जमा करें';
+
+  @override
+  String get lcWithdrawRequest => 'अनुरोध वापस लें';
+
+  @override
+  String get lcPendingTab => 'प्रतीक्षारत';
+
+  @override
+  String get lcAcceptedTab => 'स्वीकृत';
+
+  @override
+  String get lcRejectedTab => 'अस्वीकृत';
+
+  @override
+  String get lcActiveTab => 'सक्रिय';
+
+  @override
+  String get lcPausedTab => 'रोका गया';
+
+  @override
+  String get lcAddListing => 'नई सूची जोड़ें';
+
+  @override
+  String get lcListingFormTitle => 'अपनी जमीन सूचीबद्ध करें';
+
+  @override
+  String get lcPrivacyNotice => 'आपका सटीक स्थान निजी रखा जाता है। अनुरोध स्वीकृत होने तक केवल गाँव और जिला दिखाया जाता है।';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra केवल संपर्क की सुविधा देता है। कृपया भूमि लीज समझौता अलग से करें।';
+
+  @override
+  String get lcRequestWithdrawn => 'अनुरोध वापस लिया गया';
+
+  @override
+  String get lcRequestAcceptedMsg => 'अनुरोध स्वीकृत!';
+
+  @override
+  String get lcContactLandowner => 'समझौते के विवरण पर चर्चा के लिए जमीन मालिक से संपर्क करें।';
 }

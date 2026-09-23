@@ -208,6 +208,11 @@ class PlantOrder {
   final String id;
   final String userId;
   final String userName;
+  final String? buyerPhone;
+  final String? buyerEmail;
+  final String? buyerLocation;
+  final String? sellerPhone;
+  final String? sellerLocation;
   final List<OrderLineItem> items;
   final double itemsTotal;
   final double deliveryCharge;
@@ -223,6 +228,11 @@ class PlantOrder {
     required this.id,
     required this.userId,
     required this.userName,
+    this.buyerPhone,
+    this.buyerEmail,
+    this.buyerLocation,
+    this.sellerPhone,
+    this.sellerLocation,
     required this.items,
     required this.itemsTotal,
     required this.deliveryCharge,
@@ -264,10 +274,20 @@ class PlantOrder {
 
     final addressMap = m['address'] as Map?;
 
+    String? parseStr(String key) {
+      final v = (m[key] as String? ?? '').trim();
+      return v.isNotEmpty ? v : null;
+    }
+
     return PlantOrder(
       id: docId,
       userId: m['userId'] ?? '',
       userName: m['userName'] ?? '',
+      buyerPhone: parseStr('buyerPhone'),
+      buyerEmail: parseStr('buyerEmail'),
+      buyerLocation: parseStr('buyerLocation'),
+      sellerPhone: parseStr('sellerPhone'),
+      sellerLocation: parseStr('sellerLocation'),
       items: itemsList,
       itemsTotal: (m['itemsTotal'] as num? ?? 0).toDouble(),
       deliveryCharge: (m['deliveryCharge'] as num? ?? 0).toDouble(),
@@ -290,6 +310,11 @@ class PlantOrder {
   Map<String, dynamic> toMap() => {
         'userId': userId,
         'userName': userName,
+        if (buyerPhone != null) 'buyerPhone': buyerPhone,
+        if (buyerEmail != null) 'buyerEmail': buyerEmail,
+        if (buyerLocation != null) 'buyerLocation': buyerLocation,
+        if (sellerPhone != null) 'sellerPhone': sellerPhone,
+        if (sellerLocation != null) 'sellerLocation': sellerLocation,
         'items': items.map((e) => e.toMap()).toList(),
         'itemsTotal': itemsTotal,
         'deliveryCharge': deliveryCharge,

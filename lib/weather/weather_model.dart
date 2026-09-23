@@ -1,15 +1,17 @@
+import 'package:flutter/material.dart';
+
 enum AlertLevel { low, medium, high }
 
 class FarmAdvisory {
   final String message;
-  final String icon;
+  final IconData icon;
   final AlertLevel level;
   const FarmAdvisory({required this.message, required this.icon, required this.level});
 }
 
 class DiseaseRisk {
   final String name;
-  final String icon;
+  final IconData icon;
   final AlertLevel level;
   const DiseaseRisk({required this.name, required this.icon, required this.level});
 }
@@ -53,7 +55,7 @@ class WeatherData {
   final double feelsLike;
   final int humidity;
   final String description;
-  final String emoji;
+  final IconData emoji;
   final double windSpeed;
   final int windDirection;
   final double uvIndex;
@@ -100,7 +102,7 @@ class WeatherData {
 class HourlyWeather {
   final DateTime time;
   final double temp;
-  final String emoji;
+  final IconData emoji;
   final int weatherCode;
   final int rainProbability;
   final double windSpeed;
@@ -125,7 +127,7 @@ class DailyWeather {
   final String description;
   final double tempMin;
   final double tempMax;
-  final String emoji;
+  final IconData emoji;
   final int weatherCode;
   final int rainProbability;
   final double windSpeed;

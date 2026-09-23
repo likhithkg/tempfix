@@ -18,6 +18,7 @@ import 'rent_list_form_page.dart';
 import 'rent_owner_dashboard_page.dart';
 import 'rent_booking_model.dart';
 import 'rent_farmer_bookings_page.dart';
+import '../config/km_images.dart';
 import '../theme.dart';
 import '../widgets/km_widgets.dart';
 
@@ -35,17 +36,17 @@ Color _typeColor(String type) {
   }
 }
 
-String _typeEmoji(String type) {
+IconData _typeIcon(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor':    return '🚜';
-    case 'harvester':  return '🌾';
-    case 'rotavator':  return '⚙️';
-    case 'cultivator': return '🌿';
-    case 'seeder':     return '🌱';
-    case 'hitachi':    return '⛏️';
-    case 'jcb':        return '🏗️';
-    case 'lorry':      return '🚚';
-    default:           return '🔧';
+    case 'tractor':    return Icons.agriculture_rounded;
+    case 'harvester':  return Icons.grass_rounded;
+    case 'rotavator':  return Icons.settings_rounded;
+    case 'cultivator': return Icons.eco_rounded;
+    case 'seeder':     return Icons.spa_rounded;
+    case 'hitachi':    return Icons.construction_rounded;
+    case 'jcb':        return Icons.construction_rounded;
+    case 'lorry':      return Icons.local_shipping_rounded;
+    default:           return Icons.build_rounded;
   }
 }
 
@@ -63,20 +64,21 @@ Color _availColor(MachineAvailability a) {
 // ─── Category data ──────────────────────────────────────────────────────────
 
 class _Cat {
-  final String key, label, emoji;
-  const _Cat(this.key, this.label, this.emoji);
+  final String key, label;
+  final IconData icon;
+  const _Cat(this.key, this.label, this.icon);
 }
 
 const _kCats = [
-  _Cat('All',        'All',        '🔑'),
-  _Cat('Tractor',    'Tractor',    '🚜'),
-  _Cat('Harvester',  'Harvester',  '🌾'),
-  _Cat('Rotavator',  'Rotavator',  '⚙️'),
-  _Cat('Cultivator', 'Cultivator', '🌿'),
-  _Cat('Seeder',     'Seeder',     '🌱'),
-  _Cat('Hitachi',    'Hitachi',    '⛏️'),
-  _Cat('JCB',        'JCB',        '🏗️'),
-  _Cat('Lorry',      'Lorry',      '🚚'),
+  _Cat('All',        'All',        Icons.apps_rounded),
+  _Cat('Tractor',    'Tractor',    Icons.agriculture_rounded),
+  _Cat('Harvester',  'Harvester',  Icons.grass_rounded),
+  _Cat('Rotavator',  'Rotavator',  Icons.settings_rounded),
+  _Cat('Cultivator', 'Cultivator', Icons.eco_rounded),
+  _Cat('Seeder',     'Seeder',     Icons.spa_rounded),
+  _Cat('Hitachi',    'Hitachi',    Icons.construction_rounded),
+  _Cat('JCB',        'JCB',        Icons.construction_outlined),
+  _Cat('Lorry',      'Lorry',      Icons.local_shipping_rounded),
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -261,7 +263,7 @@ class _RentHomePageState extends State<RentHomePage>
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                '🚨 Emergency request for $type sent! Nearby owners notified.'),
+                'Emergency request for $type sent! Nearby owners notified.'),
             backgroundColor: const Color(0xFFD32F2F),
             duration: const Duration(seconds: 3),
           ));
@@ -340,7 +342,7 @@ class _RentHomePageState extends State<RentHomePage>
                 // Nearby available (horizontal)
                 SliverToBoxAdapter(
                     child: _buildHorizontalSection(
-                        'Nearby Available', '📍',
+                        'Nearby Available', Icons.location_on_rounded,
                         filtered
                             .where((m) =>
                                 m.availability == MachineAvailability.available)
@@ -409,10 +411,32 @@ class _RentHomePageState extends State<RentHomePage>
 
   Widget _buildHeader(int nearbyCount) {
     final topPad = MediaQuery.of(context).padding.top;
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, topPad + 12, 16, 16),
-      decoration: const BoxDecoration(gradient: KMGradients.rent),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return ClipRect(
+      child: Stack(children: [
+        Positioned.fill(
+          child: Image.network(
+            KMImages.heroRent,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const SizedBox(),
+          ),
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  KMColors.rentDark.withValues(alpha: 0.90),
+                  KMColors.rentPrimary.withValues(alpha: 0.72),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, topPad + 12, 16, 16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Top row
         Row(children: [
           IconButton(
@@ -425,7 +449,7 @@ class _RentHomePageState extends State<RentHomePage>
           const Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Text('🚜', style: TextStyle(fontSize: 20)),
+                Icon(Icons.agriculture_rounded, color: Colors.white, size: 20),
                 SizedBox(width: 6),
                 Text('RentHub',
                     style: TextStyle(
@@ -533,6 +557,8 @@ class _RentHomePageState extends State<RentHomePage>
           ]),
         ),
       ]),
+        ),
+      ]),
     );
   }
 
@@ -554,8 +580,8 @@ class _RentHomePageState extends State<RentHomePage>
             ],
           ),
           child: Center(
-              child: Text(_typeEmoji(m.type),
-                  style: const TextStyle(fontSize: 15))),
+              child: Icon(_typeIcon(m.type), size: 15,
+                  color: _typeColor(m.type))),
         ),
       );
     }).toList();
@@ -686,11 +712,17 @@ class _RentHomePageState extends State<RentHomePage>
   }
 
   Widget _buildCategoryChips() {
-    return SizedBox(
-      height: 56,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.85,
+        ),
         itemCount: _kCats.length,
         itemBuilder: (_, i) {
           final c = _kCats[i];
@@ -700,33 +732,37 @@ class _RentHomePageState extends State<RentHomePage>
             onTap: () => setState(() => _category = c.key),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: sel ? (color ?? KMColors.rentPrimary) : Colors.white,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                     color: sel
                         ? (color ?? KMColors.rentPrimary)
                         : const Color(0xFFE0E0E0)),
                 boxShadow: sel
-                    ? [
-                        BoxShadow(
-                            color: (color ?? KMColors.rentPrimary).withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2))
-                      ]
+                    ? [BoxShadow(
+                        color: (color ?? KMColors.rentPrimary).withValues(alpha: 0.28),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))]
                     : [],
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(c.emoji, style: const TextStyle(fontSize: 15)),
-                const SizedBox(width: 5),
-                Text(c.label,
-                    style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: sel ? Colors.white : const Color(0xFF616161))),
-              ]),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(c.icon,
+                      size: 24,
+                      color: sel ? Colors.white : KMColors.rentPrimary),
+                  const SizedBox(height: 4),
+                  Text(c.label,
+                      style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: sel ? Colors.white : const Color(0xFF616161)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center),
+                ],
+              ),
             ),
           );
         },
@@ -797,7 +833,7 @@ class _RentHomePageState extends State<RentHomePage>
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(children: [
-        const Text('🌤️', style: TextStyle(fontSize: 26)),
+        const Icon(Icons.wb_sunny_rounded, size: 26, color: Colors.white),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -835,13 +871,13 @@ class _RentHomePageState extends State<RentHomePage>
   }
 
   Widget _buildHorizontalSection(
-      String title, String icon, List<RentMachine> machines) {
+      String title, IconData icon, List<RentMachine> machines) {
     if (machines.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         child: Row(children: [
-          Text(icon, style: const TextStyle(fontSize: 16)),
+          Icon(icon, size: 16, color: KMColors.rentPrimary),
           const SizedBox(width: 6),
           Text(title,
               style: const TextStyle(
@@ -876,7 +912,7 @@ class _RentHomePageState extends State<RentHomePage>
       height: 300,
       child: Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('⚠️', style: TextStyle(fontSize: 48)),
+          const Icon(Icons.warning_amber_rounded, size: 48, color: Color(0xFF9E9E9E)),
           const SizedBox(height: 12),
           const Text('Could not load machines',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
@@ -901,7 +937,7 @@ class _RentHomePageState extends State<RentHomePage>
       height: 300,
       child: Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('🚜', style: TextStyle(fontSize: 56)),
+          const Icon(Icons.agriculture_rounded, size: 56, color: KMColors.rentPrimary),
           const SizedBox(height: 12),
           const Text('No machines found',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
@@ -948,7 +984,7 @@ class _MachineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = _typeColor(machine.type);
-    final emoji = _typeEmoji(machine.type);
+    final icon = _typeIcon(machine.type);
     final hasImage = machine.imageUrl.isNotEmpty;
     final hasDist = distance.isFinite && distance < 500;
     final eta = hasDist ? _etaMinutes(distance) : null;
@@ -978,8 +1014,8 @@ class _MachineCard extends StatelessWidget {
                   ? Image.network(machine.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
-                          _Placeholder(color: color, emoji: emoji))
-                  : _Placeholder(color: color, emoji: emoji),
+                          _Placeholder(color: color, icon: icon))
+                  : _Placeholder(color: color, icon: icon),
             ),
           ),
           // ── Right: info ──────────────────────────────
@@ -1021,11 +1057,15 @@ class _MachineCard extends StatelessWidget {
                         color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text('$emoji ${machine.type}',
-                          style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: color)),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(icon, size: 10.5, color: color),
+                        const SizedBox(width: 3),
+                        Text(machine.type,
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: color)),
+                      ]),
                     ),
                     const SizedBox(width: 6),
                     Container(
@@ -1078,8 +1118,7 @@ class _MachineCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   // Price
                   Text(
-                    '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr  '
-                    '₹${machine.pricePerDay.toStringAsFixed(0)}/day',
+                    '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -1193,10 +1232,10 @@ class _MiniCard extends StatelessWidget {
                           errorBuilder: (_, __, ___) =>
                               _Placeholder(
                                   color: color,
-                                  emoji: _typeEmoji(machine.type)))
+                                  icon: _typeIcon(machine.type)))
                       : _Placeholder(
                           color: color,
-                          emoji: _typeEmoji(machine.type)),
+                          icon: _typeIcon(machine.type)),
                 ),
               ),
               Padding(
@@ -1210,9 +1249,13 @@ class _MiniCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 2),
-                      Text('${_typeEmoji(machine.type)} ${machine.type}',
-                          style: TextStyle(fontSize: 10, color: color,
-                              fontWeight: FontWeight.w600)),
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(_typeIcon(machine.type), size: 10, color: color),
+                        const SizedBox(width: 3),
+                        Text(machine.type,
+                            style: TextStyle(fontSize: 10, color: color,
+                                fontWeight: FontWeight.w600)),
+                      ]),
                       const SizedBox(height: 3),
                       if (hasDist)
                         Text(
@@ -1241,15 +1284,15 @@ class _MiniCard extends StatelessWidget {
 
 class _Placeholder extends StatelessWidget {
   final Color color;
-  final String emoji;
-  const _Placeholder({required this.color, required this.emoji});
+  final IconData icon;
+  const _Placeholder({required this.color, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: color.withValues(alpha: 0.12),
       child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 36))),
+          child: Icon(icon, size: 36, color: color.withValues(alpha: 0.6))),
     );
   }
 }
@@ -1344,7 +1387,7 @@ class _EmergencyBookingSheetState extends State<_EmergencyBookingSheet> {
                 borderRadius: BorderRadius.circular(2))),
         const SizedBox(height: 16),
         const Row(children: [
-          Text('🚨', style: TextStyle(fontSize: 24)),
+          Icon(Icons.warning_rounded, size: 24, color: Color(0xFFD32F2F)),
           SizedBox(width: 8),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Emergency Booking',
@@ -1398,7 +1441,7 @@ class _EmergencyBookingSheetState extends State<_EmergencyBookingSheet> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
-            child: const Text('🚨  Send Emergency Request',
+            child: const Text('Send Emergency Request',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
           ),
         ),
@@ -1481,7 +1524,7 @@ class _AcreageCalculatorSheetState extends State<_AcreageCalculatorSheet> {
             activeColor: const Color(0xFF2E7D32),
             onChanged: (v) => setState(() => _acres = v),
           ),
-          Text('${_acres.toStringAsFixed(1)}',
+          Text(_acres.toStringAsFixed(1),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
         ]),
         const SizedBox(height: 12),
@@ -1555,15 +1598,15 @@ class _RentShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (_, __) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        (_, __) => const Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Row(children: [
-            const KMShimmerBox(width: 110, height: 140, borderRadius: 20),
-            const SizedBox(width: 12),
+            KMShimmerBox(width: 110, height: 140, borderRadius: 20),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   KMShimmerBox(height: 16, borderRadius: 8),
                   SizedBox(height: 8),
                   KMShimmerBox(width: 120, height: 12, borderRadius: 6),
@@ -1615,7 +1658,7 @@ class _OwnerFabGroup extends StatelessWidget {
               foregroundColor: Colors.white,
               mini: true,
               tooltip: 'Emergency Booking',
-              child: const Text('🚨', style: TextStyle(fontSize: 18)),
+              child: const Icon(Icons.warning_rounded, size: 18),
             ),
             const SizedBox(height: 10),
             FloatingActionButton(

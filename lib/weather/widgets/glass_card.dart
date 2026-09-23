@@ -40,7 +40,7 @@ class GlassCard extends StatelessWidget {
 
 class GlassSectionHeader extends StatelessWidget {
   final String title;
-  final String? emoji;
+  final IconData? emoji;
 
   const GlassSectionHeader({super.key, required this.title, this.emoji});
 
@@ -51,7 +51,7 @@ class GlassSectionHeader extends StatelessWidget {
       child: Row(
         children: [
           if (emoji != null) ...[
-            Text(emoji!, style: const TextStyle(fontSize: 18)),
+            Icon(emoji!, size: 16, color: Colors.white70),
             const SizedBox(width: 6),
           ],
           Text(

@@ -495,16 +495,16 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _StatPill('💧', '${w.humidity}%', AppLocalizations.of(context)!.humidity),
+                              _StatPill(Icons.water_drop, '${w.humidity}%', AppLocalizations.of(context)!.humidity),
                               _vDivider(),
-                              _StatPill('🌬️',
+                              _StatPill(Icons.air_rounded,
                                   '${w.windSpeed.toStringAsFixed(0)}m/s', AppLocalizations.of(context)!.wind),
                               _vDivider(),
-                              _StatPill('🌧️',
+                              _StatPill(Icons.water_drop_rounded,
                                   '${w.precipitationProbability}%', AppLocalizations.of(context)!.rain),
                               _vDivider(),
                               _StatPill(
-                                  '🔆', WeatherService.uvLabel(w.uvIndex), AppLocalizations.of(context)!.uv),
+                                  Icons.wb_sunny_rounded, WeatherService.uvLabel(w.uvIndex), AppLocalizations.of(context)!.uv),
                             ],
                           ),
                         ),
@@ -531,8 +531,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
                             ),
                             child: Row(
                               children: [
-                                Text(advisory.icon,
-                                    style: const TextStyle(fontSize: 14)),
+                                Icon(advisory.icon, size: 14, color: Colors.white),
                                 const SizedBox(width: 7),
                                 Expanded(
                                   child: Text(
@@ -659,7 +658,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
         ),
         child: Row(
           children: [
-            const Text('🌤️', style: TextStyle(fontSize: 36)),
+            const Icon(Icons.wb_sunny_rounded, size: 36, color: Colors.white),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -692,7 +691,7 @@ class _HomeWeatherWidgetState extends State<HomeWeatherWidget>
 // ─── Emoji with glow ring ─────────────────────────────────────────────────────
 
 class _EmojiGlow extends StatelessWidget {
-  final String emoji;
+  final IconData emoji;
   final String description;
   final bool isDay;
   const _EmojiGlow(
@@ -726,7 +725,7 @@ class _EmojiGlow extends StatelessWidget {
             ],
           ),
         ),
-        Text(emoji, style: const TextStyle(fontSize: 52)),
+        Icon(emoji, size: 52, color: Colors.white),
       ],
     );
   }
@@ -735,7 +734,8 @@ class _EmojiGlow extends StatelessWidget {
 // ─── Stat column ──────────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
-  final String icon, value, label;
+  final IconData icon;
+  final String value, label;
   const _StatPill(this.icon, this.value, this.label);
 
   @override
@@ -743,7 +743,7 @@ class _StatPill extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(icon, style: const TextStyle(fontSize: 15)),
+        Icon(icon, size: 15, color: Colors.white),
         const SizedBox(height: 2),
         Text(value,
             style: const TextStyle(

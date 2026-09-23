@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+
+import '../services/ai_proxy_service.dart';
 
 class AiPlantAssistantPage extends StatefulWidget {
   const AiPlantAssistantPage({super.key});
@@ -18,32 +17,29 @@ class _AiPlantAssistantPageState extends State<AiPlantAssistantPage> {
   final List<_Msg> _msgs = [];
   bool _loading = false;
 
-  static const String _url =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-
   final _quickPrompts = [
-    '🌞 Best plants for sunny balcony',
-    '🏠 Low-maintenance indoor plants',
-    '🍅 Vegetables for small garden',
-    '🌧️ Plants for rainy season',
-    '🐛 Organic pest control tips',
-    '💧 Drought-resistant plants',
-    '🌸 Flowering plants for home garden',
-    '🍃 Air purifying plants',
+    'Best plants for sunny balcony',
+    'Low-maintenance indoor plants',
+    'Vegetables for small garden',
+    'Plants for rainy season',
+    'Organic pest control tips',
+    'Drought-resistant plants',
+    'Flowering plants for home garden',
+    'Air purifying plants',
   ];
 
   @override
   void initState() {
     super.initState();
     _msgs.add(_Msg(
-      text: '🌿 Hello! I\'m your AI Plant Advisor.\n\n'
+      text: 'Hello! I\'m your AI Plant Advisor.\n\n'
           'I can help you with:\n'
           '• Plant recommendations for your climate\n'
           '• Seasonal planting advice\n'
           '• Care instructions & watering schedules\n'
           '• Pest control & disease prevention\n'
           '• Companion planting tips\n\n'
-          'Ask me anything about plants! 🌱',
+          'Ask me anything about plants!',
       isBot: true,
     ));
   }
@@ -68,52 +64,34 @@ class _AiPlantAssistantPageState extends State<AiPlantAssistantPage> {
     _scrollBottom();
 
     try {
-      final key = dotenv.env['GEMINI_API_KEY'] ?? '';
-      if (key.isEmpty) {
-        _addBot('⚠️ AI service not configured. Add GEMINI_API_KEY to .env');
-        return;
-      }
+      final systemAndQuery =
+          'You are an expert Indian plant nursery advisor '
+          'and agricultural specialist.\n'
+          'You help farmers and gardeners choose the right plants.\n'
+          'Give practical, specific advice relevant to Indian climate, '
+          'seasons (Kharif/Rabi/Zaid), and farming practices.\n'
+          'Keep responses clear, concise and actionable.\n'
+          'When recommending plants, mention:\n'
+          '- Best season to plant\n'
+          '- Sunlight & water needs\n'
+          '- Expected time to harvest/bloom\n'
+          '- Care tips\n\n'
+          'User question: $q';
 
-      final resp = await http.post(
-        Uri.parse('$_url?key=$key'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {
-                  'text': 'You are an expert Indian plant nursery advisor '
-                      'and agricultural specialist.\n'
-                      'You help farmers and gardeners choose the right plants.\n'
-                      'Give practical, specific advice relevant to Indian climate, '
-                      'seasons (Kharif/Rabi/Zaid), and farming practices.\n'
-                      'Keep responses clear, concise and actionable.\n'
-                      'When recommending plants, mention:\n'
-                      '- Best season to plant\n'
-                      '- Sunlight & water needs\n'
-                      '- Expected time to harvest/bloom\n'
-                      '- Care tips\n\n'
-                      'User question: $q'
-                }
-              ]
-            }
-          ]
-        }),
+      final reply = await AiProxyService.generateText(
+        contents: [
+          {
+            'role': 'user',
+            'parts': [{'text': systemAndQuery}],
+          }
+        ],
+        model: 'gemini-2.5-flash',
+        generationConfig: {'temperature': 0.7, 'maxOutputTokens': 1024},
       );
 
-      if (resp.statusCode == 200) {
-        final decoded = jsonDecode(resp.body);
-        final reply =
-            decoded['candidates']?[0]?['content']?['parts']?[0]?['text']
-                    ?.toString()
-                    .trim() ??
-                'Sorry, I could not generate a response.';
-        _addBot(reply);
-      } else {
-        _addBot('⚠️ AI server error (${resp.statusCode}). Please try again.');
-      }
+      _addBot(reply.isEmpty ? 'No response from AI. Please try again.' : reply);
     } catch (e) {
-      _addBot('⚠️ Connection error. Please check your internet and try again.');
+      _addBot('Connection error. Please check your internet and try again.');
     }
   }
 
@@ -147,7 +125,7 @@ class _AiPlantAssistantPageState extends State<AiPlantAssistantPage> {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         title: const Row(children: [
-          Text('🤖', style: TextStyle(fontSize: 18)),
+          Icon(Icons.smart_toy_rounded, size: 18, color: Colors.white),
           SizedBox(width: 8),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('AI Plant Advisor',

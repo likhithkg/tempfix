@@ -15,40 +15,42 @@ import '../l10n/app_localizations.dart';
 // ─── Category / type data ──────────────────────────────────────────────────
 
 class _TabData {
-  final String key, label, emoji;
-  const _TabData(this.key, this.label, this.emoji);
+  final String key, label;
+  final IconData icon;
+  const _TabData(this.key, this.label, this.icon);
 }
 
 const _kTabs = [
-  _TabData('all',   'All',   '🌿'),
-  _TabData('plant', 'Plants','🪴'),
-  _TabData('seeds', 'Seeds', '🌾'),
+  _TabData('all',   'All',    Icons.eco_rounded),
+  _TabData('plant', 'Plants', Icons.yard_rounded),
+  _TabData('seeds', 'Seeds',  Icons.grass_rounded),
 ];
 
 class _ChipData {
-  final String key, label, emoji;
+  final String key, label;
+  final IconData icon;
   final Color color;
-  const _ChipData(this.key, this.label, this.emoji, this.color);
+  const _ChipData(this.key, this.label, this.icon, this.color);
 }
 
 const _kPlantChips = [
-  _ChipData('all',        'All Types',  '🌿', Color(0xFF2E7D32)),
-  _ChipData('fruit',      'Fruit',      '🍎', Color(0xFFE67E22)),
-  _ChipData('flowering',  'Flowering',  '🌸', Color(0xFFE91E8C)),
-  _ChipData('vegetable',  'Vegetable',  '🥦', Color(0xFF27AE60)),
-  _ChipData('medicinal',  'Medicinal',  '💊', Color(0xFF16A085)),
-  _ChipData('ornamental', 'Ornamental', '🪴', Color(0xFF8E44AD)),
-  _ChipData('timber',     'Timber',     '🌳', Color(0xFF795548)),
-  _ChipData('aromatic',   'Aromatic',   '🌿', Color(0xFF00897B)),
+  _ChipData('all',        'All Types',  Icons.eco_rounded,           Color(0xFF2E7D32)),
+  _ChipData('fruit',      'Fruit',      Icons.apple_rounded,         Color(0xFFE67E22)),
+  _ChipData('flowering',  'Flowering',  Icons.local_florist_rounded, Color(0xFFE91E8C)),
+  _ChipData('vegetable',  'Vegetable',  Icons.eco_rounded,           Color(0xFF27AE60)),
+  _ChipData('medicinal',  'Medicinal',  Icons.healing_rounded,       Color(0xFF16A085)),
+  _ChipData('ornamental', 'Ornamental', Icons.yard_rounded,          Color(0xFF8E44AD)),
+  _ChipData('timber',     'Timber',     Icons.forest_rounded,        Color(0xFF795548)),
+  _ChipData('aromatic',   'Aromatic',   Icons.spa_rounded,           Color(0xFF00897B)),
 ];
 
 const _kSeedChips = [
-  _ChipData('all',       'All Seeds',      '🌾', Color(0xFFF39C12)),
-  _ChipData('vegetable', 'Vegetable',       '🥦', Color(0xFF27AE60)),
-  _ChipData('flower',    'Flower',          '🌸', Color(0xFFE91E8C)),
-  _ChipData('herb',      'Herb',            '🌿', Color(0xFF00897B)),
-  _ChipData('fruit',     'Fruit',           '🍎', Color(0xFFE67E22)),
-  _ChipData('grain',     'Grain',           '🌾', Color(0xFFBF360C)),
+  _ChipData('all',       'All Seeds', Icons.grass_rounded,          Color(0xFFF39C12)),
+  _ChipData('vegetable', 'Vegetable', Icons.eco_rounded,            Color(0xFF27AE60)),
+  _ChipData('flower',    'Flower',    Icons.local_florist_rounded,  Color(0xFFE91E8C)),
+  _ChipData('herb',      'Herb',      Icons.spa_rounded,            Color(0xFF00897B)),
+  _ChipData('fruit',     'Fruit',     Icons.apple_rounded,          Color(0xFFE67E22)),
+  _ChipData('grain',     'Grain',     Icons.grain_rounded,          Color(0xFFBF360C)),
 ];
 
 Color _accentForType(String rawType) {
@@ -179,7 +181,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
   List<_ChipData> get _activeChips {
     if (_tabKey == 'seeds') return _kSeedChips;
     if (_tabKey == 'plant') return _kPlantChips;
-    return const [_ChipData('all', 'All', '🌿', Color(0xFF2E7D32))];
+    return const [_ChipData('all', 'All', Icons.eco_rounded, Color(0xFF2E7D32))];
   }
 
   void _showSortSheet() {
@@ -379,7 +381,7 @@ class _PlantVendorListPageState extends State<PlantVendorListPage> {
               if (filtered.isEmpty) {
                 return Center(child: Column(mainAxisSize: MainAxisSize.min,
                     children: [
-                  const Text('🌿', style: TextStyle(fontSize: 52)),
+                  const Icon(Icons.eco_rounded, size: 52, color: Color(0xFF9E9E9E)),
                   const SizedBox(height: 12),
                   Text(l.noListingsFound,
                       style: const TextStyle(fontSize: 15,
@@ -480,7 +482,7 @@ class _PlantHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Row(mainAxisSize: MainAxisSize.min, children: [
-              Text('🌿', style: TextStyle(fontSize: 18)),
+              Icon(Icons.eco_rounded, size: 18, color: Colors.white),
               SizedBox(width: 6),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +599,7 @@ class _MainTabs extends StatelessWidget {
               ),
               child: Center(
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Text(t.emoji, style: const TextStyle(fontSize: 13)),
+                  Icon(t.icon, size: 13, color: sel ? Colors.white : const Color(0xFF757575)),
                   const SizedBox(width: 4),
                   Text(t.label,
                       style: TextStyle(fontSize: 12,
@@ -650,7 +652,7 @@ class _SubTypeChips extends StatelessWidget {
                     : null,
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text(c.emoji, style: const TextStyle(fontSize: 13)),
+                Icon(c.icon, size: 13, color: sel ? Colors.white : c.color),
                 const SizedBox(width: 4),
                 Text(c.label,
                     style: TextStyle(fontSize: 11,

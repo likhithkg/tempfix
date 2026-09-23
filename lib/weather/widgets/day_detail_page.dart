@@ -39,7 +39,7 @@ class DayDetailPage extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                Text(dayWeather.emoji, style: const TextStyle(fontSize: 80)),
+                Icon(dayWeather.emoji, size: 80, color: Colors.white),
                 const SizedBox(height: 8),
                 Text(
                   '${dayWeather.tempMax.toStringAsFixed(0)}° / ${dayWeather.tempMin.toStringAsFixed(0)}°',
@@ -78,17 +78,17 @@ class DayDetailPage extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              _row('🌧️', 'Rain Probability', '${dayWeather.rainProbability}%'),
-              _row('💨', 'Max Wind', '${dayWeather.windSpeed.toStringAsFixed(0)} m/s'),
-              _row('☀️', 'UV Index', '${dayWeather.uvIndex.toStringAsFixed(1)} — ${WeatherService.uvLabel(dayWeather.uvIndex)}'),
-              _row('🌧️', 'Expected Precipitation', '${dayWeather.precipitationSum.toStringAsFixed(1)} mm'),
+              _row(Icons.water_drop_rounded, 'Rain Probability', '${dayWeather.rainProbability}%'),
+              _row(Icons.air_rounded, 'Max Wind', '${dayWeather.windSpeed.toStringAsFixed(0)} m/s'),
+              _row(Icons.wb_sunny_rounded, 'UV Index', '${dayWeather.uvIndex.toStringAsFixed(1)} — ${WeatherService.uvLabel(dayWeather.uvIndex)}'),
+              _row(Icons.water_drop_rounded, 'Expected Precipitation', '${dayWeather.precipitationSum.toStringAsFixed(1)} mm'),
               if (sunrise != null)
-                _row('🌅', 'Sunrise', DateFormat('h:mm a').format(sunrise)),
+                _row(Icons.wb_twilight_rounded, 'Sunrise', DateFormat('h:mm a').format(sunrise)),
               if (sunset != null)
-                _row('🌇', 'Sunset', DateFormat('h:mm a').format(sunset)),
+                _row(Icons.wb_twilight_rounded, 'Sunset', DateFormat('h:mm a').format(sunset)),
               if (sunrise != null && sunset != null) ...[
                 _row(
-                  '⏳',
+                  Icons.schedule_rounded,
                   'Day Length',
                   () {
                     final d = sunset.difference(sunrise);
@@ -103,12 +103,12 @@ class DayDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _row(String icon, String label, String value) {
+  Widget _row(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 18)),
+          Icon(icon, size: 18, color: Colors.white70),
           const SizedBox(width: 12),
           Expanded(child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13))),
           Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),

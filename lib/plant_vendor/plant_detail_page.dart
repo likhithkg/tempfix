@@ -374,8 +374,7 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
     final accent = _categoryColor(category);
     final catIcon = _categoryIcon(category);
     final care = _careInfo();
-    final discountPct = (vendor.id.hashCode.abs() % 3 + 1) * 5;
-    final mrp = (vendor.price * (1 + discountPct / 100)).roundToDouble();
+    final isKrishiMithra = vendor.productSource == 'krishimithra';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
@@ -570,7 +569,7 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
                             value: '₹${vendor.price.toStringAsFixed(0)}',
                             valueBig: true,
                             accent: accent,
-                            subtitle: 'MRP ₹${mrp.toStringAsFixed(0)} ($discountPct% off)',
+                            subtitle: isKrishiMithra ? 'KrishiMithra Product' : 'Farmer/Vendor Product',
                           ),
                         ),
                         const SizedBox(width: 12),

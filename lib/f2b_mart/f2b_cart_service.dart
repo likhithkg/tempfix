@@ -14,17 +14,30 @@ class F2BCartService {
 
   // ─── Cart ─────────────────────────────────────────────────────────────────
 
+  Future<List<F2BCartItem>> getCart() async {
+    final uid = _uid;
+    if (uid == null) return [];
+    final snap = await _cartCol(uid).get();
+    final items = snap.docs
+        .map((d) => F2BCartItem.fromMap(d.data() as Map<String, dynamic>, d.id))
+        .toList();
+    items.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+    return items;
+  }
+
   Stream<List<F2BCartItem>> streamCart() {
-    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
-      if (user == null) return const Stream.empty();
-      return _cartCol(user.uid)
-          .orderBy('addedAt', descending: true)
-          .snapshots()
-          .map((s) => s.docs
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _cartCol(uid)
+        .snapshots()
+        .map((s) {
+          final items = s.docs
               .map((d) => F2BCartItem.fromMap(
                   d.data() as Map<String, dynamic>, d.id))
-              .toList());
-    });
+              .toList();
+          items.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+          return items;
+        });
   }
 
   Future<void> addToCart(ExportProduct product, {int qty = 1}) async {
@@ -32,30 +45,37 @@ class F2BCartService {
     if (uid == null) throw Exception('Not signed in');
     if (product.id.isEmpty) throw Exception('Invalid product ID');
 
-    final price = double.tryParse(
-            product.pricePerUnit.replaceAll(RegExp(r'[^\d.]'), '')) ??
-        0.0;
+    final rawPrice =
+        product.pricePerUnit.replaceAll(RegExp(r'[^\d.]'), '');
+    final price = double.tryParse(rawPrice) ?? 0.0;
+    if (price <= 0) {
+      throw Exception(
+          'Cannot add "${product.productName}" to cart: price is invalid (${product.pricePerUnit}). '
+          'Please contact the seller to update their listing.');
+    }
 
     final ref = _cartCol(uid).doc(product.id);
-    final snap = await ref.get();
-    if (snap.exists) {
-      final current = (snap.data() as Map<String, dynamic>)['qty'] as int? ?? 0;
-      await ref.update({'qty': current + qty});
-    } else {
-      await ref.set({
-        'productId': product.id,
-        'productName': product.productName,
-        'farmerName': product.farmerName,
-        'farmerId': product.farmerId,
-        'price': price,
-        'priceUnit': product.pricePerUnit,
-        'imageUrl': product.primaryImage.isNotEmpty ? product.primaryImage : null,
-        'category': product.category,
-        'qty': qty,
-        'userId': uid,
-        'addedAt': Timestamp.now(),
-      });
-    }
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (snap.exists) {
+        final current = (snap.data() as Map<String, dynamic>)['qty'] as int? ?? 0;
+        tx.update(ref, {'qty': current + qty});
+      } else {
+        tx.set(ref, {
+          'productId': product.id,
+          'productName': product.productName,
+          'farmerName': product.farmerName,
+          'farmerId': product.farmerId,
+          'price': price,
+          'priceUnit': product.pricePerUnit,
+          'imageUrl': product.primaryImage.isNotEmpty ? product.primaryImage : null,
+          'category': product.category,
+          'qty': qty,
+          'userId': uid,
+          'addedAt': Timestamp.now(),
+        });
+      }
+    });
   }
 
   Future<void> removeFromCart(String productId) async {
@@ -90,6 +110,8 @@ class F2BCartService {
   Future<String> placeTakeAwayOrder({
     required List<F2BCartItem> items,
     required String buyerName,
+    String? buyerPhone,
+    String? buyerLocation,
   }) async {
     final uid = _uid;
     if (uid == null) throw Exception('Not signed in');
@@ -100,11 +122,47 @@ class F2BCartService {
     final sellerUids =
         items.map((i) => i.farmerId).where((id) => id != uid && id.isNotEmpty).toSet();
 
+    // Fetch buyer email to embed alongside the phone they provided
+    String? buyerEmail;
+    try {
+      final userDoc = await _db.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        final d = userDoc.data() as Map<String, dynamic>;
+        buyerEmail = (d['email'] as String? ?? '').trim();
+        if (buyerEmail.isEmpty) buyerEmail = null;
+      }
+    } catch (_) {}
+
+    // Fetch seller contact from their first export_products listing
+    String? sellerPhone;
+    String? sellerLocation;
+    if (sellerUids.isNotEmpty) {
+      try {
+        final sellerSnap = await _db
+            .collection('export_products')
+            .where('ownerId', isEqualTo: sellerUids.first)
+            .limit(1)
+            .get();
+        if (sellerSnap.docs.isNotEmpty) {
+          final d = sellerSnap.docs.first.data();
+          sellerPhone = (d['farmerMobile'] as String? ?? '').trim();
+          sellerLocation = (d['location'] as String? ?? '').trim();
+          if (sellerPhone.isEmpty) sellerPhone = null;
+          if (sellerLocation.isEmpty) sellerLocation = null;
+        }
+      } catch (_) {}
+    }
+
     final orderRef = _db.collection('f2b_orders').doc();
 
     await orderRef.set({
       'userId': uid,
       'userName': buyerName,
+      if (buyerPhone != null && buyerPhone.isNotEmpty) 'buyerPhone': buyerPhone,
+      if (buyerEmail != null) 'buyerEmail': buyerEmail,
+      if (buyerLocation != null && buyerLocation.isNotEmpty) 'buyerLocation': buyerLocation,
+      if (sellerPhone != null) 'sellerPhone': sellerPhone,
+      if (sellerLocation != null) 'sellerLocation': sellerLocation,
       'items': items
           .map((c) => {
                 'productId': c.productId,
@@ -139,7 +197,7 @@ class F2BCartService {
           final notifRef = _db.collection('km_notifications').doc();
           batch.set(notifRef, {
             'userId': sellerUid,
-            'title': '🌾 New Takeaway Order!',
+            'title': 'New Takeaway Order!',
             'body': 'Pickup order received: $productNames',
             'type': 'takeaway_order',
             'orderId': orderRef.id,
@@ -156,24 +214,51 @@ class F2BCartService {
     return orderRef.id;
   }
 
+  Stream<List<F2BOrder>> streamBuyerOrders() {
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _db
+        .collection('f2b_orders')
+        .where('userId', isEqualTo: uid)
+        .snapshots()
+        .map((s) {
+      final orders = s.docs
+          .map((d) => F2BOrder.fromMap(d.data(), d.id))
+          .toList();
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    });
+  }
+
   Stream<List<F2BOrder>> streamSellerOrders() {
-    return FirebaseAuth.instance.authStateChanges().asyncExpand((user) {
-      if (user == null) return const Stream.empty();
-      return _db
-          .collection('f2b_orders')
-          .where('sellerUids', arrayContains: user.uid)
-          .snapshots()
-          .map((s) {
-        final orders = s.docs
-            .map((d) => F2BOrder.fromMap(d.data(), d.id))
-            .toList();
-        orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        return orders;
-      });
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _db
+        .collection('f2b_orders')
+        .where('sellerUids', arrayContains: uid)
+        .snapshots()
+        .map((s) {
+      final orders = s.docs
+          .map((d) => F2BOrder.fromMap(d.data(), d.id))
+          .toList();
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
     });
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in');
+
+    // Verify the caller is actually a seller on this order before updating.
+    final snap = await _db.collection('f2b_orders').doc(orderId).get();
+    if (!snap.exists) throw Exception('Order not found');
+    final data = snap.data() as Map<String, dynamic>;
+    final sellerUids = List<String>.from(data['sellerUids'] as List? ?? []);
+    if (!sellerUids.contains(uid)) {
+      throw Exception('Not authorised to update this order');
+    }
+
     await _db.collection('f2b_orders').doc(orderId).update({
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),

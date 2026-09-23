@@ -9,42 +9,28 @@ import 'firebase_options.dart';
 import 'weather/weather_page.dart';
 import 'rent/rent_home_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
-import 'providers/locale_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'services/locale_service.dart';
- // adjust path if you put it elsewhere
-import 'image_test_page.dart';
 
 
-import 'exporter_hub/exporter_service.dart';
 import 'plant_vendor/plant_vendor_home.dart';
 import 'labour_hub/labour_hub_home_page.dart';
-import 'labour_hub/labour_hub_service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'profile/profile_page.dart';
 import 'profile/profile_service.dart';
 import 'profile/profile_button.dart'; // <-- ADD THIS
 import 'crop_disease/crop_disease_page.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'service/user_service.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'rent/rent_nearby_page.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'theme.dart'; 
 import 'splash/splash_screen.dart';
 import 'export_hub/export_hub_page.dart';
 import 'chatbot/chatbot_page.dart';
-import 'exporter_hub/exporter_home_page.dart';
 import 'f2b_mart/f2b_home_page.dart';
 import 'home/home_page.dart';
+import 'config/km_images.dart';
 
 
 
@@ -91,21 +77,9 @@ void main() {
     // 3. Locale
     await LocaleService.instance.init();
 
-    // 4. Remaining services (dotenv + Supabase)
+    // 4. Supabase
     if (initError == null) {
       try {
-        try {
-          await dotenv.load(fileName: ".env");
-          final key = dotenv.env['GEMINI_API_KEY'];
-          if (key == null || key.isEmpty) {
-            print("⚠ GEMINI_API_KEY not found in .env");
-          } else {
-            print("✅ Gemini API Key Loaded");
-          }
-        } catch (e, st) {
-          print('Warning loading .env: $e\n$st');
-        }
-
         await sb.Supabase.initialize(
           url: 'https://ticpdepakqlizhdwgxtz.supabase.co',
           anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpY3BkZXBha3FsaXpoZHd3Z3h0eiIsInJvbGUiOiJhbmlvbiIsImlhdCI6MTc1MzcxNDI0MywiZXhwIjoyMDY5MjkwMjQzfQ.WdBMFR3z-mugqp7qLhOgWuHVh782ykZv4-mC2FPtKNM',
@@ -119,7 +93,7 @@ void main() {
 
     // 5. runApp — same zone as ensureInitialized above
     if (initError != null) {
-      runApp(ErrorApp(isDark: isDark, error: initError!, stack: initStack));
+      runApp(ErrorApp(isDark: isDark, error: initError, stack: initStack));
     } else {
       runApp(const KrishiMithraApp());
     }
@@ -140,7 +114,7 @@ Future<void> _syncUserWithBackend(fb.User? user) async {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 45));
   } catch (_) {
     // Non-fatal — the app still works via Firebase even if backend sync fails.
   }
@@ -313,52 +287,112 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final indicatorColor = Theme.of(context).colorScheme.primary;
-    final labelColor = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
-
+    final l = AppLocalizations.of(context)!;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        // Full-screen background image
         body: Stack(
           fit: StackFit.expand,
           children: [
+            // Background image
             Image.asset(
-              'assets/login_bg.png',
+              KMImages.loginBg,
               fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [KMColors.primaryDark, KMColors.primary],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
             ),
-            // Optional overlay to increase contrast
-            Container(color: Colors.black.withOpacity(0.35)),
+            // Gradient overlay: darker at top for readability, lighter at bottom
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.20),
+                  ],
+                ),
+              ),
+            ),
             SafeArea(
               child: Column(
                 children: [
-                  // AppBar-like header (transparent)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-                    child: Row(
-                      children: [
-                        // optional logo or back button
-                        // Icon(Icons.agriculture, color: Colors.white),
-                        const Spacer(),
-                        // keep some room for future actions
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Tabs
-                  TabBar(
-                    labelColor: labelColor,
-                    unselectedLabelColor: Colors.grey[300],
-                    indicatorColor: indicatorColor,
-                    tabs: [
-                      Tab(icon: const Icon(Icons.email), text: AppLocalizations.of(context)!.email),
-                      Tab(icon: const Icon(Icons.phone), text: AppLocalizations.of(context)!.phone),
+                  const SizedBox(height: 28),
+                  // ── Branded header ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 52, height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                        ),
+                        child: Center(
+                          child: Image.asset('assets/leaves.png', width: 34, height: 34,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.eco_rounded, color: Colors.white, size: 30)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('KrishiMithra',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Text(l.appTagline,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.80),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ]),
                     ],
                   ),
-                  // Expanded content area for forms
-                  Expanded(
+                  const SizedBox(height: 28),
+                  // ── Login method tabs ──
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      ),
+                      child: TabBar(
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white60,
+                        indicator: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        dividerColor: Colors.transparent,
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 13),
+                        tabs: [
+                          Tab(icon: const Icon(Icons.email_outlined, size: 16), text: l.email, height: 40),
+                          Tab(icon: const Icon(Icons.phone_outlined, size: 16), text: l.phone, height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Expanded(
                     child: TabBarView(
-                      children: const [
+                      children: [
                         EmailLoginPage(),
                         PhoneLoginPage(),
                       ],
@@ -388,6 +422,7 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool loading = false;
+  bool _obscurePassword = true;
 
   Future<void> _signInWithGoogle() async {
     setState(() => loading = true);
@@ -480,123 +515,150 @@ class _EmailLoginPageState extends State<EmailLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Floating card style on top of the background
+    final primary = Theme.of(context).colorScheme.primary;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Card(
-          elevation: 14,
-          color: Theme.of(context).cardColor.withOpacity(0.95),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipOval(
-                  child: SizedBox(
-                    height: 80,
-                    width: 80,
-                    child: Image.asset(
-                      'assets/log.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Card(
+            elevation: 16,
+            color: Theme.of(context).cardColor.withValues(alpha: 0.96),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.loginEmail,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800, fontSize: 22, color: primary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Welcome back to KrishiMithra',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.email,
+                      prefixIcon: Icon(Icons.email_outlined, color: primary),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: primary, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: primary.withValues(alpha: 0.04),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(AppLocalizations.of(context)!.loginEmail, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.email,
-                    prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.password,
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: loading ? null : login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: loading ? const CircularProgressIndicator(color: Colors.white) : const Text("Login"),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpPage())),
-                      child: Text("Don't have an account? Sign Up", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                    ),
-                  ],
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordPage())),
-                  child: Text("Forgot Password?", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.black54)),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("OR", style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: loading ? null : _signInWithGoogle,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade300),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4285F4),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: const Text(
-                            "G",
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.password,
+                      prefixIcon: Icon(Icons.lock_outline_rounded, color: primary),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: Colors.grey.shade500,
+                          size: 20,
                         ),
-                        const SizedBox(width: 10),
-                        const Text("Continue with Google"),
-                      ],
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: primary, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: primary.withValues(alpha: 0.04),
                     ),
                   ),
-                ),
-              ],
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordPage())),
+                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4)),
+                      child: Text('Forgot Password?', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: loading ? null : login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primary,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: loading
+                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('OR', style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: loading ? null : _signInWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4285F4),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text('G',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Don't have an account? ", style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpPage())),
+                        child: Text('Sign Up', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primary)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -769,25 +831,14 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Card(
           elevation: 14,
-          color: Theme.of(context).cardColor.withOpacity(0.95),
+          color: Theme.of(context).cardColor.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(40), // Half of the height to make it circular
-                child: Image.asset(
-                'assets/log.png',
-                height: 80,
-                width: 80, // Make width equal to height for perfect circle
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text("Login / Sign Up with Phone", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)!.phoneLogin, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
                 if (otpSent)
                   Column(
@@ -879,6 +930,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool loading = false;
+  bool _obscurePassword = true;
 
   void register() async {
     if (emailController.text.trim().isEmpty || passwordController.text.isEmpty) {
@@ -924,80 +976,187 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      // Full-screen background + overlay
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/login_bg.png', fit: BoxFit.cover),
-          Container(color: Colors.black.withOpacity(0.35)),
+          Image.asset(
+            'assets/login_bg.png',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [KMColors.primaryDark, KMColors.primary],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.black.withValues(alpha: 0.20),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Card(
-                  elevation: 10,
-                  color: Theme.of(context).cardColor.withOpacity(0.95),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+            child: Column(
+              children: [
+                const SizedBox(height: 28),
+                // ── Branded header ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 52, height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                      ),
+                      child: Center(
+                        child: Image.asset(
+                          'assets/leaves.png', width: 34, height: 34,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.eco_rounded, color: Colors.white, size: 30),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipOval(
-                          child: SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: Image.asset(
-                              'assets/log.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(color: Colors.transparent),
-                            ),
+                        const Text(
+                          'KrishiMithra',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 16),
                         Text(
-                          "Create Your Account",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 22, fontWeight: FontWeight.bold, color: primary),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.email,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: passwordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.password,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: loading ? null : register,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: loading ? const CircularProgressIndicator(color: Colors.white) : const Text("Sign Up"),
+                          l.appTagline,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.80),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: Card(
+                        elevation: 16,
+                        color: Theme.of(context).cardColor.withValues(alpha: 0.96),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                l.createAccount,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontSize: 22, fontWeight: FontWeight.w800, color: primary),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Join the KrishiMithra community',
+                                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                              ),
+                              const SizedBox(height: 24),
+                              TextField(
+                                controller: emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  labelText: l.email,
+                                  prefixIcon: Icon(Icons.email_outlined, color: primary),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide(color: primary, width: 2),
+                                  ),
+                                  filled: true,
+                                  fillColor: primary.withValues(alpha: 0.04),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              TextField(
+                                controller: passwordController,
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
+                                  labelText: l.password,
+                                  prefixIcon: Icon(Icons.lock_outline_rounded, color: primary),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                      color: Colors.grey.shade500,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  ),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide(color: primary, width: 2),
+                                  ),
+                                  filled: true,
+                                  fillColor: primary.withValues(alpha: 0.04),
+                                ),
+                              ),
+                              const SizedBox(height: 22),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: ElevatedButton(
+                                  onPressed: loading ? null : register,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  child: loading
+                                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                      : Text(l.createAccount, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Already have an account? ', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                                  GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Text(l.login, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primary)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -1040,53 +1199,80 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      // Full-screen background + overlay
       body: Stack(
         fit: StackFit.expand,
         children: [
           Image.asset('assets/login_bg.png', fit: BoxFit.cover),
-          Container(color: Colors.black.withOpacity(0.35)),
+          Container(color: Colors.black.withValues(alpha: 0.38)),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Card(
-                  elevation: 10,
-                  color: Theme.of(context).cardColor.withOpacity(0.95),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Reset Your Password",
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 22, fontWeight: FontWeight.bold, color: primary),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.email,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Card(
+                    elevation: 16,
+                    color: Theme.of(context).cardColor.withValues(alpha: 0.96),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_reset_rounded, color: primary, size: 48),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Reset Your Password',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontSize: 22, fontWeight: FontWeight.w800, color: primary),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: loading ? null : sendResetLink,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primary,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          const SizedBox(height: 6),
+                          Text(
+                            'We will send a reset link to your email',
+                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          TextField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)!.email,
+                              prefixIcon: Icon(Icons.email_outlined, color: primary),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide(color: primary, width: 2),
+                              ),
+                              filled: true,
+                              fillColor: primary.withValues(alpha: 0.04),
                             ),
-                            child: loading ? const CircularProgressIndicator(color: Colors.white) : Text(AppLocalizations.of(context)!.sendResetLink),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 22),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: loading ? null : sendResetLink,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primary,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: loading
+                                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                  : Text(AppLocalizations.of(context)!.sendResetLink,
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Back to Login', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1124,12 +1310,9 @@ class _DashboardPageState extends State<DashboardPage> {
   String selectedLocation = 'Select Location';
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  List<dynamic> _suggestions = [];
-  bool _showSuggestions = false;
   List<String> _recentLocations = [];
 
   Map<String, dynamic>? userProfile;
-  LatLng? _defaultCoords; // ✅ stores latest lat/lon
 
  final List<Map<String, dynamic>> features = [
   {"title": "Weather", "icon": Icons.cloud, "asset": "assets/icons/weather.png"},
@@ -1160,13 +1343,10 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final loc = prefs.getString('loc_name_$uid') ?? '';
-      final lat = prefs.getDouble('loc_lat_$uid');
-      final lon = prefs.getDouble('loc_lon_$uid');
       if (loc.isNotEmpty && mounted) {
         setState(() {
           selectedLocation = loc;
           _searchController.text = loc;
-          if (lat != null && lon != null) _defaultCoords = LatLng(lat, lon);
         });
         return; // SharedPreferences hit — no need to wait for Firestore
       }
@@ -1190,9 +1370,6 @@ class _DashboardPageState extends State<DashboardPage> {
           setState(() {
             selectedLocation = location;
             _searchController.text = location;
-            if (lat != null && lon != null) {
-              _defaultCoords = LatLng(lat.toDouble(), lon.toDouble());
-            }
           });
         }
         // Mirror to SharedPreferences so next cold start is instant
@@ -1288,8 +1465,6 @@ class _DashboardPageState extends State<DashboardPage> {
       setState(() {
         selectedLocation = location;
         _searchController.text = location;
-        _showSuggestions = false;
-        if (lat != 0) _defaultCoords = LatLng(lat, lon);
         _recentLocations.remove(location);
         _recentLocations.insert(0, location);
         if (_recentLocations.length > 8) {
@@ -1318,23 +1493,6 @@ class _DashboardPageState extends State<DashboardPage> {
         continue;
       }
     }
-  }
-
-  // ---------- small helpers used by search & dialog ----------
-  void _onSearchTextChanged(String text) async {
-    if (text.isEmpty) {
-      setState(() => _suggestions = []);
-      return;
-    }
-    final results = await LocationService.getSuggestions(text);
-    setState(() {
-      _suggestions = results;
-    });
-  }
-
-  void _selectLocation(String displayName) {
-    _saveLocation(displayName);
-    FocusScope.of(context).unfocus();
   }
 
   // ---------- Location dialog (await save before pop) ----------
@@ -1439,31 +1597,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
 
-  void _openNearbyMachines() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => RentNearbyPage(
-        userLocation: _defaultCoords != null
-            ? Position(
-                latitude: _defaultCoords!.latitude,
-                longitude: _defaultCoords!.longitude,
-                timestamp: DateTime.now(),
-                accuracy: 0,
-                altitude: 0,
-                heading: 0,
-                speed: 0,
-                speedAccuracy: 0,
-                altitudeAccuracy: 0,
-                headingAccuracy: 0,
-              )
-            : null,
-        referenceName: selectedLocation, // ✅ pass the saved name
-      ),
-    ),
-  );
-}
-
  @override
 Widget build(BuildContext context) {
   Widget buildFeatureCard(String title, String imagePath, IconData fallbackIcon, VoidCallback onTap) {
@@ -1497,8 +1630,8 @@ Widget build(BuildContext context) {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.25),
-                      Colors.black.withOpacity(0.05),
+                      Colors.black.withValues(alpha: 0.25),
+                      Colors.black.withValues(alpha: 0.05),
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -1521,7 +1654,7 @@ Widget build(BuildContext context) {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                color: Colors.black.withOpacity(0.25), // extra overlay behind text
+                color: Colors.black.withValues(alpha: 0.25),
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
@@ -1545,7 +1678,6 @@ Widget build(BuildContext context) {
   return GestureDetector(
     onTap: () {
       FocusScope.of(context).unfocus();
-      setState(() => _showSuggestions = false);
     },
     child: Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

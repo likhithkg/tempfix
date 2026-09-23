@@ -14,7 +14,7 @@ class FarmerAdvisoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: AppLocalizations.of(context)!.farmerAdvisoryTitle, emoji: '🌾'),
+          GlassSectionHeader(title: AppLocalizations.of(context)!.farmerAdvisoryTitle, emoji: Icons.grass_rounded),
           ...advisories.map((a) => _AdvisoryRow(advisory: a)),
         ],
       ),
@@ -61,7 +61,7 @@ class _AdvisoryRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(advisory.icon, style: const TextStyle(fontSize: 18)),
+          Icon(advisory.icon, size: 18, color: Colors.white),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

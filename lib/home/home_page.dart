@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme.dart';
 import '../chatbot/chatbot_page.dart';
+import '../land_connect/land_connect_home_page.dart';
 import 'home_search_page.dart';
 import '../crop_disease/crop_disease_page.dart';
 import '../exporter_hub/exporter_home_page.dart';
@@ -22,6 +23,7 @@ import '../plant_vendor/plant_vendor_home.dart';
 import '../profile/profile_page.dart';
 import '../rent/rent_home_page.dart';
 import '../service/user_service.dart';
+import '../config/km_images.dart';
 import '../services/locale_service.dart';
 import '../weather/weather_page.dart';
 import 'widgets/home_weather_widget.dart';
@@ -71,16 +73,8 @@ class _KrishiMithraHomeState extends State<KrishiMithraHome> {
             label: l.greenBazaar,
           ),
           NavigationDestination(
-            icon: Stack(clipBehavior: Clip.none, children: [
-              const Icon(Icons.local_shipping_outlined),
-              const Positioned(right: -4, bottom: -4,
-                  child: Icon(Icons.lock, size: 12, color: Colors.grey)),
-            ]),
-            selectedIcon: Stack(clipBehavior: Clip.none, children: [
-              Icon(Icons.local_shipping_rounded, color: cs.primary),
-              const Positioned(right: -4, bottom: -4,
-                  child: Icon(Icons.lock, size: 12, color: Colors.grey)),
-            ]),
+            icon: const Icon(Icons.local_shipping_outlined),
+            selectedIcon: Icon(Icons.local_shipping_rounded, color: cs.primary),
             label: l.exportHub,
           ),
           NavigationDestination(
@@ -387,9 +381,13 @@ class _HomeTabState extends State<HomeTab> {
             SliverToBoxAdapter(child: _buildSectionHeader(context, l.quickActions, null, cs)),
             SliverToBoxAdapter(child: _buildQuickActions(context, l)),
 
-            // ── 5. SMART SERVICES ───────────────────────────────────────────
-            SliverToBoxAdapter(child: _buildSectionHeader(context, l.smartServices, null, cs)),
-            SliverToBoxAdapter(child: _buildSmartServices(context, l)),
+            // ── 5. GREENBAZAAR HIGHLIGHTS ───────────────────────────────────
+            SliverToBoxAdapter(
+              child: _buildSectionHeader(context, l.greenBazaarHighlights, () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const F2BHomePage()));
+              }, cs),
+            ),
+            SliverToBoxAdapter(child: _buildGreenBazaar(context, l, cs)),
 
             // ── 6. PLANT VENDORS ────────────────────────────────────────────
             SliverToBoxAdapter(
@@ -399,25 +397,13 @@ class _HomeTabState extends State<HomeTab> {
             ),
             SliverToBoxAdapter(child: _buildPlantVendorsSection(context, l, cs)),
 
-            // ── 7. GREENBAZAAR HIGHLIGHTS ───────────────────────────────────
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(context, l.greenBazaarHighlights, () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const PlantVendorHome()));
-              }, cs),
-            ),
-            SliverToBoxAdapter(child: _buildGreenBazaar(context, l, cs)),
-
-            // ── 8. NEARBY FARMERS ───────────────────────────────────────────
+            // ── 7. NEARBY FARMERS ───────────────────────────────────────────
             SliverToBoxAdapter(child: _buildSectionHeader(context, l.nearbyFarmersSection, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const ExporterHomePage()));
             }, cs)),
             SliverToBoxAdapter(child: _buildNearbyFarmers(context, l, cs)),
 
-            // ── 9. PERSONALIZED INSIGHTS ─────────────────────────────────────
-            SliverToBoxAdapter(child: _buildSectionHeader(context, l.personalizedInsights, null, cs)),
-            SliverToBoxAdapter(child: _buildInsights(context, l, user)),
-
-            // ── 10. RECENT ACTIVITY ─────────────────────────────────────────
+            // ── 8. RECENT ACTIVITY ─────────────────────────────────────────
             SliverToBoxAdapter(child: _buildSectionHeader(context, l.recentActivity, null, cs)),
             SliverToBoxAdapter(child: _buildRecentActivity(context, l, cs, user)),
 
@@ -432,7 +418,7 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildHeader(BuildContext context, AppLocalizations l, ColorScheme cs, fb.User? user) {
     final avatarText = _userName.isNotEmpty ? _userName[0].toUpperCase() : '?';
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: KMGradients.primaryHeader,
       ),
       child: SafeArea(
@@ -613,51 +599,19 @@ class _HomeTabState extends State<HomeTab> {
   // ── Quick Actions ─────────────────────────────────────────────────────────
   Widget _buildQuickActions(BuildContext context, AppLocalizations l) {
     final actions = _quickActions(context, l, _location, _coords);
-    return SizedBox(
-      height: 108,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 14,
+          childAspectRatio: 0.78,
+        ),
         itemCount: actions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) => _QuickActionTile(data: actions[i]),
-      ),
-    );
-  }
-
-  // ── Smart Services ────────────────────────────────────────────────────────
-  Widget _buildSmartServices(BuildContext context, AppLocalizations l) {
-    final services = [
-      _SmartServiceData(
-        icon: Icons.agriculture_outlined,
-        color: Colors.brown,
-        title: l.rentMachine,
-        subtitle: l.machinesAvailableNearby,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentHomePage())),
-      ),
-      _SmartServiceData(
-        icon: Icons.groups_outlined,
-        color: Colors.purple,
-        title: l.labourHub,
-        subtitle: l.hireFarmWorkers,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
-      ),
-      _SmartServiceData(
-        icon: Icons.bug_report_outlined,
-        color: Colors.red,
-        title: l.cropDisease,
-        subtitle: l.detectTreatDiseases,
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CropDiseasePage())),
-      ),
-    ];
-    return SizedBox(
-      height: 96,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        itemCount: services.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (_, i) => _SmartServiceCard(data: services[i]),
       ),
     );
   }
@@ -700,7 +654,7 @@ class _HomeTabState extends State<HomeTab> {
   // ── GreenBazaar Highlights ────────────────────────────────────────────────
   Widget _buildGreenBazaar(BuildContext context, AppLocalizations l, ColorScheme cs) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _db.collection('plant_vendors').limit(8).snapshots(),
+      stream: _db.collection('export_products').limit(8).snapshots(),
       builder: (_, snap) {
         if (snap.connectionState == ConnectionState.waiting) return _shimmerRow();
         if (snap.hasError) {
@@ -719,14 +673,16 @@ class _HomeTabState extends State<HomeTab> {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (_, i) {
               final d = docs[i].data() as Map<String, dynamic>;
+              final price = d['pricePerKg']?.toString() ?? d['price']?.toString() ?? '';
+              final unit  = d['unit']?.toString() ?? 'kg';
               return _ProductCard(
-                imageUrl: d['imageUrl']?.toString() ?? d['primaryImage']?.toString() ?? '',
-                name: d['plantName']?.toString() ?? d['name']?.toString() ?? '',
-                detail: '₹${d['price']?.toString() ?? d['pricePerUnit']?.toString() ?? ''}',
-                badge: d['type']?.toString() ?? d['category']?.toString(),
-                badgeColor: Colors.green,
+                imageUrl: d['primaryImage']?.toString() ?? d['imageUrl']?.toString() ?? '',
+                name: d['productName']?.toString() ?? d['name']?.toString() ?? '',
+                detail: price.isNotEmpty ? '₹$price/$unit' : '',
+                badge: d['category']?.toString() ?? d['type']?.toString(),
+                badgeColor: Colors.orange,
                 onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const PlantVendorHome())),
+                    MaterialPageRoute(builder: (_) => const F2BHomePage())),
               );
             },
           ),
@@ -828,54 +784,6 @@ class _HomeTabState extends State<HomeTab> {
           ]),
         );
       },
-    );
-  }
-
-  // ── Personalized Insights / For You ──────────────────────────────────────
-  Widget _buildInsights(BuildContext context, AppLocalizations l, fb.User? user) {
-    final insights = [
-      _InsightData(
-        icon: Icons.wb_sunny_outlined,
-        color: Colors.orange,
-        title: l.insightMonitorSoilTitle,
-        subtitle: l.insightMonitorSoilSubtitle,
-        onTap: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => WeatherPage(location: _location))),
-      ),
-      _InsightData(
-        icon: Icons.trending_up_outlined,
-        color: Colors.green,
-        title: l.insightExportPricesTitle,
-        subtitle: l.insightExportPricesSubtitle,
-        onTap: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const ExporterHomePage())),
-      ),
-      _InsightData(
-        icon: Icons.agriculture_outlined,
-        color: const Color(0xFF795548),
-        title: l.insightRentMachineTitle,
-        subtitle: l.insightRentMachineSubtitle,
-        onTap: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const RentHomePage())),
-      ),
-      _InsightData(
-        icon: Icons.chat_bubble_outline_rounded,
-        color: Colors.indigo,
-        title: l.insightAskAiTitle,
-        subtitle: l.insightAskAiSubtitle,
-        onTap: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const ChatbotPage())),
-      ),
-    ];
-    return SizedBox(
-      height: 130,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        itemCount: insights.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (_, i) => _InsightCard(data: insights[i]),
-      ),
     );
   }
 
@@ -1030,12 +938,14 @@ class _HomeTabState extends State<HomeTab> {
 class _BannerData {
   final List<Color> gradient;
   final IconData icon;
+  final String? imageUrl;
   final String Function(AppLocalizations) title;
   final String Function(AppLocalizations) subtitle;
   final void Function(BuildContext ctx, String location, LatLng? coords) onTap;
   const _BannerData({
     required this.gradient,
     required this.icon,
+    this.imageUrl,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -1044,15 +954,25 @@ class _BannerData {
 
 final _kBanners = [
   _BannerData(
+    gradient: [KMColors.landDark, KMColors.landPrimary],
+    icon: Icons.landscape_rounded,
+    imageUrl: KMImages.heroLand,
+    title: (_) => 'Land Connect',
+    subtitle: (_) => 'Find land to cultivate or list your land',
+    onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LandConnectHomePage())),
+  ),
+  _BannerData(
     gradient: [KMColors.primaryDark, KMColors.primary],
     icon: Icons.agriculture_rounded,
+    imageUrl: KMImages.heroExport,
     title: (l) => l.sellDirectlyBanner,
     subtitle: (l) => l.connectExportBuyers,
-    onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
+    onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const F2BHomePage())),
   ),
   _BannerData(
     gradient: [KMColors.weatherDark, KMColors.weatherPrimary],
     icon: Icons.cloud_outlined,
+    imageUrl: KMImages.heroWeather,
     title: (l) => l.checkWeatherBanner,
     subtitle: (l) => l.realTimeFarmForecast,
     onTap: (ctx, loc, _) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => WeatherPage(location: loc))),
@@ -1060,6 +980,7 @@ final _kBanners = [
   _BannerData(
     gradient: [KMColors.rentDark, KMColors.rentPrimary],
     icon: Icons.precision_manufacturing_outlined,
+    imageUrl: KMImages.heroRent,
     title: (l) => l.rentEquipmentBanner,
     subtitle: (l) => l.tractorsHarvestersLowCost,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const RentHomePage())),
@@ -1067,6 +988,7 @@ final _kBanners = [
   _BannerData(
     gradient: [KMColors.exportDark, KMColors.exportPrimary],
     icon: Icons.local_shipping_outlined,
+    imageUrl: KMImages.heroMarket,
     title: (l) => l.exportBanner,
     subtitle: (l) => l.reachInternationalBuyers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const ExporterHomePage())),
@@ -1074,6 +996,7 @@ final _kBanners = [
   _BannerData(
     gradient: [KMColors.labourDark, KMColors.labourPrimary],
     icon: Icons.groups_outlined,
+    imageUrl: KMImages.heroLabour,
     title: (l) => l.hireLabourBanner,
     subtitle: (l) => l.findSkilledFarmWorkers,
     onTap: (ctx, _, __) => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LabourHubHomePage())),
@@ -1102,6 +1025,12 @@ List<_QuickActionData> _quickActions(BuildContext ctx, AppLocalizations l, Strin
     gradient: [KMColors.cropDark, KMColors.cropPrimary],
     label: l.cropDisease,
     onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const CropDiseasePage())),
+  ),
+  _QuickActionData(
+    icon: Icons.landscape_outlined,
+    gradient: [KMColors.landDark, KMColors.landPrimary],
+    label: 'Land Connect',
+    onTap: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const LandConnectHomePage())),
   ),
   _QuickActionData(
     icon: Icons.agriculture_outlined,
@@ -1141,26 +1070,6 @@ List<_QuickActionData> _quickActions(BuildContext ctx, AppLocalizations l, Strin
   ),
 ];
 
-// ─── Smart service data ───────────────────────────────────────────────────────
-
-class _SmartServiceData {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  const _SmartServiceData({required this.icon, required this.color, required this.title, required this.subtitle, required this.onTap});
-}
-
-class _InsightData {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-  const _InsightData({required this.icon, required this.color, required this.title, required this.subtitle, this.onTap});
-}
-
 // ─── UI helper widgets ────────────────────────────────────────────────────────
 
 class _BannerSlide extends StatelessWidget {
@@ -1173,50 +1082,85 @@ class _BannerSlide extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: data.gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [BoxShadow(color: data.gradient.last.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
-              child: const Text('KrishiMithra', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
-            ),
-            const SizedBox(height: 8),
-            Text(data.title(l),
-                style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold, height: 1.2)),
-            const SizedBox(height: 5),
-            Text(data.subtitle(l),
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Photography background
+            if (data.imageUrl != null)
+              Image.network(
+                data.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  ),
+                ),
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                ),
               ),
-              child: const Text('Explore →', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+            // Gradient overlay for text readability (left-heavy)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    data.gradient.first.withValues(alpha: 0.84),
+                    data.gradient.last.withValues(alpha: 0.52),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
             ),
-          ])),
-          const SizedBox(width: 12),
-          Container(
-            width: 80, height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
+                    child: const Text('KrishiMithra', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(data.title(l),
+                      style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold, height: 1.2)),
+                  const SizedBox(height: 5),
+                  Text(data.subtitle(l),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 12)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text('Explore →', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ])),
+                const SizedBox(width: 12),
+                Container(
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+                  ),
+                  child: Icon(data.icon, color: Colors.white, size: 38),
+                ),
+              ]),
             ),
-            child: Icon(data.icon, color: Colors.white, size: 42),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -1230,65 +1174,23 @@ class _QuickActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: data.onTap,
-      child: SizedBox(
-        width: 74,
-        child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Container(
-            width: 60, height: 60,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [BoxShadow(color: data.gradient.last.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))],
-            ),
-            child: Icon(data.icon, color: Colors.white, size: 28),
+      child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+        Container(
+          width: 56, height: 56,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: data.gradient.last.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))],
           ),
-          const SizedBox(height: 7),
-          Text(data.label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2)),
-        ]),
-      ),
-    );
-  }
-}
-
-class _SmartServiceCard extends StatelessWidget {
-  final _SmartServiceData data;
-  const _SmartServiceCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: data.onTap,
-      child: Container(
-        width: 190,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 8, offset: const Offset(0, 2))],
+          child: Icon(data.icon, color: Colors.white, size: 26),
         ),
-        child: Row(children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: data.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(data.icon, color: data.color, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(data.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            const SizedBox(height: 2),
-            Text(data.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-          ])),
-        ]),
-      ),
+        const SizedBox(height: 7),
+        Text(data.label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2)),
+      ]),
     );
   }
 }
@@ -1362,44 +1264,6 @@ class _ProductCard extends StatelessWidget {
   );
 
   Widget _shimmerBox() => Container(color: Colors.grey.shade200);
-}
-
-class _InsightCard extends StatelessWidget {
-  final _InsightData data;
-  const _InsightCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: data.onTap,
-      child: Container(
-        width: 200,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: data.color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: data.color.withValues(alpha: 0.2)),
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-          Row(children: [
-            Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(color: data.color.withValues(alpha: 0.15), shape: BoxShape.circle),
-              child: Icon(data.icon, color: data.color, size: 18),
-            ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_rounded, color: data.color, size: 16),
-          ]),
-          const SizedBox(height: 8),
-          Text(data.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: data.color)),
-          const SizedBox(height: 3),
-          Text(data.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-        ]),
-      ),
-    );
-  }
 }
 
 class _ShimmerCard extends StatefulWidget {

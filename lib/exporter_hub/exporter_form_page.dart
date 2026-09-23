@@ -1,6 +1,4 @@
 // lib/exporter_hub/exporter_form_page.dart
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,7 +53,6 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
   bool _isSubmitting = false;
   bool _isUploadingImage = false;
   bool _detectingLocation = false;
-  bool _advancedExpanded = false;
 
   String _category = 'Crops';
   String _unit = 'kg';
@@ -64,19 +61,18 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
   DateTime? _harvestDate;
 
   // Primary image (backward-compat)
-  File? _pickedImageFile;
+  XFile? _pickedXFile;
+  Uint8List? _pickedImageBytes;
   String? _imageUrl;
 
   // Additional images (Phase 3 — imageUrls array)
-  final List<File> _additionalFiles = [];
+  final List<XFile> _additionalFiles = [];
   final List<String> _additionalUrls = [];
 
   double? _selectedLat;
   double? _selectedLon;
 
   final List<String> _categories = ['Crops', 'Fruits', 'Vegetables', 'Grains', 'Spices', 'Other'];
-  final List<String?> _grades = [null, 'A', 'B', 'C'];
-
   @override
   void initState() {
     super.initState();
@@ -113,10 +109,6 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
     _packagingTypeCtrl.text = p.packagingType ?? '';
     _additionalUrls.addAll(p.imageUrls.where((u) => u != _imageUrl));
 
-    if (_grade != null || _isOrganic || _harvestDate != null ||
-        _expectedPriceCtrl.text.isNotEmpty || _minOrderQtyCtrl.text.isNotEmpty) {
-      _advancedExpanded = true;
-    }
   }
 
   @override
@@ -142,7 +134,10 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
   Future<void> _pickImage(ImageSource src) async {
     try {
       final picked = await _picker.pickImage(source: src, imageQuality: 80, maxWidth: 1200);
-      if (picked != null) setState(() => _pickedImageFile = File(picked.path));
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        setState(() { _pickedXFile = picked; _pickedImageBytes = bytes; });
+      }
     } on PlatformException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image pick failed: ${e.message}')));
@@ -150,27 +145,10 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
     }
   }
 
-  Future<void> _pickAdditionalImage() async {
-    if (_additionalFiles.length + _additionalUrls.length >= 4) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Max 4 additional images')));
-      }
-      return;
-    }
-    try {
-      final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1200);
-      if (picked != null) setState(() => _additionalFiles.add(File(picked.path)));
-    } on PlatformException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image pick failed: ${e.message}')));
-      }
-    }
-  }
-
-  Future<String?> _uploadImage(File file) async {
+  Future<String?> _uploadXFile(XFile xfile) async {
     setState(() => _isUploadingImage = true);
     try {
-      final imageUrl = await ImageUploadService.uploadImage(file);
+      final imageUrl = await ImageUploadService.uploadImageFromXFile(xfile);
       if (imageUrl == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.imageUploadFailed)));
@@ -210,7 +188,7 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
       if (placemarks.isNotEmpty) {
         final pm = placemarks.first;
         final parts = [pm.locality, pm.subAdministrativeArea, pm.administrativeArea]
-            .where((e) => e != null).join(', ');
+            .whereType<String>().where((e) => e.isNotEmpty).join(', ');
         if (mounted) setState(() => _locationCtrl.text = parts);
       }
     } catch (e) {
@@ -235,15 +213,15 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
 
     try {
       // Upload primary image
-      if (_pickedImageFile != null) {
-        final uploaded = await _uploadImage(_pickedImageFile!);
+      if (_pickedXFile != null) {
+        final uploaded = await _uploadXFile(_pickedXFile!);
         if (uploaded != null) _imageUrl = uploaded;
       }
 
       // Upload additional images
       final uploadedAdditional = List<String>.from(_additionalUrls);
-      for (final file in _additionalFiles) {
-        final url = await _uploadImage(file);
+      for (final xfile in _additionalFiles) {
+        final url = await _uploadXFile(xfile);
         if (url != null) uploadedAdditional.add(url);
       }
 
@@ -330,7 +308,7 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(editing ? l.editExportProductTitle : l.addExportProductTitle),
+        title: Text(editing ? l.editExportProductTitle : 'Add Product'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -480,97 +458,6 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
               // ── Primary Image ──
               _buildPrimaryImageSection(l),
 
-              const SizedBox(height: 16),
-
-              // ── Advanced Details (Phase 3) ──
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  initiallyExpanded: _advancedExpanded,
-                  onExpansionChanged: (v) => setState(() => _advancedExpanded = v),
-                  title: Row(children: [
-                    Icon(Icons.tune, color: Theme.of(context).colorScheme.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(l.advancedDetails,
-                        style: TextStyle(fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary)),
-                  ]),
-                  children: [
-                    _Field(child: DropdownButtonFormField<String?>(
-                      value: _grade,
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('No grade selected')),
-                        ..._grades.skip(1).map((g) => DropdownMenuItem(value: g, child: Text('Grade $g'))),
-                      ],
-                      onChanged: (v) => setState(() => _grade = v),
-                      decoration: InputDecoration(labelText: l.grade, border: const OutlineInputBorder()),
-                    )),
-                    _Field(child: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l.organic),
-                      subtitle: Text(l.isOrganicSubtitle),
-                      value: _isOrganic,
-                      onChanged: (v) => setState(() => _isOrganic = v),
-                    )),
-                    _Field(child: InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _harvestDate ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (picked != null) setState(() => _harvestDate = picked);
-                      },
-                      child: InputDecorator(
-                        decoration: InputDecoration(labelText: l.harvestDate, border: const OutlineInputBorder()),
-                        child: Text(
-                          _harvestDate != null
-                              ? '${_harvestDate!.day}/${_harvestDate!.month}/${_harvestDate!.year}'
-                              : 'Tap to select date',
-                          style: TextStyle(
-                              color: _harvestDate != null ? null : Colors.grey.shade500),
-                        ),
-                      ),
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _varietyCtrl,
-                      decoration: InputDecoration(labelText: l.varietyLabel, border: const OutlineInputBorder(),
-                          hintText: 'e.g. Alphonso, Basmati'),
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _expectedPriceCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(labelText: '${l.expectedPriceLabel} (₹)', border: const OutlineInputBorder()),
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _minOrderQtyCtrl,
-                      decoration: InputDecoration(labelText: l.minOrder, border: const OutlineInputBorder(),
-                          hintText: 'e.g. 100 kg'),
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _moistureLevelCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(labelText: l.moistureLevelLabel, border: const OutlineInputBorder(),
-                          hintText: 'e.g. 12.5'),
-                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _storageLocationCtrl,
-                      decoration: InputDecoration(labelText: l.storageLocationLabel, border: const OutlineInputBorder()),
-                    )),
-                    _Field(child: TextFormField(
-                      controller: _packagingTypeCtrl,
-                      decoration: InputDecoration(labelText: l.packagingTypeLabel, border: const OutlineInputBorder(),
-                          hintText: 'e.g. Jute bags, Poly bags'),
-                    )),
-
-                    // ── Additional Images ──
-                    _buildAdditionalImagesSection(l),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 20),
 
               SizedBox(
@@ -585,7 +472,7 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
                       ? const SizedBox(
                           height: 18, width: 18,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(editing ? l.update : l.addExportProductTitle,
+                      : Text(editing ? l.update : 'Add Product',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
@@ -629,70 +516,12 @@ class _ExporterFormPageState extends State<ExporterFormPage> {
     );
   }
 
-  Widget _buildAdditionalImagesSection(AppLocalizations l) {
-    final allPreviews = <Widget>[];
-
-    // Existing uploaded URLs
-    for (final url in _additionalUrls) {
-      allPreviews.add(_AdditionalImageThumb(
-        url: url,
-        onRemove: () => setState(() => _additionalUrls.remove(url)),
-      ));
-    }
-
-    // Newly picked files
-    for (final file in _additionalFiles) {
-      allPreviews.add(_AdditionalFileThumb(
-        file: file,
-        onRemove: () => setState(() => _additionalFiles.remove(file)),
-      ));
-    }
-
-    // Add button
-    if (_additionalFiles.length + _additionalUrls.length < 4) {
-      allPreviews.add(GestureDetector(
-        onTap: _pickAdditionalImage,
-        child: Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), width: 2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(Icons.add_photo_alternate_outlined,
-              color: Theme.of(context).colorScheme.primary, size: 32),
-        ),
-      ));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.additionalImagesLabel,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 90,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: allPreviews.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) => allPreviews[i],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _imagePreviewWidget() {
     const double size = 120;
-    if (_pickedImageFile != null) {
+    if (_pickedImageBytes != null) {
       return ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.file(_pickedImageFile!, width: size, height: size, fit: BoxFit.cover));
+          child: Image.memory(_pickedImageBytes!, width: size, height: size, fit: BoxFit.cover));
     }
     if (_imageUrl != null && _imageUrl!.isNotEmpty) {
       return ClipRRect(
@@ -722,66 +551,3 @@ class _Field extends StatelessWidget {
       Padding(padding: const EdgeInsets.only(bottom: 12), child: child);
 }
 
-class _AdditionalImageThumb extends StatelessWidget {
-  final String url;
-  final VoidCallback onRemove;
-  const _AdditionalImageThumb({required this.url, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(url, width: 80, height: 80, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(width: 80, height: 80, color: Colors.grey.shade200,
-                  child: const Icon(Icons.broken_image))),
-        ),
-        Positioned(
-          top: -6, right: -6,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              width: 22, height: 22,
-              decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5)),
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AdditionalFileThumb extends StatelessWidget {
-  final File file;
-  final VoidCallback onRemove;
-  const _AdditionalFileThumb({required this.file, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.file(file, width: 80, height: 80, fit: BoxFit.cover),
-        ),
-        Positioned(
-          top: -6, right: -6,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              width: 22, height: 22,
-              decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5)),
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}

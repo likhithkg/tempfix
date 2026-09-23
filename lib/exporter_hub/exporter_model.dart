@@ -38,6 +38,8 @@ class ExportProduct {
   String listingSource;    // 'export_hub' | 'f2b_mart' — separates the two marketplaces
   int views;
   List<String> imageUrls;  // multiple images (supplements single imageUrl)
+  double? locationLat;
+  double? locationLon;
 
   ExportProduct({
     this.id = '',
@@ -70,6 +72,8 @@ class ExportProduct {
     this.listingSource = 'export_hub',
     this.views = 0,
     this.imageUrls = const [],
+    this.locationLat,
+    this.locationLon,
   });
 
   factory ExportProduct.fromMap(Map<String, dynamic> map) {
@@ -116,6 +120,8 @@ class ExportProduct {
       listingSource: (map['listingSource'] ?? '').toString(),
       views: (map['views'] is int) ? map['views'] as int : 0,
       imageUrls: parseImageUrls(map['imageUrls']),
+      locationLat: (map['locationLat'] as num?)?.toDouble(),
+      locationLon: (map['locationLon'] as num?)?.toDouble(),
     );
   }
 

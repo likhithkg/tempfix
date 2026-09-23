@@ -1,72 +1,141 @@
 // lib/profile/profile_service.dart
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Import the helpers we added (ensure this path matches your project)
 import 'profile_service_helpers.dart';
 
 class ProfileService {
   ProfileService._();
   static final instance = ProfileService._();
 
+  static const String _backendBase = 'https://km-backend-ug96.onrender.com';
+
   /// Notifier that drives live theme changes across the app.
-  /// Initialised to light; updated by [setDarkMode] and at startup in main().
   final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  // Lazy getter — Supabase.instance is only resolved when first used,
-  // which is always after Supabase.initialize() completes in main().
-  SupabaseClient get _supabase => Supabase.instance.client;
 
-  // Upload file to Supabase storage and return public URL
-  Future<String> uploadProfileImage(File file) async {
+  // ── Profile photo upload ──────────────────────────────────────────────────
+
+  /// Uploads [bytes] to MongoDB GridFS via the backend and returns the public
+  /// HTTPS URL for the stored image.
+  ///
+  /// Uses [picked.readAsBytes()] on the call-site so this works on Flutter Web
+  /// (no dart:io File involved).
+  Future<String> uploadProfileImage(Uint8List bytes, String mimeType) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
 
-    final bucket = 'profile-photos'; // ensure this bucket exists in Supabase
-    final path = '${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final token = await user.getIdToken();
+    if (token == null) throw Exception('Authentication failed');
 
-    try {
-      final bytes = await file.readAsBytes();
+    final result = await _doUpload(bytes, mimeType, token);
 
-      // Attempt upload. Different supabase_flutter versions return different shapes.
-      // We don't rely on a specific response shape; instead, catch exceptions.
-      await _supabase.storage.from(bucket).uploadBinary(
-        path,
-        bytes,
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
-
-      // Get public URL. Some versions return a String directly, others return an object.
-      final publicRes = _supabase.storage.from(bucket).getPublicUrl(path);
-
-      // Guard: convert to string so it works regardless of return type.
-      final publicUrl = publicRes?.toString() ?? '';
-      if (publicUrl.isEmpty) {
-        throw Exception('Failed to get public URL from Supabase.');
+    // If the backend doesn't have a MongoDB record yet (e.g. startup sync
+    // timed out on a cold Render instance), sync now and retry once.
+    if (result == null) {
+      await _syncWithBackend(token);
+      final retry = await _doUpload(bytes, mimeType, token);
+      if (retry == null) {
+        throw Exception(
+            'Upload failed: could not create user record. Please try again.');
       }
-      return publicUrl;
+      return retry;
+    }
+
+    return result;
+  }
+
+  /// Sends the multipart request and returns the image URL, or null when the
+  /// backend says the MongoDB user record is missing (404 "User not found").
+  /// Throws for all other errors.
+  Future<String?> _doUpload(
+      Uint8List bytes, String mimeType, String token) async {
+    final uri = Uri.parse('$_backendBase/api/profile/photo');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..files.add(http.MultipartFile.fromBytes(
+        'photo',
+        bytes,
+        filename: 'profile.jpg',
+        contentType: MediaType.parse(mimeType),
+      ));
+
+    late http.StreamedResponse streamed;
+    try {
+      streamed = await request.send().timeout(const Duration(seconds: 60));
     } catch (e) {
-      // Re-throw with clearer message
-      throw Exception('Supabase upload failed: $e');
+      // In Flutter Web, CORS failures and network timeouts both surface here.
+      throw Exception('Upload failed: $e');
+    }
+
+    final body = await streamed.stream.bytesToString();
+
+    if (streamed.statusCode == 200) {
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      final url = data['imageUrl'] as String?;
+      if (url == null || url.isEmpty) {
+        throw Exception('Server returned no image URL');
+      }
+      return url;
+    }
+
+    // 404 "User not found" — signal the caller to sync and retry.
+    if (streamed.statusCode == 404) {
+      try {
+        final data = jsonDecode(body) as Map<String, dynamic>;
+        final msg = data['error'] as String? ?? '';
+        if (msg.toLowerCase().contains('user not found')) return null;
+      } catch (_) {}
+    }
+
+    // All other errors — surface the backend's message.
+    try {
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      final msg = data['error'] as String?;
+      throw Exception(msg ?? 'Upload failed (HTTP ${streamed.statusCode})');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Upload failed (HTTP ${streamed.statusCode})');
     }
   }
 
-  // Update Firebase user's photoURL
+  /// Calls /api/auth/verify to create or update the MongoDB user record.
+  Future<void> _syncWithBackend(String token) async {
+    try {
+      await http
+          .post(
+            Uri.parse('$_backendBase/api/auth/verify'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 45));
+    } catch (_) {
+      // Best-effort — the retry upload will surface any remaining error.
+    }
+  }
+
+  // ── Firebase photoURL ─────────────────────────────────────────────────────
+
   Future<void> updateFirebasePhotoUrl(String url) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
-
     await user.updatePhotoURL(url);
     await user.reload();
   }
 
-  // Save additional profile fields to Firestore
+  // ── Firestore profile fields ──────────────────────────────────────────────
+
   Future<void> saveProfileFields({
     required String uid,
     String? defaultLocation,
@@ -85,7 +154,8 @@ class ProfileService {
     return doc.data() ?? {};
   }
 
-  // Theme preference — scoped per user so one account's choice doesn't affect another's.
+  // ── Theme preference ──────────────────────────────────────────────────────
+
   Future<void> setDarkMode(bool isDark) async {
     final uid = _auth.currentUser?.uid;
     final key = uid != null ? 'isDarkMode_$uid' : 'isDarkMode';
@@ -101,17 +171,12 @@ class ProfileService {
     return sp.getBool(key) ?? false;
   }
 
-  // ----- New forwarding helpers (fixes undefined_method errors) -----
+  // ── Account management (delegated to helpers) ─────────────────────────────
 
-  /// Deletes user-owned documents and the users/{uid} doc.
-  /// This delegates to ProfileServiceHelpers.deleteUserData - adjust helper's
-  /// collection list in profile_service_helpers.dart if needed.
   Future<void> deleteUserData(String uid) async {
     return ProfileServiceHelpers.deleteUserData(uid);
   }
 
-  /// Exports user data (returns a download URL for the exported JSON).
-  /// Delegates to ProfileServiceHelpers.exportUserData.
   Future<String> exportUserData(String uid) async {
     return ProfileServiceHelpers.exportUserData(uid);
   }

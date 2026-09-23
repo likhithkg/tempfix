@@ -20,7 +20,7 @@ import 'widgets/wind_card.dart';
 import 'widgets/irrigation_card.dart';
 import 'widgets/weather_background.dart';
 import 'widgets/animated_weather_icon.dart';
-import '../services/libre_translate_service.dart';
+import '../services/content_translation_service.dart';
 
 // ─── Gradient palette (time-of-day + condition aware) ────────────────────────
 
@@ -135,10 +135,8 @@ class _WeatherPageState extends State<WeatherPage>
       await prefs.setString('lastLocation', place);
 
       final lang = mounted ? Localizations.localeOf(context).languageCode : 'en';
-      final translated = await LibreTranslateService.translateText(
-        text: data.description,
-        targetLanguage: lang,
-      );
+      final translated = ContentTranslationService.translateWeatherDescription(
+        data.description, lang);
 
       if (!mounted) return;
       setState(() {
@@ -362,7 +360,7 @@ class _WeatherPageState extends State<WeatherPage>
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
           child: Column(
             children: [
-              _glassSection('🕒', AppLocalizations.of(context)!.twentyFourHourForecast, HourlyForecast(hourly: w.hourly)),
+              _glassSection(Icons.schedule_rounded, AppLocalizations.of(context)!.twentyFourHourForecast, HourlyForecast(hourly: w.hourly)),
               const SizedBox(height: 12),
               FarmerAdvisoryCard(advisories: w.advisories),
               const SizedBox(height: 12),
@@ -382,7 +380,7 @@ class _WeatherPageState extends State<WeatherPage>
               SunInfoCard(weather: w),
               const SizedBox(height: 12),
               _glassSection(
-                '📅',
+                Icons.date_range_rounded,
                 AppLocalizations.of(context)!.sevenDayForecastSection,
                 DailyForecast(
                   daily: w.daily,
@@ -518,22 +516,22 @@ class _WeatherPageState extends State<WeatherPage>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _HeroStat(icon: '💧', value: '${w.humidity}%', label: AppLocalizations.of(context)!.humidity),
+              _HeroStat(icon: Icons.water_drop, value: '${w.humidity}%', label: AppLocalizations.of(context)!.humidity),
               _vDivider(),
               _HeroStat(
-                icon: '🌬️',
+                icon: Icons.air_rounded,
                 value: '${w.windSpeed.toStringAsFixed(0)} m/s',
                 label: AppLocalizations.of(context)!.wind,
               ),
               _vDivider(),
               _HeroStat(
-                icon: '🌧️',
+                icon: Icons.water_drop_rounded,
                 value: '${w.precipitationProbability}%',
                 label: AppLocalizations.of(context)!.rain,
               ),
               _vDivider(),
               _HeroStat(
-                icon: '🔆',
+                icon: Icons.wb_sunny_rounded,
                 value: WeatherService.uvLabel(w.uvIndex),
                 label: AppLocalizations.of(context)!.uv,
               ),
@@ -567,7 +565,7 @@ class _WeatherPageState extends State<WeatherPage>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🌧️', style: TextStyle(fontSize: 15)),
+              const Icon(Icons.water_drop_rounded, size: 15, color: Colors.lightBlueAccent),
               const SizedBox(width: 6),
               Text(
                 AppLocalizations.of(context)!.rainChanceToday(prob),
@@ -586,7 +584,7 @@ class _WeatherPageState extends State<WeatherPage>
 
   // ─── Glass section card ──────────────────────────────────────────────────────
 
-  Widget _glassSection(String emoji, String title, Widget child) {
+  Widget _glassSection(IconData icon, String title, Widget child) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -606,7 +604,7 @@ class _WeatherPageState extends State<WeatherPage>
             children: [
               Row(
                 children: [
-                  Text(emoji, style: const TextStyle(fontSize: 15)),
+                  Icon(icon, size: 15, color: Colors.white70),
                   const SizedBox(width: 6),
                   Text(
                     title,
@@ -698,7 +696,7 @@ class _WeatherPageState extends State<WeatherPage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('⚠️', style: TextStyle(fontSize: 48)),
+                  const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.white70),
                   const SizedBox(height: 14),
                   Text(
                     _error,
@@ -728,7 +726,7 @@ class _WeatherPageState extends State<WeatherPage>
 // ─── Hero stat tile ───────────────────────────────────────────────────────────
 
 class _HeroStat extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String value;
   final String label;
   const _HeroStat({required this.icon, required this.value, required this.label});
@@ -738,7 +736,7 @@ class _HeroStat extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(icon, style: const TextStyle(fontSize: 18)),
+        Icon(icon, size: 18, color: Colors.white),
         const SizedBox(height: 3),
         Text(
           value,

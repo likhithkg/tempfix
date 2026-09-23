@@ -31,8 +31,6 @@ class F2BProductDetailPage extends StatefulWidget {
 class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
   bool _isWishlisted = false;
   bool _inCart = false;
-  StreamSubscription<Set<String>>? _wishlistSub;
-  StreamSubscription<List<dynamic>>? _cartSub;
   int _imgIndex = 0;
   late final PageController _imgCtrl = PageController();
   final _cartSvc = F2BCartService();
@@ -44,24 +42,38 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
   void initState() {
     super.initState();
     if (_uid != null) {
-      _wishlistSub = WishlistService.stream(_uid!).listen((ids) {
-        if (mounted) {
-          setState(() => _isWishlisted = ids.contains(widget.product.id));
-        }
-      });
-      _cartSub = _cartSvc.streamCart().listen((items) {
-        if (mounted) {
-          setState(() => _inCart =
-              items.any((i) => i.productId == widget.product.id));
-        }
-      });
+      _checkInCart();
+      _checkWishlisted();
     }
+  }
+
+  Future<void> _checkWishlisted() async {
+    final uid = _uid;
+    if (uid == null) return;
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('wishlist').doc(uid).collection('items')
+          .doc(widget.product.id).get();
+      if (mounted) setState(() => _isWishlisted = snap.exists);
+    } catch (_) {}
+  }
+
+  Future<void> _checkInCart() async {
+    final uid = _uid;
+    if (uid == null) return;
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('f2b_cart')
+          .doc(uid)
+          .collection('items')
+          .doc(widget.product.id)
+          .get();
+      if (mounted) setState(() => _inCart = snap.exists);
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    _wishlistSub?.cancel();
-    _cartSub?.cancel();
     _imgCtrl.dispose();
     super.dispose();
   }
@@ -72,6 +84,7 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
     try {
       await _cartSvc.addToCart(widget.product);
       if (mounted) {
+        setState(() => _inCart = true);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('${widget.product.productName} added to cart'),
           backgroundColor: const Color(0xFF1B5E20),
@@ -87,7 +100,7 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to add to cart: $e'),
+          content: Text('Could not add to cart. Please try again.'),
           backgroundColor: Colors.red,
         ));
       }
@@ -225,17 +238,31 @@ class _F2BProductDetailPageState extends State<F2BProductDetailPage> {
           .showSnackBar(SnackBar(content: Text(l.loginToSave)));
       return;
     }
-    await WishlistService.toggle(_uid!, widget.product.id);
+    try {
+      final added = await WishlistService.toggle(_uid!, widget.product.id);
+      if (mounted) {
+        setState(() => _isWishlisted = added);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(added ? 'Added to wishlist' : 'Removed from wishlist'),
+          duration: const Duration(seconds: 1),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update wishlist')));
+      }
+    }
   }
 
   void _share(AppLocalizations l) {
     final p = widget.product;
     final text =
-        '🌾 ${p.productName}\n'
-        '💰 ₹${p.pricePerUnit} per unit\n'
-        '📦 Available: ${p.quantity}\n'
-        '👨‍🌾 Farmer: ${p.farmerName}\n'
-        '📍 Location: ${p.location}\n'
+        '${p.productName}\n'
+        '₹${p.pricePerUnit} per unit\n'
+        'Available: ${p.quantity}\n'
+        'Farmer: ${p.farmerName}\n'
+        'Location: ${p.location}\n'
         '\nBrowse more on KrishiMithra F2B Mart';
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -898,7 +925,7 @@ class _HeroImageCarousel extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: const Color(0xFF2E7D32),
                       borderRadius: BorderRadius.circular(8)),
-                  child: const Text('🌿 Organic',
+                  child: const Text('Organic',
                       style: TextStyle(color: Colors.white,
                           fontSize: 10, fontWeight: FontWeight.w700)),
                 ),

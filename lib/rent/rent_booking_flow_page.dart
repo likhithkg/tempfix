@@ -24,17 +24,17 @@ Color _typeColor(String type) {
   }
 }
 
-String _typeEmoji(String type) {
+IconData _typeIcon(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor':    return '🚜';
-    case 'harvester':  return '🌾';
-    case 'rotavator':  return '⚙️';
-    case 'cultivator': return '🌿';
-    case 'seeder':     return '🌱';
-    case 'hitachi':    return '⛏️';
-    case 'jcb':        return '🏗️';
-    case 'lorry':      return '🚚';
-    default:           return '🔧';
+    case 'tractor':    return Icons.agriculture_rounded;
+    case 'harvester':  return Icons.grass_rounded;
+    case 'rotavator':  return Icons.settings_rounded;
+    case 'cultivator': return Icons.eco_rounded;
+    case 'seeder':     return Icons.spa_rounded;
+    case 'hitachi':    return Icons.construction_rounded;
+    case 'jcb':        return Icons.construction_rounded;
+    case 'lorry':      return Icons.local_shipping_rounded;
+    default:           return Icons.build_rounded;
   }
 }
 
@@ -400,14 +400,12 @@ class _RentBookingFlowPageState extends State<RentBookingFlowPage>
                       errorBuilder: (_, __, ___) => Container(
                             color: color.withValues(alpha: 0.15),
                             child: Center(
-                                child: Text(_typeEmoji(m.type),
-                                    style: const TextStyle(fontSize: 36))),
+                                child: Icon(_typeIcon(m.type), size: 36, color: color)),
                           ))
                   : Container(
                       color: color.withValues(alpha: 0.15),
                       child: Center(
-                          child: Text(_typeEmoji(m.type),
-                              style: const TextStyle(fontSize: 36))),
+                          child: Icon(_typeIcon(m.type), size: 36, color: color)),
                     ),
             ),
           ),
@@ -418,7 +416,7 @@ class _RentBookingFlowPageState extends State<RentBookingFlowPage>
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              Text('${_typeEmoji(m.type)} ${m.type}',
+              Text('${_typeIcon(m.type)} ${m.type}',
                   style: TextStyle(
                       fontSize: 12, color: color, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
@@ -441,11 +439,11 @@ class _RentBookingFlowPageState extends State<RentBookingFlowPage>
       ),
       const SizedBox(height: 16),
       _InfoChip(
-          '👤 Owner', m.ownerName, const Color(0xFF1565C0)),
+          'Owner', m.ownerName, const Color(0xFF1565C0)),
       if (m.location != null && m.location!.isNotEmpty)
         Padding(
           padding: const EdgeInsets.only(top: 10),
-          child: _InfoChip('📍 Location', m.location!, const Color(0xFF388E3C)),
+          child: _InfoChip('Location', m.location!, const Color(0xFF388E3C)),
         ),
     ]);
   }
@@ -746,7 +744,7 @@ class _RentBookingFlowPageState extends State<RentBookingFlowPage>
           ],
         ),
         child: Column(children: [
-          _ConfirmRow('Machine', '${_typeEmoji(m.type)} ${m.name}'),
+          _ConfirmRow('Machine', '${_typeIcon(m.type)} ${m.name}'),
           _ConfirmRow('Type', m.type),
           _ConfirmRow('Owner', m.ownerName),
           _ConfirmRow('Duration', '$_hours hour${_hours > 1 ? 's' : ''}'),

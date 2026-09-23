@@ -12,6 +12,9 @@ class AppLocalizationsTe extends AppLocalizations {
   String get appName => 'కృషిమిత్ర';
 
   @override
+  String get appTagline => 'ప్రతి రైతుకు స్మార్ట్ వ్యవసాయం';
+
+  @override
   String get login => 'లాగిన్';
 
   @override
@@ -2382,4 +2385,103 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get tryAgain => 'మళ్ళీ ప్రయత్నించు';
+
+  @override
+  String get lcTitle => 'లాండ్ కనెక్ట్';
+
+  @override
+  String get lcSubtitle => 'సాగు చేయడానికి భూమి వెతకండి లేదా మీ భూమిని జాబితా చేయండి';
+
+  @override
+  String get lcHaveLand => 'నా దగ్గర భూమి ఉంది';
+
+  @override
+  String get lcHaveLandSub => 'మీ అందుబాటులో లేని భూమిని జాబితా చేసి రైతులను కనుగొనండి';
+
+  @override
+  String get lcFindLand => 'భూమి వెతకండి';
+
+  @override
+  String get lcFindLandSub => 'సమీపంలో అందుబాటులో ఉన్న భూమిని చూడండి';
+
+  @override
+  String get lcMyListings => 'నా భూమి జాబితాలు';
+
+  @override
+  String get lcMyListingsSub => 'మీ భూమి జాబితాలను నిర్వహించండి';
+
+  @override
+  String get lcCultivationRequests => 'సాగు అభ్యర్థనలు';
+
+  @override
+  String get lcCultivationRequestsSub => 'మీ భూమిపై అభ్యర్థనలు చూడండి';
+
+  @override
+  String get lcMyRequests => 'నా సాగు అభ్యర్థనలు';
+
+  @override
+  String get lcMyRequestsSub => 'భూ యజమానులకు పంపిన అభ్యర్థనలను ట్రాక్ చేయండి';
+
+  @override
+  String get lcHowItWorks => 'ఇది ఎలా పని చేస్తుంది';
+
+  @override
+  String get lcDiscoveryTitle => 'సమీపంలో భూమి వెతకండి';
+
+  @override
+  String get lcSearchHint => 'స్థానం, పంట లేదా భూమి రకం ద్వారా వెతకండి...';
+
+  @override
+  String get lcEnableLocation => 'స్థానం ప్రారంభించండి';
+
+  @override
+  String get lcRequestCultivate => 'సాగుకు అభ్యర్థన చేయండి';
+
+  @override
+  String get lcRequestAlreadySent => 'అభ్యర్థన ఇప్పటికే పంపబడింది';
+
+  @override
+  String get lcSendRequest => 'సాగు అభ్యర్థన పంపండి';
+
+  @override
+  String get lcSubmitRequest => 'అభ్యర్థన సమర్పించండి';
+
+  @override
+  String get lcWithdrawRequest => 'అభ్యర్థన వెనక్కి తీసుకోండి';
+
+  @override
+  String get lcPendingTab => 'పెండింగ్';
+
+  @override
+  String get lcAcceptedTab => 'స్వీకరించబడింది';
+
+  @override
+  String get lcRejectedTab => 'తిరస్కరించబడింది';
+
+  @override
+  String get lcActiveTab => 'చురుకుగా ఉంది';
+
+  @override
+  String get lcPausedTab => 'నిలిపివేయబడింది';
+
+  @override
+  String get lcAddListing => 'కొత్త జాబితా జోడించండి';
+
+  @override
+  String get lcListingFormTitle => 'మీ భూమిని జాబితా చేయండి';
+
+  @override
+  String get lcPrivacyNotice => 'మీ ఖచ్చితమైన స్థానం ప్రైవేట్‌గా ఉంచబడుతుంది. అభ్యర్థన స్వీకరించబడే వరకు గ్రామం మరియు జిల్లా మాత్రమే చూపబడతాయి.';
+
+  @override
+  String get lcDisclaimerText => 'KrishiMithra సంబంధాన్ని సులభతరం చేస్తుంది. భూమి లీజు ఒప్పందాన్ని ప్రత్యేకంగా అమలు చేయండి.';
+
+  @override
+  String get lcRequestWithdrawn => 'అభ్యర్థన వెనక్కి తీసుకోబడింది';
+
+  @override
+  String get lcRequestAcceptedMsg => 'అభ్యర్థన స్వీకరించబడింది!';
+
+  @override
+  String get lcContactLandowner => 'ఒప్పంద వివరాలను చర్చించడానికి భూ యజమానిని సంప్రదించండి.';
 }

@@ -131,6 +131,10 @@ class F2BOrder {
   final String id;
   final String userId;
   final String userName;
+  final String? buyerPhone;
+  final String? buyerEmail;
+  final String? sellerPhone;
+  final String? sellerLocation;
   final List<F2BOrderLineItem> items;
   final double itemsTotal;
   final String status;
@@ -143,6 +147,10 @@ class F2BOrder {
     required this.id,
     required this.userId,
     required this.userName,
+    this.buyerPhone,
+    this.buyerEmail,
+    this.sellerPhone,
+    this.sellerLocation,
     required this.items,
     required this.itemsTotal,
     required this.status,
@@ -172,6 +180,10 @@ class F2BOrder {
       id: docId,
       userId: m['userId'] ?? '',
       userName: m['userName'] ?? '',
+      buyerPhone: m['buyerPhone'] as String?,
+      buyerEmail: m['buyerEmail'] as String?,
+      sellerPhone: m['sellerPhone'] as String?,
+      sellerLocation: m['sellerLocation'] as String?,
       items: itemsList,
       itemsTotal: (m['itemsTotal'] as num? ?? 0).toDouble(),
       status: m['status'] ?? 'placed',

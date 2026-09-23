@@ -24,30 +24,30 @@ class SunInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.sunAndUv, emoji: '☀️'),
+          GlassSectionHeader(title: l.sunAndUv, emoji: Icons.wb_sunny_rounded),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               if (sunrise != null)
                 _SunStat(
-                  icon: '🌅',
+                  icon: Icons.wb_twilight_rounded,
                   label: l.sunrise,
                   value: DateFormat('h:mm a').format(sunrise),
                 ),
               if (sunset != null)
                 _SunStat(
-                  icon: '🌇',
+                  icon: Icons.wb_twilight_rounded,
                   label: l.sunset,
                   value: DateFormat('h:mm a').format(sunset),
                 ),
               if (dayLength != null)
                 _SunStat(
-                  icon: '⏳',
+                  icon: Icons.schedule_rounded,
                   label: l.dayLength,
                   value: '${dayLength.inHours}h ${dayLength.inMinutes % 60}m',
                 ),
               _SunStat(
-                icon: '🔆',
+                icon: Icons.wb_sunny_rounded,
                 label: l.uvIndex,
                 value: '${weather.uvIndex.toStringAsFixed(1)}\n${WeatherService.uvLabel(weather.uvIndex)}',
               ),
@@ -64,7 +64,7 @@ class SunInfoCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Text('⚠️', style: TextStyle(fontSize: 14)),
+                  const Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -85,7 +85,7 @@ class SunInfoCard extends StatelessWidget {
 }
 
 class _SunStat extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final String value;
 
@@ -95,7 +95,7 @@ class _SunStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 22)),
+        Icon(icon, size: 22, color: Colors.white),
         const SizedBox(height: 4),
         Text(
           value,

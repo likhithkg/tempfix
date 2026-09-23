@@ -21,13 +21,14 @@ class NearbyFarmersService {
       // ignore or log - don't fail entire flow if one collection errors
     }
 
-    // Fetch a chunk from export_products
+    // Fetch a chunk from export_products (exclude f2b_mart listings)
     try {
       final exportRef = _db.collection('export_products');
       final exportSnap = await exportRef.limit(limit).get();
-      if (exportSnap.docs.isNotEmpty) {
-        results.addAll(exportSnap.docs);
-      }
+      final exportDocs = exportSnap.docs.where(
+        (d) => (d.data()['listingSource'] ?? '') != 'f2b_mart',
+      );
+      results.addAll(exportDocs);
     } catch (e) {
       // ignore or log
     }

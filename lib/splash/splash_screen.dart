@@ -62,25 +62,17 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             // optional subtle overlay so white text/indicators are visible
             Container(color: Colors.black.withValues(alpha: 0.18)),
-            // centered content on top of the full-screen image
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  // If you want only the image, you can remove these children.
-                  // Kept small loader and app name for UX feedback.
-                  Text(
-                    '',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  SizedBox(height: 28, width: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)),
-                ],
+            // loading indicator at the bottom, away from the logo
+            Positioned(
+              bottom: 72,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                ),
               ),
             ),
           ],

@@ -1,7 +1,9 @@
 ﻿import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme.dart';
+import '../config/km_images.dart';
 import 'package:flutter/material.dart';
+import '../services/distance_service.dart';
 
 import 'plant_vendor_model.dart';
 import 'plant_vendor_service.dart';
@@ -16,25 +18,27 @@ import 'ai_plant_assistant_page.dart';
 import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
 import 'seller_orders_page.dart';
+import 'buyer_orders_page.dart';
 
 // ─── Category data ────────────────────────────────────────────────────────────
 
 class _Cat {
-  final String key, label, emoji;
+  final String key, label;
+  final IconData icon;
   final Color color;
-  const _Cat(this.key, this.label, this.emoji, this.color);
+  const _Cat(this.key, this.label, this.icon, this.color);
 }
 
 const _kCategories = [
-  _Cat('all', 'All Plants', '🌿', Color(0xFF2E7D32)),
-  _Cat('fruit', 'Fruit', '🍎', Color(0xFFE67E22)),
-  _Cat('flower', 'Flower', '🌸', Color(0xFFE91E8C)),
-  _Cat('vegetable', 'Vegetable', '🥦', Color(0xFF27AE60)),
-  _Cat('medicinal', 'Medicinal', '💊', Color(0xFF16A085)),
-  _Cat('ornamental', 'Ornamental', '🪴', Color(0xFF8E44AD)),
-  _Cat('timber', 'Timber', '🌳', Color(0xFF795548)),
-  _Cat('aromatic', 'Aromatic', '🌿', Color(0xFF00897B)),
-  _Cat('seeds', 'Seeds', '🌾', Color(0xFFF39C12)),
+  _Cat('all',        'All Plants', Icons.eco_rounded,             Color(0xFF2E7D32)),
+  _Cat('fruit',      'Fruit',      Icons.local_florist_rounded,   Color(0xFFE67E22)),
+  _Cat('flower',     'Flower',     Icons.local_florist_outlined,  Color(0xFFE91E8C)),
+  _Cat('vegetable',  'Vegetable',  Icons.grass_rounded,           Color(0xFF27AE60)),
+  _Cat('medicinal',  'Medicinal',  Icons.medical_services_outlined, Color(0xFF16A085)),
+  _Cat('ornamental', 'Ornamental', Icons.spa_rounded,             Color(0xFF8E44AD)),
+  _Cat('timber',     'Timber',     Icons.park_outlined,           Color(0xFF795548)),
+  _Cat('aromatic',   'Aromatic',   Icons.air_rounded,             Color(0xFF00897B)),
+  _Cat('seeds',      'Seeds',      Icons.grain_rounded,           Color(0xFFF39C12)),
 ];
 
 // ─── Banner data ──────────────────────────────────────────────────────────────
@@ -42,27 +46,28 @@ const _kCategories = [
 class _Banner {
   final String title, subtitle, cta;
   final List<Color> colors;
-  final String emoji;
-  const _Banner(this.title, this.subtitle, this.cta, this.colors, this.emoji);
+  final IconData icon;
+  const _Banner(this.title, this.subtitle, this.cta, this.colors, this.icon);
 }
 
 const _kBanners = [
   _Banner('Fresh from the Nursery', 'Handpicked plants delivered to your door',
-      'Shop Now', [KMColors.primaryDark, KMColors.primary], '🌿'),
+      'Shop Now', [KMColors.primaryDark, KMColors.primary], Icons.eco_rounded),
   _Banner('Seasonal Picks', 'Best plants for the current season',
-      'Explore', [KMColors.labourDark, KMColors.labourPrimary], '🌸'),
+      'Explore', [KMColors.labourDark, KMColors.labourPrimary], Icons.local_florist_outlined),
   _Banner('Organic Collection', 'Certified organic plants & seeds',
-      'View All', [KMColors.weatherDark, KMColors.weatherPrimary], '🌱'),
+      'View All', [KMColors.weatherDark, KMColors.weatherPrimary], Icons.spa_rounded),
   _Banner('Flash Deals', 'Up to 20% off on select plants today',
-      'Grab Now', [KMColors.rentDark, KMColors.rentPrimary], '⚡'),
+      'Grab Now', [KMColors.rentDark, KMColors.rentPrimary], Icons.local_offer_rounded),
 ];
 
 // ─── Section model ────────────────────────────────────────────────────────────
 
 class _Section {
-  final String title, emoji, filterKey;
+  final String title, filterKey;
+  final IconData icon;
   final List<PlantVendor> Function(List<PlantVendor>) filter;
-  const _Section(this.title, this.emoji, this.filterKey, this.filter);
+  const _Section(this.title, this.icon, this.filterKey, this.filter);
 }
 
 // ─── Home page ────────────────────────────────────────────────────────────────
@@ -95,6 +100,13 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
   int _newOrderCount = 0;
   StreamSubscription<List<PlantOrder>>? _sellerOrderSub;
 
+  // Buyer orders badge (active orders not yet collected/delivered/cancelled)
+  int _activeBuyerOrderCount = 0;
+  StreamSubscription<List<PlantOrder>>? _buyerOrderSub;
+
+  double? _userLat;
+  double? _userLon;
+
   @override
   void initState() {
     super.initState();
@@ -114,7 +126,30 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
         });
       }
     });
+    _buyerOrderSub = _gbService.streamMyOrders().listen((orders) {
+      if (mounted) {
+        setState(() {
+          _activeBuyerOrderCount = orders
+              .where((o) =>
+                  o.status != 'collected' &&
+                  o.status != 'delivered' &&
+                  o.status != 'cancelled')
+              .length;
+        });
+      }
+    });
     _startBannerTimer();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    final pos = await DistanceService.getUserLocation();
+    if (pos != null && mounted) {
+      setState(() {
+        _userLat = pos.latitude;
+        _userLon = pos.longitude;
+      });
+    }
   }
 
   void _startBannerTimer() {
@@ -136,6 +171,7 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
     _searchCtrl.dispose();
     _cartSub?.cancel();
     _sellerOrderSub?.cancel();
+    _buyerOrderSub?.cancel();
     super.dispose();
   }
 
@@ -157,33 +193,29 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
         .toList();
   }
 
-  // Deterministic fake rating for each plant
-  double _rating(PlantVendor v) =>
-      4.0 + (v.id.hashCode.abs() % 10) / 10.0;
-
   // Sections definition
   List<_Section> _buildSections() => [
-        _Section('Best Sellers', '⭐', 'all',
+        _Section('Best Sellers', Icons.trending_up_rounded, 'all',
             (all) => (List.of(all)..sort((a, b) => b.quantity.compareTo(a.quantity))).take(10).toList()),
-        _Section('Seasonal Picks', '🌦️', 'seasonal',
+        _Section('Seasonal Picks', Icons.wb_sunny_outlined, 'seasonal',
             (all) => all.where((v) => v.type.toLowerCase().contains('vegetable') || v.type.toLowerCase().contains('herb')).take(10).toList()),
-        _Section('Indoor Plants', '🏠', 'indoor',
+        _Section('Indoor Plants', Icons.home_outlined, 'indoor',
             (all) => all.where((v) => v.type.toLowerCase().contains('ornamental') || v.type.toLowerCase().contains('aromatic')).take(10).toList()),
-        _Section('Outdoor Plants', '🌳', 'outdoor',
+        _Section('Outdoor Plants', Icons.park_outlined, 'outdoor',
             (all) => all.where((v) => v.type.toLowerCase().contains('timber') || v.type.toLowerCase().contains('fruit')).take(10).toList()),
-        _Section('Fruit Plants', '🍎', 'fruit',
+        _Section('Fruit Plants', Icons.local_florist_rounded, 'fruit',
             (all) => all.where((v) => v.type.toLowerCase().contains('fruit')).take(10).toList()),
-        _Section('Flower Plants', '🌸', 'flower',
+        _Section('Flower Plants', Icons.local_florist_outlined, 'flower',
             (all) => all.where((v) => v.type.toLowerCase().contains('flower') || v.type.toLowerCase().contains('flowering')).take(10).toList()),
-        _Section('Vegetable Seedlings', '🥦', 'vegetable',
+        _Section('Vegetable Seedlings', Icons.grass_rounded, 'vegetable',
             (all) => all.where((v) => v.type.toLowerCase().contains('vegetable')).take(10).toList()),
-        _Section('Medicinal Plants', '💊', 'medicinal',
+        _Section('Medicinal Plants', Icons.medical_services_outlined, 'medicinal',
             (all) => all.where((v) => v.type.toLowerCase().contains('medicinal')).take(10).toList()),
-        _Section('Organic Collection', '🌱', 'organic',
+        _Section('Organic Collection', Icons.eco_rounded, 'organic',
             (all) => all.where((v) => v.description.toLowerCase().contains('organic')).take(10).toList()),
-        _Section('Flash Deals', '⚡', 'deals',
+        _Section('Flash Deals', Icons.local_offer_rounded, 'deals',
             (all) => all.where((v) => v.quantity > 0 && v.quantity <= 5).take(10).toList()),
-        _Section('Recently Added', '🆕', 'recent',
+        _Section('Recently Added', Icons.new_releases_outlined, 'recent',
             (all) => (List.of(all)..sort((a, b) => b.timestamp.compareTo(a.timestamp))).take(10).toList()),
       ];
 
@@ -221,8 +253,33 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                 floating: true,
                 snap: true,
                 pinned: false,
+                expandedHeight: 200,
                 backgroundColor: const Color(0xFF1B5E20),
                 automaticallyImplyLeading: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        KMImages.heroPlantVendors,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox(),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              KMColors.primaryDark.withValues(alpha: 0.88),
+                              KMColors.primary.withValues(alpha: 0.70),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 title: Row(children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
@@ -231,7 +288,7 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  const Text('🌿', style: TextStyle(fontSize: 20)),
+                  const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
                   const SizedBox(width: 6),
                   const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('GreenBazaar',
@@ -257,6 +314,38 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                     tooltip: 'Wishlist',
                     onPressed: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const WishlistPage())),
+                  ),
+                  // Buyer purchases with badge
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white),
+                        tooltip: 'My Purchases',
+                        onPressed: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => const BuyerOrdersPage())),
+                      ),
+                      if (_activeBuyerOrderCount > 0)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF43A047),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$_activeBuyerOrderCount',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   // Seller orders with badge
                   Stack(
@@ -364,7 +453,7 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
         const SliverFillRemaining(
           child: Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('🌿', style: TextStyle(fontSize: 52)),
+              Icon(Icons.eco_rounded, size: 52, color: KMColors.primary),
               SizedBox(height: 12),
               Text('No plants found',
                   style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 15)),
@@ -384,7 +473,6 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                   (v.createdBy.isNotEmpty ? v.createdBy : v.ownerId) == uid;
               return _PlantCard(
                 vendor: v,
-                rating: _rating(v),
                 isOwner: isOwner,
                 onTap: () => _openDetail(v),
                 gbService: _gbService,
@@ -442,11 +530,67 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
 
             const SizedBox(height: 16),
 
+            // Nearest to You (location-based)
+            Builder(builder: (ctx) {
+              if (_userLat == null || _userLon == null) return const SizedBox.shrink();
+              final nearbyAll = all.where((v) => DistanceService.isValid(v.latitude, v.longitude)).toList();
+              if (nearbyAll.isEmpty) return const SizedBox.shrink();
+              final sorted = DistanceService.sortByDistance(
+                items: nearbyAll,
+                userLat: _userLat!,
+                userLon: _userLon!,
+                getLat: (v) => v.latitude as double?,
+                getLon: (v) => v.longitude as double?,
+              ).take(10).toList();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SectionHeader(
+                    title: 'Nearest to You',
+                    icon: Icons.location_on_rounded,
+                    onSeeAll: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PlantVendorNearbyPage()),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 250,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      itemCount: sorted.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (_, i) {
+                        final v = sorted[i];
+                        final isOwner = (v.createdBy.isNotEmpty ? v.createdBy : v.ownerId) == uid;
+                        final dist = DistanceService.haversine(_userLat!, _userLon!, v.latitude, v.longitude);
+                        return SizedBox(
+                          width: 150,
+                          child: _PlantCard(
+                            vendor: v,
+                            isOwner: isOwner,
+                            onTap: () => _openDetail(v),
+                            gbService: _gbService,
+                            compact: true,
+                            distanceKm: dist,
+                            onEdit: isOwner ? () => Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => PlantListFormPage(existingVendor: v))) : null,
+                            onDelete: isOwner ? () => _confirmDelete(context, v) : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            }),
+
             // Featured nurseries
             if (nurseries.isNotEmpty) ...[
-              _SectionHeader(
+              const _SectionHeader(
                 title: 'Featured Nurseries',
-                emoji: '🏪',
+                icon: Icons.storefront_outlined,
                 onSeeAll: null,
               ),
               _NurseryRow(nurseries: nurseries, allPlants: all),
@@ -463,7 +607,7 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                   children: [
                     _SectionHeader(
                       title: sec.title,
-                      emoji: sec.emoji,
+                      icon: sec.icon,
                       onSeeAll: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -490,7 +634,6 @@ class _GreenBazaarHomePageState extends State<GreenBazaarHomePage> {
                             width: 150,
                             child: _PlantCard(
                               vendor: v,
-                              rating: _rating(v),
                               isOwner: isOwner,
                               onTap: () => _openDetail(v),
                               gbService: _gbService,
@@ -724,7 +867,7 @@ class _BannerCarousel extends StatelessWidget {
                         ),
                       ]),
                 ),
-                Text(b.emoji, style: const TextStyle(fontSize: 64)),
+                Icon(b.icon, size: 64, color: Colors.white.withValues(alpha: 0.85)),
               ]),
             );
           },
@@ -767,56 +910,59 @@ class _CategoryRow extends StatelessWidget {
         child: Text('Browse by Category',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
       ),
-      SizedBox(
-        height: 88,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 0.85,
+          ),
           itemCount: _kCategories.length,
           itemBuilder: (_, i) {
             final c = _kCategories[i];
             final sel = selected == c.key;
             return GestureDetector(
               onTap: () => onSelect(c.key),
-              child: Container(
-                width: 70,
-                margin: const EdgeInsets.only(right: 10),
-                child: Column(children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? c.color
-                          : c.color.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                      boxShadow: sel
-                          ? [
-                              BoxShadow(
-                                  color: c.color.withValues(alpha: 0.35),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3))
-                            ]
-                          : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: sel ? c.color : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: sel ? c.color : const Color(0xFFE0E0E0)),
+                  boxShadow: sel
+                      ? [
+                          BoxShadow(
+                              color: c.color.withValues(alpha: 0.28),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2))
+                        ]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(c.icon, size: 24,
+                        color: sel ? Colors.white : c.color),
+                    const SizedBox(height: 4),
+                    Text(
+                      c.label,
+                      style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: sel
+                              ? Colors.white
+                              : const Color(0xFF616161)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                     ),
-                    child: Center(
-                      child: Text(c.emoji,
-                          style: const TextStyle(fontSize: 22)),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    c.label,
-                    style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: sel ? c.color : const Color(0xFF616161)),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ]),
+                  ],
+                ),
               ),
             );
           },
@@ -829,17 +975,18 @@ class _CategoryRow extends StatelessWidget {
 // ─── Section header ───────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
-  final String title, emoji;
+  final String title;
+  final IconData icon;
   final VoidCallback? onSeeAll;
   const _SectionHeader(
-      {required this.title, required this.emoji, required this.onSeeAll});
+      {required this.title, required this.icon, required this.onSeeAll});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 12, 10),
       child: Row(children: [
-        Text(emoji, style: const TextStyle(fontSize: 18)),
+        Icon(icon, size: 18, color: KMColors.primary),
         const SizedBox(width: 6),
         Text(title,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
@@ -921,7 +1068,7 @@ class _NurseryRow extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Center(
-                        child: Text('🌿', style: TextStyle(fontSize: 18))),
+                        child: Icon(Icons.eco_rounded, size: 18, color: KMColors.primary)),
                   ),
                   const Spacer(),
                   Text(
@@ -951,22 +1098,22 @@ class _NurseryRow extends StatelessWidget {
 
 class _PlantCard extends StatefulWidget {
   final PlantVendor vendor;
-  final double rating;
   final bool isOwner;
   final bool compact;
+  final double? distanceKm;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final GreenBazaarService gbService;
   const _PlantCard({
     required this.vendor,
-    required this.rating,
     required this.isOwner,
     required this.onTap,
     required this.gbService,
     this.onEdit,
     this.onDelete,
     this.compact = false,
+    this.distanceKm,
   });
   @override
   State<_PlantCard> createState() => _PlantCardState();
@@ -1107,8 +1254,9 @@ class _PlantCardState extends State<_PlantCard> {
   Color _accentColor() {
     final lower = widget.vendor.type.toLowerCase();
     if (lower.contains('fruit')) return const Color(0xFFE67E22);
-    if (lower.contains('flower') || lower.contains('flowering'))
+    if (lower.contains('flower') || lower.contains('flowering')) {
       return const Color(0xFFE91E8C);
+    }
     if (lower.contains('vegetable')) return const Color(0xFF27AE60);
     if (lower.contains('medicinal')) return const Color(0xFF16A085);
     if (lower.contains('ornamental')) return const Color(0xFF8E44AD);
@@ -1125,8 +1273,7 @@ class _PlantCardState extends State<_PlantCard> {
     final accent = _accentColor();
     final hasImage = (v.imageUrl ?? '').isNotEmpty;
     final isFlashDeal = v.quantity > 0 && v.quantity <= 5;
-    final discountPct = (v.id.hashCode.abs() % 3 + 1) * 5; // 5, 10, or 15%
-    final mrp = (v.price * (1 + discountPct / 100)).roundToDouble();
+    final isKrishiMithra = v.productSource == 'krishimithra';
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -1221,6 +1368,32 @@ class _PlantCardState extends State<_PlantCard> {
                     ),
                   ),
                 )
+              else if (isKrishiMithra)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B5E20),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified_rounded,
+                            size: 8, color: Color(0xFF69F0AE)),
+                        SizedBox(width: 2),
+                        Text('KrishiMithra',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 7.5,
+                                fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                )
               else if (isFlashDeal)
                 Positioned(
                   top: 6,
@@ -1232,38 +1405,11 @@ class _PlantCardState extends State<_PlantCard> {
                       color: const Color(0xFFE53935),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text('⚡ Deal',
+                    child: const Text('Deal',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 8,
                             fontWeight: FontWeight.w800)),
-                  ),
-                ),
-              // Verified badge
-              if (v.vendorName.isNotEmpty)
-                Positioned(
-                  bottom: 6,
-                  left: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0).withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.verified_rounded,
-                            size: 8, color: Colors.white),
-                        SizedBox(width: 2),
-                        Text('Verified',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
                   ),
                 ),
             ]),
@@ -1308,50 +1454,58 @@ class _PlantCardState extends State<_PlantCard> {
                       ]),
                     ],
                     const SizedBox(height: 3),
-                    // Rating row
+                    // Product source row
                     Row(children: [
-                      const Icon(Icons.star_rounded,
-                          size: 11, color: Color(0xFFFFB300)),
-                      const SizedBox(width: 2),
-                      Text(
-                        widget.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF616161)),
-                      ),
+                      if (isKrishiMithra) ...[
+                        const Icon(Icons.verified_rounded,
+                            size: 10, color: Color(0xFF1B5E20)),
+                        const SizedBox(width: 2),
+                        const Text('KrishiMithra',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1B5E20))),
+                      ] else ...[
+                        const Icon(Icons.person_outline_rounded,
+                            size: 10, color: Color(0xFF757575)),
+                        const SizedBox(width: 2),
+                        const Text('Farmer/Vendor',
+                            style: TextStyle(
+                                fontSize: 9,
+                                color: Color(0xFF757575))),
+                      ],
                       const Spacer(),
                       if (v.quantity <= 5 && v.quantity > 0)
-                        Text('Only ${v.quantity} left',
+                        Text('${v.quantity} left',
                             style: const TextStyle(
                                 fontSize: 8.5,
                                 color: Color(0xFFE53935),
                                 fontWeight: FontWeight.w700)),
                     ]),
+                    if (widget.distanceKm != null) ...[
+                      const SizedBox(height: 3),
+                      Row(children: [
+                        const Icon(Icons.near_me_rounded,
+                            size: 10, color: Color(0xFF006064)),
+                        const SizedBox(width: 2),
+                        Text(DistanceService.format(widget.distanceKm!),
+                            style: const TextStyle(
+                                fontSize: 9.5,
+                                color: Color(0xFF006064),
+                                fontWeight: FontWeight.w600)),
+                      ]),
+                    ],
                     const Spacer(),
                     // Price row
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '₹${mrp.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                  fontSize: 9.5,
-                                  color: Color(0xFF9E9E9E),
-                                  decoration:
-                                      TextDecoration.lineThrough),
-                            ),
-                            Text(
-                              '₹${v.price.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: accent),
-                            ),
-                          ],
+                        Text(
+                          '₹${v.price.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: accent),
                         ),
                         const Spacer(),
                         GestureDetector(

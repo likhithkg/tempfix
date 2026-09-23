@@ -1,919 +1,144 @@
 // lib/exporter_hub/po_detail_page.dart
+// Simple, user-friendly Order Detail page.
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'exporter_service.dart';
-import 'qc_report_page.dart';
-import '../l10n/app_localizations.dart';
-
-// ── 13-Status Procurement Workflow ────────────────────────────────────────────
-
-// Canonical step order for the procurement timeline
-const List<String> _procurementSteps = [
-  'draft',
-  'listed',
-  'under_review',
-  'price_negotiation',
-  'po_issued',
-  'farmer_accepted',
-  'collection_scheduled',
-  'collected',
-  'qc_pending',
-  'qc_approved',
-  'ready_for_export',
-  'exported',
-];
-
-// Statuses that are off the main path (rejection states)
-const Set<String> _rejectionStatuses = {'qc_rejected', 'rejected', 'cancelled'};
-
-// Normalize status aliases → canonical key
-String _normalizeStatus(String s) {
-  final lower = s.toLowerCase();
-  switch (lower) {
-    case 'issued': return 'po_issued';
-    case 'pending': return 'listed';
-    case 'accepted': return 'farmer_accepted';
-    case 'confirmed': return 'farmer_accepted';
-    case 'completed': return 'exported';
-    default: return lower;
-  }
-}
-
-
-String _localizedPoStatus(AppLocalizations l, String status) {
-  switch (_normalizeStatus(status)) {
-    case 'draft': return l.statusDraft;
-    case 'listed': return l.statusListed;
-    case 'under_review': return l.statusUnderReview;
-    case 'price_negotiation': return l.statusPriceNegotiation;
-    case 'po_issued': return l.statusPoIssued;
-    case 'farmer_accepted': return l.statusFarmerAccepted;
-    case 'collection_scheduled': return l.statusCollectionScheduled;
-    case 'collected': return l.statusCollected;
-    case 'qc_pending': return l.statusQcPending;
-    case 'qc_approved': return l.statusQcApproved;
-    case 'qc_rejected': return l.statusQcRejected;
-    case 'ready_for_export': return l.statusReadyForExport;
-    case 'exported': return l.statusExported;
-    case 'rejected': return l.statusRejected;
-    case 'cancelled': return l.statusCancelled;
-    default: return status;
-  }
-}
-
-Color _statusColor(String status) {
-  switch (_normalizeStatus(status)) {
-    case 'exported': return Colors.green.shade700;
-    case 'ready_for_export': return Colors.teal;
-    case 'qc_approved': return Colors.green;
-    case 'qc_rejected':
-    case 'rejected': return Colors.red;
-    case 'cancelled': return Colors.red.shade300;
-    case 'farmer_accepted':
-    case 'collection_scheduled':
-    case 'collected': return Colors.blue;
-    case 'qc_pending': return Colors.purple;
-    case 'po_issued': return Colors.indigo;
-    case 'price_negotiation': return Colors.orange;
-    case 'under_review': return Colors.amber.shade700;
-    case 'listed': return Colors.teal.shade300;
-    case 'draft': return Colors.grey;
-    default: return Colors.orange;
-  }
-}
-
-// ── Purchase Order Detail Page ─────────────────────────────────────────────────
+import '../theme.dart';
 
 class PODetailPage extends StatelessWidget {
   final String poId;
   final bool isAdmin;
-  final ExporterService svc = ExporterService();
-
-  PODetailPage({super.key, required this.poId, this.isAdmin = false});
-
-  String _formatTimestamp(dynamic ts) {
-    try {
-      if (ts == null) return '—';
-      if (ts is Timestamp) {
-        final d = ts.toDate();
-        return '${d.day}/${d.month}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-      } else if (ts is Map && ts.containsKey('_seconds')) {
-        final d = DateTime.fromMillisecondsSinceEpoch((ts['_seconds'] as int) * 1000);
-        return '${d.day}/${d.month}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-      } else if (ts is int) {
-        final d = DateTime.fromMillisecondsSinceEpoch(ts);
-        return '${d.day}/${d.month}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-      } else {
-        return ts.toString();
-      }
-    } catch (_) {
-      return ts.toString();
-    }
-  }
-
-  Future<bool?> _confirmDialog(BuildContext context, String title, String body) {
-    final l = AppLocalizations.of(context)!;
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l.cancel)),
-          ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l.yes)),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _acceptResponse(BuildContext context, DocumentReference responseRef,
-      Map<String, dynamic> respData, String poFarmerId) async {
-    final l = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
-      return;
-    }
-
-    final buyerName = respData['buyerName'] ?? respData['from'] ?? 'Buyer';
-    final confirmed = await _confirmDialog(
-        context, l.acceptResponseTitle, l.acceptBuyerResponseConfirm(buyerName));
-    if (confirmed != true) return;
-
-    final poRef = svc.poRef.doc(poId);
-    try {
-      await FirebaseFirestore.instance.runTransaction((tx) async {
-        tx.update(responseRef, {
-          'responseStatus': 'accepted',
-          'respondedAt': Timestamp.now(),
-        });
-        tx.update(poRef, {
-          'status': 'farmer_accepted',
-          'history': FieldValue.arrayUnion([
-            {'status': 'farmer_accepted', 'by': user.uid, 'note': 'Accepted buyer: $buyerName', 'ts': Timestamp.now()}
-          ]),
-        });
-      });
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.buyerResponseAccepted)));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToAcceptResponse)));
-      }
-    }
-  }
-
-  Future<void> _rejectResponse(
-      BuildContext context, DocumentReference responseRef, Map<String, dynamic> respData) async {
-    final l = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
-      return;
-    }
-
-    final buyerName = respData['buyerName'] ?? respData['from'] ?? 'Buyer';
-    final confirmed = await _confirmDialog(
-        context, l.rejectResponseTitle, l.rejectBuyerResponseConfirm(buyerName));
-    if (confirmed != true) return;
-
-    try {
-      await FirebaseFirestore.instance.runTransaction((tx) async {
-        tx.update(responseRef, {'responseStatus': 'rejected', 'respondedAt': Timestamp.now()});
-        final poRef = svc.poRef.doc(poId);
-        tx.update(poRef, {
-          'history': FieldValue.arrayUnion([
-            {'status': 'response rejected', 'by': user.uid, 'note': 'Rejected buyer: $buyerName', 'ts': Timestamp.now()}
-          ]),
-        });
-      });
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.buyerResponseRejected)));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToRejectResponse)));
-      }
-    }
-  }
-
-  Future<void> _acceptPO(BuildContext context, String farmerId) async {
-    final l = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
-      return;
-    }
-    if (user.uid != farmerId) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.onlySellerCanPerformAction)));
-      return;
-    }
-
-    final confirmed =
-        await _confirmDialog(context, l.acceptPurchaseOrderTitle, l.acceptPurchaseOrderConfirm);
-    if (confirmed != true) return;
-
-    final poRef = svc.poRef.doc(poId);
-    try {
-      await FirebaseFirestore.instance.runTransaction((tx) async {
-        final snapshot = await tx.get(poRef);
-        if (!snapshot.exists) throw Exception('PO not found');
-        tx.update(poRef, {
-          'status': 'farmer_accepted',
-          'acceptedBy': user.uid,
-          'acceptedAt': Timestamp.now(),
-          'history': FieldValue.arrayUnion([
-            {'status': 'farmer_accepted', 'by': user.uid, 'note': 'Farmer accepted the PO', 'ts': Timestamp.now()}
-          ]),
-        });
-      });
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.purchaseOrderAccepted)));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToAcceptPO)));
-      }
-    }
-  }
-
-  Future<void> _rejectPO(BuildContext context, String farmerId) async {
-    final l = AppLocalizations.of(context)!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pleaseSignInToPerformAction)));
-      return;
-    }
-    if (user.uid != farmerId) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.onlySellerCanPerformAction)));
-      return;
-    }
-
-    final confirmed =
-        await _confirmDialog(context, l.rejectPurchaseOrderTitle, l.rejectPurchaseOrderConfirm);
-    if (confirmed != true) return;
-
-    final poRef = svc.poRef.doc(poId);
-    try {
-      final responsesSnap = await poRef
-          .collection('buyer_responses')
-          .where('responseStatus', isEqualTo: 'pending')
-          .get();
-
-      final batch = FirebaseFirestore.instance.batch();
-      batch.update(poRef, {
-        'status': 'rejected',
-        'rejectedBy': user.uid,
-        'rejectedAt': Timestamp.now(),
-        'history': FieldValue.arrayUnion([
-          {'status': 'rejected', 'by': user.uid, 'note': 'Farmer rejected the PO', 'ts': Timestamp.now()}
-        ]),
-      });
-
-      for (final d in responsesSnap.docs) {
-        batch.update(d.reference, {'responseStatus': 'rejected', 'respondedAt': Timestamp.now()});
-      }
-
-      await batch.commit();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.purchaseOrderRejectedFull)));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.failedToRejectPO)));
-      }
-    }
-  }
-
-  static List<String> _nextStatuses(String currentStatus) {
-    switch (_normalizeStatus(currentStatus)) {
-      case 'draft':               return ['listed'];
-      case 'listed':              return ['under_review', 'cancelled'];
-      case 'under_review':        return ['price_negotiation', 'rejected'];
-      case 'price_negotiation':   return ['po_issued', 'cancelled'];
-      case 'po_issued':           return ['farmer_accepted', 'cancelled'];
-      case 'farmer_accepted':     return ['collection_scheduled', 'cancelled'];
-      case 'collection_scheduled': return ['collected', 'cancelled'];
-      case 'collected':           return ['qc_pending'];
-      case 'qc_pending':          return ['qc_approved', 'qc_rejected'];
-      case 'qc_approved':         return ['ready_for_export'];
-      case 'ready_for_export':    return ['exported'];
-      default:                    return [];
-    }
-  }
-
-  Future<void> _adminAdvanceStatus(
-      BuildContext context, String currentStatus, String adminUid) async {
-    final nexts = _nextStatuses(currentStatus);
-    if (nexts.isEmpty) return;
-    final l = AppLocalizations.of(context)!;
-    String? picked;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Advance Order Status'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: nexts.map((s) => ListTile(
-            dense: true,
-            leading: CircleAvatar(
-              radius: 10,
-              backgroundColor: _statusColor(s).withValues(alpha: 0.2),
-              child: Icon(Icons.circle, color: _statusColor(s), size: 8),
-            ),
-            title: Text(_localizedPoStatus(l, s),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            onTap: () { picked = s; Navigator.pop(ctx); },
-          )).toList(),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-        ],
-      ),
-    );
-    if (picked == null || !context.mounted) return;
-    try {
-      await svc.updatePOStatus(poId, picked!, adminUid, note: 'Admin advanced status');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Status → ${_localizedPoStatus(AppLocalizations.of(context)!, picked!)}'),
-          backgroundColor: Colors.green,
-        ));
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update status'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
-  Widget _statusBadge(String rawStatus, {String? displayLabel}) {
-    final color = _statusColor(rawStatus);
-    return Builder(builder: (ctx) {
-      final label = displayLabel ?? _localizedPoStatus(AppLocalizations.of(ctx)!, rawStatus);
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color),
-        ),
-        child: Text(label.toUpperCase(),
-            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
-      );
-    });
-  }
-
-  String? _extractCropNameFromPOData(Map<String, dynamic> data) {
-    try {
-      final items = (data['items'] as List?)?.cast<dynamic>() ?? [];
-      if (items.isNotEmpty) {
-        final first = items.first;
-        if (first is Map<String, dynamic>) {
-          for (final k in ['productName', 'product_name', 'crop', 'listingTitle', 'title', 'name']) {
-            if (first.containsKey(k) && first[k] != null && first[k].toString().trim().isNotEmpty) {
-              return first[k].toString().trim();
-            }
-          }
-          if (first.containsKey('listing') && first['listing'] is Map) {
-            final listing = first['listing'] as Map<String, dynamic>;
-            for (final k in ['productName', 'product_name', 'name', 'title']) {
-              if (listing.containsKey(k) && listing[k] != null && listing[k].toString().trim().isNotEmpty) {
-                return listing[k].toString().trim();
-              }
-            }
-          }
-        }
-      }
-      for (final k in ['productName', 'product_name', 'crop', 'title']) {
-        if (data.containsKey(k) && data[k] != null && data[k].toString().trim().isNotEmpty) {
-          return data[k].toString().trim();
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
+  const PODetailPage({super.key, required this.poId, this.isAdmin = false});
 
   @override
   Widget build(BuildContext context) {
-    final poStream = svc.poRef.doc(poId).snapshots();
+    final svc = ExporterService();
 
-    return StreamBuilder<DocumentSnapshot>(
-      stream: poStream,
+    return StreamBuilder<Map<String, dynamic>?>(
+      stream: svc.streamPOById(poId),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: Text(AppLocalizations.of(context)!.orderDetails)),
+            appBar: AppBar(
+                title: const Text('Order Details'),
+                backgroundColor: KMColors.primary,
+                foregroundColor: Colors.white),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-
-        if (!snap.hasData || !snap.data!.exists) {
+        if (!snap.hasData || snap.data == null) {
           return Scaffold(
-            appBar: AppBar(title: Text(AppLocalizations.of(context)!.orderDetails)),
-            body: Center(child: Text(AppLocalizations.of(context)!.orderNotFound)),
+            appBar: AppBar(
+                title: const Text('Order Details'),
+                backgroundColor: KMColors.primary,
+                foregroundColor: Colors.white),
+            body: const Center(child: Text('Order not found')),
           );
         }
 
-        final data = snap.data!.data() as Map<String, dynamic>;
-        final items = (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        final history = (data['history'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        final status = (data['status'] ?? 'listed').toString();
-        final buyerName = data['buyerName'] ?? '—';
-        final buyerContact = data['buyerContact'] ?? data['buyerPhone'] ?? '—';
+        final data = snap.data!;
+        final currentUid = FirebaseAuth.instance.currentUser?.uid;
         final farmerId = (data['farmerId'] ?? '').toString();
-        final totalAmount = data['totalAmount'] ?? 0;
-        final createdAt = data['createdAt'];
-        final currentUser = FirebaseAuth.instance.currentUser;
-        final currentUid = currentUser?.uid;
-
-        final inlineName = _extractCropNameFromPOData(data);
-        Widget titleWidget;
-
-        if (inlineName != null) {
-          titleWidget = Text(inlineName);
-        } else if (items.isNotEmpty &&
-            (items.first['listingId'] ?? items.first['productId']) != null) {
-          final listingId = (items.first['listingId'] ?? items.first['productId']).toString();
-          titleWidget = FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance.collection('export_products').doc(listingId).get(),
-            builder: (context, pSnap) {
-              if (pSnap.connectionState == ConnectionState.waiting) return const Text('Loading…');
-              if (!pSnap.hasData || !pSnap.data!.exists) {
-                return Text('Order ${poId.length >= 6 ? poId.substring(0, 6) : poId}');
-              }
-              final pd = pSnap.data!.data() as Map<String, dynamic>;
-              return Text((pd['productName'] ?? pd['name'] ?? 'Order').toString());
-            },
-          );
-        } else {
-          titleWidget = Text('Order ${poId.length >= 6 ? poId.substring(0, 6) : poId}');
-        }
-
-        final responsesStream = svc.poRef
-            .doc(poId)
-            .collection('buyer_responses')
-            .orderBy('createdAt', descending: true)
-            .snapshots();
-
-        final canActOnPO = currentUid != null && farmerId.isNotEmpty && currentUid == farmerId;
-        final isRejected = _rejectionStatuses.contains(_normalizeStatus(status));
-        final poFinalized =
-            isRejected || ['exported', 'cancelled'].contains(_normalizeStatus(status));
+        final status = (data['status'] ?? 'pending').toString();
+        final isFarmer = currentUid != null && currentUid == farmerId;
+        final isNew = status == 'pending' || status == 'issued' || status == 'listed';
+        final isActive = const {
+          'confirmed',
+          'preparing',
+          'ready',
+          'out_for_delivery',
+          'farmer_accepted',
+          'collection_scheduled',
+          'collected',
+          'qc_pending',
+          'qc_approved',
+          'ready_for_export',
+        }.contains(status);
+        final isFinalized = const {
+          'delivered',
+          'exported',
+          'completed',
+          'cancelled',
+          'rejected',
+          'qc_rejected',
+        }.contains(status);
 
         return Scaffold(
+          backgroundColor: const Color(0xFFF9FBF7),
           appBar: AppBar(
-            title: titleWidget,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.refreshing))),
-              )
-            ],
+            title: const Text('Order Details'),
+            backgroundColor: KMColors.primary,
+            foregroundColor: Colors.white,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Header ──
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(AppLocalizations.of(context)!.orderIdLabel(poId),
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 6),
-                          Row(children: [
-                            Text('${AppLocalizations.of(context)!.statusLabel} ',
-                                style: const TextStyle(fontWeight: FontWeight.w600)),
-                            _statusBadge(status),
-                          ]),
-                          const SizedBox(height: 6),
-                          Text(AppLocalizations.of(context)!.createdAtLabel(_formatTimestamp(createdAt)),
-                              style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
+                // ── Product Summary ──
+                _ProductSummaryCard(data: data),
                 const SizedBox(height: 16),
 
-                // ── Procurement Timeline ──
-                if (!isRejected)
-                  _ProcurementTimeline(currentStatus: status),
+                // ── Progress Tracker ──
+                _OrderProgressTracker(status: status),
+                const SizedBox(height: 16),
 
-                if (isRejected)
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade300),
-                    ),
-                    child: Row(children: [
-                      const Icon(Icons.cancel_outlined, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _localizedPoStatus(AppLocalizations.of(context)!, status),
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ]),
+                // ── Farmer: accept/reject new orders ──
+                if (isFarmer && isNew) ...[
+                  _FarmerActionCard(
+                    buyerName: (data['buyerName'] ?? '').toString(),
+                    onAccept: () async {
+                      await svc.updatePOStatus(poId, 'confirmed', currentUid,
+                          note: 'Farmer confirmed the order');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Order confirmed'),
+                            backgroundColor: Colors.green));
+                      }
+                    },
+                    onReject: () async {
+                      final ok = await _confirm(
+                          context, 'Reject Order?', 'Are you sure?');
+                      if (ok == true && context.mounted) {
+                        await svc.updatePOStatus(poId, 'rejected', currentUid,
+                            note: 'Farmer rejected the order');
+                      }
+                    },
                   ),
-
-                const SizedBox(height: 12),
-
-                // ── Farmer accept / reject actions ──
-                if (canActOnPO && !poFinalized)
-                  Row(children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _acceptPO(context, farmerId),
-                      icon: const Icon(Icons.thumb_up),
-                      label: Text(AppLocalizations.of(context)!.acceptOrderButton),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => _rejectPO(context, farmerId),
-                      icon: const Icon(Icons.thumb_down),
-                      label: Text(AppLocalizations.of(context)!.rejectOrderButton),
-                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
-                    ),
-                  ]),
-
-                if (canActOnPO && poFinalized)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      AppLocalizations.of(context)!.poFinalizedMessage(
-                          _localizedPoStatus(AppLocalizations.of(context)!, status).toUpperCase()),
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ),
-
-                // ── Admin Controls ────────────────────────────────────────────
-                if (isAdmin) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.shade400),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          const Icon(Icons.admin_panel_settings_rounded,
-                              size: 18, color: Colors.amber),
-                          const SizedBox(width: 8),
-                          const Text('Admin Controls',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15)),
-                        ]),
-                        const SizedBox(height: 6),
-                        Text(
-                          poFinalized
-                              ? 'This order is finalized (${_localizedPoStatus(AppLocalizations.of(context)!, status)}).'
-                              : 'Advance this order through the procurement workflow.',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        if (!poFinalized) ...[
-                          const SizedBox(height: 12),
-                          Wrap(spacing: 8, runSpacing: 8, children: [
-                            ElevatedButton.icon(
-                              onPressed: currentUser != null
-                                  ? () => _adminAdvanceStatus(
-                                      context, status, currentUser.uid)
-                                  : null,
-                              icon: const Icon(Icons.arrow_circle_right_outlined),
-                              label: const Text('Advance Status'),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber.shade700,
-                                  foregroundColor: Colors.white),
-                            ),
-                            if (!_rejectionStatuses.contains(_normalizeStatus(status)) &&
-                                _normalizeStatus(status) != 'cancelled')
-                              OutlinedButton.icon(
-                                onPressed: () async {
-                                  if (currentUser == null) return;
-                                  final ok = await _confirmDialog(
-                                      context,
-                                      'Cancel Order?',
-                                      'Are you sure you want to cancel this purchase order?');
-                                  if (ok == true && context.mounted) {
-                                    await svc.updatePOStatus(poId, 'cancelled',
-                                        currentUser.uid,
-                                        note: 'Cancelled by admin');
-                                  }
-                                },
-                                icon: const Icon(Icons.cancel_outlined,
-                                    color: Colors.red),
-                                label: const Text('Cancel Order',
-                                    style: TextStyle(color: Colors.red)),
-                                style: OutlinedButton.styleFrom(
-                                    side:
-                                        const BorderSide(color: Colors.red)),
-                              ),
-                          ]),
-                        ],
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 16),
                 ],
 
+                // ── Farmer: update active order status ──
+                if (isFarmer && isActive && !isFinalized) ...[
+                  _StatusUpdateCard(
+                      orderId: poId, currentStatus: status, svc: svc, byUid: currentUid),
+                  const SizedBox(height: 16),
+                ],
+
+                // ── Admin controls ──
+                if (isAdmin && !isFarmer) ...[
+                  _AdminStatusCard(
+                      orderId: poId,
+                      currentStatus: status,
+                      svc: svc,
+                      currentUid: currentUid),
+                  const SizedBox(height: 16),
+                ],
+
+                // ── Contact Details ──
+                _ContactSection(
+                  poData: data,
+                  poItems: (data['items'] as List?)
+                          ?.cast<Map<String, dynamic>>() ??
+                      [],
+                ),
                 const SizedBox(height: 16),
-                const Divider(),
 
-                // ── Buyer & Contact ──
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.person, color: Colors.green),
-                  title: Text(buyerName),
-                  subtitle: Text(AppLocalizations.of(context)!.buyerContactSubtitle(buyerContact)),
-                ),
-                const SizedBox(height: 12),
-
-                if (farmerId.isNotEmpty)
-                  Builder(builder: (context) {
-                    final user = FirebaseAuth.instance.currentUser;
-                    final isBuyer = user != null && user.uid != farmerId;
-                    if (!isBuyer) return const SizedBox.shrink();
-                    return FutureBuilder<DocumentSnapshot>(
-                      future: FirebaseFirestore.instance.collection('users').doc(farmerId).get(),
-                      builder: (context, snap) {
-                        if (snap.connectionState == ConnectionState.waiting) {
-                          return ListTile(
-                              leading: const Icon(Icons.store, color: Colors.green),
-                              title: Text(AppLocalizations.of(context)!.loadingSellerInfo));
-                        }
-                        if (!snap.hasData || !snap.data!.exists) {
-                          return ListTile(
-                            leading: const Icon(Icons.store, color: Colors.green),
-                            title: Text(AppLocalizations.of(context)!.sellerNotFound),
-                            subtitle: Text(AppLocalizations.of(context)!.farmerIdLabel(farmerId)),
-                          );
-                        }
-                        final sd = snap.data!.data() as Map<String, dynamic>;
-                        final sellerName = (sd['displayName'] ?? sd['name'] ?? 'Unknown Seller').toString();
-                        final sellerContact =
-                            (sd['phone'] ?? sd['contact'] ?? 'No contact number').toString();
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.store, color: Colors.green),
-                          title: Text(sellerName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(AppLocalizations.of(context)!.contactColonLabel(sellerContact)),
-                        );
-                      },
-                    );
-                  }),
-
-                const Divider(),
-
-                // ── Items list ──
-                Text(AppLocalizations.of(context)!.itemsSection,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                ...items.map<Widget>((it) {
-                  final listingId = it['listingId'] ?? it['productId'] ?? '—';
-                  final qty = it['qtyKg'] ?? it['qty'] ?? 0;
-                  final price = it['pricePerKg'] ?? it['price'] ?? 0;
-                  final itemTs = it['createdAt'];
-
-                  return FutureBuilder<DocumentSnapshot?>(
-                    future: listingId != '—'
-                        ? FirebaseFirestore.instance
-                            .collection('export_products')
-                            .doc(listingId.toString())
-                            .get()
-                        : Future<DocumentSnapshot?>.value(null),
-                    builder: (context, snapshot) {
-                      String productName = 'Loading…';
-                      ImageProvider? imgProvider;
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
-                          final pd = snapshot.data!.data() as Map<String, dynamic>;
-                          productName =
-                              (pd['productName'] ?? pd['name'] ?? 'Unnamed Product').toString();
-                          final imgUrl = pd['imageUrl']?.toString() ?? '';
-                          if (imgUrl.isNotEmpty) imgProvider = NetworkImage(imgUrl);
-                        } else {
-                          productName =
-                              (it['productName'] ?? it['name'] ?? 'Product not found').toString();
-                        }
-                      }
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            radius: 28,
-                            backgroundColor: Colors.green.shade100,
-                            backgroundImage: imgProvider ??
-                                const AssetImage('assets/farmer_logo.png') as ImageProvider,
-                            onBackgroundImageError: (_, __) {},
-                            child: null,
-                          ),
-                          title: Text(productName,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(
-                              '$qty kg × ₹$price\n${AppLocalizations.of(context)!.addedAtLabel(_formatTimestamp(itemTs))}'),
-                          isThreeLine: true,
-                        ),
-                      );
-                    },
-                  );
-                }),
-
-                const SizedBox(height: 12),
-                Text(AppLocalizations.of(context)!.totalAmountLabel(totalAmount),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 18),
-
-                const Divider(),
-
-                // ── Buyer responses ──
-                Text(AppLocalizations.of(context)!.buyerResponsesSection,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-
-                StreamBuilder<QuerySnapshot>(
-                  stream: responsesStream,
-                  builder: (context, rsnap) {
-                    if (rsnap.hasError) {
-                      return Text(AppLocalizations.of(context)!.errorLoadingResponses,
-                          style: const TextStyle(color: Colors.red));
-                    }
-                    if (!rsnap.hasData) return const Center(child: CircularProgressIndicator());
-                    final docs = rsnap.data!.docs;
-                    if (docs.isEmpty) return Text(AppLocalizations.of(context)!.noBuyerResponsesYet);
-
-                    return Column(
-                      children: docs.map((rd) {
-                        final r = rd.data() as Map<String, dynamic>;
-                        final buyer = (r['buyerName'] ?? r['from'] ?? 'Buyer').toString();
-                        final msg = (r['message'] ?? '').toString();
-                        final respStatus = (r['responseStatus'] ?? 'pending').toString();
-                        final created = r['createdAt'];
-                        final respRef = rd.reference;
-                        final canAct =
-                            currentUid != null && farmerId.isNotEmpty && currentUid == farmerId;
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          child: ListTile(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            leading: const Icon(Icons.person_outline, color: Colors.green),
-                            title: Row(children: [
-                              Expanded(
-                                  child: Text(buyer,
-                                      style: const TextStyle(fontWeight: FontWeight.w600))),
-                              const SizedBox(width: 8),
-                              _statusBadge(respStatus),
-                            ]),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 6),
-                                Text(msg),
-                                const SizedBox(height: 8),
-                                Text(
-                                  AppLocalizations.of(context)!
-                                      .atDateLabel(_formatTimestamp(created)),
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 8),
-                                if (canAct && respStatus.toLowerCase() == 'pending')
-                                  Row(children: [
-                                    ElevatedButton.icon(
-                                      onPressed: () =>
-                                          _acceptResponse(context, respRef, r, farmerId),
-                                      icon: const Icon(Icons.check),
-                                      label: Text(AppLocalizations.of(context)!.accept),
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    OutlinedButton.icon(
-                                      onPressed: () => _rejectResponse(context, respRef, r),
-                                      icon: const Icon(Icons.close),
-                                      label: Text(AppLocalizations.of(context)!.reject),
-                                    ),
-                                  ]),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 18),
-
-                // ── History ──
-                Text(AppLocalizations.of(context)!.historySection,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                if (history.isEmpty)
-                  Text(AppLocalizations.of(context)!.noHistoryEntries)
-                else
-                  Column(
-                    children: history.reversed.map((h) {
-                      final hStatus = (h['status'] ?? '').toString();
-                      final hBy = (h['by'] ?? '').toString();
-                      final hNote = (h['note'] ?? '').toString();
-                      final hTs = h['ts'];
-                      final l = AppLocalizations.of(context)!;
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: _statusColor(hStatus).withValues(alpha: 0.15),
-                          child: Icon(Icons.history, color: _statusColor(hStatus), size: 16),
-                        ),
-                        title: Text(_localizedPoStatus(l, hStatus),
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                        subtitle: Text(
-                            '${l.by}: $hBy\n$hNote\n${l.at}: ${_formatTimestamp(hTs)}',
-                            style: const TextStyle(fontSize: 12)),
-                      );
-                    }).toList(),
-                  ),
-
-                const SizedBox(height: 20),
-
-                // ── QC Report button (shown when collected) ──
-                if (_normalizeStatus(status) == 'collected' ||
-                    _normalizeStatus(status) == 'qc_pending')
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        final listingId = items.isNotEmpty
-                            ? (items.first['listingId'] ?? items.first['productId'] ?? '').toString()
-                            : '';
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => QCReportPage(
-                            poId: poId,
-                            listingId: listingId,
-                            isAdminView: currentUid != null && farmerId.isNotEmpty && currentUid != farmerId,
-                          ),
-                        ));
-                      },
-                      icon: const Icon(Icons.science_outlined),
-                      label: Text(AppLocalizations.of(context)!.addQcReport),
-                    ),
-                  ),
-
-                // ── Contact / Refresh actions ──
-                Row(children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final sellerPhone = data['sellerContact'] ??
-                          data['farmerPhone'] ??
-                          data['ownerPhone'] ??
-                          'Not available';
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(AppLocalizations.of(context)!
-                              .contactSellerSnackbar(sellerPhone))));
-                    },
-                    icon: const Icon(Icons.phone),
-                    label: Text(AppLocalizations.of(context)!.contactSellerButton),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.refreshing))),
-                    icon: const Icon(Icons.refresh),
-                    label: Text(AppLocalizations.of(context)!.refresh),
-                  ),
-                ]),
-
+                // ── Order Info ──
+                _OrderInfoCard(data: data),
                 const SizedBox(height: 40),
               ],
             ),
@@ -922,117 +147,873 @@ class PODetailPage extends StatelessWidget {
       },
     );
   }
+
+  Future<bool?> _confirm(BuildContext ctx, String title, String msg) =>
+      showDialog<bool>(
+        context: ctx,
+        builder: (_) => AlertDialog(
+          title: Text(title),
+          content: Text(msg),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child:
+                  const Text('Confirm', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
 }
 
-// ── Procurement Timeline Widget ────────────────────────────────────────────────
+// ── Product Summary Card ──────────────────────────────────────────────────────
 
-class _ProcurementTimeline extends StatelessWidget {
+class _ProductSummaryCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _ProductSummaryCard({required this.data});
+
+  String _productName() {
+    final n = (data['productName'] ?? '').toString().trim();
+    if (n.isNotEmpty) return n;
+    try {
+      final items =
+          (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (items.isNotEmpty) {
+        return (items.first['productName'] ?? items.first['name'] ?? 'Product')
+            .toString();
+      }
+    } catch (_) {}
+    return 'Product';
+  }
+
+  String _imageUrl() {
+    final img = (data['productImage'] ?? '').toString().trim();
+    if (img.isNotEmpty) return img;
+    try {
+      final items =
+          (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (items.isNotEmpty) {
+        return (items.first['productImage'] ?? '').toString();
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final productName = _productName();
+    final imageUrl = _imageUrl();
+    final quantity = data['quantity'];
+    final unit = (data['unit'] ?? '').toString();
+    final pricePerUnit = data['pricePerUnit'];
+    final total = data['totalAmount'] ?? 0;
+    final delivery = (data['deliveryAddress'] ?? '').toString();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const _ImgFallback())
+                      : const _ImgFallback(),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(productName,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                        maxLines: 2),
+                    if (quantity != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                          '${quantity.toString()} ${unit.isNotEmpty ? unit : 'units'}',
+                          style: const TextStyle(color: Colors.grey)),
+                    ],
+                    if (pricePerUnit != null)
+                      Text(
+                          '₹$pricePerUnit / ${unit.isNotEmpty ? unit : 'unit'}',
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ]),
+            const Divider(height: 20),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('Total',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              Text(
+                '₹${total is double ? total.toStringAsFixed(0) : total}',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: KMColors.primary),
+              ),
+            ]),
+            if (delivery.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(children: [
+                const Icon(Icons.location_on_outlined,
+                    size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                Expanded(
+                    child: Text(delivery,
+                        style: const TextStyle(
+                            color: Colors.grey, fontSize: 13))),
+              ]),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImgFallback extends StatelessWidget {
+  const _ImgFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF00897B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+          child: Icon(Icons.grain, color: Colors.white54, size: 26)),
+    );
+  }
+}
+
+// ── Progress Tracker ──────────────────────────────────────────────────────────
+
+class _OrderProgressTracker extends StatelessWidget {
+  final String status;
+  const _OrderProgressTracker({required this.status});
+
+  static const _steps = [
+    ('pending', 'Order\nPlaced'),
+    ('confirmed', 'Confirmed'),
+    ('preparing', 'Preparing'),
+    ('ready', 'Ready'),
+    ('out_for_delivery', 'On\nthe Way'),
+    ('delivered', 'Delivered'),
+  ];
+
+  String _normalize(String s) {
+    switch (s.toLowerCase()) {
+      case 'issued':
+      case 'listed':
+      case 'under_review':
+      case 'price_negotiation':
+      case 'po_issued':
+        return 'pending';
+      case 'farmer_accepted':
+      case 'accepted':
+        return 'confirmed';
+      case 'collection_scheduled':
+      case 'collected':
+      case 'qc_pending':
+        return 'preparing';
+      case 'qc_approved':
+      case 'ready_for_export':
+        return 'ready';
+      case 'exported':
+      case 'completed':
+        return 'delivered';
+      default:
+        return s.toLowerCase();
+    }
+  }
+
+  int _currentIndex(String s) {
+    final n = _normalize(s);
+    for (int i = 0; i < _steps.length; i++) {
+      if (_steps[i].$1 == n) return i;
+    }
+    return 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final norm = _normalize(status);
+    final isCancelled = norm == 'cancelled';
+    final isRejected = norm == 'rejected' || norm == 'qc_rejected';
+
+    if (isCancelled || isRejected) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Row(children: [
+          const Icon(Icons.cancel_outlined, color: Colors.red),
+          const SizedBox(width: 10),
+          Text(
+            isCancelled ? 'Order Cancelled' : 'Order Rejected by Farmer',
+            style: const TextStyle(
+                color: Colors.red, fontWeight: FontWeight.w600),
+          ),
+        ]),
+      );
+    }
+
+    final currentIdx = _currentIndex(status);
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Order Status',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 16),
+            Row(
+              children: List.generate(_steps.length * 2 - 1, (i) {
+                if (i.isOdd) {
+                  final stepIdx = i ~/ 2;
+                  final isDone = stepIdx < currentIdx;
+                  return Expanded(
+                    child: Container(
+                        height: 2,
+                        color: isDone
+                            ? KMColors.primary
+                            : Colors.grey.shade200),
+                  );
+                }
+                final stepIdx = i ~/ 2;
+                final isDone = stepIdx < currentIdx;
+                final isCurrent = stepIdx == currentIdx;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: isCurrent ? 28 : 22,
+                      height: isCurrent ? 28 : 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDone
+                            ? KMColors.primary
+                            : (isCurrent
+                                ? KMColors.primary
+                                : Colors.transparent),
+                        border: (isDone || isCurrent)
+                            ? null
+                            : Border.all(
+                                color: Colors.grey.shade300, width: 1.5),
+                      ),
+                      child: Center(
+                        child: isDone
+                            ? const Icon(Icons.check,
+                                size: 13, color: Colors.white)
+                            : isCurrent
+                                ? Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle))
+                                : null,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    SizedBox(
+                      width: 46,
+                      child: Text(
+                        _steps[stepIdx].$2,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: isCurrent
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: (isCurrent || isDone)
+                              ? KMColors.primaryDark
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Farmer Action Card ────────────────────────────────────────────────────────
+
+class _FarmerActionCard extends StatelessWidget {
+  final String buyerName;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+  const _FarmerActionCard(
+      {required this.buyerName,
+      required this.onAccept,
+      required this.onReject});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Row(children: [
+          Icon(Icons.notifications_active_outlined,
+              color: Colors.orange, size: 20),
+          SizedBox(width: 8),
+          Text('New Order',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Colors.orange)),
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          buyerName.isNotEmpty ? 'From: $buyerName' : 'A buyer placed an order',
+          style: const TextStyle(color: Colors.grey),
+        ),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: onAccept,
+              child: const Text('Accept'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: onReject,
+              child: const Text('Reject'),
+            ),
+          ),
+        ]),
+      ]),
+    );
+  }
+}
+
+// ── Status Update Card ────────────────────────────────────────────────────────
+
+class _StatusUpdateCard extends StatelessWidget {
+  final String orderId;
   final String currentStatus;
-  const _ProcurementTimeline({required this.currentStatus});
+  final ExporterService svc;
+  final String byUid;
+  const _StatusUpdateCard(
+      {required this.orderId,
+      required this.currentStatus,
+      required this.svc,
+      required this.byUid});
 
-  static const List<(String, String)> _steps = [
-    ('listed', 'Listed'),
-    ('under_review', 'Review'),
-    ('po_issued', 'PO Issued'),
-    ('farmer_accepted', 'Accepted'),
-    ('collection_scheduled', 'Collection'),
-    ('collected', 'Collected'),
-    ('qc_pending', 'QC'),
-    ('qc_approved', 'QC OK'),
-    ('ready_for_export', 'Ready'),
-    ('exported', 'Exported'),
+  static const _next = {
+    'confirmed': ('preparing', 'Mark as Preparing'),
+    'farmer_accepted': ('preparing', 'Mark as Preparing'),
+    'preparing': ('ready', 'Mark as Ready'),
+    'collection_scheduled': ('ready', 'Mark as Ready'),
+    'collected': ('ready', 'Mark as Ready'),
+    'qc_pending': ('ready', 'Mark as Ready'),
+    'qc_approved': ('ready', 'Mark as Ready'),
+    'ready': ('out_for_delivery', 'Mark as Out for Delivery'),
+    'ready_for_export': ('out_for_delivery', 'Mark as Out for Delivery'),
+    'out_for_delivery': ('delivered', 'Mark as Delivered'),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = _next[currentStatus];
+    if (entry == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.indigo.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Update Status',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              await svc.updatePOStatus(orderId, entry.$1, byUid,
+                  note: 'Status updated by farmer');
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(entry.$2)));
+              }
+            },
+            child: Text(entry.$2),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Admin Status Card ─────────────────────────────────────────────────────────
+
+class _AdminStatusCard extends StatelessWidget {
+  final String orderId;
+  final String currentStatus;
+  final ExporterService svc;
+  final String? currentUid;
+  const _AdminStatusCard(
+      {required this.orderId,
+      required this.currentStatus,
+      required this.svc,
+      this.currentUid});
+
+  static const _statuses = [
+    ('pending', 'Pending'),
+    ('confirmed', 'Confirmed'),
+    ('preparing', 'Preparing'),
+    ('ready', 'Ready'),
+    ('out_for_delivery', 'Out for Delivery'),
+    ('delivered', 'Delivered'),
+    ('cancelled', 'Cancelled'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final normalizedCurrent = _normalizeStatus(currentStatus);
-    final currentIdx = _procurementSteps.indexOf(normalizedCurrent);
+    final finalized = const [
+      'delivered',
+      'cancelled',
+      'rejected',
+      'exported',
+      'completed',
+    ].contains(currentStatus);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.amber.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.admin_panel_settings_outlined,
+                size: 18, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Admin Controls',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ]),
+          const SizedBox(height: 10),
+          if (!finalized)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _statuses
+                  .where((s) => s.$1 != currentStatus)
+                  .map((s) => OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () async {
+                          if (currentUid == null) return;
+                          await svc.updatePOStatus(
+                              orderId, s.$1, currentUid!,
+                              note: 'Admin updated status');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('→ ${s.$2}')));
+                          }
+                        },
+                        child: Text('→ ${s.$2}',
+                            style: const TextStyle(fontSize: 12)),
+                      ))
+                  .toList(),
+            )
+          else
+            Text('Finalized: $currentStatus',
+                style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Contact Section ───────────────────────────────────────────────────────────
+
+class _ContactSection extends StatelessWidget {
+  final Map<String, dynamic> poData;
+  final List<Map<String, dynamic>> poItems;
+  const _ContactSection({required this.poData, required this.poItems});
+
+  @override
+  Widget build(BuildContext context) {
+    final listingId = poItems.isNotEmpty
+        ? (poItems.first['listingId'] ?? poItems.first['productId'] ?? '').toString()
+        : '';
+    final farmerId = (poData['farmerId'] ?? '').toString();
+    final buyerName = (poData['buyerName'] ?? '').toString();
+    final buyerPhone = (poData['buyerContact'] ?? poData['buyerPhone'] ?? '').toString();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(l.procurementTimeline,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ),
-        SizedBox(
-          height: 72,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _steps.length,
-            itemBuilder: (context, i) {
-              final (stepKey, label) = _steps[i];
-              final stepOrderIdx = _procurementSteps.indexOf(stepKey);
-              final isDone = currentIdx >= 0 && stepOrderIdx < currentIdx;
-              final isCurrent = stepKey == normalizedCurrent ||
-                  (stepKey == 'listed' && currentIdx == 0);
-              final isFuture = !isDone && !isCurrent;
+        const Text('Contact Details',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 10),
 
-              final color = isFuture
-                  ? Colors.grey.shade300
-                  : isCurrent
-                      ? _statusColor(stepKey)
-                      : Colors.green;
-
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: isCurrent ? 28 : 22,
-                        height: isCurrent ? 28 : 22,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isFuture ? Colors.transparent : color,
-                          border: Border.all(color: color, width: isCurrent ? 2.5 : 1.5),
-                        ),
-                        child: isDone
-                            ? const Icon(Icons.check, size: 14, color: Colors.white)
-                            : isCurrent
-                                ? Icon(Icons.circle, size: 10, color: Colors.white.withValues(alpha: 0.9))
-                                : null,
-                      ),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 52,
-                        child: Text(
-                          label,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                            color: isFuture
-                                ? Colors.grey.shade400
-                                : isCurrent
-                                    ? color
-                                    : Colors.green.shade700,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (i < _steps.length - 1)
-                    SizedBox(
-                      width: 20,
-                      child: Divider(
-                        color: isDone ? Colors.green : Colors.grey.shade300,
-                        thickness: 1.5,
-                        indent: 0,
-                        endIndent: 0,
-                      ),
-                    ),
-                ],
+        // Farmer card
+        if (listingId.isNotEmpty)
+          FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('export_products')
+                .doc(listingId)
+                .get(),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return _loadingCard(Colors.green);
+              }
+              String name = '', phone = '', location = '';
+              if (snap.hasData && snap.data!.exists) {
+                final d = snap.data!.data() as Map<String, dynamic>;
+                name = (d['farmerName'] ?? d['name'] ?? '').toString();
+                phone =
+                    (d['farmerMobile'] ?? d['farmerPhone'] ?? '').toString();
+                location = (d['location'] ?? '').toString();
+              }
+              if (name.isEmpty && farmerId.isNotEmpty) {
+                return FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(farmerId)
+                      .get(),
+                  builder: (ctx, uSnap) {
+                    String uName = name, uPhone = phone;
+                    if (uSnap.hasData && uSnap.data!.exists) {
+                      final ud = uSnap.data!.data() as Map<String, dynamic>;
+                      uName =
+                          (ud['displayName'] ?? ud['name'] ?? '').toString();
+                      uPhone = (ud['phone'] ?? ud['phoneNumber'] ?? '').toString();
+                    }
+                    return _ContactCard(
+                      role: 'Seller (Farmer)',
+                      icon: Icons.agriculture_rounded,
+                      accent: Colors.green,
+                      name: uName.isEmpty ? '—' : uName,
+                      phone: uPhone.isEmpty ? null : uPhone,
+                      location: null,
+                    );
+                  },
+                );
+              }
+              return _ContactCard(
+                role: 'Seller (Farmer)',
+                icon: Icons.agriculture_rounded,
+                accent: Colors.green,
+                name: name.isEmpty ? '—' : name,
+                phone: phone.isEmpty ? null : phone,
+                location: location.isEmpty ? null : location,
+              );
+            },
+          )
+        else if (farmerId.isNotEmpty)
+          FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(farmerId)
+                .get(),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return _loadingCard(Colors.green);
+              }
+              String name = '', phone = '';
+              if (snap.hasData && snap.data!.exists) {
+                final d = snap.data!.data() as Map<String, dynamic>;
+                name = (d['displayName'] ?? d['name'] ?? '').toString();
+                phone =
+                    (d['phone'] ?? d['phoneNumber'] ?? '').toString();
+              }
+              return _ContactCard(
+                role: 'Seller (Farmer)',
+                icon: Icons.agriculture_rounded,
+                accent: Colors.green,
+                name: name.isEmpty ? '—' : name,
+                phone: phone.isEmpty ? null : phone,
+                location: null,
               );
             },
           ),
+
+        const SizedBox(height: 10),
+
+        _ContactCard(
+          role: 'Buyer',
+          icon: Icons.person_rounded,
+          accent: Colors.indigo,
+          name: buyerName.isEmpty ? '—' : buyerName,
+          phone: buyerPhone.isEmpty ? null : buyerPhone,
+          location: null,
         ),
       ],
     );
   }
+
+  Widget _loadingCard(Color accent) => Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accent.withValues(alpha: 0.15)),
+        ),
+        child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+}
+
+class _ContactCard extends StatelessWidget {
+  final String role;
+  final IconData icon;
+  final Color accent;
+  final String name;
+  final String? phone;
+  final String? location;
+  const _ContactCard({
+    required this.role,
+    required this.icon,
+    required this.accent,
+    required this.name,
+    this.phone,
+    this.location,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
+            ),
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle),
+                child: Icon(icon, color: accent, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(role,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: accent)),
+            ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _row(Icons.person_rounded, 'Name', name),
+                const SizedBox(height: 8),
+                _row(Icons.phone_rounded, 'Phone', phone ?? '—'),
+                if (location != null) ...[
+                  const SizedBox(height: 8),
+                  _row(Icons.location_on_rounded, 'Location', location!),
+                ],
+                if (phone != null) ...[
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    Expanded(
+                        child: _btn(Icons.call_rounded, 'Call',
+                            Colors.green, () => _launch('tel:$phone'))),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: _btn(
+                            Icons.chat_rounded,
+                            'WhatsApp',
+                            const Color(0xFF25D366),
+                            () => _launch(
+                                'https://wa.me/${phone!.replaceAll(RegExp(r'[^0-9+]'), '')}'))),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(IconData ico, String label, String value) => Row(children: [
+        Icon(ico, size: 15, color: accent.withValues(alpha: 0.7)),
+        const SizedBox(width: 8),
+        SizedBox(
+            width: 58,
+            child: Text(label,
+                style:
+                    const TextStyle(fontSize: 12, color: Colors.grey))),
+        Expanded(
+            child: Text(value,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w500))),
+      ]);
+
+  Widget _btn(IconData ico, String label, Color color, VoidCallback onTap) =>
+      OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(ico, size: 15, color: color),
+        label: Text(label, style: TextStyle(color: color, fontSize: 12)),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: color.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+
+  Future<void> _launch(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+// ── Order Info Card ───────────────────────────────────────────────────────────
+
+class _OrderInfoCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _OrderInfoCard({required this.data});
+
+  String _fmt(dynamic ts) {
+    try {
+      DateTime? dt;
+      if (ts is Timestamp) {
+        dt = ts.toDate();
+      } else if (ts is int) {
+        dt = DateTime.fromMillisecondsSinceEpoch(ts);
+      } else if (ts is String) {
+        dt = DateTime.tryParse(ts);
+      }
+      if (dt != null) {
+        return '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (_) {}
+    return '—';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final id = (data['id'] ?? '').toString();
+    final shortId =
+        id.length >= 8 ? '#${id.substring(0, 8).toUpperCase()}' : '#$id';
+
+    return Card(
+      elevation: 1,
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Order Info',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 10),
+            _row('Order ID', shortId),
+            const SizedBox(height: 6),
+            _row('Placed on', _fmt(data['createdAt'])),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, String value) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style:
+                  const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w500, fontSize: 13)),
+        ],
+      );
 }

@@ -20,29 +20,29 @@ Color _statusColor(BookingStatus s) {
   }
 }
 
-String _statusEmoji(BookingStatus s) {
+IconData _statusIcon(BookingStatus s) {
   switch (s) {
-    case BookingStatus.requested:  return '📋';
-    case BookingStatus.accepted:   return '✅';
-    case BookingStatus.onTheWay:   return '🚚';
-    case BookingStatus.arrived:    return '📍';
-    case BookingStatus.working:    return '⚙️';
-    case BookingStatus.completed:  return '🎉';
-    case BookingStatus.rejected:   return '❌';
+    case BookingStatus.requested:  return Icons.pending_outlined;
+    case BookingStatus.accepted:   return Icons.check_circle_outline;
+    case BookingStatus.onTheWay:   return Icons.local_shipping_outlined;
+    case BookingStatus.arrived:    return Icons.location_on_outlined;
+    case BookingStatus.working:    return Icons.settings_outlined;
+    case BookingStatus.completed:  return Icons.task_alt_rounded;
+    case BookingStatus.rejected:   return Icons.cancel_outlined;
   }
 }
 
-String _typeEmoji(String type) {
+IconData _typeIcon(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor':    return '🚜';
-    case 'harvester':  return '🌾';
-    case 'rotavator':  return '⚙️';
-    case 'cultivator': return '🌿';
-    case 'seeder':     return '🌱';
-    case 'hitachi':    return '⛏️';
-    case 'jcb':        return '🏗️';
-    case 'lorry':      return '🚚';
-    default:           return '🔧';
+    case 'tractor':    return Icons.agriculture_outlined;
+    case 'harvester':  return Icons.grass_rounded;
+    case 'rotavator':  return Icons.settings_rounded;
+    case 'cultivator': return Icons.eco_rounded;
+    case 'seeder':     return Icons.grain_rounded;
+    case 'hitachi':    return Icons.construction;
+    case 'jcb':        return Icons.construction;
+    case 'lorry':      return Icons.local_shipping_outlined;
+    default:           return Icons.build_rounded;
   }
 }
 
@@ -121,8 +121,7 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
                 ],
               ),
               child: Center(
-                child: Text(_typeEmoji(booking.machineType),
-                    style: const TextStyle(fontSize: 20)),
+                child: Icon(_typeIcon(booking.machineType), size: 20, color: Colors.white),
               ),
             ),
           ));
@@ -192,8 +191,7 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
               color: color.withValues(alpha: 0.1),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(children: [
-                Text(_statusEmoji(status),
-                    style: const TextStyle(fontSize: 22)),
+                Icon(_statusIcon(status), size: 22, color: color),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -256,11 +254,11 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
                     children: [
                       _MapLegendChip(
                           color: color,
-                          label: '${_typeEmoji(booking.machineType)} Machine'),
+                          label: 'Machine'),
                       const SizedBox(height: 6),
                       const _MapLegendChip(
                           color: Color(0xFF4CAF50),
-                          label: '🏠 Your Field'),
+                          label: 'Your Field'),
                     ],
                   ),
                 ),
@@ -288,8 +286,7 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
                       color: color.withValues(alpha: 0.12),
                     ),
                     child: Center(
-                        child: Text(_typeEmoji(booking.machineType),
-                            style: const TextStyle(fontSize: 24))),
+                        child: Icon(_typeIcon(booking.machineType), size: 24, color: color)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -362,7 +359,7 @@ class _RentTrackingPageState extends State<RentTrackingPage> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _whatsApp(booking.ownerPhone),
-                      icon: const Text('📱', style: TextStyle(fontSize: 14)),
+                      icon: const Icon(Icons.phone_android_rounded, size: 14),
                       label: const Text('WhatsApp',
                           style: TextStyle(fontWeight: FontWeight.w700)),
                       style: ElevatedButton.styleFrom(

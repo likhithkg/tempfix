@@ -22,17 +22,17 @@ Color _typeColor(String type) {
   }
 }
 
-String _typeEmoji(String type) {
+IconData _typeIcon(String type) {
   switch (type.toLowerCase()) {
-    case 'tractor':    return '🚜';
-    case 'harvester':  return '🌾';
-    case 'rotavator':  return '⚙️';
-    case 'cultivator': return '🌿';
-    case 'seeder':     return '🌱';
-    case 'hitachi':    return '⛏️';
-    case 'jcb':        return '🏗️';
-    case 'lorry':      return '🚚';
-    default:           return '🔧';
+    case 'tractor':    return Icons.agriculture_rounded;
+    case 'harvester':  return Icons.grass_rounded;
+    case 'rotavator':  return Icons.settings_rounded;
+    case 'cultivator': return Icons.eco_rounded;
+    case 'seeder':     return Icons.spa_rounded;
+    case 'hitachi':    return Icons.construction_rounded;
+    case 'jcb':        return Icons.construction_rounded;
+    case 'lorry':      return Icons.local_shipping_rounded;
+    default:           return Icons.build_rounded;
   }
 }
 
@@ -164,9 +164,8 @@ class _RentMapPageState extends State<RentMapPage> {
               ],
             ),
             child: Center(
-              child: Text(_typeEmoji(m.type),
-                  style: TextStyle(
-                      fontSize: isSelected ? 26 : 20)),
+              child: Icon(_typeIcon(m.type),
+                  size: isSelected ? 26 : 20, color: color),
             ),
           ),
         ),
@@ -362,7 +361,7 @@ class _MachineBottomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _typeColor(machine.type);
-    final emoji = _typeEmoji(machine.type);
+    final icon = _typeIcon(machine.type);
 
     return Container(
       decoration: BoxDecoration(
@@ -400,15 +399,11 @@ class _MachineBottomCard extends StatelessWidget {
                           errorBuilder: (_, __, ___) => Container(
                                 color: color.withValues(alpha: 0.15),
                                 child: Center(
-                                    child: Text(emoji,
-                                        style: const TextStyle(
-                                            fontSize: 30)))))
+                                    child: Icon(icon, size: 30, color: color))))
                       : Container(
                           color: color.withValues(alpha: 0.15),
                           child: Center(
-                              child: Text(emoji,
-                                  style:
-                                      const TextStyle(fontSize: 30)))),
+                              child: Icon(icon, size: 30, color: color))),
                 ),
               ),
               const SizedBox(width: 12),
@@ -420,7 +415,7 @@ class _MachineBottomCard extends StatelessWidget {
                           style: const TextStyle(
                               fontSize: 15, fontWeight: FontWeight.w800)),
                       const SizedBox(height: 3),
-                      Text('$emoji ${machine.type}',
+                      Text(machine.type,
                           style: TextStyle(
                               fontSize: 12, color: color,
                               fontWeight: FontWeight.w600)),
@@ -448,8 +443,7 @@ class _MachineBottomCard extends StatelessWidget {
                       ]),
                       const SizedBox(height: 3),
                       Text(
-                          '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr  '
-                          '₹${machine.pricePerDay.toStringAsFixed(0)}/day',
+                          '₹${machine.effectiveHourlyRate.toStringAsFixed(0)}/hr',
                           style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,

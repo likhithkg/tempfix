@@ -290,7 +290,7 @@ class _RentNearbyMapPageState extends State<RentNearbyMapPage> {
               _mapController.move(ll.LatLng(lat, lon), 14);
               _showMachineSheet(m);
             },
-            child: const Text('🚜', style: TextStyle(fontSize: 30)),
+            child: const Icon(Icons.agriculture_rounded, size: 30, color: Colors.green),
           ),
         );
       }).toList(),

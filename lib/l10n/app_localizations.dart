@@ -111,6 +111,12 @@ abstract class AppLocalizations {
   /// **'KrishiMithra'**
   String get appName;
 
+  /// No description provided for @appTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Agriculture for Every Farmer'**
+  String get appTagline;
+
   /// No description provided for @login.
   ///
   /// In en, this message translates to:
@@ -4742,6 +4748,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try Again'**
   String get tryAgain;
+
+  /// No description provided for @lcTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Land Connect'**
+  String get lcTitle;
+
+  /// No description provided for @lcSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find land to cultivate or list your land'**
+  String get lcSubtitle;
+
+  /// No description provided for @lcHaveLand.
+  ///
+  /// In en, this message translates to:
+  /// **'I Have Land'**
+  String get lcHaveLand;
+
+  /// No description provided for @lcHaveLandSub.
+  ///
+  /// In en, this message translates to:
+  /// **'List your unused land and find cultivators'**
+  String get lcHaveLandSub;
+
+  /// No description provided for @lcFindLand.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Land'**
+  String get lcFindLand;
+
+  /// No description provided for @lcFindLandSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse available land near you'**
+  String get lcFindLandSub;
+
+  /// No description provided for @lcMyListings.
+  ///
+  /// In en, this message translates to:
+  /// **'My Land Listings'**
+  String get lcMyListings;
+
+  /// No description provided for @lcMyListingsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your land listings'**
+  String get lcMyListingsSub;
+
+  /// No description provided for @lcCultivationRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Cultivation Requests'**
+  String get lcCultivationRequests;
+
+  /// No description provided for @lcCultivationRequestsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'View requests on your land'**
+  String get lcCultivationRequestsSub;
+
+  /// No description provided for @lcMyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'My Cultivation Requests'**
+  String get lcMyRequests;
+
+  /// No description provided for @lcMyRequestsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your requests to landowners'**
+  String get lcMyRequestsSub;
+
+  /// No description provided for @lcHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How It Works'**
+  String get lcHowItWorks;
+
+  /// No description provided for @lcDiscoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Land Near You'**
+  String get lcDiscoveryTitle;
+
+  /// No description provided for @lcSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by location, crop, or land type...'**
+  String get lcSearchHint;
+
+  /// No description provided for @lcEnableLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Location'**
+  String get lcEnableLocation;
+
+  /// No description provided for @lcRequestCultivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Request to Cultivate'**
+  String get lcRequestCultivate;
+
+  /// No description provided for @lcRequestAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Already Sent'**
+  String get lcRequestAlreadySent;
+
+  /// No description provided for @lcSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Cultivation Request'**
+  String get lcSendRequest;
+
+  /// No description provided for @lcSubmitRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Request'**
+  String get lcSubmitRequest;
+
+  /// No description provided for @lcWithdrawRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw Request'**
+  String get lcWithdrawRequest;
+
+  /// No description provided for @lcPendingTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get lcPendingTab;
+
+  /// No description provided for @lcAcceptedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get lcAcceptedTab;
+
+  /// No description provided for @lcRejectedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get lcRejectedTab;
+
+  /// No description provided for @lcActiveTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get lcActiveTab;
+
+  /// No description provided for @lcPausedTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get lcPausedTab;
+
+  /// No description provided for @lcAddListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Listing'**
+  String get lcAddListing;
+
+  /// No description provided for @lcListingFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'List Your Land'**
+  String get lcListingFormTitle;
+
+  /// No description provided for @lcPrivacyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your exact location is kept private. Only village and district are shown to cultivators until a request is accepted.'**
+  String get lcPrivacyNotice;
+
+  /// No description provided for @lcDisclaimerText.
+  ///
+  /// In en, this message translates to:
+  /// **'KrishiMithra facilitates the connection. Please execute any land lease agreement separately.'**
+  String get lcDisclaimerText;
+
+  /// No description provided for @lcRequestWithdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Request withdrawn'**
+  String get lcRequestWithdrawn;
+
+  /// No description provided for @lcRequestAcceptedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Accepted!'**
+  String get lcRequestAcceptedMsg;
+
+  /// No description provided for @lcContactLandowner.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact the landowner to discuss the agreement details and proceed.'**
+  String get lcContactLandowner;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'green_bazaar_service.dart';
 import 'green_bazaar_models.dart';
@@ -28,20 +29,26 @@ class _CartPageState extends State<CartPage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final confirmed = await showModalBottomSheet<bool>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _TakeAwaySheet(items: items, total: total),
+      builder: (_) => _TakeAwaySheet(
+        items: items,
+        total: total,
+        initialName: user.displayName ?? '',
+      ),
     );
 
-    if (confirmed != true || !mounted) return;
+    if (result == null || !mounted) return;
 
     setState(() => _placing = true);
     try {
       await _svc.placeTakeAwayOrder(
         items: items,
-        buyerName: user.displayName ?? 'Buyer',
+        buyerName: result['name']!,
+        buyerPhone: result['phone'],
+        buyerLocation: result['location'],
       );
       if (mounted) {
         await showDialog(
@@ -163,7 +170,7 @@ class _CartPageState extends State<CartPage> {
                 if (items.isEmpty) {
                   return Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Text('🛒', style: TextStyle(fontSize: 64)),
+                      const Icon(Icons.shopping_cart_rounded, size: 64, color: Color(0xFF9E9E9E)),
                       const SizedBox(height: 16),
                       const Text('Your cart is empty',
                           style: TextStyle(
@@ -239,8 +246,7 @@ class _CartPageState extends State<CartPage> {
                             ],
                           ),
                           child: Column(children: [
-                            const Text('🏪',
-                                style: TextStyle(fontSize: 28)),
+                            const Icon(Icons.store_rounded, size: 28, color: Colors.white),
                             const SizedBox(height: 4),
                             const Text('Take Away',
                                 style: TextStyle(
@@ -453,142 +459,269 @@ class _CartTile extends StatelessWidget {
 
 // ─── Take Away Confirmation Sheet ─────────────────────────────────────────────
 
-class _TakeAwaySheet extends StatelessWidget {
+class _TakeAwaySheet extends StatefulWidget {
   final List<CartItem> items;
   final double total;
-  const _TakeAwaySheet({required this.items, required this.total});
+  final String initialName;
+  const _TakeAwaySheet({
+    required this.items,
+    required this.total,
+    required this.initialName,
+  });
+
+  @override
+  State<_TakeAwaySheet> createState() => _TakeAwaySheetState();
+}
+
+class _TakeAwaySheetState extends State<_TakeAwaySheet> {
+  late final TextEditingController _nameCtrl;
+  final _phoneCtrl = TextEditingController();
+  final _locationCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _locationCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
+    final location = _locationCtrl.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please enter your name'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please enter your phone number'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    if (location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please enter your location'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    Navigator.pop(context, {'name': name, 'phone': phone, 'location': location});
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-          24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0E0E0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          const Row(children: [
-            Text('🏪', style: TextStyle(fontSize: 28)),
-            SizedBox(width: 10),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Confirm Takeaway',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-              Text('You will pick up from the nursery',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E))),
-            ]),
-          ]),
-          const SizedBox(height: 20),
-
-          // Info banner
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(children: [
-              Icon(Icons.info_outline_rounded,
-                  size: 16, color: Color(0xFF2E7D32)),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'The seller will be notified immediately. Visit the nursery to collect your plants.',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF2E7D32),
-                      fontWeight: FontWeight.w600),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+            24, 20, 24, MediaQuery.of(context).padding.bottom + 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ]),
-          ),
-          const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-          // Order summary
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(children: [
-                  const Icon(Icons.local_florist_rounded,
-                      size: 14, color: Color(0xFF2E7D32)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text('${item.plantName} ×${item.orderQty}',
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                  ),
-                  Text(
-                      '₹${(item.price * item.orderQty).toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700)),
+              const Row(children: [
+                Icon(Icons.store_rounded, size: 28),
+                SizedBox(width: 10),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Confirm Takeaway',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                  Text('Your details are shared with the seller',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E))),
                 ]),
-              )),
+              ]),
+              const SizedBox(height: 20),
 
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Total to pay at nursery',
-                  style: TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700)),
-              Text('₹${total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF2E7D32))),
+              // Buyer details fields
+              _field(
+                controller: _nameCtrl,
+                label: 'Your Name *',
+                hint: 'Full name',
+                icon: Icons.person_rounded,
+                keyboardType: TextInputType.name,
+              ),
+              const SizedBox(height: 12),
+              _field(
+                controller: _phoneCtrl,
+                label: 'Your Phone *',
+                hint: '10-digit mobile number',
+                icon: Icons.phone_rounded,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 12),
+              _field(
+                controller: _locationCtrl,
+                label: 'Your Location *',
+                hint: 'Village, Taluk, District',
+                icon: Icons.location_on_rounded,
+                keyboardType: TextInputType.streetAddress,
+              ),
+              const SizedBox(height: 16),
+
+              // Info banner
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: Color(0xFF2E7D32)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'The seller will be notified. Visit the nursery to collect your plants.',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF2E7D32),
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 16),
+
+              // Order summary
+              ...widget.items.map((item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(children: [
+                      const Icon(Icons.local_florist_rounded,
+                          size: 14, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('${item.plantName} ×${item.orderQty}',
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                      ),
+                      Text(
+                          '₹${(item.price * item.orderQty).toStringAsFixed(0)}',
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w700)),
+                    ]),
+                  )),
+
+              const Divider(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total to pay at nursery',
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                  Text('₹${widget.total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF2E7D32))),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: Color(0xFFE0E0E0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Cancel',
+                        style: TextStyle(color: Color(0xFF616161))),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Confirm Takeaway',
+                        style:
+                            TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ]),
             ],
           ),
-          const SizedBox(height: 20),
-
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context, false),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Color(0xFFE0E0E0)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Cancel',
-                    style: TextStyle(color: Color(0xFF616161))),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Text('Confirm Takeaway',
-                    style:
-                        TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-              ),
-            ),
-          ]),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF424242))),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 13),
+            prefixIcon: Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
+            filled: true,
+            fillColor: const Color(0xFFF5F5F5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+        ),
+      ],
     );
   }
 }
@@ -611,12 +744,12 @@ class _SuccessDialog extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                  child: Text('✅', style: TextStyle(fontSize: 36))),
+                  child: Icon(Icons.check_circle_rounded, size: 36, color: Color(0xFF2E7D32))),
             ),
             const SizedBox(height: 16),
             const Text('Order Placed!',

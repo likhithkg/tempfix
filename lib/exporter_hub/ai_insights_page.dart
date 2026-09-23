@@ -1,14 +1,13 @@
 // lib/exporter_hub/ai_insights_page.dart
 // AI Procurement Insights — derives actionable insights from Firestore data.
-// Uses Gemini API (same key as chatbot) to generate textual insights.
-// Falls back to rule-based local insights when API is unavailable.
+// Uses backend proxy to call Gemini without exposing the API key client-side.
+// Falls back to rule-based local insights when the backend is unavailable.
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../l10n/app_localizations.dart';
+import '../services/ai_proxy_service.dart';
 
 class AiInsightsPage extends StatefulWidget {
   const AiInsightsPage({super.key});
@@ -39,7 +38,10 @@ class _AiInsightsPageState extends State<AiInsightsPage> {
       final shipmentsSnap = await _db.collection('shipments').get();
 
       final pos = posSnap.docs.map((d) => d.data()).toList();
-      final products = productsSnap.docs.map((d) => d.data()).toList();
+      final products = productsSnap.docs
+          .map((d) => d.data())
+          .where((p) => (p['listingSource'] ?? '') != 'f2b_mart')
+          .toList();
       final shipments = shipmentsSnap.docs.map((d) => d.data()).toList();
 
       // Crop frequency
@@ -107,7 +109,7 @@ class _AiInsightsPageState extends State<AiInsightsPage> {
         'topDestinations': topDestinations.map((e) => '${e.key}(${e.value})').join(', '),
       };
 
-      // 2. Generate insights (try Gemini, fallback to rule-based)
+      // 2. Generate insights (try Gemini via proxy, fallback to rule-based)
       final aiInsights = await _generateGeminiInsights(_stats);
       if (aiInsights != null) {
         _insights = aiInsights;
@@ -124,9 +126,6 @@ class _AiInsightsPageState extends State<AiInsightsPage> {
   }
 
   Future<List<_Insight>?> _generateGeminiInsights(Map<String, dynamic> stats) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
-    if (apiKey.isEmpty) return null;
-
     final prompt = '''
 You are an agricultural export procurement advisor for KrishiMithra in India.
 Based on this data, provide 5 concise, actionable procurement insights:
@@ -146,27 +145,26 @@ Only return the JSON array, no other text.
 ''';
 
     try {
-      final response = await http.post(
-        Uri.parse(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [{'parts': [{'text': prompt}]}],
-          'generationConfig': {'temperature': 0.4, 'maxOutputTokens': 800},
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final text = await AiProxyService.generateText(
+        contents: [
+          {
+            'role': 'user',
+            'parts': [{'text': prompt}],
+          }
+        ],
+        model: 'gemini-1.5-flash',
+        generationConfig: {'temperature': 0.4, 'maxOutputTokens': 800},
+      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-        final cleaned = text.replaceAll('```json', '').replaceAll('```', '').trim();
-        final list = jsonDecode(cleaned) as List;
-        return list.map((item) => _Insight(
-          title: item['title']?.toString() ?? '',
-          body: item['body']?.toString() ?? '',
-          type: item['type']?.toString() ?? 'crop',
-        )).toList();
-      }
+      if (text.isEmpty || text.startsWith('AI error')) return null;
+
+      final cleaned = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final list = jsonDecode(cleaned) as List;
+      return list.map((item) => _Insight(
+        title: item['title']?.toString() ?? '',
+        body: item['body']?.toString() ?? '',
+        type: item['type']?.toString() ?? 'crop',
+      )).toList();
     } catch (_) {}
     return null;
   }
@@ -225,7 +223,6 @@ Only return the JSON array, no other text.
       ));
     }
 
-    // Price insight for top crop
     if (topCrops.isNotEmpty) {
       final crop = topCrops.first.key;
       final avgPrice = priceCount[crop] != null && (priceCount[crop] ?? 0) > 0

@@ -16,16 +16,16 @@ class RainIntelligenceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassSectionHeader(title: l.rainfallIntelligence, emoji: '🌧️'),
+          GlassSectionHeader(title: l.rainfallIntelligence, emoji: Icons.water_drop_rounded),
           if (!rain.rainExpected)
             _StatusRow(
-              icon: '☀️',
+              icon: Icons.wb_sunny_rounded,
               label: l.noRainNext24Hours,
               color: Colors.greenAccent,
             )
           else ...[
             _StatusRow(
-              icon: '🌧️',
+              icon: Icons.water_drop_rounded,
               label: rain.hoursUntilRain == 0
                   ? l.rainFallingNow
                   : l.rainExpectedSoon(rain.hoursUntilRain),
@@ -35,11 +35,11 @@ class RainIntelligenceCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: _StatBox(label: l.startTime, value: DateFormat('h:mm a').format(rain.rainStartTime!), icon: '⏰')),
+                  Expanded(child: _StatBox(label: l.startTime, value: DateFormat('h:mm a').format(rain.rainStartTime!), icon: Icons.schedule_rounded)),
                   const SizedBox(width: 8),
-                  Expanded(child: _StatBox(label: l.rainDuration, value: '${rain.durationHours}h', icon: '⏱️')),
+                  Expanded(child: _StatBox(label: l.rainDuration, value: '${rain.durationHours}h', icon: Icons.timer_rounded)),
                   const SizedBox(width: 8),
-                  Expanded(child: _StatBox(label: l.expectedLabel, value: '${rain.expectedRainfallMm.toStringAsFixed(0)} mm', icon: '💧')),
+                  Expanded(child: _StatBox(label: l.expectedLabel, value: '${rain.expectedRainfallMm.toStringAsFixed(0)} mm', icon: Icons.water_drop)),
                 ],
               ),
             ],
@@ -51,7 +51,7 @@ class RainIntelligenceCard extends StatelessWidget {
 }
 
 class _StatusRow extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final Color color;
 
@@ -61,7 +61,7 @@ class _StatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 22)),
+        Icon(icon, size: 22, color: color),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -77,7 +77,7 @@ class _StatusRow extends StatelessWidget {
 class _StatBox extends StatelessWidget {
   final String label;
   final String value;
-  final String icon;
+  final IconData icon;
 
   const _StatBox({required this.label, required this.value, required this.icon});
 
@@ -92,7 +92,7 @@ class _StatBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          Icon(icon, size: 14, color: Colors.lightBlueAccent),
           const SizedBox(height: 2),
           Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
           Text(label, style: const TextStyle(fontSize: 10, color: Colors.white54)),
