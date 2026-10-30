@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { initializeApp, getApps, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
+const { getFirestore } = require('firebase-admin/firestore');
 
 if (!getApps().length) {
   // Render env vars are stored as raw text.  Several copy-paste paths produce
@@ -29,4 +30,4 @@ if (!getApps().length) {
   });
 }
 
-module.exports = { getAuth };
+module.exports = { getAuth, getFirestore };

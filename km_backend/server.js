@@ -9,6 +9,9 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const authRoutes = require("./routes/authRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const premiumRoutes = require("./routes/premiumRoutes");
+const rentRoutes = require("./routes/rentRoutes");
 const { verifyToken } = require("./middleware/auth");
 
 const app = express();
@@ -51,6 +54,13 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+if (allowedOrigins.length === 0 && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[SECURITY WARNING] ALLOWED_ORIGINS is not set. " +
+    "All web origins are allowed. Set ALLOWED_ORIGINS in your environment."
+  );
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -83,6 +93,15 @@ app.use("/api/ai", aiLimiter, aiRoutes);
 // Profile routes — GET /photo/:id is public; POST /photo applies verifyToken internally.
 // Must be registered before the catch-all /api route below.
 app.use("/api/profile", profileRoutes);
+
+// Payment routes — create, dynamic hash generation, verify, cancel, webhook
+app.use("/api/payment", paymentRoutes);
+
+// Premium feature payment routes — entitlements, purchase, verify, webhook
+app.use("/api/premium", premiumRoutes);
+
+// RentHub machine listing (publish) — owner-only, requires entitlement check
+app.use("/api/rent", rentRoutes);
 
 // Upload route — requires valid Firebase ID token
 app.use("/api", uploadLimiter, verifyToken, uploadRoutes);
