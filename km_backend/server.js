@@ -16,6 +16,12 @@ const { verifyToken } = require("./middleware/auth");
 
 const app = express();
 
+// Render (and all cloud platforms) sit behind a reverse proxy that injects
+// X-Forwarded-For.  Without this setting express-rate-limit throws
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and cannot identify real client IPs.
+// '1' means trust exactly one proxy hop (Render's load balancer).
+app.set("trust proxy", 1);
+
 // Rate limiters — keyed by client IP.
 // Auth routes: tight limit to block brute-force attacks.
 const authLimiter = rateLimit({
@@ -45,6 +51,19 @@ const aiLimiter = rateLimit({
 });
 
 connectDB();
+
+// Validate required PayU environment variables at startup.
+// The app still starts and serves non-payment endpoints without these,
+// but any payment endpoint call will fail with HTTP 500.
+// Set PAYU_KEY, PAYU_SALT (and optionally PAYU_ENV) in your Render
+// environment variables dashboard before accepting payments.
+const missingPayU = ["PAYU_KEY", "PAYU_SALT"].filter((v) => !process.env[v]);
+if (missingPayU.length > 0) {
+  console.warn(
+    `[CONFIG] Missing environment variable(s): ${missingPayU.join(", ")}. ` +
+    "Payment endpoints will return HTTP 500 until these are set in Render."
+  );
+}
 
 // CORS: native mobile sends no Origin header — always allow.
 // For web clients, only allow origins listed in ALLOWED_ORIGINS (comma-separated).
