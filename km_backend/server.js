@@ -13,6 +13,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const premiumRoutes = require("./routes/premiumRoutes");
 const rentRoutes = require("./routes/rentRoutes");
 const plantVendorRoutes = require("./routes/plantVendorRoutes");
+const otpRoutes = require("./routes/otpRoutes");
 const { verifyToken } = require("./middleware/auth");
 
 const app = express();
@@ -51,6 +52,15 @@ const aiLimiter = rateLimit({
   message: { error: "AI request rate limit exceeded. Please slow down." },
 });
 
+// OTP routes: tight IP-level limit; per-phone limits are enforced in the controller.
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many OTP requests. Please try again later." },
+});
+
 connectDB();
 
 // Validate required PayU environment variables at startup.
@@ -58,6 +68,13 @@ connectDB();
 // but any payment endpoint call will fail with HTTP 500.
 // Set PAYU_KEY, PAYU_SALT (and optionally PAYU_ENV) in your Render
 // environment variables dashboard before accepting payments.
+if (!process.env.OTPDEV_API_KEY) {
+  console.warn(
+    "[CONFIG] Missing environment variable: OTPDEV_API_KEY. " +
+    "OTP registration endpoints will fail until this is set in Render."
+  );
+}
+
 const missingPayU = ["PAYU_KEY", "PAYU_SALT"].filter((v) => !process.env[v]);
 if (missingPayU.length > 0) {
   console.warn(
@@ -125,6 +142,9 @@ app.use("/api/rent", rentRoutes);
 
 // Plant Vendor listing publish — requires entitlement check
 app.use("/api/plant-vendor", plantVendorRoutes);
+
+// OTP.dev phone verification for registration
+app.use("/api/otp", otpLimiter, otpRoutes);
 
 // Upload route — requires valid Firebase ID token
 app.use("/api", uploadLimiter, verifyToken, uploadRoutes);

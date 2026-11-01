@@ -44,6 +44,8 @@ import 'public/faq_page.dart';
 import 'public/payment_policy_page.dart';
 import 'public/digital_fulfillment_page.dart';
 import 'public/services_page.dart';
+import 'services/otp_service.dart';
+import 'auth/otp_verification_page.dart';
 
 
 
@@ -990,38 +992,93 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final emailController = TextEditingController();
+  final emailController    = TextEditingController();
   final passwordController = TextEditingController();
-  bool loading = false;
-  bool _obscurePassword = true;
+  String _phoneComplete    = '';
+  bool loading             = false;
+  bool _obscurePassword    = true;
+  final _otpService        = OtpService();
 
-  void register() async {
-    if (emailController.text.trim().isEmpty || passwordController.text.isEmpty) {
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> register() async {
+    final email    = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || _phoneComplete.isEmpty) {
       showToast("Please fill all fields");
       return;
     }
+
+    setState(() => loading = true);
+
+    // Step 1: Send OTP to the provided phone number
+    final sendResult = await _otpService.sendOtp(phone: _phoneComplete);
+    if (!mounted) return;
+
+    if (!sendResult.success) {
+      showToast(sendResult.error ?? 'Failed to send OTP');
+      setState(() => loading = false);
+      return;
+    }
+
+    setState(() => loading = false);
+
+    // Step 2: Navigate to OTP verification page; it pops with the proof token on success
+    final proofToken = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OtpVerificationPage(phone: _phoneComplete),
+      ),
+    );
+
+    if (proofToken == null) return; // user cancelled
+
+    // Step 3: Create Firebase account
     setState(() => loading = true);
     try {
-      fb.UserCredential userCredential = await fb.FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: emailController.text.trim(),
-              password: passwordController.text.trim());
+      final userCredential = await fb.FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       final user = userCredential.user;
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('userProfile')
-            .doc(user.uid)
-            .set({
-          'email': user.email,
-          'phone': user.phoneNumber,
-          'authProvider': 'email',
-          'createdAt': FieldValue.serverTimestamp(),
-          'defaultLocation': null,
-          'preferences': {},
-        });
-        await _syncUserWithBackend(user);
+      if (user == null) throw Exception('User creation returned null');
+
+      // Step 4: Validate proof on backend (requires Firebase ID token)
+      final idToken = await user.getIdToken();
+      final completeResult = await _otpService.completeRegistration(
+        phone:      _phoneComplete,
+        proofToken: proofToken,
+        idToken:    idToken!,
+      );
+
+      if (!completeResult.success) {
+        // Backend rejected the proof — roll back the Firebase account and abort
+        await user.delete();
+        if (!mounted) return;
+        showToast(completeResult.error ?? 'Registration failed. Please try again.');
+        setState(() => loading = false);
+        return;
       }
+
+      // Step 5: Write user profile to Firestore
+      await FirebaseFirestore.instance
+          .collection('userProfile')
+          .doc(user.uid)
+          .set({
+        'email':           user.email,
+        'phone':           _phoneComplete,
+        'authProvider':    'email',
+        'createdAt':       FieldValue.serverTimestamp(),
+        'defaultLocation': null,
+        'preferences':     {},
+      });
+
+      await _syncUserWithBackend(user);
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -1183,6 +1240,21 @@ class _SignUpPageState extends State<SignUpPage> {
                                   filled: true,
                                   fillColor: primary.withValues(alpha: 0.04),
                                 ),
+                              ),
+                              const SizedBox(height: 14),
+                              IntlPhoneField(
+                                initialCountryCode: 'IN',
+                                decoration: InputDecoration(
+                                  labelText: 'Phone Number',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    borderSide: BorderSide(color: primary, width: 2),
+                                  ),
+                                  filled: true,
+                                  fillColor: primary.withValues(alpha: 0.04),
+                                ),
+                                onChanged: (val) => _phoneComplete = val.completeNumber,
                               ),
                               const SizedBox(height: 22),
                               SizedBox(
