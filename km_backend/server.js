@@ -12,6 +12,7 @@ const profileRoutes = require("./routes/profileRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const premiumRoutes = require("./routes/premiumRoutes");
 const rentRoutes = require("./routes/rentRoutes");
+const plantVendorRoutes = require("./routes/plantVendorRoutes");
 const { verifyToken } = require("./middleware/auth");
 
 const app = express();
@@ -121,6 +122,9 @@ app.use("/api/premium", premiumRoutes);
 
 // RentHub machine listing (publish) — owner-only, requires entitlement check
 app.use("/api/rent", rentRoutes);
+
+// Plant Vendor listing publish — requires entitlement check
+app.use("/api/plant-vendor", plantVendorRoutes);
 
 // Upload route — requires valid Firebase ID token
 app.use("/api", uploadLimiter, verifyToken, uploadRoutes);

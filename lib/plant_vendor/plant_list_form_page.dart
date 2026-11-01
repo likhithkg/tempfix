@@ -14,6 +14,9 @@ import 'package:krishimithra/plant_vendor/plant_vendor_service.dart';
 
 import '../services/image_upload_service.dart';
 import '../l10n/app_localizations.dart';
+import '../premium/premium_service.dart';
+import '../premium/premium_screen.dart';
+import '../premium/premium_constants.dart';
 
 // ---------- CONFIG ----------
 const String LOCATIONIQ_API_KEY =
@@ -449,10 +452,49 @@ class _PlantListFormPageState
       return;
     }
 
-    setState(() => _saving = true);
+    final isEdit = widget.existingVendor != null;
 
-    final isEdit =
-        widget.existingVendor != null;
+    // ── Premium gate: new listings only ──────────────────────────────────────
+    // Editing an existing listing is always free. Only publishing a new listing
+    // requires Plant Vendor Premium. The form stays populated during payment so
+    // the user never loses their entered data.
+    if (!isEdit) {
+      setState(() => _saving = true);
+      bool entitled = false;
+      try {
+        entitled = await PremiumService.instance
+            .hasEntitlement(kPlantVendorPremium);
+      } catch (_) {}
+      if (mounted) setState(() => _saving = false);
+      if (!mounted) return;
+
+      if (!entitled) {
+        await Navigator.push<void>(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                const PremiumScreen(initialFeatureId: kPlantVendorPremium),
+          ),
+        );
+        if (!mounted) return;
+        // Cache was invalidated by verifyPayment — this fetch is fresh.
+        entitled = await PremiumService.instance
+            .hasEntitlement(kPlantVendorPremium);
+        if (!entitled) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Plant Vendor Premium required to publish a listing'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    setState(() => _saving = true);
 
     final user =
         FirebaseAuth.instance.currentUser;
@@ -569,14 +611,11 @@ class _PlantListFormPageState
           PlantVendorService();
 
       if (isEdit) {
-        await service
-            .updatePlantVendor(
-          vendor,
-        );
+        await service.updatePlantVendor(vendor);
       } else {
-        await service.addPlantVendor(
-          vendor,
-        );
+        // Backend-verified publish: server re-checks entitlement before
+        // writing to Firestore. Client-side check above is UX-only.
+        await service.publishPlant(vendor);
       }
 
       if (mounted) {

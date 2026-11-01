@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
@@ -31,6 +32,18 @@ import 'chatbot/chatbot_page.dart';
 import 'f2b_mart/f2b_home_page.dart';
 import 'home/home_page.dart';
 import 'config/km_images.dart';
+import 'premium/payment_result_page.dart';
+import 'public/landing_page.dart';
+import 'public/about_page.dart';
+import 'public/contact_page.dart';
+import 'public/terms_page.dart';
+import 'public/privacy_page.dart';
+import 'public/refund_policy_page.dart';
+import 'public/pricing_page.dart';
+import 'public/faq_page.dart';
+import 'public/payment_policy_page.dart';
+import 'public/digital_fulfillment_page.dart';
+import 'public/services_page.dart';
 
 
 
@@ -45,6 +58,7 @@ import 'config/km_images.dart';
 // errors from Supabase's async auth listeners on web. The fix: do everything
 // inside a single runZonedGuarded with an async callback.
 void main() {
+  if (kIsWeb) usePathUrlStrategy();
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -264,9 +278,20 @@ class KrishiMithraApp extends StatelessWidget {
               return child!;
             },
             debugShowCheckedModeBanner: false,
-            home: const SplashScreen(),
+            home: const _AppEntryPoint(),
             routes: {
-              '/login': (context) => const LoginPage(),
+              '/login':   (context) => const LoginPage(),
+              '/landing': (context) => const LandingPage(),
+              '/about':   (context) => const AboutPage(),
+              '/contact': (context) => const ContactPage(),
+              '/terms':   (context) => const TermsPage(),
+              '/privacy': (context) => const PrivacyPage(),
+              '/refund':               (context) => const RefundPolicyPage(),
+              '/pricing':              (context) => const PricingPage(),
+              '/faq':                  (context) => const FAQPage(),
+              '/payment-policy':       (context) => const PaymentPolicyPage(),
+              '/digital-fulfillment':  (context) => const DigitalFulfillmentPage(),
+              '/services':             (context) => const ServicesPage(),
             },
           );
         },
@@ -274,6 +299,44 @@ class KrishiMithraApp extends StatelessWidget {
     ),
   );
   }
+}
+
+// Detects web payment callbacks in the URL fragment before showing SplashScreen.
+class _AppEntryPoint extends StatefulWidget {
+  const _AppEntryPoint();
+  @override
+  State<_AppEntryPoint> createState() => _AppEntryPointState();
+}
+
+class _AppEntryPointState extends State<_AppEntryPoint> {
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkWebPayment());
+    }
+  }
+
+  void _checkWebPayment() {
+    final fragment = Uri.base.fragment;
+    if (!fragment.startsWith('payment-result')) return;
+    final qIdx = fragment.indexOf('?');
+    if (qIdx < 0) return;
+    final query = Uri.splitQueryString(fragment.substring(qIdx + 1));
+    final txnid = query['txnid'];
+    final status = query['status'];
+    if (txnid != null && mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PaymentResultPage.fromWebCallback(
+            txnid: txnid, status: status ?? 'pending'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const SplashScreen();
 }
 
 //

@@ -1,6 +1,8 @@
 // lib/plant_vendor/plant_vendor_service.dart
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'plant_vendor_model.dart';
 
 class PlantVendorService {
@@ -39,6 +41,52 @@ class PlantVendorService {
       // ignore any conversion errors and leave map unchanged
     }
     return map;
+  }
+
+  static const _backendBase = 'https://km-backend-ug96.onrender.com';
+
+  /// Publishes a NEW plant listing via the backend, which server-side verifies
+  /// the user's Plant Vendor Premium entitlement before writing to Firestore.
+  /// Throws on failure. Returns the created plant ID.
+  Future<String> publishPlant(PlantVendor vendor) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+    final token = await user.getIdToken();
+
+    final res = await http
+        .post(
+          Uri.parse('$_backendBase/api/plant-vendor/publish-plant'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'plant': {
+              'plantName': vendor.plantName,
+              'type': vendor.type,
+              'price': vendor.price,
+              'quantity': vendor.quantity,
+              'vendorName': vendor.vendorName,
+              'phone': vendor.phone,
+              'location': vendor.location,
+              'address': vendor.address,
+              'latitude': vendor.latitude,
+              'longitude': vendor.longitude,
+              'description': vendor.description,
+              'imageUrl': vendor.imageUrl,
+              'productSource': vendor.productSource,
+            },
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return data['plantId'] as String;
+    }
+    final body = res.body.isNotEmpty ? jsonDecode(res.body) : <String, dynamic>{};
+    final err = body is Map ? (body['error'] ?? 'Failed to publish listing') : 'Failed to publish listing';
+    throw Exception(err);
   }
 
   // ✅ Add new vendor (Firestore will generate ID if vendor.id is empty)
