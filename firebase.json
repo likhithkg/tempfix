@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "krishimithra-650c2",
     "public": "build/web",
     "ignore": [
       "firebase.json",
