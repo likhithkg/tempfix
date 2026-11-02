@@ -40,12 +40,21 @@
             android:value="2" />
     </application>
 
-    <!-- Required by Flutter for PROCESS_TEXT actions -->
+    <!-- Required by Flutter for PROCESS_TEXT actions and Razorpay UPI/wallet apps -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" />
+        </intent>
+        <!-- Razorpay-supported UPI and wallet apps -->
+        <package android:name="com.google.android.apps.nbu.paisa.user" />
+        <package android:name="com.phonepe.app" />
+        <package android:name="net.one97.paytm" />
+        <package android:name="in.amazon.mShop.android.shopping" />
     </queries>
 
 </manifest>

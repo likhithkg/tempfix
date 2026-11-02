@@ -6,25 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../theme.dart';
 import 'chat_models.dart';
 import 'chat_repository.dart';
-import 'chatbot_service.dart';
 import 'search_engine.dart';
-
-// ── Language option ───────────────────────────────────────────────────────────
-
-class _Lang {
-  final String code;
-  final String label;
-  final String flag;
-  const _Lang(this.code, this.label, this.flag);
-}
-
-const _kLangs = [
-  _Lang('en', 'English', 'EN'),
-  _Lang('hi', 'हिंदी', 'HI'),
-  _Lang('kn', 'ಕನ್ನಡ', 'KN'),
-  _Lang('ta', 'தமிழ்', 'TA'),
-  _Lang('te', 'తెలుగు', 'TE'),
-];
 
 // ── Quick suggestion prompts ──────────────────────────────────────────────────
 
@@ -49,7 +31,6 @@ class ChatbotPage extends StatefulWidget {
 class _ChatbotPageState extends State<ChatbotPage> {
   final _repo = ChatRepository();
   final _engine = SearchEngine();
-  final _service = ChatbotService();
   final _ctrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final _uuid = const Uuid();
@@ -59,7 +40,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
   Conversation? _current;
   bool _sending = false;
   bool _initialising = true;
-  String _lang = 'en';
 
   @override
   void initState() {
@@ -198,24 +178,17 @@ class _ChatbotPageState extends State<ChatbotPage> {
     });
     _scrollToBottom();
 
-    // ── Answer resolution ─────────────────────────────────────────────────
+    // ── Answer resolution (knowledge-base only) ───────────────────────────
     String reply;
     String? matchedCategory;
 
     try {
-      final currentMessages = _current!.messages;
-
       final match = _engine.search(text, _entries);
       if (match != null) {
         matchedCategory = '${match.categoryEmoji} ${match.category}';
-        if (_lang == 'en') {
-          reply = match.getAnswer('en');
-        } else {
-          reply = await _service.getBotReplyWithContext(
-              text, _lang, match.getAnswer('en'), currentMessages);
-        }
+        reply = match.getAnswer('en');
       } else {
-        reply = await _service.getBotReply(text, _lang, currentMessages);
+        reply = _noKbAnswer();
       }
     } catch (e) {
       reply = 'Sorry, something went wrong. Please try again.';
@@ -268,6 +241,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
     });
   }
 
+  String _noKbAnswer() =>
+      "I don't have specific information about that in my knowledge base.\n\n"
+      'For personalised farming advice, please contact:\n'
+      '• Kisan Call Center: 1800-180-1551 (free, 24×7)\n'
+      '• Your local Krishi Vigyan Kendra (KVK)\n'
+      '• State Agriculture Department helpline';
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -307,38 +287,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 color: Colors.white.withValues(alpha: 0.75), fontSize: 11)),
       ]),
       actions: [
-        // Language picker
-        PopupMenuButton<String>(
-          initialValue: _lang,
-          tooltip: 'Language',
-          icon: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              _kLangs.firstWhere((l) => l.code == _lang).flag,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
-          onSelected: (code) => setState(() => _lang = code),
-          itemBuilder: (_) => _kLangs
-              .map((l) => PopupMenuItem<String>(
-                    value: l.code,
-                    child: Row(children: [
-                      Text(l.flag, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Text(l.label),
-                      if (l.code == _lang) ...[
-                        const Spacer(),
-                        Icon(Icons.check, size: 16, color: cs.primary),
-                      ],
-                    ]),
-                  ))
-              .toList(),
-        ),
-        // History button
         Builder(builder: (ctx) => IconButton(
           icon: const Icon(Icons.history_rounded, color: Colors.white),
           tooltip: 'Chat history',

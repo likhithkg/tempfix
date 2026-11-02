@@ -180,6 +180,37 @@ class GreenBazaarService {
     return ref.id;
   }
 
+  /// Creates a pending order in Firestore without clearing cart.
+  /// Cart is cleared only upon verified payment success.
+  Future<String> createPendingOrder(PlantOrder order) async {
+    final ref = _db.collection('gb_orders').doc();
+    final data = {
+      ...order.toMap(),
+      'paymentStatus': 'PENDING',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    await ref.set(data);
+    return ref.id;
+  }
+
+  Future<void> updateOrderPaymentStatus({
+    required String orderId,
+    required String paymentStatus,
+    String? status,
+    String? payuTxnId,
+    String? payuPaymentId,
+  }) async {
+    final updateData = <String, dynamic>{
+      'paymentStatus': paymentStatus,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (status != null) updateData['status'] = status;
+    if (payuTxnId != null) updateData['payuTxnId'] = payuTxnId;
+    if (payuPaymentId != null) updateData['payuPaymentId'] = payuPaymentId;
+    await _db.collection('gb_orders').doc(orderId).update(updateData);
+  }
+
   Future<String> placeTakeAwayOrder({
     required List<CartItem> items,
     required String buyerName,

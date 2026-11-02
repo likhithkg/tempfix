@@ -1,5 +1,8 @@
 // lib/rent/rent_machine_service.dart
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'rent_model.dart';
 import 'rent_booking_model.dart';
 
@@ -21,6 +24,48 @@ class RentMachineService {
   }
 
   Future<void> addMachine(RentMachine machine) async => addRentMachine(machine);
+
+  /// Publishes a NEW machine listing via the backend, which server-side verifies
+  /// the user's RentHub Premium entitlement before writing to Firestore.
+  /// Throws on failure. Returns the created machine ID.
+  Future<String> publishMachine(RentMachine machine) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+    final token = await user.getIdToken();
+    if (token == null) throw Exception('Could not obtain auth token');
+
+    final res = await http
+        .post(
+          Uri.parse('https://km-backend-ug96.onrender.com/api/rent/publish-machine'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'machine': {
+              'name': machine.name,
+              'type': machine.type,
+              'pricePerHour': machine.pricePerHour,
+              'ownerName': machine.ownerName,
+              'phone': machine.phone,
+              'latitude': machine.latitude,
+              'longitude': machine.longitude,
+              'imageUrl': machine.imageUrl,
+              'location': machine.location,
+              'ownerPhotoUrl': machine.ownerPhotoUrl,
+            },
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return data['machineId'] as String;
+    }
+    final err = (jsonDecode(res.body) as Map<String, dynamic>)['error']
+        ?? 'Failed to publish listing';
+    throw Exception(err);
+  }
 
   Stream<List<RentMachine>> streamRentMachines() {
     return _db.snapshots().map((snap) {

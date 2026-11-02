@@ -113,13 +113,22 @@ String _seasonName() {
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
-class RentHomePage extends StatefulWidget {
+class RentHomePage extends StatelessWidget {
   const RentHomePage({super.key});
+
   @override
-  State<RentHomePage> createState() => _RentHomePageState();
+  Widget build(BuildContext context) {
+    return const _RentHomeContent();
+  }
 }
 
-class _RentHomePageState extends State<RentHomePage>
+class _RentHomeContent extends StatefulWidget {
+  const _RentHomeContent();
+  @override
+  State<_RentHomeContent> createState() => _RentHomePageState();
+}
+
+class _RentHomePageState extends State<_RentHomeContent>
     with TickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
   String _query = '';

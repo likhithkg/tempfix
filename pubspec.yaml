@@ -55,6 +55,9 @@ dependencies:
   # 💾 Local Storage
   shared_preferences: ^2.2.2
 
+  # Web APIs (replaces deprecated dart:html on Flutter Web)
+  web: ^1.1.0
+
   # Utilities
   uuid: ^4.0.0
   # Image & File Pickers
@@ -65,6 +68,7 @@ dependencies:
   # Search & Keyboard
   flutter_typeahead: ^5.2.0
   flutter_keyboard_visibility: ^6.0.0
+  razorpay_flutter: ^1.3.6
 
 dev_dependencies:
   flutter_test:

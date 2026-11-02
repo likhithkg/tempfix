@@ -5,6 +5,8 @@ pubspec.lock
 
 android/.gradle/
 android/app/build/
+android/key.properties
+*.jks
 
 ios/Pods/
 ios/.symlinks/

@@ -21,10 +21,18 @@ const premiumPaymentSchema = new mongoose.Schema(
       default: 'pending',
       index: true,
     },
+    provider: { type: String, enum: ['payu', 'razorpay'], default: 'razorpay', index: true },
+
+    // Razorpay fields
+    razorpayOrderId: { type: String, default: null, index: true },
+    razorpayPaymentId: { type: String, default: null },
+
+    // Legacy PayU fields — preserved for historical records
     payuPaymentId: { type: String, default: null },
     paymentMode: { type: String, default: null },
+
     verifiedAt: { type: Date, default: null },
-    rawPayuResponse: { type: mongoose.Schema.Types.Mixed, default: null },
+    rawGatewayResponse: { type: mongoose.Schema.Types.Mixed, default: null },
     failureReason: { type: String, default: null },
   },
   { timestamps: true }

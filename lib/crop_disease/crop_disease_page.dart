@@ -10,6 +10,8 @@ import '../l10n/app_localizations.dart';
 import '../services/ai_proxy_service.dart';
 import '../services/image_upload_service.dart';
 import '../theme.dart';
+import '../premium/premium_gate.dart';
+import '../premium/premium_constants.dart';
 
 // ─── Scan beam painter ────────────────────────────────────────────────────────
 
@@ -105,14 +107,26 @@ class _LeafGlowPainter extends CustomPainter {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-class CropDiseasePage extends StatefulWidget {
+class CropDiseasePage extends StatelessWidget {
   const CropDiseasePage({super.key});
 
   @override
-  State<CropDiseasePage> createState() => _CropDiseasePageState();
+  Widget build(BuildContext context) {
+    return const PremiumGate(
+      featureId: kCropDiseasePremium,
+      child: _CropDiseaseContent(),
+    );
+  }
 }
 
-class _CropDiseasePageState extends State<CropDiseasePage>
+class _CropDiseaseContent extends StatefulWidget {
+  const _CropDiseaseContent();
+
+  @override
+  State<_CropDiseaseContent> createState() => _CropDiseasePageState();
+}
+
+class _CropDiseasePageState extends State<_CropDiseaseContent>
     with TickerProviderStateMixin {
 
   Uint8List? _imageBytes;

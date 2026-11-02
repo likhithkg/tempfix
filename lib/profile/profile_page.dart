@@ -14,6 +14,9 @@ import '../services/locale_service.dart';
 import '../theme.dart';
 import '../l10n/app_localizations.dart';
 import 'profile_service.dart';
+import '../premium/premium_screen.dart';
+import '../premium/payment_history_page.dart';
+import '../premium/premium_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -49,6 +52,7 @@ class _ProfilePageState extends State<ProfilePage>
     ('தமிழ்', 'ta'),
     ('తెలుగు', 'te'),
     ('मराठी', 'mr'),
+    ('മലയാളം', 'ml'),
   ];
 
   @override
@@ -339,6 +343,11 @@ class _ProfilePageState extends State<ProfilePage>
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+          // ── Premium section ───────────────────────────────────────────
+          SliverToBoxAdapter(child: _buildPremiumCard(isDark)),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
           // ── Account section ───────────────────────────────────────────
           SliverToBoxAdapter(
               child: _sectionLabel('Account', isDark)),
@@ -363,6 +372,14 @@ class _ProfilePageState extends State<ProfilePage>
 
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+          // ── Legal & Support section ───────────────────────────────────
+          SliverToBoxAdapter(
+              child: _sectionLabel('Legal & Support', isDark)),
+          SliverToBoxAdapter(
+              child: _buildLegalCard(cs, isDark)),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
           // ── Account Management section ────────────────────────────────
           SliverToBoxAdapter(
               child: _sectionLabel('Account Management', isDark)),
@@ -384,6 +401,106 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
+      ),
+    );
+  }
+
+  // ── Premium card ──────────────────────────────────────────────────────────
+
+  Widget _buildPremiumCard(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: FutureBuilder<List<PremiumEntitlementRecord>>(
+        future: PremiumService.instance.getEntitlements(),
+        builder: (context, snap) {
+          final owned = snap.data?.length ?? 0;
+          final allUnlocked = owned >= 3;
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: allUnlocked
+                    ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                    : [const Color(0xFF37474F), const Color(0xFF455A64)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  allUnlocked ? Icons.star_rounded : Icons.lock_open_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        allUnlocked ? 'All Features Unlocked!' : 'Premium Features',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      Text(
+                        allUnlocked
+                            ? 'You have permanent access to everything'
+                            : '$owned / 3 features unlocked',
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const PremiumScreen()),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.white.withValues(alpha: 0.15),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                        allUnlocked ? 'Manage' : 'Unlock',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const PaymentHistoryPage()),
+                      ),
+                      child: const Text(
+                        'History',
+                        style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white60),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -892,6 +1009,41 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   // ── Management card ───────────────────────────────────────────────────────
+
+  Widget _buildLegalCard(ColorScheme cs, bool isDark) {
+    void go(String route) => Navigator.pushNamed(context, route);
+    return _card(
+      isDark,
+      child: Column(children: [
+        _legalTile(Icons.info_outline_rounded, Colors.blueGrey, 'About KrishiMithra', () => go('/about'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.contact_support_outlined, Colors.teal, 'Contact Us', () => go('/contact'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.local_atm_rounded, Colors.orange, 'Pricing & Premium', () => go('/pricing'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.help_outline_rounded, Colors.indigo, 'FAQ', () => go('/faq'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.gavel_rounded, Colors.brown, 'Terms & Conditions', () => go('/terms'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.privacy_tip_outlined, Colors.green, 'Privacy Policy', () => go('/privacy'), cs, isDark),
+        _divider(),
+        _legalTile(Icons.replay_rounded, Colors.deepOrange, 'Refund Policy', () => go('/refund'), cs, isDark),
+      ]),
+    );
+  }
+
+  Widget _legalTile(IconData icon, Color color, String label, VoidCallback onTap,
+      ColorScheme cs, bool isDark) {
+    return ListTile(
+      leading: _iconBox(icon, color),
+      title: Text(label,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      trailing: Icon(Icons.chevron_right_rounded,
+          color: cs.onSurfaceVariant, size: 18),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+    );
+  }
 
   Widget _buildManagementCard(
       AppLocalizations l, ColorScheme cs, bool isDark) {

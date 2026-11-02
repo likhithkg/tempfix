@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'green_bazaar_models.dart';
 import 'green_bazaar_service.dart';
 import 'order_tracking_page.dart';
+import '../services/razorpay_payment_service.dart';
 
 class CheckoutPage extends StatefulWidget {
   final List<CartItem> items;
@@ -20,6 +23,8 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  static const _backendBase = 'https://km-backend-ug96.onrender.com';
+
   final _svc = GreenBazaarService();
   final _formKey = GlobalKey<FormState>();
 
@@ -81,29 +86,152 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ))
           .toList();
 
-      final order = PlantOrder(
-        id: '',
-        userId: user.uid,
-        userName: _name.text.trim(),
-        items: orderItems,
-        itemsTotal: widget.itemsTotal,
-        deliveryCharge: widget.deliveryCharge,
-        paymentMethod: _payment,
-        address: addr,
-        status: 'placed',
-        createdAt: DateTime.now(),
-      );
-
-      final orderId = await _svc.placeOrder(order);
-
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (_) => OrderTrackingPage(orderId: orderId),
-          ),
-          (route) => route.isFirst,
+      if (_payment == 'online') {
+        // Online Payment Flow via Razorpay
+        final order = PlantOrder(
+          id: '',
+          userId: user.uid,
+          userName: _name.text.trim(),
+          buyerPhone: _phone.text.trim(),
+          buyerEmail: user.email,
+          items: orderItems,
+          itemsTotal: widget.itemsTotal,
+          deliveryCharge: widget.deliveryCharge,
+          paymentMethod: 'online',
+          paymentStatus: 'PENDING',
+          address: addr,
+          status: 'placed',
+          createdAt: DateTime.now(),
         );
+
+        final orderId = await _svc.createPendingOrder(order);
+
+        // 1. Create Razorpay order on backend
+        final token = await user.getIdToken();
+        final createRes = await http.post(
+          Uri.parse('$_backendBase/api/razorpay/marketplace/create-order'),
+          headers: {
+            'Authorization': 'Bearer ${token ?? ''}',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'orderId': orderId,
+            'customerDetails': {
+              'name': _name.text.trim(),
+              'email': user.email ?? '',
+              'phone': _phone.text.trim(),
+            },
+          }),
+        ).timeout(const Duration(seconds: 20));
+
+        if (createRes.statusCode != 200) {
+          final err = jsonDecode(createRes.body)['error'] ?? 'Failed to initiate payment';
+          throw Exception(err);
+        }
+
+        final createData = jsonDecode(createRes.body) as Map<String, dynamic>;
+        final razorpayOrderId = createData['razorpayOrderId'] as String;
+        final keyId = createData['keyId'] as String;
+        final amountPaise = (createData['amountPaise'] as num).toInt();
+        final prefill = createData['prefill'] as Map<String, dynamic>;
+
+        if (!mounted) return;
+
+        // 2. Open Razorpay Checkout
+        final result = await RazorpayPaymentService.instance.startPayment(
+          razorpayOrderId: razorpayOrderId,
+          keyId: keyId,
+          amountPaise: amountPaise,
+          description: 'KrishiMithra Plant Order',
+          prefillName: prefill['name'] as String? ?? _name.text.trim(),
+          prefillEmail: prefill['email'] as String? ?? user.email ?? '',
+          prefillContact: prefill['contact'] as String? ?? _phone.text.trim(),
+        );
+
+        if (!mounted) return;
+
+        if (result.isSuccess) {
+          // 3. Verify signature on backend
+          final verifyToken = await user.getIdToken();
+          final verifyRes = await http.post(
+            Uri.parse('$_backendBase/api/razorpay/marketplace/verify-payment'),
+            headers: {
+              'Authorization': 'Bearer ${verifyToken ?? ''}',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'razorpayOrderId': result.razorpayOrderId ?? razorpayOrderId,
+              'razorpayPaymentId': result.razorpayPaymentId ?? '',
+              'razorpaySignature': result.razorpaySignature ?? '',
+            }),
+          ).timeout(const Duration(seconds: 20));
+
+          if (verifyRes.statusCode == 200) {
+            await _svc.clearCart();
+            if (!mounted) return;
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OrderTrackingPage(orderId: orderId),
+              ),
+              (route) => route.isFirst,
+            );
+          } else {
+            final err = jsonDecode(verifyRes.body)['error'] ?? 'Payment verification failed';
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(err), backgroundColor: Colors.red),
+              );
+            }
+          }
+        } else if (result.isCancelled) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Payment cancelled. Your items remain in cart.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message ?? 'Payment failed. Please try again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        // Cash on Delivery Flow
+        final order = PlantOrder(
+          id: '',
+          userId: user.uid,
+          userName: _name.text.trim(),
+          buyerPhone: _phone.text.trim(),
+          buyerEmail: user.email,
+          items: orderItems,
+          itemsTotal: widget.itemsTotal,
+          deliveryCharge: widget.deliveryCharge,
+          paymentMethod: 'cod',
+          paymentStatus: 'COD',
+          address: addr,
+          status: 'placed',
+          createdAt: DateTime.now(),
+        );
+
+        final orderId = await _svc.placeOrder(order);
+
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OrderTrackingPage(orderId: orderId),
+            ),
+            (route) => route.isFirst,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -231,7 +359,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       _PayOption(
                         icon: Icons.phone_android_rounded,
                         label: 'Online Payment',
-                        subtitle: 'UPI / Card / Net Banking',
+                        subtitle: 'UPI / Card / Net Banking via Razorpay',
                         value: 'online',
                         selected: _payment,
                         onSelect: (v) => setState(() => _payment = v),

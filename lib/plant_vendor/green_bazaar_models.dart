@@ -221,6 +221,9 @@ class PlantOrder {
   final String status;
   final String orderType; // 'takeaway' | 'delivery'
   final List<String> sellerUids;
+  final String paymentStatus; // 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'COD'
+  final String? payuTxnId;
+  final String? payuPaymentId;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -241,6 +244,9 @@ class PlantOrder {
     required this.status,
     this.orderType = 'takeaway',
     this.sellerUids = const [],
+    this.paymentStatus = 'COD',
+    this.payuTxnId,
+    this.payuPaymentId,
     required this.createdAt,
     this.updatedAt,
   });
@@ -298,6 +304,10 @@ class PlantOrder {
       status: m['status'] ?? 'placed',
       orderType: m['orderType'] as String? ?? 'takeaway',
       sellerUids: List<String>.from(m['sellerUids'] as List? ?? []),
+      paymentStatus: m['paymentStatus'] as String? ??
+          (m['paymentMethod'] == 'online' ? 'PENDING' : 'COD'),
+      payuTxnId: parseStr('payuTxnId'),
+      payuPaymentId: parseStr('payuPaymentId'),
       createdAt: m['createdAt'] is Timestamp
           ? (m['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -323,6 +333,9 @@ class PlantOrder {
         'status': status,
         'orderType': orderType,
         'sellerUids': sellerUids,
+        'paymentStatus': paymentStatus,
+        if (payuTxnId != null) 'payuTxnId': payuTxnId,
+        if (payuPaymentId != null) 'payuPaymentId': payuPaymentId,
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt':
             updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,

@@ -10,6 +10,9 @@ import 'dart:convert';
 import 'rent_model.dart';
 import 'package:krishimithra/rent/rent_machine_service.dart';
 import '../services/image_upload_service.dart';
+import '../premium/premium_service.dart';
+import '../premium/premium_constants.dart';
+import '../premium/premium_screen.dart';
 
 // ─── Theme constants (mirror RentHub palette) ────────────────────────────────
 const _kPrimary = Color(0xFFE65100);
@@ -207,6 +210,38 @@ class _RentListFormPageState extends State<RentListFormPage> {
       return;
     }
 
+    final isNew = widget.existingMachine == null;
+
+    // New listings require RentHub Premium entitlement.
+    // Edits to existing listings are always free — no gate.
+    if (isNew) {
+      setState(() => _submitting = true);
+      bool entitled = false;
+      try {
+        entitled = await PremiumService.instance.hasEntitlement(kRentHubPremium);
+      } catch (_) {}
+      if (mounted) setState(() => _submitting = false);
+      if (!mounted) return;
+
+      if (!entitled) {
+        // Preserve form state — push PremiumScreen on top rather than replacing.
+        // When the user completes payment and returns, the form is still populated.
+        await Navigator.push<void>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const PremiumScreen(initialFeatureId: kRentHubPremium),
+          ),
+        );
+        if (!mounted) return;
+        // Cache was invalidated by verifyPayment — this fetch is fresh.
+        entitled = await PremiumService.instance.hasEntitlement(kRentHubPremium);
+        if (!entitled) {
+          _snack('RentHub Premium required to publish a listing');
+          return;
+        }
+      }
+    }
+
     setState(() => _submitting = true);
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -225,16 +260,16 @@ class _RentListFormPageState extends State<RentListFormPage> {
         imageUrl:     _imageUrl ?? '',
         createdAt:    widget.existingMachine?.createdAt ?? DateTime.now(),
         location:     _locCtrl.text.trim(),
-        // Persist the owner's profile photo so machine-detail cards can display it.
-        // photoURL is set after a profile-picture upload via the main Profile page.
         ownerPhotoUrl: widget.existingMachine?.ownerPhotoUrl
             ?? currentUser?.photoURL,
       );
 
-      if (widget.existingMachine == null) {
-        await RentMachineService.instance.addMachine(m);
+      if (isNew) {
+        // Backend-verified publish: server re-checks entitlement before Firestore write.
+        await RentMachineService.instance.publishMachine(m);
         _snack('Machine listed successfully!', color: const Color(0xFF4CAF50));
       } else {
+        // Editing is free — write directly to Firestore.
         await RentMachineService.instance.updateMachine(m.id, m);
         _snack('Listing updated', color: const Color(0xFF4CAF50));
       }
