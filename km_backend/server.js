@@ -77,6 +77,15 @@ if (missingRazorpay.length > 0) {
 }
 
 // CORS
+// These are the canonical Firebase Hosting origins for this project. They are
+// always allowed regardless of the ALLOWED_ORIGINS env var so that a missing
+// or misconfigured env var on Render does not silently break Flutter Web
+// payments (which manifest as "ClientLoad failed" / XHR status 0 in the app).
+const KNOWN_FIREBASE_ORIGINS = [
+  "https://krishimithra-650c2.web.app",
+  "https://krishimithra-650c2.firebaseapp.com",
+];
+
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
@@ -94,8 +103,12 @@ app.use(
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
       if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return callback(null, true);
+      if (KNOWN_FIREBASE_ORIGINS.includes(origin)) return callback(null, true);
       if (allowedOrigins.length === 0) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      console.error(
+        `[CORS BLOCKED] origin="${origin}" | ALLOWED_ORIGINS="${process.env.ALLOWED_ORIGINS || "(not set)"}"`
+      );
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -116,6 +129,17 @@ app.use(
 
 // Public health check
 app.get("/", (req, res) => res.send("KM Backend Running"));
+
+// Diagnostic endpoint — returns config status without exposing secrets.
+// Used by Flutter Web to verify CORS + backend reachability before payment.
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    razorpayConfigured: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+    webhookConfigured: !!process.env.RAZORPAY_WEBHOOK_SECRET,
+    allowedOriginsConfigured: allowedOrigins.length > 0,
+  });
+});
 
 // Auth routes
 app.use("/api/auth", authLimiter, authRoutes);

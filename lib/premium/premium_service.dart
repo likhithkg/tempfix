@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -120,7 +121,9 @@ class PremiumService {
         _cacheExpiry = now.add(const Duration(minutes: 5));
         return list;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Premium] getEntitlements error: $e');
+    }
     return _cache ?? [];
   }
 
@@ -138,23 +141,41 @@ class PremiumService {
   }) async {
     const url = '$_base/api/razorpay/create-order';
     final tok = await _token();
-    final res = await http
-        .post(
-          Uri.parse(url),
-          headers: {
-            'Authorization': 'Bearer ${tok ?? ''}',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'features': features,
-            'customerDetails': {
-              'name': customerName ?? '',
-              'email': customerEmail ?? '',
-              'phone': customerPhone ?? '',
+
+    final http.Response res;
+    try {
+      res = await http
+          .post(
+            Uri.parse(url),
+            headers: {
+              'Authorization': 'Bearer ${tok ?? ''}',
+              'Content-Type': 'application/json',
             },
-          }),
-        )
-        .timeout(const Duration(seconds: 20));
+            body: jsonEncode({
+              'features': features,
+              'customerDetails': {
+                'name': customerName ?? '',
+                'email': customerEmail ?? '',
+                'phone': customerPhone ?? '',
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+    } on http.ClientException catch (e) {
+      // XHR status 0 — CORS blocked or backend unreachable.
+      debugPrint('[Premium] Network error on create-order: ${e.message}');
+      throw Exception(
+        'Cannot reach payment server. '
+        'Check your internet connection and try again. '
+        'If the problem persists, the server may be starting up — wait 30 seconds.',
+      );
+    } on TimeoutException {
+      debugPrint('[Premium] Timeout on create-order');
+      throw Exception(
+        'Payment server is taking too long to respond. '
+        'It may be starting up — please wait 30 seconds and try again.',
+      );
+    }
 
     _log('POST', url, res, hasToken: tok != null);
 
